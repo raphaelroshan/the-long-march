@@ -523,6 +523,28 @@ func _run() -> void:
 	var completed_hull: int = game.state.hull_condition
 	var completed_result: String = game.state.final_result
 	var completed_outcome: String = game.state.encounter_outcome
+	var completed_enemies: Array[Dictionary] = []
+	for completed_enemy in game.state.encounter_enemies:
+		completed_enemies.append(completed_enemy.duplicate(true))
+	game.state.hull_condition = 8
+	game.state.final_result = "scarred_march"
+	game.state.encounter_enemies[0]["defeated"] = false
+	game.state.encounter_enemies[0]["hp"] = 2
+	for enemy_index in range(1, game.state.encounter_enemies.size()):
+		game.state.encounter_enemies[enemy_index]["defeated"] = true
+		game.state.encounter_enemies[enemy_index]["hp"] = 0
+	game._refresh_ui()
+	_expect(game.results_summary_label.text.contains("1 final contact remained") and not game.results_summary_label.text.contains("convoy contract failed"), "scarred results should name only thresholds that actually determine the outcome")
+	_expect(game.results_replay_label.text.contains("CONTACTS FIRST") and game.results_replay_label.text.contains("Siege Beast") and game.results_replay_label.text.contains("shell cannon and front armor"), "a contact-only scarred result should recommend the authored counter for the surviving threat")
+	game.state.final_result = "decisive_march"
+	game.state.guard_contract_status = "declined"
+	for enemy in game.state.encounter_enemies:
+		enemy["defeated"] = true
+		enemy["hp"] = 0
+	game._refresh_ui()
+	_expect(game.results_summary_label.text.contains("travelled without the guard contract") and not game.results_summary_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
+	game.state.guard_contract_status = "completed"
+	game.state.encounter_enemies = completed_enemies
 	game.state.campaign_path.pop_back()
 	game.state.campaign_encounters_completed = 4
 	game.state.final_result = "march_failed"
@@ -547,6 +569,7 @@ func _run() -> void:
 	game.state.modules[failed_engine_index]["durability"] = failed_engine_before
 	game.state.final_result = completed_result
 	game.state.encounter_outcome = completed_outcome
+	game.state.encounter_enemies = completed_enemies
 	game.state._recalculate()
 	game._refresh_ui()
 	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")

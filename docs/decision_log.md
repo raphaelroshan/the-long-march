@@ -435,3 +435,7 @@ When the currently inspected module is healthy but another installed system is d
 ## 2026-08-28 — Route commitment shows the state after departure
 
 The Commit control presents day, fuel, and known pressure as before-and-after values rather than isolated costs. Unscouted routes preserve unknown risk and pressure while still showing the resource balances the crew can calculate. Meridian Pass uses a distinct `Final Commit` label and states that failure ends the run with no retreat before the player confirms the chapter's final encounter.
+
+## 2026-08-28 — Debrief advice follows actual victory thresholds
+
+Result copy now treats final-contact defeat and seven remaining hull as the decisive thresholds implemented by the simulation. Contract status is recorded as run context rather than incorrectly presented as a victory requirement. Scarred runs distinguish hull-shortfall and surviving-contact causes; contact-only results name the remaining threat and its authored counter, while hull-shortfall results state exactly how many more hull points the next run needs.

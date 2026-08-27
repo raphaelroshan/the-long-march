@@ -2344,19 +2344,15 @@ func _advance_encounter_action_text() -> String:
 func _result_summary_text() -> String:
 	match state.final_result:
 		"decisive_march":
-			return "DECISIVE MARCH · Meridian Pass is open. Every final contact was defeated, the fortress retained at least 7 hull, and the convoy contract survived."
+			var contract_note := "the guard contract was completed" if state.guard_contract_status == "completed" else ("the fortress travelled without the guard contract" if state.guard_contract_status == "declined" else "the guard contract was not completed")
+			return "DECISIVE MARCH · Meridian Pass is open. Every final contact was defeated, the fortress retained %d/10 hull, and %s." % [state.hull_condition, contract_note]
 		"scarred_march":
 			var missed: Array[String] = []
 			if state.hull_condition < 7:
 				missed.append("hull ended at %d/10 (7 required)" % state.hull_condition)
-			var undefeated := 0
-			for enemy in state.encounter_enemies:
-				if not bool(enemy.get("defeated", false)):
-					undefeated += 1
+			var undefeated := _undefeated_final_contacts().size()
 			if undefeated > 0:
 				missed.append("%d final contact%s remained" % [undefeated, "" if undefeated == 1 else "s"])
-			if state.guard_contract_status == "failed":
-				missed.append("the convoy contract failed")
 			return "SCARRED MARCH · The fortress crossed, but missed a decisive result because %s." % (", ".join(missed) if not missed.is_empty() else "the final approach left lasting damage")
 		"march_failed":
 			if state.hull_condition <= 0:
@@ -2368,10 +2364,36 @@ func _result_replay_text() -> String:
 	if state.final_result == "decisive_march":
 		return "NEXT RUN · Test a different doctrine or road and see whether the fortress can remain decisive."
 	if state.final_result == "scarred_march":
-		return "NEXT RUN · Preserve hull before Meridian Pass and use the Morrowline service budget on the system that protects the final approach."
+		var remaining_contacts := _undefeated_final_contacts()
+		if state.hull_condition < 7:
+			var hull_needed := 7 - state.hull_condition
+			var contact_note := " Also prepare for %s." % ", ".join(remaining_contacts) if not remaining_contacts.is_empty() else ""
+			return "NEXT RUN · HULL FIRST · Reach Meridian Pass with at least %d more hull; reserve a Morrowline service for hull or armor.%s" % [hull_needed, contact_note]
+		if not remaining_contacts.is_empty():
+			var counters: Array[String] = []
+			for enemy in state.encounter_enemies:
+				if bool(enemy.get("defeated", false)):
+					continue
+				var enemy_id := String(enemy.get("id", ""))
+				var counter := String(LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {}).get("counter", "increase reliable damage"))
+				if counter not in counters:
+					counters.append(counter)
+			return "NEXT RUN · CONTACTS FIRST · Defeat %s before step 6; prepare %s." % [", ".join(remaining_contacts), " or ".join(counters)]
+		return "NEXT RUN · Review the final causal report and preserve the system that produced the scarred result."
 	if state.hull_condition <= 0:
 		return "NEXT RUN · HULL FIRST · Reserve one Morrowline service for the hull, then inspect active targets before spending the final Seal order."
 	return "NEXT RUN · MOVEMENT FIRST · %s Preserve one Seal order for threats targeting that system." % String(_movement_failure_diagnosis().get("action", "Keep one engine fuel-connected."))
+
+func _undefeated_final_contacts() -> Array[String]:
+	var contacts: Array[String] = []
+	for enemy in state.encounter_enemies:
+		if bool(enemy.get("defeated", false)):
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var enemy_name := String(LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id.replace("_", " ").capitalize()))
+		if enemy_name not in contacts:
+			contacts.append(enemy_name)
+	return contacts
 
 func _movement_failure_diagnosis() -> Dictionary:
 	for module in state.modules:
