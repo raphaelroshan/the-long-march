@@ -86,6 +86,8 @@ The prototype records a small local journal of gameplay decisions and outcomes. 
 
 The result screen explains its classification before asking for feedback. A Scarred March names each missed decisive threshold—hull, surviving final contacts, or contract failure—while failure identifies hull loss or loss of operational movement. A short next-run prompt turns the result into a testable strategy without claiming there is one correct build.
 
+The debrief card retains a compact run record beside that explanation: the complete secured path, final closure pressure, contract state, specialist, and ready/strained/offline system counts. These facts remain readable next to the replay prompt instead of requiring the tester to reconstruct the run from separate status regions or the raw log.
+
 The results feedback form uses explicit local-only actions, returns to the debrief rather than generically closing, and replaces a successful save action with `Save Again`. Its receipt shows the generated filename while retaining the full path as a tooltip, giving playtesters useful proof without filling the modal with machine-specific directory text.
 
 Every exported feedback bundle records the exact application build at the top level and repeats it in the visible save receipt. Reports can therefore be matched to behavior after the repository has moved on, without asking the tester to copy a version string manually.

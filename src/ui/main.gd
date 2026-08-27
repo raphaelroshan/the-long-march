@@ -118,6 +118,7 @@ var how_to_play_button: Button
 var feedback_button: Button
 var results_group: VBoxContainer
 var results_summary_label: Label
+var results_record_label: Label
 var results_replay_label: Label
 var play_again_button: Button
 var results_title_button: Button
@@ -735,6 +736,11 @@ func _build_ui() -> void:
 	results_summary_label.add_theme_font_size_override("font_size", 14)
 	results_summary_label.add_theme_color_override("font_color", Color("#d6dfdf"))
 	results_summary_stack.add_child(results_summary_label)
+	results_record_label = Label.new()
+	results_record_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	results_record_label.add_theme_font_size_override("font_size", 11)
+	results_record_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	results_summary_stack.add_child(results_record_label)
 	results_replay_label = Label.new()
 	results_replay_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	results_replay_label.add_theme_font_size_override("font_size", 12)
@@ -1803,6 +1809,7 @@ func _refresh_ui() -> void:
 	results_group.visible = state.phase == "results"
 	if state.phase == "results":
 		results_summary_label.text = _result_summary_text()
+		results_record_label.text = _result_record_text()
 		results_replay_label.text = _result_replay_text()
 	guidance_label.text = _current_guidance()
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
@@ -2092,6 +2099,27 @@ func _result_replay_text() -> String:
 	if state.final_result == "scarred_march":
 		return "NEXT RUN · Preserve hull before Meridian Pass and use the Morrowline service budget on the system that protects the final approach."
 	return "NEXT RUN · Protect movement first: keep one engine fuel-connected, then preserve hull for the final commitment."
+
+func _result_record_text() -> String:
+	var path_names: Array[String] = []
+	for node_id in state.campaign_path:
+		path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
+	var dependencies: Dictionary = state.dependency_summary()
+	var specialist_name := "None"
+	if state.specialist_id == "iven_pell":
+		specialist_name = "Iven Pell"
+	elif not state.specialist_id.is_empty():
+		specialist_name = state.specialist_id.replace("_", " ").capitalize()
+	return "RUN RECORD · %s\nPressure: %s %d · Contract: %s · Specialist: %s\nSystems: %d ready · %d strained · %d offline" % [
+		" → ".join(path_names),
+		state.campaign_pressure_band().capitalize(),
+		state.campaign_pressure,
+		state.guard_contract_status.replace("_", " ").capitalize(),
+		specialist_name,
+		int(dependencies.get("ready", 0)),
+		int(dependencies.get("strained", 0)),
+		int(dependencies.get("offline", 0))
+	]
 
 func _service_action_count_text() -> String:
 	return "%d service action%s" % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s"]
