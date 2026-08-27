@@ -90,6 +90,8 @@ The results feedback form uses explicit local-only actions, returns to the debri
 
 Every exported feedback bundle records the exact application build at the top level and repeats it in the visible save receipt. Reports can therefore be matched to behavior after the repository has moved on, without asking the tester to copy a version string manually.
 
+Closing and reopening the feedback form retains the last successful local filename and keeps `Save Again` available while the file still exists. The form falls back to its unsaved message if that file has been removed, so its receipt reflects durable state rather than only the most recent button press.
+
 ## 2026-08-27 — Tagged playtests produce desktop artifacts
 
 Windows remains the primary product target. The repository also provides an unsigned macOS playtest preset so development sessions can run on the current platform. Tagged GitHub Actions runs build both artifacts; signing, notarization, Steam, and Epic publishing remain human-controlled release steps.

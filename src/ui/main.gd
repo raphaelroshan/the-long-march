@@ -917,8 +917,15 @@ func _finish_onboarding(skipped: bool) -> void:
 	focus_current_action.call_deferred()
 
 func _show_feedback() -> void:
-	feedback_status_label.text = "Nothing is sent automatically. You can save again after editing."
-	feedback_save_button.text = "SAVE NOTES LOCALLY"
+	if not last_feedback_path.is_empty() and FileAccess.file_exists(last_feedback_path):
+		feedback_status_label.text = "LAST SAVED LOCALLY · %s\nEdits can be saved as a fresh report." % last_feedback_path.get_file()
+		feedback_status_label.tooltip_text = last_feedback_path
+		feedback_save_button.text = "SAVE AGAIN"
+	else:
+		last_feedback_path = ""
+		feedback_status_label.text = "Nothing is sent automatically. You can save again after editing."
+		feedback_status_label.tooltip_text = ""
+		feedback_save_button.text = "SAVE NOTES LOCALLY"
 	feedback_overlay.visible = true
 	feedback_clear_text.grab_focus()
 	_journal_event("feedback_opened", {"phase": state.phase})
@@ -944,6 +951,7 @@ func _save_feedback() -> void:
 		feedback_save_button.grab_focus()
 	else:
 		last_feedback_path = ""
+		feedback_status_label.tooltip_text = ""
 		feedback_status_label.text = "Could not save feedback: %s" % String(result.get("reason", "unknown error"))
 
 func _unhandled_key_input(event: InputEvent) -> void:
