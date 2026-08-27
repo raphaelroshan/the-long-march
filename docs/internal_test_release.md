@@ -7,12 +7,16 @@ This is an internal, testable vertical slice for The Long March. It proves one a
 ## Test flow
 
 1. Start at Ashgate Depot with the prepared fortress modules visible in the chassis grid.
-2. Choose **The Long Road**, **The Exposed Cut**, or **The Salvage Detour**.
-3. Select a journey doctrine: protect cargo, protect crew, or run hot.
-4. Depart and read the forecast. The safe road creates two Road Raiders, the shortcut creates a Raider plus Climber, and the salvage detour creates a Burrower.
-5. Advance the journey battle one step at a time. Use **Encounter: Shift Power** once if the weapon system needs priority.
-6. Read the report to see which module behaved, which enemy was targeted, and which module or hull section was damaged.
-7. Verify that the fortress reaches Morrowline Camp, arrives damaged, or returns to Ashgate Depot after a forced retreat.
+2. Select an installed module to move, rotate, or remove it. Select a module from the palette and click an empty cell to install it. Exterior-tagged modules consume one of two mount slots.
+3. Confirm that invalid overlap, bounds, mass, and exterior-capacity placements show a blocked preview without changing the old layout.
+4. Choose **The Long Road**, **The Exposed Cut**, or **The Salvage Detour**.
+5. Select a journey doctrine: protect cargo, protect crew, or run hot.
+6. Depart and read the forecast. Refit controls lock once the fortress leaves Ashgate.
+7. Advance the journey battle one step at a time. Use **Encounter: Shift Power** once if the weapon system needs priority.
+8. Read the report to see which module behaved, which enemy was targeted, and which module or hull section was damaged.
+9. Verify that the fortress reaches Morrowline Camp, arrives damaged, or returns to Ashgate Depot after a forced retreat.
+
+The refit interaction is the input foundation for the spatial engineering loop. Adjacency benefits, fuel links, ammunition links, and crew dependencies remain separate follow-up slices and are not implied by successful placement alone.
 
 ## Implemented units and behaviors
 

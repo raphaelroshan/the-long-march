@@ -6,6 +6,7 @@ extends RefCounted
 
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
+const MAX_EXTERIOR_MOUNTS := 2
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
 const BASE_HEAT_LIMIT := 6
@@ -40,9 +41,11 @@ const ENCOUNTER_ENEMIES := {
 const MODULE_DEFS := {
 	"steam_lance_engine": {"name": "Steam Lance Engine", "family": "engine", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 0, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"]},
 	"ash_runner_engine": {"name": "Ash Runner Engine", "family": "engine", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 0, "power_output": 0, "heat": 2, "durability": 3, "tags": ["engine", "fast", "hot"]},
+	"coal_cell": {"name": "Coal Cell", "family": "cargo", "shape": Vector2i(1, 1), "mass": 1, "power_draw": 0, "power_output": 0, "heat": 0, "durability": 2, "tags": ["fuel", "cargo"]},
 	"generator_core": {"name": "Generator Core", "family": "crew_room", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 4, "heat": 2, "durability": 4, "tags": ["generator", "critical"]},
 	"shell_cannon": {"name": "Shell Cannon", "family": "weapon", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 2, "power_output": 0, "heat": 2, "durability": 3, "tags": ["weapon", "exterior", "burst"]},
 	"repeater_gun": {"name": "Repeater Gun", "family": "weapon", "shape": Vector2i(1, 1), "mass": 1, "power_draw": 1, "power_output": 0, "heat": 1, "durability": 2, "tags": ["weapon", "exterior", "suppress"]},
+	"ammunition_lift": {"name": "Ammunition Lift", "family": "workshop", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["ammunition", "dependency"]},
 	"field_workshop": {"name": "Field Workshop", "family": "workshop", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 1, "durability": 3, "tags": ["repair", "workshop", "crew"]},
 	"signal_coil": {"name": "Signal Coil", "family": "signal", "shape": Vector2i(1, 1), "mass": 1, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 2, "tags": ["signal", "forecast"]},
 	"wall_lamp": {"name": "Wall Lamp", "family": "signal", "shape": Vector2i(1, 1), "mass": 1, "power_draw": 1, "power_output": 0, "heat": 1, "durability": 2, "tags": ["signal", "exterior", "climber_counter"]},
@@ -86,7 +89,14 @@ func _init(world_seed: int = 1107) -> void:
 func module_definition(module_id: String) -> Dictionary:
 	return MODULE_DEFS.get(module_id, {})
 
-func module_instance(module_id: String, position: Vector2i, exterior: bool = false) -> Dictionary:
+func module_shape(module_id: String, rotated: bool = false) -> Vector2i:
+	var definition := module_definition(module_id)
+	var shape: Vector2i = definition.get("shape", Vector2i.ONE)
+	if rotated and shape.x != shape.y:
+		return Vector2i(shape.y, shape.x)
+	return shape
+
+func module_instance(module_id: String, position: Vector2i, exterior: bool = false, rotated: bool = false) -> Dictionary:
 	var definition := module_definition(module_id)
 	if definition.is_empty():
 		return {}
@@ -94,13 +104,13 @@ func module_instance(module_id: String, position: Vector2i, exterior: bool = fal
 		"id": module_id,
 		"position": position,
 		"exterior": exterior,
+		"rotated": rotated,
 		"durability": int(definition.get("durability", 1)),
 		"sealed": false
 	}
 
 func occupied_cells(instance: Dictionary) -> Array[Vector2i]:
-	var definition := module_definition(String(instance.get("id", "")))
-	var shape: Vector2i = definition.get("shape", Vector2i.ONE)
+	var shape := module_shape(String(instance.get("id", "")), bool(instance.get("rotated", false)))
 	var result: Array[Vector2i] = []
 	var origin: Vector2i = instance.get("position", Vector2i.ZERO)
 	for y in range(shape.y):
@@ -108,20 +118,36 @@ func occupied_cells(instance: Dictionary) -> Array[Vector2i]:
 			result.append(origin + Vector2i(x, y))
 	return result
 
-func place_module(module_id: String, position: Vector2i, exterior: bool = false) -> Dictionary:
+func validate_module_placement(module_id: String, position: Vector2i, exterior: bool = false, rotated: bool = false, ignore_index: int = -1) -> Dictionary:
 	var definition := module_definition(module_id)
 	if definition.is_empty():
 		return {"ok": false, "reason": "unknown module"}
-	var instance := module_instance(module_id, position, exterior)
+	var tags: Array = definition.get("tags", [])
+	if "exterior" in tags and not exterior:
+		return {"ok": false, "reason": "module requires an exterior mount"}
+	if exterior and not ("exterior" in tags):
+		return {"ok": false, "reason": "module cannot use an exterior mount"}
+	var instance := module_instance(module_id, position, exterior, rotated)
 	for cell in occupied_cells(instance):
 		if cell.x < 0 or cell.x >= GRID_WIDTH or cell.y < 0 or cell.y >= GRID_HEIGHT:
 			return {"ok": false, "reason": "module is outside the chassis grid"}
-		if _cell_occupied(cell):
+		if _cell_occupied(cell, ignore_index):
 			return {"ok": false, "reason": "module overlaps an existing module"}
-	if exterior and not _has_exterior_capacity():
+	if exterior and not _has_exterior_capacity(ignore_index):
 		return {"ok": false, "reason": "exterior mount capacity exceeded"}
-	if total_mass() + int(definition.get("mass", 0)) > BASE_MASS_LIMIT:
+	var placement_mass := total_mass()
+	if ignore_index >= 0 and ignore_index < modules.size():
+		placement_mass -= int(module_definition(String(modules[ignore_index].get("id", ""))).get("mass", 0))
+	if placement_mass + int(definition.get("mass", 0)) > BASE_MASS_LIMIT:
 		return {"ok": false, "reason": "mass limit exceeded"}
+	return {"ok": true, "module": instance.duplicate(true)}
+
+func place_module(module_id: String, position: Vector2i, exterior: bool = false, rotated: bool = false) -> Dictionary:
+	var validation := validate_module_placement(module_id, position, exterior, rotated)
+	if not bool(validation.get("ok", false)):
+		return validation
+	var definition := module_definition(module_id)
+	var instance: Dictionary = validation.module
 	modules.append(instance)
 	_recalculate()
 	log.append("Installed %s." % String(definition.get("name", module_id)))
@@ -136,6 +162,72 @@ func remove_module(module_id: String) -> Dictionary:
 			log.append("Removed %s." % module_id)
 			return {"ok": true, "module": removed.duplicate(true)}
 	return {"ok": false, "reason": "module not installed"}
+
+func module_at(cell: Vector2i) -> Dictionary:
+	for index in range(modules.size()):
+		var instance: Dictionary = modules[index]
+		if cell in occupied_cells(instance):
+			var result := instance.duplicate(true)
+			result["index"] = index
+			return result
+	return {}
+
+func remove_module_at(cell: Vector2i) -> Dictionary:
+	var found := module_at(cell)
+	if found.is_empty():
+		return {"ok": false, "reason": "no module at that cell"}
+	var index := int(found.get("index", -1))
+	if index < 0 or index >= modules.size():
+		return {"ok": false, "reason": "module index is invalid"}
+	var removed: Dictionary = modules[index]
+	modules.remove_at(index)
+	_recalculate()
+	log.append("Removed %s from the chassis." % String(module_definition(String(removed.get("id", ""))).get("name", removed.get("id", "module"))))
+	return {"ok": true, "module": removed.duplicate(true), "summary": summary()}
+
+func validate_module_reposition(cell: Vector2i, new_position: Vector2i, rotated: bool) -> Dictionary:
+	var found := module_at(cell)
+	if found.is_empty():
+		return {"ok": false, "reason": "no module selected"}
+	return validate_module_placement(
+		String(found.get("id", "")),
+		new_position,
+		bool(found.get("exterior", false)),
+		rotated,
+		int(found.get("index", -1))
+	)
+
+func reposition_module_at(cell: Vector2i, new_position: Vector2i, rotated: bool) -> Dictionary:
+	var found := module_at(cell)
+	if found.is_empty():
+		return {"ok": false, "reason": "no module selected"}
+	var index := int(found.get("index", -1))
+	var validation := validate_module_reposition(cell, new_position, rotated)
+	if not bool(validation.get("ok", false)):
+		return validation
+	var moved: Dictionary = modules[index].duplicate(true)
+	var rotation_changed := bool(moved.get("rotated", false)) != rotated
+	moved["position"] = new_position
+	moved["rotated"] = rotated
+	modules[index] = moved
+	_recalculate()
+	log.append("Moved %s to %d,%d%s." % [
+		String(module_definition(String(moved.get("id", ""))).get("name", moved.get("id", "module"))),
+		new_position.x,
+		new_position.y,
+		" and changed its orientation" if rotation_changed else ""
+	])
+	return {"ok": true, "module": moved.duplicate(true), "summary": summary()}
+
+func module_count(module_id: String) -> int:
+	var count := 0
+	for instance in modules:
+		if String(instance.get("id", "")) == module_id:
+			count += 1
+	return count
+
+func can_refit() -> bool:
+	return not encounter_active and not journey_complete and current_location == "ashgate_depot"
 
 func total_mass() -> int:
 	var total := 0
@@ -583,18 +675,24 @@ func _all_encounter_enemies_defeated() -> bool:
 func encounter_summary() -> Dictionary:
 	return {"active": encounter_active, "step": encounter_step, "progress": encounter_progress, "outcome": encounter_outcome, "intervention_used": encounter_intervention_used, "forecast": encounter_forecast(), "enemies": encounter_enemies.duplicate(true), "report": encounter_report.duplicate()}
 
-func _cell_occupied(cell: Vector2i) -> bool:
-	for instance in modules:
+func _cell_occupied(cell: Vector2i, ignore_index: int = -1) -> bool:
+	for index in range(modules.size()):
+		if index == ignore_index:
+			continue
+		var instance: Dictionary = modules[index]
 		if cell in occupied_cells(instance):
 			return true
 	return false
 
-func _has_exterior_capacity() -> bool:
+func _has_exterior_capacity(ignore_index: int = -1) -> bool:
 	var count := 0
-	for instance in modules:
+	for index in range(modules.size()):
+		if index == ignore_index:
+			continue
+		var instance: Dictionary = modules[index]
 		if bool(instance.get("exterior", false)):
 			count += 1
-	return count < 2
+	return count < MAX_EXTERIOR_MOUNTS
 
 func _has_engine() -> bool:
 	for instance in modules:

@@ -6,6 +6,8 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_placement_and_shape()
+	_test_rotation_reposition_and_removal()
+	_test_exterior_mount_rules()
 	_test_mass_and_power()
 	_test_travel_and_deterministic_threat()
 	_test_intervention_and_recovery()
@@ -33,6 +35,31 @@ func _test_placement_and_shape() -> void:
 	_expect(not overlap.ok, "overlapping modules should be rejected")
 	var outside := state.place_module("front_armor_plate", Vector2i(5, 3))
 	_expect(not outside.ok, "a two-cell module should not fit beyond the grid")
+
+func _test_rotation_reposition_and_removal() -> void:
+	var state := LongMarchState.new(1107)
+	var placed := state.place_module("ammunition_lift", Vector2i(0, 0))
+	_expect(placed.ok, "ammunition lift should place vertically")
+	_expect(Vector2i(0, 1) in state.occupied_cells(state.modules[0]), "unrotated lift should occupy two vertical cells")
+	var rotated := state.reposition_module_at(Vector2i(0, 0), Vector2i(1, 0), true)
+	_expect(rotated.ok, "installed modules should rotate and move atomically")
+	_expect(Vector2i(2, 0) in state.occupied_cells(state.modules[0]), "rotated lift should occupy two horizontal cells")
+	var restored := LongMarchState.new(0)
+	restored.load_serialized(state.serialize())
+	_expect(bool(restored.modules[0].get("rotated", false)), "save data should preserve module orientation")
+	_expect(Vector2i(2, 0) in restored.occupied_cells(restored.modules[0]), "restored rotation should preserve occupied cells")
+	var invalid := state.reposition_module_at(Vector2i(1, 0), Vector2i(5, 3), true)
+	_expect(not invalid.ok, "invalid reposition should be rejected")
+	_expect(Vector2i(2, 0) in state.occupied_cells(state.modules[0]), "failed reposition should preserve the old footprint")
+	var removed := state.remove_module_at(Vector2i(2, 0))
+	_expect(removed.ok and state.modules.is_empty(), "clicking any occupied cell should remove the whole module")
+
+func _test_exterior_mount_rules() -> void:
+	var state := LongMarchState.new(1107)
+	_expect(not state.place_module("shell_cannon", Vector2i(0, 0)).ok, "exterior modules should require an exterior mount")
+	_expect(state.place_module("shell_cannon", Vector2i(0, 0), true).ok, "shell cannon should use the first exterior mount")
+	_expect(state.place_module("repeater_gun", Vector2i(2, 0), true).ok, "repeater gun should use the second exterior mount")
+	_expect(not state.place_module("wall_lamp", Vector2i(3, 0), true).ok, "a third exterior module should exceed mount capacity")
 
 func _test_mass_and_power() -> void:
 	var state := LongMarchState.new(1107)
@@ -81,8 +108,10 @@ func _install_encounter_loadout(state: LongMarchState, include_signal: bool = fa
 func _test_city_journey_and_battle() -> void:
 	var state := LongMarchState.new(1107)
 	_install_encounter_loadout(state)
+	_expect(state.can_refit(), "the fortress should be refittable at Ashgate before departure")
 	var started := state.begin_journey("safe_road", "protect_cargo")
 	_expect(bool(started.get("ok", false)), "safe road should begin the Ashgate-to-Morrowline journey")
+	_expect(not state.can_refit(), "refit should lock after departure")
 	_expect(state.current_location == "rill_crossing", "safe road should place the fortress at Rill Crossing during the encounter")
 	_expect(state.encounter_enemies.size() == 2, "safe road should create two Road Raider contacts")
 	_expect(String(started.get("forecast", {}).get("target_class", "")).contains("cargo"), "safe road forecast should identify cargo pressure")

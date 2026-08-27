@@ -10,6 +10,7 @@ The repository contains an agent-first Godot project with:
 
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.
+- Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
 - Routes with distance, fuel, reward, and threat risk.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
