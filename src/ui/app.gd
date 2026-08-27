@@ -830,6 +830,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 func _show_pause() -> void:
 	if game_view == null or pause_view.visible:
 		return
+	_dismiss_checkpoint_toast()
 	var focus_owner := get_viewport().gui_get_focus_owner()
 	paused_stage_focus = focus_owner if focus_owner != null and game_view.is_ancestor_of(focus_owner) else null
 	_refresh_pause_summary()
@@ -844,7 +845,7 @@ func _refresh_pause_summary(message: String = "") -> void:
 	var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
 	var phase := String(run_state.get("phase")).replace("_", " ").capitalize()
 	var current_run_saved := _current_run_matches_save()
-	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed"))]
+	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
 	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."
 	if not message.is_empty():
@@ -923,6 +924,11 @@ func _show_checkpoint_toast(reason: String) -> void:
 	if not reduced_motion:
 		checkpoint_toast_tween.tween_property(checkpoint_toast, "modulate", Color(1.0, 1.0, 1.0, 0.0), 0.25)
 	checkpoint_toast_tween.tween_callback(func() -> void: checkpoint_toast.visible = false)
+
+func _dismiss_checkpoint_toast() -> void:
+	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
+		checkpoint_toast_tween.kill()
+	checkpoint_toast.visible = false
 
 func _save_and_return_to_title() -> void:
 	if _save_from_pause():
