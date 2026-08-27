@@ -96,6 +96,13 @@ func _run() -> void:
 
 	app.start_button.pressed.emit()
 	await process_frame
+	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "START NEW", "starting over with an autosave should explain when the previous save will be replaced")
+	_expect(app.confirmation_cancel_button.text == "KEEP SAVE", "the safe new-run confirmation action should preserve the existing save")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	app.start_button.pressed.emit()
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
 	await process_frame
 	_expect(not app.menu_view.visible and app.game_view != null, "Start Game should open the playable Ashgate stage")
 	_expect(app.game_view.state.phase == "refit", "a new stage should begin at the Ashgate refit")

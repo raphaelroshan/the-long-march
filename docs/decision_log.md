@@ -150,6 +150,8 @@ The exact application version appears on both the title and pause screens. A tes
 
 The title menu changes its primary action based on verified local state. Start Game is highlighted and focused when no compatible save exists; Continue becomes highlighted and focused after a manual or automatic save. This shortens the common resume path without making a corrupt save actionable.
 
+Starting a Guided or Quick run while a valid save exists now requires confirmation when autosave is enabled. The copy states that the old save remains intact until the new run reaches its first checkpoint. The safe cancellation action is labelled Keep Save and receives focus by default.
+
 ## 2026-08-27 — Autosaves follow confirmed state changes
 
 The application writes a silent local checkpoint after meaningful committed actions: refit changes, contract answers, route departures, authored event choices, specialist recruitment, encounter advancement, emergency interventions, and successful settlement services. Merely selecting a module or previewing a route does not save. The stage emits checkpoint intent while the application shell owns file persistence, preserving the separation between simulation and lifecycle policy. The pause summary names the latest checkpoint so testers can tell what Continue will restore.

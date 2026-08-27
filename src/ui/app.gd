@@ -755,10 +755,16 @@ func _saved_run_info() -> Dictionary:
 	return {"exists": true, "valid": true, "summary": "Saved · Day %d · %s · %d/5 encounters" % [int(parsed.get("day", 1)), location, int(parsed.get("campaign_encounters_completed", 0))]}
 
 func _start_new_game() -> void:
-	_open_stage(false, true)
+	_request_new_game(true)
 
 func _quick_start_game() -> void:
-	_open_stage(false, false)
+	_request_new_game(false)
+
+func _request_new_game(show_briefing: bool) -> void:
+	if autosave_enabled and bool(_saved_run_info().get("valid", false)):
+		_request_confirmation("new_guided" if show_briefing else "new_quick")
+		return
+	_open_stage(false, show_briefing)
 
 func _continue_game() -> void:
 	if not bool(_saved_run_info().get("valid", false)):
@@ -877,7 +883,7 @@ func _restart_game() -> void:
 	_open_stage(false, false)
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "title", "clear_save"]:
+	if action not in ["restart", "title", "clear_save", "new_guided", "new_quick"]:
 		return
 	pending_confirmation = action
 	if action == "restart":
@@ -888,10 +894,15 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Return without saving?"
 		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
 		confirmation_confirm_button.text = "RETURN"
-	else:
+	elif action == "clear_save":
 		confirmation_title_label.text = "Clear the local save?"
 		confirmation_body_label.text = "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
 		confirmation_confirm_button.text = "CLEAR SAVE"
+	else:
+		confirmation_title_label.text = "Begin a new march?"
+		confirmation_body_label.text = "Your existing save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march."
+		confirmation_confirm_button.text = "START NEW"
+	confirmation_cancel_button.text = "KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else "KEEP PLAYING"
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
@@ -903,6 +914,10 @@ func _cancel_confirmation() -> void:
 		restart_button.grab_focus()
 	elif previous_action == "clear_save":
 		clear_save_button.grab_focus()
+	elif previous_action == "new_quick":
+		quick_start_button.grab_focus()
+	elif previous_action == "new_guided":
+		start_button.grab_focus()
 	else:
 		title_button.grab_focus()
 
@@ -921,6 +936,10 @@ func _confirm_pending_action() -> void:
 		_refresh_title_state()
 		_refresh_settings("Local save cleared. Start Game begins a fresh march.")
 		clear_save_button.grab_focus()
+	elif action == "new_guided":
+		_open_stage(false, true)
+	elif action == "new_quick":
+		_open_stage(false, false)
 
 func _show_guide() -> void:
 	guide_view.visible = true
