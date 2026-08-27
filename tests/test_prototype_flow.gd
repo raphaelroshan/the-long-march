@@ -516,7 +516,7 @@ func _run() -> void:
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
 	_expect(game.results_group.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose replay and return-to-title actions")
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
-	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Systems:"), "the debrief card should retain the path and operating state needed to interpret the run")
+	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, doctrine, and named operating condition needed to interpret the run")
 	_expect(game.results_replay_label.text.begins_with("NEXT RUN"), "the result should offer a concrete replay goal")
 	var completed_path: Array[String] = game.state.campaign_path.duplicate()
 	var completed_encounters: int = game.state.campaign_encounters_completed
@@ -563,6 +563,7 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(game.results_summary_label.text.contains("Steam Lance Engine reached 0/4 durability"), "a movement failure should identify the disabled engine and its condition")
 	_expect(game.results_replay_label.text.contains("MOVEMENT FIRST") and game.results_replay_label.text.contains("Repair Steam Lance Engine"), "an engine failure should recommend repairing the system that ended the run")
+	_expect(game.results_record_label.text.contains("Damage: Steam Lance Engine 0/4") and game.results_record_label.text.contains("Unavailable: Steam Lance Engine"), "the run record should name the damaged and unavailable system instead of reporting only aggregate counts")
 	game.state.campaign_path = completed_path
 	game.state.campaign_encounters_completed = completed_encounters
 	game.state.hull_condition = completed_hull

@@ -2435,17 +2435,38 @@ func _result_record_text() -> String:
 	var stopping_line := ""
 	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
-	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nSystems: %d ready · %d strained · %d offline" % [
+	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_band().capitalize(),
 		state.campaign_pressure,
 		state.guard_contract_status.replace("_", " ").capitalize(),
 		specialist_name,
+		state.encounter_target_doctrine.replace("_", " ").capitalize(),
 		int(dependencies.get("ready", 0)),
 		int(dependencies.get("strained", 0)),
-		int(dependencies.get("offline", 0))
+		int(dependencies.get("offline", 0)),
+		_result_system_condition_text()
 	]
+
+func _result_system_condition_text() -> String:
+	var damaged: Array[String] = []
+	var unavailable: Array[String] = []
+	for module in state.modules:
+		var module_id := String(module.get("id", ""))
+		var definition := state.module_definition(module_id)
+		var module_name := String(definition.get("name", module_id.replace("_", " ").capitalize()))
+		var current := int(module.get("durability", 0))
+		var maximum := int(definition.get("durability", 0))
+		if current < maximum:
+			damaged.append("%s %d/%d" % [module_name, current, maximum])
+		var dependency := state.dependency_status(module)
+		if String(dependency.get("state", "offline")) != "offline":
+			continue
+		var reasons: Array = dependency.get("reasons", [])
+		var reason := String(reasons[0]) if not reasons.is_empty() else "unavailable"
+		unavailable.append("%s — %s" % [module_name, reason])
+	return "Damage: %s\nUnavailable: %s" % [", ".join(damaged) if not damaged.is_empty() else "none", "; ".join(unavailable) if not unavailable.is_empty() else "none"]
 
 func _service_action_count_text() -> String:
 	return "%d service action%s" % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s"]

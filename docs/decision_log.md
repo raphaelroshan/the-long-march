@@ -439,3 +439,7 @@ The Commit control presents day, fuel, and known pressure as before-and-after va
 ## 2026-08-28 — Debrief advice follows actual victory thresholds
 
 Result copy now treats final-contact defeat and seven remaining hull as the decisive thresholds implemented by the simulation. Contract status is recorded as run context rather than incorrectly presented as a victory requirement. Scarred runs distinguish hull-shortfall and surviving-contact causes; contact-only results name the remaining threat and its authored counter, while hull-shortfall results state exactly how many more hull points the next run needs.
+
+## 2026-08-28 — Run records name system condition
+
+The result card records the final doctrine and names every damaged or unavailable installed system with current durability and the first dependency reason. Aggregate ready, strained, and offline counts remain for scanning, but replay diagnosis no longer requires the tester to reconstruct specific system failures from the chassis after the run has ended.
