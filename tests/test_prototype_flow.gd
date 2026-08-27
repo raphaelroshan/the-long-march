@@ -249,6 +249,17 @@ func _run() -> void:
 	game.fortress_panel._gui_input(battle_chassis_select)
 	await process_frame
 	_expect(game.selected_module_id == "coal_cell" and game.intervention_buttons[1].has_focus() and game.intervention_buttons[1].text.contains("Coal Cell"), "selecting a combat system should return focus to the matching Seal order")
+	var original_raider: Dictionary = game.state.encounter_enemies[0].duplicate(true)
+	game.state.encounter_enemies[0]["arrived"] = true
+	game.state.encounter_enemies[0]["target"] = "coal_cell"
+	game._refresh_ui()
+	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL"), "battle inspection should name an active enemy target before the player enters the chassis")
+	game.fortress_panel.cursor_cell = Vector2i(5, 3)
+	game.combat_inspect_button.pressed.emit()
+	await process_frame
+	_expect(game.fortress_panel.cursor_cell == Vector2i(0, 1), "battle inspection should jump directly to the active target module")
+	game.state.encounter_enemies[0] = original_raider
+	game._refresh_ui()
 	game.fortress_panel.grab_focus()
 	var battle_chassis_cancel := InputEventAction.new()
 	battle_chassis_cancel.action = "ui_cancel"

@@ -1346,10 +1346,23 @@ func _focus_chassis_for_refit() -> void:
 func _focus_chassis_for_combat() -> void:
 	if state.phase not in ["battle", "final_battle"]:
 		return
-	if selected_module_cell.x >= 0:
+	var active_target_id := _active_combat_target_id()
+	if not active_target_id.is_empty():
+		for instance in state.modules:
+			if String(instance.get("id", "")) == active_target_id:
+				fortress_panel.cursor_cell = Vector2i(instance.get("position", Vector2i.ZERO))
+				break
+	elif selected_module_cell.x >= 0:
 		fortress_panel.cursor_cell = selected_module_cell
 	fortress_panel.queue_redraw()
 	fortress_panel.grab_focus()
+
+func _active_combat_target_id() -> String:
+	for enemy in state.encounter_enemies:
+		var target_id := String(enemy.get("target", ""))
+		if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull":
+			return target_id
+	return ""
 
 func _on_fortress_focus_exit_requested() -> void:
 	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(combat_inspect_button):
@@ -1861,7 +1874,12 @@ func _refresh_ui() -> void:
 		advance_encounter_button.text = _advance_encounter_action_text()
 	combat_inspect_button.visible = is_battle_phase
 	combat_inspect_button.disabled = not state.encounter_active
-	combat_inspect_button.text = "INSPECT CHASSIS · %s" % ("REVIEW DAMAGE" if state.encounter_intervention_used else "CHOOSE SEAL TARGET")
+	var active_combat_target_id := _active_combat_target_id()
+	if not active_combat_target_id.is_empty():
+		var active_combat_target_name := String(state.module_definition(active_combat_target_id).get("name", active_combat_target_id.replace("_", " ").capitalize()))
+		combat_inspect_button.text = "INSPECT TARGET · %s" % active_combat_target_name.to_upper()
+	else:
+		combat_inspect_button.text = "INSPECT CHASSIS · %s" % ("REVIEW DAMAGE" if state.encounter_intervention_used else "CHOOSE SEAL TARGET")
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
