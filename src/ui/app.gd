@@ -24,6 +24,7 @@ var guide_quick_start_button: Button
 var settings_close_button: Button
 var display_mode_button: Button
 var motion_button: Button
+var autosave_button: Button
 var reset_briefing_button: Button
 var clear_save_button: Button
 var settings_status_label: Label
@@ -45,6 +46,7 @@ var save_status_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
 var reduced_motion: bool = false
+var autosave_enabled: bool = true
 var settings_opened_from_pause: bool = false
 var last_checkpoint_reason: String = ""
 
@@ -400,11 +402,11 @@ func _build_settings_overlay() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	settings_view.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(620, 570)
+	panel.custom_minimum_size = Vector2(620, 660)
 	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#688587"), 2, 8, 28))
 	center.add_child(panel)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 12)
+	content.add_theme_constant_override("separation", 9)
 	panel.add_child(content)
 	var eyebrow := Label.new()
 	eyebrow.text = "APPLICATION SETTINGS"
@@ -419,11 +421,12 @@ func _build_settings_overlay() -> void:
 	var intro := Label.new()
 	intro.text = "Display and onboarding controls live outside campaign state. Changing them never alters the simulation or route seed."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro.custom_minimum_size = Vector2(550, 52)
+	intro.custom_minimum_size = Vector2(550, 44)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
 	display_mode_button = _settings_action(content, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	motion_button = _settings_action(content, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
+	autosave_button = _settings_action(content, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
 	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the five-part Marchmaster briefing on the next guided run.", _reset_briefing)
 	clear_save_button = _settings_action(content, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
 	settings_status_label = Label.new()
@@ -449,7 +452,7 @@ func _settings_action(parent: VBoxContainer, title: String, detail: String, call
 	label.add_theme_color_override("font_color", Color("#98a8aa"))
 	group.add_child(label)
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(0, 46)
+	button.custom_minimum_size = Vector2(0, 42)
 	button.tooltip_text = detail
 	button.pressed.connect(callback)
 	group.add_child(button)
@@ -625,6 +628,7 @@ func _load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
+		autosave_enabled = bool(config.get_value("gameplay", "autosave_enabled", true))
 
 func _build_version() -> String:
 	return "v%s" % String(ProjectSettings.get_setting("application/config/version", "development"))
@@ -632,6 +636,7 @@ func _build_version() -> String:
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
+	config.set_value("gameplay", "autosave_enabled", autosave_enabled)
 	config.save(SETTINGS_PATH)
 
 func _show_settings() -> void:
@@ -655,6 +660,7 @@ func _refresh_settings(message: String = "") -> void:
 	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen else "FULLSCREEN · OFF"
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
+	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
 	reset_briefing_button.text = "RESET COMPLETED BRIEFING" if briefing_complete else "BRIEFING · ENABLED FOR NEXT RUN"
 	reset_briefing_button.disabled = not briefing_complete
@@ -673,6 +679,12 @@ func _toggle_reduced_motion() -> void:
 	_save_preferences()
 	_refresh_settings("Reduced motion enabled." if reduced_motion else "Standard transition motion enabled.")
 	motion_button.grab_focus()
+
+func _toggle_autosave() -> void:
+	autosave_enabled = not autosave_enabled
+	_save_preferences()
+	_refresh_settings("Automatic checkpoints enabled." if autosave_enabled else "Automatic checkpoints disabled. Use Save March from the pause menu.")
+	autosave_button.grab_focus()
 
 func _reset_briefing() -> void:
 	var absolute_path := ProjectSettings.globalize_path(ONBOARDING_PATH)
@@ -772,6 +784,8 @@ func _refresh_pause_summary(message: String = "") -> void:
 	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed"))]
 	if not message.is_empty():
 		pause_save_status_label.text = message
+	elif not autosave_enabled:
+		pause_save_status_label.text = "Autosave is off · use Save March to preserve progress."
 	elif not last_checkpoint_reason.is_empty():
 		pause_save_status_label.text = "Autosaved · %s" % last_checkpoint_reason.replace("_", " ").capitalize()
 	elif FileAccess.file_exists(SAVE_PATH):
@@ -792,7 +806,7 @@ func _save_from_pause() -> bool:
 	return saved
 
 func _on_checkpoint_reached(reason: String) -> void:
-	if game_view == null:
+	if game_view == null or not autosave_enabled:
 		return
 	if bool(game_view.call("save_run", true)):
 		last_checkpoint_reason = reason

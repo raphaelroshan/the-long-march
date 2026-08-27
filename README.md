@@ -17,7 +17,7 @@ The repository contains an agent-first Godot project with:
 - Exact build identifiers on title and pause screens for reproducible playtest reports.
 - Silent local checkpoints after confirmed contracts, route departures, event choices, encounter steps, interventions, and settlement services.
 - Save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.
-- Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, briefing reset, and confirmed save clearing.
+- Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, autosave, briefing reset, and confirmed save clearing.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.

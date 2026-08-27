@@ -46,6 +46,12 @@ func _run() -> void:
 	app.motion_button.pressed.emit()
 	await process_frame
 	_expect(app.reduced_motion and FileAccess.file_exists(ProjectSettings.globalize_path(SETTINGS_PATH)), "reduced motion should persist as a local preference")
+	app.autosave_button.pressed.emit()
+	await process_frame
+	_expect(not app.autosave_enabled and app.autosave_button.text.contains("OFF"), "automatic checkpoints should be optional and visibly disabled")
+	app.autosave_button.pressed.emit()
+	await process_frame
+	_expect(app.autosave_enabled and app.autosave_button.text.contains("ON"), "automatic checkpoints should be restorable before a playtest")
 	app.settings_close_button.pressed.emit()
 	await process_frame
 	_expect(not app.settings_view.visible and app.settings_button.has_focus(), "closing Settings should restore title-menu focus")
