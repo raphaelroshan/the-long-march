@@ -118,6 +118,8 @@ Known nodes reveal exact threats, forecast nodes reveal hazard class and pressur
 
 Forecast and unscouted route details state how the player can improve that information: ready forecasting gear or Iven Pell reveals exact contacts, lowers route risk by up to eight percentage points, and reduces encounter pressure by one. Closed Signal Causeway guidance names the same two recovery paths, turning uncertainty into a build or recruitment objective without revealing the hidden contact list.
 
+Route inspection also breaks the current risk into authored baseline and player-controlled modifiers: blockade pressure, excess mass, overheat, earlier decisions, and forecasting. The heavy-fortress factor also names its additional fuel cost. Unscouted roads omit their hidden baseline and total while still naming visible modifiers, preserving uncertainty without obscuring the consequences of the player's own build and prior choices. Selecting a road collapses this explanatory detail so the map and Commit action remain adjacent.
+
 ## 2026-08-27 — Closure pressure removes advantage, not progression
 
 Watch, Closing, and Break are visible regional pressure bands. At Break, the optional Signal Causeway may close without reliable forecasting, but Lower Ash Road remains available. This establishes the campaign rule that time pressure can remove a safer or more informative option but cannot silently delete the only recovery or progression route.

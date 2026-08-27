@@ -386,7 +386,10 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
 	var signal_discount := 0.08 if informed else 0.0
 	var heat_penalty := 0.08 if predicted_heat > BASE_HEAT_LIMIT else 0.0
-	var risk := clampf(float(node.get("risk", 0.0)) + route_risk_modifier + campaign_pressure * 0.02 + float(mass_penalty) * 0.05 + heat_penalty - signal_discount, 0.0, 0.95)
+	var base_risk := float(node.get("risk", 0.0))
+	var blockade_risk := campaign_pressure * 0.02
+	var mass_risk := float(mass_penalty) * 0.05
+	var risk := clampf(base_risk + route_risk_modifier + blockade_risk + mass_risk + heat_penalty - signal_discount, 0.0, 0.95)
 	var pressure_gain := int(node.get("pressure", 1))
 	var encounter_difficulty := maxi(0, pressure_gain - (1 if informed else 0))
 	if predicted_heat > BASE_HEAT_LIMIT:
@@ -395,6 +398,19 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	if visibility == "known":
 		for enemy_id in node.get("encounter", []):
 			threat_names.append(String(ENCOUNTER_ENEMIES.get(String(enemy_id), {}).get("name", enemy_id)))
+	var risk_factors: Array[String] = []
+	if visibility != "unscouted":
+		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
+	if blockade_risk > 0.0:
+		risk_factors.append("blockade +%dpt" % roundi(blockade_risk * 100.0))
+	if mass_risk > 0.0:
+		risk_factors.append("heavy fortress +%dpt, +1 fuel" % roundi(mass_risk * 100.0))
+	if heat_penalty > 0.0:
+		risk_factors.append("overheat +%dpt" % roundi(heat_penalty * 100.0))
+	if route_risk_modifier != 0.0:
+		risk_factors.append("prior choices %s%dpt" % ["+" if route_risk_modifier > 0.0 else "-", roundi(absf(route_risk_modifier) * 100.0)])
+	if signal_discount > 0.0:
+		risk_factors.append("forecasting -%dpt" % roundi(signal_discount * 100.0))
 	return {
 		"ok": true,
 		"id": node_id,
@@ -404,6 +420,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"days": int(node.get("days", 0)),
 		"fuel": fuel_cost,
 		"risk": risk,
+		"risk_factors": risk_factors,
 		"pressure_gain": pressure_gain,
 		"encounter_pressure": encounter_difficulty,
 		"predicted_heat": predicted_heat,
