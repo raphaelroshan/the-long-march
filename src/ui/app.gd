@@ -92,7 +92,7 @@ func _ready() -> void:
 	_build_confirmation_overlay()
 	_build_checkpoint_toast()
 	_refresh_title_state()
-	start_button.grab_focus()
+	_focus_title_primary()
 
 func _build_title_menu() -> void:
 	menu_view = Control.new()
@@ -270,6 +270,10 @@ func _accent_button(button: Button) -> void:
 	button.add_theme_stylebox_override("hover", _flat_style(Color("#35695cf7"), Color("#adf0ce"), 2, 6, 12))
 	button.add_theme_stylebox_override("pressed", _flat_style(Color("#1c3e35f7"), Color("#ffffff"), 2, 6, 12))
 	button.add_theme_stylebox_override("focus", _flat_style(Color("#285348f7"), Color("#ffffff"), 3, 6, 11))
+
+func _clear_button_accent(button: Button) -> void:
+	for style_name in ["normal", "hover", "pressed", "focus"]:
+		button.remove_theme_stylebox_override(style_name)
 
 func _stage_rule(number: String, title: String, detail: String) -> Control:
 	var row := HBoxContainer.new()
@@ -720,6 +724,15 @@ func _refresh_title_state() -> void:
 	continue_button.disabled = not has_valid_save
 	continue_button.text = "CONTINUE SAVED MARCH" if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	save_status_label.text = String(save_info.get("summary", "No save yet · New runs save only when you choose Save."))
+	_clear_button_accent(start_button)
+	_clear_button_accent(continue_button)
+	_accent_button(continue_button if has_valid_save else start_button)
+
+func _focus_title_primary() -> void:
+	if not continue_button.disabled:
+		continue_button.grab_focus()
+	else:
+		start_button.grab_focus()
 
 func _saved_run_info() -> Dictionary:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -933,7 +946,7 @@ func _return_to_title() -> void:
 		old_game.queue_free()
 	menu_view.visible = true
 	_refresh_title_state()
-	start_button.grab_focus()
+	_focus_title_primary()
 
 func _quit_game() -> void:
 	get_tree().quit()

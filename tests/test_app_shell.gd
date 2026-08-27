@@ -136,6 +136,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
+	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 
 	app.continue_button.pressed.emit()
 	await process_frame

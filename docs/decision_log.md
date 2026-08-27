@@ -148,6 +148,8 @@ The results phase places Record Playtest Notes, Play Again, and Return to Title 
 
 The exact application version appears on both the title and pause screens. A tester can therefore include the build identifier in a screenshot or written report even when the stage is paused, without depending on filenames or external release notes.
 
+The title menu changes its primary action based on verified local state. Start Game is highlighted and focused when no compatible save exists; Continue becomes highlighted and focused after a manual or automatic save. This shortens the common resume path without making a corrupt save actionable.
+
 ## 2026-08-27 — Autosaves follow confirmed state changes
 
 The application writes a silent local checkpoint after meaningful committed actions: refit changes, contract answers, route departures, authored event choices, specialist recruitment, encounter advancement, emergency interventions, and successful settlement services. Merely selecting a module or previewing a route does not save. The stage emits checkpoint intent while the application shell owns file persistence, preserving the separation between simulation and lifecycle policy. The pause summary names the latest checkpoint so testers can tell what Continue will restore.
