@@ -186,6 +186,8 @@ Locked chassis guidance is phase-specific as well: battles mention damage and se
 
 When contact is already active, the inspection action names the first threatened system and opens the chassis cursor on that module. Before contact it remains a neutral seal-target picker. The urgent target is therefore one action away for controller users while the full grid remains available for choosing a different defensive sacrifice.
 
+When a new non-hull target first becomes active, it also becomes the default selected system for the Seal order. Subsequent refreshes do not overwrite a player's deliberate alternate selection; the automatic handoff happens only when the active target changes. The current order, Inspect Target action, chassis highlight, and Seal action therefore agree at first contact without removing tactical choice.
+
 An active contact's preview shows the target's current and predicted durability, flags a disabling hit or hull collapse, and names any damage absorbed by adjacent armor. The player can therefore compare advancing with sealing or another emergency order before the deterministic step resolves.
 
 `Cut Loose Cargo` names the exact installed module that its deterministic priority will sacrifice before the player commits the once-per-encounter order. Its visible label also warns whether that means losing shelter, repair supply, or a fuel feed; the result report repeats the discarded module. A desperate mobility action should be costly, not opaque.

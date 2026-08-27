@@ -149,6 +149,7 @@ var fortress_panel: Control
 var selected_module_id: String = ""
 var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
+var last_synced_combat_target_id: String = ""
 var show_onboarding_on_ready: bool = true
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
@@ -333,6 +334,7 @@ func _reset_state() -> void:
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
+	last_synced_combat_target_id = ""
 	result_recorded = false
 
 func _build_ui() -> void:
@@ -1366,6 +1368,21 @@ func _active_combat_target_id() -> String:
 			return target_id
 	return ""
 
+func _sync_new_active_combat_target() -> void:
+	if state.phase not in ["battle", "final_battle"]:
+		last_synced_combat_target_id = ""
+		return
+	var active_target_id := _active_combat_target_id()
+	if active_target_id.is_empty():
+		last_synced_combat_target_id = ""
+		return
+	if active_target_id == last_synced_combat_target_id:
+		return
+	last_synced_combat_target_id = active_target_id
+	selected_module_id = active_target_id
+	_sync_selected_module_context()
+	_select_module_option(active_target_id)
+
 func _on_fortress_focus_exit_requested() -> void:
 	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(combat_inspect_button):
 		_focus_control(combat_inspect_button)
@@ -1812,6 +1829,7 @@ func _refresh_campaign_controls() -> void:
 	recruit_iven_button.tooltip_text = "Adds exact immediate threat forecasts and storm navigation." if can_recruit_iven else recruit_reason
 
 func _refresh_ui() -> void:
+	_sync_new_active_combat_target()
 	_refresh_module_options()
 	var snapshot := state.summary()
 	var selected_definition := state.module_definition(selected_module_id)
