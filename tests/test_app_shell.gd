@@ -120,6 +120,8 @@ func _run() -> void:
 	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
 	_expect(not app.game_view.save_button.visible and not app.game_view.load_button.visible, "pause-owned persistence controls should not be duplicated in the live stage")
 
+	app.game_view._finish_onboarding(false)
+	await process_frame
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_view.visible, "the in-stage menu should pause the march")
@@ -130,6 +132,10 @@ func _run() -> void:
 	app.pause_briefing_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.onboarding_overlay.visible, "the pause menu should reopen the field briefing without leaving the run")
+	_expect(app.game_view.onboarding_skip_button.text == "CLOSE BRIEFING" and app.game_view.onboarding_progress_label.text.contains("Esc closes"), "a reopened briefing should use reference-mode close language")
+	app.game_view.onboarding_step = app.game_view.ONBOARDING_STEPS.size() - 1
+	app.game_view._refresh_onboarding()
+	_expect(app.game_view.onboarding_next_button.text == "RETURN TO MARCH", "the final reopened briefing step should return to the active march")
 	app.game_view._finish_onboarding(true)
 	await process_frame
 	app._show_pause()

@@ -121,6 +121,7 @@ var onboarding_back_button: Button
 var onboarding_next_button: Button
 var onboarding_skip_button: Button
 var onboarding_step: int = 0
+var onboarding_reopened: bool = false
 var feedback_overlay: Control
 var feedback_clear_text: TextEdit
 var feedback_confusing_text: TextEdit
@@ -857,6 +858,7 @@ func _build_feedback_overlay() -> void:
 	content.add_child(actions)
 
 func _show_onboarding(reopened: bool = false) -> void:
+	onboarding_reopened = reopened
 	onboarding_step = 0
 	onboarding_overlay.visible = true
 	_refresh_onboarding()
@@ -869,7 +871,7 @@ func _refresh_onboarding() -> void:
 	onboarding_title_label.text = String(step.title)
 	onboarding_body_label.text = String(step.body)
 	onboarding_action_label.text = String(step.action)
-	onboarding_progress_label.text = "Briefing %d of %d  ·  Arrows or Tab move focus  ·  Enter confirms  ·  Esc skips" % [onboarding_step + 1, ONBOARDING_STEPS.size()]
+	onboarding_progress_label.text = "Briefing %d of %d  ·  Arrows or Tab move focus  ·  Enter confirms  ·  Esc %s" % [onboarding_step + 1, ONBOARDING_STEPS.size(), "closes" if onboarding_reopened else "skips"]
 	for index in range(onboarding_step_panels.size()):
 		var panel := onboarding_step_panels[index]
 		var label := onboarding_step_labels[index]
@@ -886,7 +888,8 @@ func _refresh_onboarding() -> void:
 			label.text = "— %s" % ONBOARDING_LABELS[index]
 			label.add_theme_color_override("font_color", Color("#738286"))
 	onboarding_back_button.disabled = onboarding_step == 0
-	onboarding_next_button.text = "ENTER ASHGATE" if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
+	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER ASHGATE") if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
+	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP BRIEFING"
 
 func _on_onboarding_back() -> void:
 	onboarding_step = maxi(0, onboarding_step - 1)
@@ -900,11 +903,14 @@ func _on_onboarding_next() -> void:
 	_refresh_onboarding()
 
 func _finish_onboarding(skipped: bool) -> void:
-	var marker := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
-	if marker != null:
-		marker.store_string(String(ProjectSettings.get_setting("application/config/version", "unknown")))
+	var was_reopened := onboarding_reopened
+	if not was_reopened:
+		var marker := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
+		if marker != null:
+			marker.store_string(String(ProjectSettings.get_setting("application/config/version", "unknown")))
 	onboarding_overlay.visible = false
-	_journal_event("onboarding_skipped" if skipped else "onboarding_completed", {"step_reached": onboarding_step + 1})
+	_journal_event("onboarding_closed" if was_reopened else ("onboarding_skipped" if skipped else "onboarding_completed"), {"step_reached": onboarding_step + 1})
+	onboarding_reopened = false
 	focus_current_action.call_deferred()
 
 func _show_feedback() -> void:
