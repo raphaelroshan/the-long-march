@@ -287,11 +287,11 @@ func _run() -> void:
 	target_enemy["arrived"] = true
 	target_enemy["defeated"] = false
 	target_enemy["target"] = "coal_cell"
-	target_enemy["impact"] = {"damage": 1}
+	target_enemy["impact"] = {"damage": 1, "current_durability": 1, "remaining_durability": 0, "armor_absorbed": 1}
 	target_card_preview.enemies[0] = target_enemy
 	target_card_preview["target_names"] = {"hull": "Hull", "coal_cell": "Coal Cell"}
 	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
-	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL · NEXT HIT · 1 DAMAGE") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose the exact next resolved damage")
+	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR ABSORBS 1") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose damage, absorption, remaining durability, and disablement")
 	game._refresh_ui()
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")

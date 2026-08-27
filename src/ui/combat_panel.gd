@@ -167,7 +167,16 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 		var contact_state := "CLEARED" if defeated and enemy_id == "storm_front" else ("DEFEATED" if defeated else ("CONTACT" if arrived else "APPROACHING · %d STEP%s OUT" % [steps_out, "" if steps_out == 1 else "S"]))
 		var target_name := String(target_names.get(target, target.replace("_", " ").capitalize()))
 		var impact: Dictionary = enemy.get("impact", {})
-		var target_text := "\nTARGET · %s · NEXT HIT · %d DAMAGE" % [target_name.to_upper(), int(impact.get("damage", 0))] if arrived and not target.is_empty() and not defeated and not impact.is_empty() else ""
+		var target_text := ""
+		if arrived and not target.is_empty() and not defeated and not impact.is_empty():
+			var damage := int(impact.get("damage", 0))
+			var current_durability := int(impact.get("current_durability", 0))
+			var remaining_durability := int(impact.get("remaining_durability", maxi(0, current_durability - damage)))
+			var terminal_warning := " · HULL COLLAPSE" if target == "hull" and remaining_durability <= 0 else (" · DISABLES SYSTEM" if remaining_durability <= 0 else "")
+			target_text = "\nTARGET · %s\nNEXT · %d DAMAGE · %d→%d%s" % [target_name.to_upper(), damage, current_durability, remaining_durability, terminal_warning]
+			var armor_absorbed := int(impact.get("armor_absorbed", 0))
+			if armor_absorbed > 0:
+				target_text += "\nARMOR ABSORBS %d" % armor_absorbed
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
 		enemy_counters[index].text = "Counter: %s" % String(definition.get("counter", "unknown"))
