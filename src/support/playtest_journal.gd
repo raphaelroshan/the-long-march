@@ -52,7 +52,7 @@ func export_feedback(
 ) -> Dictionary:
 	var destination := output_path
 	if destination.is_empty():
-		destination = "user://the_long_march_feedback_%d.json" % _now()
+		destination = _available_feedback_path(_now())
 	var file := FileAccess.open(destination, FileAccess.WRITE)
 	if file == null:
 		return {"ok": false, "reason": error_string(FileAccess.get_open_error())}
@@ -74,3 +74,12 @@ func export_feedback(
 	}
 	file.store_string(JSON.stringify(payload, "\t"))
 	return {"ok": true, "path": ProjectSettings.globalize_path(destination), "payload": payload}
+
+func _available_feedback_path(timestamp: int) -> String:
+	var base_path := "user://the_long_march_feedback_%d.json" % timestamp
+	if not FileAccess.file_exists(base_path):
+		return base_path
+	var copy_number := 2
+	while FileAccess.file_exists("user://the_long_march_feedback_%d_%d.json" % [timestamp, copy_number]):
+		copy_number += 1
+	return "user://the_long_march_feedback_%d_%d.json" % [timestamp, copy_number]

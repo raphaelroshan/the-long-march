@@ -11,7 +11,9 @@ func _expect(condition: bool, message: String) -> void:
 func _init() -> void:
 	var journal_path := "user://the_long_march_journal_test.json"
 	var feedback_path := "user://the_long_march_feedback_test.json"
-	for path in [journal_path, feedback_path]:
+	var automatic_feedback_path := "user://the_long_march_feedback_1700000000.json"
+	var automatic_feedback_copy_path := "user://the_long_march_feedback_1700000000_2.json"
+	for path in [journal_path, feedback_path, automatic_feedback_path, automatic_feedback_copy_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
@@ -29,8 +31,12 @@ func _init() -> void:
 	_expect(String(feedback_data.get("build_version", "")) == "0.3.0-test", "feedback should identify the exact playtest build")
 	_expect(int(feedback_data.get("answers", {}).get("replay_score", 0)) == 4, "feedback should preserve the replay score")
 	_expect(String(feedback_data.get("final_state", {}).get("final_result", "")) == "scarred_march", "feedback should include the final prototype state")
+	var first_automatic: Dictionary = journal.export_feedback("First", "", 3, {"phase": "results"}, "0.3.0-test")
+	var second_automatic: Dictionary = journal.export_feedback("Second", "", 3, {"phase": "results"}, "0.3.0-test")
+	_expect(String(first_automatic.get("path", "")) != String(second_automatic.get("path", "")), "rapid feedback saves should receive distinct filenames")
+	_expect(FileAccess.file_exists(String(first_automatic.get("path", ""))) and FileAccess.file_exists(String(second_automatic.get("path", ""))), "each repeated feedback save should remain available")
 
-	for path in [journal_path, feedback_path]:
+	for path in [journal_path, feedback_path, automatic_feedback_path, automatic_feedback_copy_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	if failures.is_empty():
