@@ -290,7 +290,7 @@ func _build_title_menu() -> void:
 	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once, and recover at Morrowline."))
 
 	var controls := Label.new()
-	controls.text = "MOUSE · KEYBOARD · CONTROLLER\nA / Enter confirms  ·  B / Esc pauses or returns"
+	controls.text = "MOUSE · KEYBOARD · CONTROLLER\nD-pad / arrows move  ·  A / Enter confirms  ·  B / Esc closes panels"
 	controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	controls.add_theme_font_size_override("font_size", 12)
 	controls.add_theme_color_override("font_color", Color("#aab6ba"))

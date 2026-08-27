@@ -467,3 +467,7 @@ Restart confirmation inspects the local checkpoint before describing what surviv
 ## 2026-08-28 — Skipping does not complete the briefing
 
 The first-run briefing distinguishes temporary dismissal from completion. Skip and B/Esc now close it for the current run without writing the completed marker, while advancing through all four cards still suppresses it on later guided starts. This prevents an accidental cancel input from permanently hiding onboarding and keeps the existing Settings reset limited to genuinely completed briefings.
+
+## 2026-08-28 — Control hints describe the current screen
+
+The title footer describes directional navigation, confirmation, and closing title panels. It no longer borrows the in-stage claim that B/Esc pauses the game, which was inaccurate while no march was running. Pause and briefing overlays retain their own contextual cancel hints.
