@@ -414,6 +414,7 @@ func _build_ui() -> void:
 	guidance_label = Label.new()
 	guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guidance_label.custom_minimum_size = Vector2(320, 54)
+	guidance_label.add_theme_font_size_override("font_size", 14)
 	guidance_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	controls.add_child(guidance_label)
 
@@ -1443,17 +1444,7 @@ func _refresh_ui() -> void:
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	_refresh_run_flow_tracker()
 	results_group.visible = state.phase == "results"
-	match state.phase:
-		"refit":
-			guidance_label.text = "NEXT — Configure dependencies, answer the contract, then select and commit to a highlighted map node."
-		"map":
-			guidance_label.text = "NEXT — Resolve any local decision, select a cyan map node, review it, then commit."
-		"battle", "final_battle":
-			guidance_label.text = "NEXT — Advance one step, read each target and causal line, then spend at most one emergency order."
-		"settlement":
-			guidance_label.text = "NEXT — Spend up to two service actions, refit around the damage, then choose a doctrine for Meridian Pass."
-		"results":
-			guidance_label.text = "RUN COMPLETE — Inspect the surviving systems, then save a local playtest feedback bundle while the decisions are fresh."
+	guidance_label.text = _current_guidance()
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
 	refit_title.visible = is_refit_phase
 	module_group.visible = is_refit_phase
@@ -1542,7 +1533,8 @@ func _refresh_ui() -> void:
 		var last_consequence := state.encounter_report[-1] if not state.encounter_report.is_empty() else "The road is clear."
 		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step(s)\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, String(last_consequence)]
 	else:
-		encounter_label.text = "NO ACTIVE CONTACT\nChoose a highlighted route when the fortress is ready."
+		var waiting_instruction := "Answer the Ashgate convoy contract to open the first roads." if state.guard_contract_status == "offered" else ("Select a cyan route and review its costs." if selected_campaign_node_id.is_empty() else "Review the selected route, then commit when ready.")
+		encounter_label.text = "NO ENCOUNTER UNDERWAY\n%s" % waiting_instruction
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
 	for index in range(start, state.log.size()):
@@ -1562,6 +1554,26 @@ func _refresh_ui() -> void:
 				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
 	_ensure_current_focus()
+
+func _current_guidance() -> String:
+	if state.phase == "results":
+		return "RUN COMPLETE · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
+	if state.phase in ["battle", "final_battle"]:
+		if state.encounter_intervention_used:
+			return "CURRENT ORDER · The emergency order is spent. Read the highlighted target and advance one encounter step."
+		return "CURRENT ORDER · Read the highlighted target, then advance one encounter step. One emergency order remains."
+	if not state.campaign_event_pending.is_empty():
+		return "DECISION REQUIRED · Resolve the local event below before the fortress can depart."
+	if state.guard_contract_status == "offered":
+		return "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
+	if not selected_campaign_node_id.is_empty():
+		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
+		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit." % node_name
+	if state.phase == "settlement":
+		return "RECOVERY · %d service action(s) remain. Repair or refuel, refit freely, then choose the next road." % state.settlement_actions_remaining
+	if state.campaign_active and state.phase in ["refit", "map"]:
+		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
+	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
 
 class FortressPanel extends Control:
 	signal grid_cell_pressed(cell: Vector2i)

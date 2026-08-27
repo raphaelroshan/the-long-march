@@ -4,7 +4,7 @@
 
 This playtest is about two connected questions: can a player understand how a fortress layout causes a battle outcome, and can they use incomplete map information to plan five encounters? It is not a content-volume test. A useful session is one complete attempt from Ashgate Depot to Meridian Pass, including contract, route decisions, Morrowline recovery, retreat, or failure.
 
-The build opens with a five-part Marchmaster briefing. **How to play** reopens it at any time. The green **NEXT** line on the Marchmaster's Desk gives one contextual instruction for the current phase without prescribing a winning layout.
+The build opens with a four-part Marchmaster briefing. **How to play** reopens it at any time. The green current-order line on the Marchmaster's Desk follows the active decision—contract, route preview, battle, recovery, or result—without prescribing a winning layout.
 
 ## Suggested session
 

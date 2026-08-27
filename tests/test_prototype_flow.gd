@@ -23,6 +23,7 @@ func _press_campaign_node(node_id: String) -> void:
 			button.pressed.emit()
 			await process_frame
 			_expect(game.selected_campaign_node_id == node_id and game.state.phase in ["refit", "map", "settlement"], "selecting a map node should wait for explicit route confirmation: " + node_id)
+			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
 			_expect(game.campaign_map.commit_button.has_focus(), "route selection should move keyboard or controller focus to confirmation")
 			game.campaign_map.commit_button.pressed.emit()
@@ -66,6 +67,7 @@ func _run() -> void:
 	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
 	_expect(game.ONBOARDING_STEPS.size() == 4 and game.onboarding_step_panels.size() == 4, "the guided briefing should use four concise, visible stages")
 	_expect(game.onboarding_action_label.text.begins_with("FIRST ACTION"), "each briefing page should name a concrete player action")
+	_expect(game.guidance_label.text.begins_with("CURRENT ORDER") and game.guidance_label.text.contains("convoy"), "the opening objective should identify the contract decision")
 	for _step in range(game.ONBOARDING_STEPS.size()):
 		if _step == game.ONBOARDING_STEPS.size() - 1:
 			_expect(game.onboarding_next_button.text == "ENTER ASHGATE", "the final briefing action should clearly enter the playable stage")
@@ -82,6 +84,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
+	_expect(game.guidance_label.text.contains("Select one cyan route"), "the objective should advance immediately after the contract is answered")
 	_expect(game.current_run_flow_step == 1 and game.run_flow_labels[0].text.begins_with("✓"), "answering the contract should advance the tracker to the Lowlands roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
