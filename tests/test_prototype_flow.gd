@@ -83,6 +83,16 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	await process_frame
+	var combat_receipt: String = game.combat_panel._latest_causal_lines([
+		"Step 3: the road pressure advances.",
+		"Shell Cannon fires a burst into the Burrower.",
+		"Lower Hull Plate absorbs 2 damage intended for Coal Cell.",
+		"Burrower hits Coal Cell for 1; durability is 0.",
+		"Dependency change: March Engine is now offline — engine has no adjacent Coal Cell.",
+		"Field Workshop restores Coal Cell by 1 durability."
+	])
+	_expect(combat_receipt.contains("Lower Hull Plate absorbs") and combat_receipt.contains("Burrower hits Coal Cell") and combat_receipt.contains("March Engine is now offline") and combat_receipt.contains("Field Workshop restores"), "the combat receipt should preserve the latest impact from mitigation through dependency failure and repair")
+	_expect(not combat_receipt.contains("Shell Cannon fires"), "the combat receipt should prefer the latest incoming cause-and-effect chain over older outgoing detail")
 	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
 	_expect(game.ONBOARDING_STEPS.size() == 4 and game.onboarding_step_panels.size() == 4, "the guided briefing should use four concise, visible stages")
 	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_skip_button, "the first briefing step should route left around its disabled Previous action")

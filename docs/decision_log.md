@@ -174,6 +174,8 @@ Route inspection remains available when the fortress cannot move. The selected r
 
 The alpha battle view uses enemy cards, arrival timing, target labels, counters, a six-step timeline, and the latest causal report lines. Targeted modules receive a visible chassis outline and every module shows durability. Emergency orders state both their benefit and cost. Animation and effects should reinforce this information later rather than replace it.
 
+The latest causal report preserves one complete incoming chain: mitigation immediately before the hit, the hit itself, and up to three subsequent dependency, repair, heat, or outcome lines. It scopes that receipt to the latest combat step and only falls back to recent general activity when no enemy impact occurred, preventing verbose weapon behavior from pushing the decisive failure off screen.
+
 Combat timing is expressed relative to the present state. Approaching enemy cards count down the steps until arrival, the timeline distinguishes Done from Next, the primary button names the exact step it will resolve, and the desk order mentions either the nearest arrival or the systems currently under threat. This avoids asking the player to inspect a target that does not exist yet.
 
 During combat, Advance, every currently available emergency order, and Field Briefing form one explicit vertical and Tab loop. Once the encounter's single intervention is spent, its disabled actions leave that loop automatically, keeping controller focus on commands that can still respond.

@@ -92,14 +92,42 @@ func _panel_style(background: Color, border: Color, width: int = 1) -> StyleBoxF
 	return style
 
 func _latest_causal_lines(report: Array) -> String:
+	var latest_step_index := -1
+	for index in range(report.size()):
+		if String(report[index]).begins_with("Step "):
+			latest_step_index = index
 	var useful: Array[String] = []
-	for raw_line in report:
+	for index in range(latest_step_index + 1, report.size()):
+		var raw_line = report[index]
 		var line := String(raw_line)
 		if line.begins_with("Forecast:") or line.begins_with("Route:") or line.begins_with("Step "):
 			continue
 		useful.append(line)
-	var recent := useful.slice(maxi(0, useful.size() - 2), useful.size())
-	return "\n".join(recent) if not recent.is_empty() else "Advance one step to reveal attacks, targets, and dependency changes."
+	if useful.is_empty():
+		return "Advance one step to reveal attacks, targets, and dependency changes."
+
+	var latest_impact_index := -1
+	for index in range(useful.size() - 1, -1, -1):
+		var line := useful[index]
+		if " hits " in line or "reaches the hull" in line:
+			latest_impact_index = index
+			break
+	if latest_impact_index < 0:
+		return "\n".join(useful.slice(maxi(0, useful.size() - 3), useful.size()))
+
+	var receipt: Array[String] = []
+	var consequence_count := useful.size() - latest_impact_index - 1
+	if consequence_count < 3:
+		for index in range(latest_impact_index - 1, -1, -1):
+			var context := useful[index]
+			if " absorbs " in context or context.begins_with("Protect ") or context.begins_with("Run Hot ") or context.begins_with("Open heat vents "):
+				receipt.push_front(context)
+				break
+	receipt.append(useful[latest_impact_index])
+	var consequence_start := maxi(latest_impact_index + 1, useful.size() - 3)
+	for index in range(consequence_start, useful.size()):
+		receipt.append(useful[index])
+	return "\n".join(receipt)
 
 func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 	var step := int(view.get("step", 0))
