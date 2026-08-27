@@ -767,7 +767,7 @@ func _build_onboarding_overlay() -> void:
 	onboarding_action_label.add_theme_color_override("font_color", Color("#aee4cf"))
 	action_panel.add_child(onboarding_action_label)
 	onboarding_progress_label = Label.new()
-	onboarding_progress_label.text = "Arrows or Tab move focus · Enter confirms · Esc skips"
+	onboarding_progress_label.text = "D-pad / arrows or Tab move · A / Enter confirms · B / Esc skips"
 	onboarding_progress_label.add_theme_color_override("font_color", Color("#8fa3a7"))
 	content.add_child(onboarding_progress_label)
 	var actions := HBoxContainer.new()
@@ -883,7 +883,7 @@ func _refresh_onboarding() -> void:
 	onboarding_title_label.text = String(step.title)
 	onboarding_body_label.text = String(step.body)
 	onboarding_action_label.text = String(step.action)
-	onboarding_progress_label.text = "Briefing %d of %d  ·  Arrows or Tab move focus  ·  Enter confirms  ·  Esc %s" % [onboarding_step + 1, ONBOARDING_STEPS.size(), "closes" if onboarding_reopened else "skips"]
+	onboarding_progress_label.text = "Briefing %d of %d  ·  D-pad / arrows or Tab move  ·  A / Enter confirms  ·  B / Esc %s" % [onboarding_step + 1, ONBOARDING_STEPS.size(), "closes" if onboarding_reopened else "skips"]
 	for index in range(onboarding_step_panels.size()):
 		var panel := onboarding_step_panels[index]
 		var label := onboarding_step_labels[index]

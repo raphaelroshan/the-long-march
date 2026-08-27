@@ -289,7 +289,7 @@ func _build_title_menu() -> void:
 	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once, and recover at Morrowline."))
 
 	var controls := Label.new()
-	controls.text = "MOUSE · KEYBOARD · CONTROLLER\nEnter confirms  ·  Esc pauses or returns"
+	controls.text = "MOUSE · KEYBOARD · CONTROLLER\nA / Enter confirms  ·  B / Esc pauses or returns"
 	controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	controls.add_theme_font_size_override("font_size", 12)
 	controls.add_theme_color_override("font_color", Color("#aab6ba"))
@@ -539,7 +539,8 @@ func _settings_action(parent: VBoxContainer, title: String, detail: String, call
 	group.add_theme_constant_override("separation", 3)
 	parent.add_child(group)
 	var label := Label.new()
-	label.text = title
+	label.text = "%s · %s" % [title, detail]
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 11)
 	label.add_theme_color_override("font_color", Color("#98a8aa"))
 	group.add_child(label)
