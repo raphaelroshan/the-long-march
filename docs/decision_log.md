@@ -180,6 +180,8 @@ Menu and stage transitions explicitly hand keyboard/controller focus to the next
 
 The title screen additionally defines explicit directional neighbors across its vertical start actions and horizontal utility row. Controller movement therefore follows the reading order and loops back to the primary action instead of depending on engine heuristics that can change with label width or save-state text.
 
+The field guide, pause menu, and confirmation dialog use the same explicit-neighbor rule for paired actions and stacked rows. Their safe or primary control still receives focus on entry, while directional input now follows the visible grouping consistently across every application-level modal.
+
 Focus handoff also scrolls the Marchmaster's Desk until the target control is fully visible. Logical focus alone was insufficient because the route map and later encounter actions can sit below the 720p fold. Automated flow coverage now checks both focus ownership and viewport containment after the contract and first route commitment.
 
 When the focused action and current-order text fit in the viewport together, scrolling preserves both rather than aligning only the control. This matters for taller commitment cards and doctrine warnings: the player should never have to choose between seeing what to press and why they are pressing it.

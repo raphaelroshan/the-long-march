@@ -72,6 +72,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.guide_view.visible, "Field Guide should open without starting a run")
 	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
+	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_left) == app.guide_close_button, "the field guide should have explicit horizontal controller navigation")
 	app.guide_close_button.pressed.emit()
 	await process_frame
 	_expect(not app.guide_view.visible and app.guide_button.has_focus(), "closing the field guide should restore title-menu focus")
@@ -137,6 +138,7 @@ func _run() -> void:
 	_expect(app.pause_view.visible, "the in-stage menu should pause the march")
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
+	_expect(app.resume_button.get_node_or_null(app.resume_button.focus_neighbor_bottom) == app.pause_save_button and app.pause_save_button.get_node_or_null(app.pause_save_button.focus_neighbor_right) == app.save_return_button, "the pause menu should have explicit directional navigation")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
 	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
 	app.pause_briefing_button.pressed.emit()
@@ -164,6 +166,7 @@ func _run() -> void:
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "restart should require confirmation before discarding progress")
+	_expect(app.confirmation_cancel_button.get_node_or_null(app.confirmation_cancel_button.focus_neighbor_right) == app.confirmation_confirm_button, "confirmation actions should have explicit horizontal controller navigation")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
 	app.pause_save_button.pressed.emit()
