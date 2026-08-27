@@ -2237,6 +2237,15 @@ class FortressPanel extends Control:
 			return "CHASSIS EDIT MODE — arrows move · A acts · B returns"
 		return "CHASSIS INSPECTION — arrows move · A selects · B returns"
 
+	func locked_mode_help_text() -> String:
+		if state == null:
+			return "Chassis data is unavailable."
+		if state.phase in ["battle", "final_battle"]:
+			return "Select another module to inspect battle damage or choose a seal target."
+		if state.phase == "results":
+			return "Select another module to review the fortress that reached the result."
+		return "Refit is unavailable between road stops; inspect system condition here."
+
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			var next_cell := _cell_from_point(event.position)
@@ -2336,7 +2345,7 @@ class FortressPanel extends Control:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), placement_status_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, status_color)
 			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · A confirms · B returns", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
-			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 228), locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)

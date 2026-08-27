@@ -305,6 +305,7 @@ func _run() -> void:
 	await _press_campaign_node("broken_relay")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_event_pending == "lost_signal", "the Broken Relay should surface its authored decision")
+	_expect(game.fortress_panel.locked_mode_help_text().contains("between road stops") and not game.fortress_panel.locked_mode_help_text().contains("battle damage"), "map-event chassis guidance should not describe the current phase as a battle")
 	_expect(game.campaign_map.status_for("morrowline_camp") == "blocked", "the map should show that a local decision blocks the next road")
 	_expect(game.campaign_event_buttons[0].disabled and game.campaign_event_buttons[0].text.contains("REQUIRES AN OPERATIONAL SIGNAL SYSTEM"), "locked event choices should state their missing capability without requiring hover")
 	await _press_campaign_event("move_silent")

@@ -164,6 +164,8 @@ Battle controls include a dedicated `Inspect Chassis` action in that loop. Keybo
 
 The focused chassis names its mode explicitly. Planning phases say `Chassis Edit Mode`, while battles say `Chassis Inspection` and describe A/Enter as selection rather than editing. The same grid interaction can therefore serve both phases without promising an unavailable move or placement action.
 
+Locked chassis guidance is phase-specific as well: battles mention damage and seal targets, results invite inspection of the surviving fortress, and map decisions explain that refitting resumes only at a road stop. The persistent chassis no longer labels every non-refit state as combat.
+
 When contact is already active, the inspection action names the first threatened system and opens the chassis cursor on that module. Before contact it remains a neutral seal-target picker. The urgent target is therefore one action away for controller users while the full grid remains available for choosing a different defensive sacrifice.
 
 `Cut Loose Cargo` names the exact installed module that its deterministic priority will sacrifice before the player commits the once-per-encounter order. Its visible label also warns whether that means losing shelter, repair supply, or a fuel feed; the result report repeats the discarded module. A desperate mobility action should be costly, not opaque.
