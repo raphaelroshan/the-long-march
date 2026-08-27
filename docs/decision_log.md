@@ -154,6 +154,8 @@ During combat, Advance, every currently available emergency order, and Field Bri
 
 Combat describes the intervention budget consistently as one emergency order rather than exposing the underlying two-point legacy value beside a once-per-encounter lock. After any order, the immediate report names its concrete outcome: power and heat change, sealed module and downtime, heat removed and exposure, or discarded cargo and reduced incentive.
 
+That exact outcome is authored once by the simulation and reused by both the immediate status line and the lasting encounter report. The explanation therefore survives the next input, enters saved deterministic state and playtest evidence, and cannot drift between two UI-specific summaries.
+
 The combat header names the next action as `Next step 1/6` rather than presenting the internal zero-based count as `Step 0/6`. Header, timeline, and Advance button now agree before and after every resolution.
 
 ## 2026-08-27 — The application shell starts outside the simulation

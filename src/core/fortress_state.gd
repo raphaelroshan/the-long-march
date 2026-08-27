@@ -1695,8 +1695,24 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 	var result: Dictionary = intervene(intervention_id, target_module)
 	if bool(result.get("ok", false)):
 		encounter_intervention_used = true
-		_encounter_log("Intervention: %s." % intervention_id.replace("_", " ").capitalize())
+		var effect := _intervention_effect_text(intervention_id, result)
+		result["effect"] = effect
+		_encounter_log("Intervention: %s." % effect)
 	return result
+
+func _intervention_effect_text(intervention_id: String, result: Dictionary) -> String:
+	match intervention_id:
+		"shift_power":
+			return "Weapon priority set; weapon output +1, heat +%d" % int(result.get("heat_change", 1))
+		"seal_compartment":
+			var target_module := String(result.get("target_module", "module"))
+			return "%s sealed; protected from targeting, offline until the encounter ends" % String(module_definition(target_module).get("name", target_module))
+		"vent_heat":
+			return "%d heat vented; the next exterior hit deals +1 damage" % int(result.get("heat_removed", 0))
+		"cut_loose_cargo":
+			var removed_module := String(result.get("removed_module", "cargo"))
+			return "%s discarded; mass and cargo incentive reduced" % String(module_definition(removed_module).get("name", removed_module))
+	return intervention_id.replace("_", " ").capitalize()
 
 func _all_encounter_enemies_defeated() -> bool:
 	if encounter_enemies.is_empty():

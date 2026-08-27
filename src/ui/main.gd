@@ -1579,21 +1579,7 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 	if not result.ok:
 		_set_event("Intervention blocked: %s." % result.reason)
 	else:
-		var intervention_result := ""
-		match intervention_id:
-			"shift_power":
-				intervention_result = "Weapon priority set — weapon output +1, heat +%d" % int(result.get("heat_change", 1))
-			"seal_compartment":
-				var sealed_module := String(result.get("target_module", target_module))
-				intervention_result = "%s sealed — protected from targeting, offline until the encounter ends" % String(state.module_definition(sealed_module).get("name", sealed_module))
-			"vent_heat":
-				intervention_result = "%d heat vented — the next exterior hit deals +1 damage" % int(result.get("heat_removed", 0))
-			"cut_loose_cargo":
-				var removed_module := String(result.get("removed_module", "cargo"))
-				intervention_result = "%s discarded — mass and cargo incentive reduced" % String(state.module_definition(removed_module).get("name", removed_module))
-			_:
-				intervention_result = intervention_id.replace("_", " ").capitalize()
-		_set_event("Intervention used: %s." % intervention_result)
+		_set_event("Intervention used: %s." % String(result.get("effect", intervention_id.replace("_", " ").capitalize())))
 		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
 		_checkpoint("intervention_used")
 	_refresh_ui()
