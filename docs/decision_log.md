@@ -148,6 +148,8 @@ The pause menu compares the live campaign snapshot with the local save whenever 
 
 Pausing also dismisses transient checkpoint toasts and presents fuel, hull, and heat beside the route position. The modal therefore becomes a stable decision snapshot rather than allowing short-lived notifications to overlap it or forcing the player to resume just to check whether the fortress is in immediate danger.
 
+When a valid local save exists, the primary Continue action names its day and location before loading; the supporting line carries phase and encounter progress. This keeps the choice scannable while giving returning playtesters enough context to recognize the run they are about to resume.
+
 The title menu separates a guided first run from a briefing-free Quick Start. Quick Start suppresses onboarding only for that stage and does not write the onboarding marker, alter the deterministic seed, or touch the save. A field-guide overlay states the intended five-part test flow so repeated playtests can reach the actual decisions quickly without introducing simulation-only debug shortcuts.
 
 The title presents that material as a chapter and field guide rather than as internal test tooling. Its no-save line follows the autosave preference: automatic checkpoints are explained when enabled, while manual saving through pause is named when disabled. This keeps the first screen truthful without exposing implementation vocabulary.

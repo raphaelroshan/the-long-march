@@ -736,7 +736,8 @@ func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
 	continue_button.disabled = not has_valid_save
-	continue_button.text = "CONTINUE SAVED MARCH" if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
+	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
+	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
@@ -771,7 +772,15 @@ func _saved_run_info() -> Dictionary:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · %s." % String(validation.get("reason", "Campaign state could not be restored"))}
 	var location := String(parsed.get("current_location", "unknown road")).replace("_", " ").capitalize()
 	var phase := String(parsed.get("phase", "unknown")).replace("_", " ").capitalize()
-	return {"exists": true, "valid": true, "summary": "Saved · Day %d · %s · %s · %d/5" % [int(parsed.get("day", 1)), location, phase, int(parsed.get("campaign_encounters_completed", 0))]}
+	var day := int(parsed.get("day", 1))
+	var encounters := int(parsed.get("campaign_encounters_completed", 0))
+	return {
+		"exists": true,
+		"valid": true,
+		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
+		"tooltip": "Resume at %s during %s with %d of 5 encounters secured." % [location, phase, encounters],
+		"summary": "Checkpoint · %s · %d/5 encounters secured" % [phase, encounters]
+	}
 
 func _empty_save_summary() -> String:
 	return "No saved march · Progress checkpoints after committed decisions." if autosave_enabled else "No saved march · Use Save March from the pause menu."
