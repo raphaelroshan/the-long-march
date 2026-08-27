@@ -262,4 +262,6 @@ Automatic checkpoints default to enabled but can be disabled as a persisted loca
 
 Successful automatic checkpoints display a short corner notice naming the committed action. The notice does not take focus, pause play, or replace the event log, and respects reduced-motion settings by omitting its fade animation.
 
+The checkpoint notice occupies the clear header space between the game title and Pause control. It must not cover a persistent action while acknowledging a save, especially during the contract-to-route transition when the player is likely to pause and inspect the new state.
+
 Checkpoint reasons are translated from internal event identifiers into player-facing action names such as `Route Committed`, `Battle Step`, and `Emergency Order`. The same vocabulary appears in the transient toast and pause summary, keeping implementation identifiers out of the playtest experience.
