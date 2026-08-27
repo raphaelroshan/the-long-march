@@ -97,6 +97,12 @@ func _run() -> void:
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
+	app.pause_settings_button.pressed.emit()
+	await process_frame
+	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")
+	app.settings_close_button.pressed.emit()
+	await process_frame
+	_expect(app.pause_view.visible and app.pause_settings_button.has_focus(), "closing in-run Settings should return to the pause menu")
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "restart should require confirmation before discarding progress")

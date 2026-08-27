@@ -139,3 +139,5 @@ The application shell inspects local save JSON, schema version, and required cam
 ## 2026-08-27 — Playtest preferences remain local and outside campaign state
 
 The title screen exposes fullscreen mode, persisted reduced transition motion, briefing reset, and confirmed local-save clearing. These preferences live in a separate local configuration file and never enter deterministic campaign serialization. Destructive save clearing reuses the safe confirmation layer, while briefing reset affects only whether the guided introduction appears on the next run.
+
+Settings are also reachable from the paused stage. Opening them temporarily replaces the pause panel while leaving the stage disabled; closing them returns focus to the pause menu and preserves the stage control that will be restored on resume. A tester therefore does not need to abandon the current run to change display or motion preferences.

@@ -32,6 +32,7 @@ var pause_summary_label: Label
 var pause_save_status_label: Label
 var pause_save_button: Button
 var save_return_button: Button
+var pause_settings_button: Button
 var restart_button: Button
 var title_button: Button
 var confirmation_title_label: Label
@@ -42,6 +43,7 @@ var save_status_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
 var reduced_motion: bool = false
+var settings_opened_from_pause: bool = false
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -529,6 +531,12 @@ func _build_pause_menu() -> void:
 	var session_actions := HBoxContainer.new()
 	session_actions.add_theme_constant_override("separation", 8)
 	content.add_child(session_actions)
+	pause_settings_button = Button.new()
+	pause_settings_button.text = "SETTINGS"
+	pause_settings_button.custom_minimum_size = Vector2(0, 46)
+	pause_settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pause_settings_button.pressed.connect(_show_settings)
+	session_actions.add_child(pause_settings_button)
 	restart_button = Button.new()
 	restart_button.text = "RESTART"
 	restart_button.custom_minimum_size = Vector2(0, 46)
@@ -537,9 +545,10 @@ func _build_pause_menu() -> void:
 	restart_button.pressed.connect(_request_confirmation.bind("restart"))
 	session_actions.add_child(restart_button)
 	title_button = Button.new()
-	title_button.text = "TITLE WITHOUT SAVING"
+	title_button.text = "EXIT UNSAVED"
 	title_button.custom_minimum_size = Vector2(0, 46)
 	title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_button.tooltip_text = "Return to the title without updating the local save."
 	title_button.pressed.connect(_request_confirmation.bind("title"))
 	session_actions.add_child(title_button)
 	var hint := Label.new()
@@ -614,13 +623,21 @@ func _save_preferences() -> void:
 	config.save(SETTINGS_PATH)
 
 func _show_settings() -> void:
+	settings_opened_from_pause = game_view != null and pause_view.visible
+	if settings_opened_from_pause:
+		pause_view.visible = false
 	settings_view.visible = true
 	_refresh_settings()
 	display_mode_button.grab_focus()
 
 func _hide_settings() -> void:
 	settings_view.visible = false
-	settings_button.grab_focus()
+	if settings_opened_from_pause and game_view != null:
+		pause_view.visible = true
+		pause_settings_button.grab_focus()
+	else:
+		settings_button.grab_focus()
+	settings_opened_from_pause = false
 
 func _refresh_settings(message: String = "") -> void:
 	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
@@ -705,6 +722,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	pause_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
+	settings_opened_from_pause = false
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	game_view.modulate = Color.WHITE if reduced_motion else Color(1.0, 1.0, 1.0, 0.0)
 	if load_saved and not bool(game_view.call("load_saved_run")):
@@ -834,6 +852,7 @@ func _return_to_title() -> void:
 	confirmation_view.visible = false
 	pending_confirmation = ""
 	paused_stage_focus = null
+	settings_opened_from_pause = false
 	if game_view != null:
 		var old_game := game_view
 		game_view = null
