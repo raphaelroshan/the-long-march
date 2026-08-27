@@ -40,6 +40,7 @@ var metric_labels: Dictionary = {}
 var subtitle_label: Label
 var journey_banner: TextureRect
 var status_label: Label
+var right_scroll: ScrollContainer
 var journey_label: Label
 var encounter_label: Label
 var combat_panel: CombatPanel
@@ -371,7 +372,7 @@ func _build_ui() -> void:
 	log_label.add_theme_color_override("font_color", Color("#9aa8aa"))
 	left.add_child(log_label)
 
-	var right_scroll := ScrollContainer.new()
+	right_scroll = ScrollContainer.new()
 	right_scroll.custom_minimum_size = Vector2(370, 0)
 	right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -800,7 +801,7 @@ func _finish_onboarding(skipped: bool) -> void:
 		marker.store_string(String(ProjectSettings.get_setting("application/config/version", "unknown")))
 	onboarding_overlay.visible = false
 	_journal_event("onboarding_skipped" if skipped else "onboarding_completed", {"step_reached": onboarding_step + 1})
-	travel_button.grab_focus()
+	focus_current_action.call_deferred()
 
 func _show_feedback() -> void:
 	feedback_status_label.text = ""
@@ -810,7 +811,7 @@ func _show_feedback() -> void:
 
 func _hide_feedback() -> void:
 	feedback_overlay.visible = false
-	feedback_button.grab_focus()
+	_focus_control(feedback_button)
 
 func _save_feedback() -> void:
 	_journal_event("feedback_saved", {"phase": state.phase, "replay_score": feedback_score_option.selected + 1})
@@ -841,7 +842,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_refresh_ui()
 		var previous_button := campaign_map.button_for(previous_selection) as Button
 		if previous_button != null and not previous_button.disabled:
-			previous_button.grab_focus()
+			_focus_control(previous_button)
 		get_viewport().set_input_as_handled()
 
 func _journal_event(event_id: String, properties: Dictionary = {}) -> void:
@@ -890,40 +891,40 @@ func _control_can_receive_focus(control: Control) -> bool:
 		return false
 	return true
 
+func _focus_control(control: Control) -> bool:
+	if not _control_can_receive_focus(control):
+		return false
+	control.grab_focus()
+	if right_scroll != null and right_scroll.is_ancestor_of(control):
+		right_scroll.ensure_control_visible.call_deferred(control)
+	return true
+
 func focus_current_action() -> void:
 	if onboarding_overlay != null and onboarding_overlay.visible:
-		onboarding_next_button.grab_focus()
+		_focus_control(onboarding_next_button)
 		return
 	if feedback_overlay != null and feedback_overlay.visible:
-		feedback_clear_text.grab_focus()
+		_focus_control(feedback_clear_text)
 		return
-	if contract_accept_button != null and _control_can_receive_focus(contract_accept_button):
-		contract_accept_button.grab_focus()
+	if _focus_control(contract_accept_button):
 		return
 	for button in campaign_event_buttons:
-		if _control_can_receive_focus(button):
-			button.grab_focus()
+		if _focus_control(button):
 			return
-	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(advance_encounter_button):
-		advance_encounter_button.grab_focus()
+	if state.phase in ["battle", "final_battle"] and _focus_control(advance_encounter_button):
 		return
-	if campaign_commit_button != null and _control_can_receive_focus(campaign_commit_button):
-		campaign_commit_button.grab_focus()
+	if _focus_control(campaign_commit_button):
 		return
 	if state.phase == "settlement":
 		for button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
-			if _control_can_receive_focus(button):
-				button.grab_focus()
+			if _focus_control(button):
 				return
 	for button in campaign_node_buttons:
-		if _control_can_receive_focus(button):
-			button.grab_focus()
+		if _focus_control(button):
 			return
-	if state.phase == "results" and _control_can_receive_focus(feedback_button):
-		feedback_button.grab_focus()
+	if state.phase == "results" and _focus_control(feedback_button):
 		return
-	if _control_can_receive_focus(travel_button):
-		travel_button.grab_focus()
+	_focus_control(travel_button)
 
 func _ensure_current_focus() -> void:
 	var focus_owner := get_viewport().gui_get_focus_owner()
@@ -958,7 +959,7 @@ func _on_campaign_node_selected(node_id: String) -> void:
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
 	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready." % String(preview.get("name", node_id)))
 	_refresh_ui()
-	campaign_commit_button.grab_focus()
+	_focus_control(campaign_commit_button)
 
 func _on_campaign_route_committed(node_id: String) -> void:
 	if node_id.is_empty() or node_id != selected_campaign_node_id:

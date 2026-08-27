@@ -12,6 +12,7 @@ The repository contains an agent-first Godot project with:
 - A session-safe pause menu with live run status, Save, Save & Return, and confirmation before discarding progress.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.
+- Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible.
 - Save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.
 - Local playtest settings for fullscreen, reduced transition motion, briefing reset, and confirmed save clearing.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.

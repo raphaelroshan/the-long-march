@@ -71,16 +71,20 @@ func _run() -> void:
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.contract_accept_button.pressed.emit()
 	await process_frame
+	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
 	_expect(game.current_run_flow_step == 1 and game.run_flow_labels[0].text.begins_with("✓"), "answering the contract should advance the tracker to the Lowlands roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
+	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
 	_expect(game.campaign_map.detail_label.text.contains("Known route"), "keyboard or controller focus should expose the same route detail as mouse hover")
 	await _press_campaign_node("rill_crossing")
+	await process_frame
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
 	_expect(game.advance_encounter_button.has_focus(), "committing a route should hand controller focus to the encounter timeline")
+	_expect(game.right_scroll.get_global_rect().encloses(game.advance_encounter_button.get_global_rect()), "battle focus should scroll encounter advancement into view")
 	_expect(game.combat_panel.visible and game.combat_panel.step_panels.size() == 6, "battle state should expose the six-step encounter timeline")
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	await _advance_until_phase("map")
