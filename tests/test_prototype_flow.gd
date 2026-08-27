@@ -211,6 +211,12 @@ func _run() -> void:
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
 	_expect(game.route_preview_label.text.contains("ROUTE INTEL · RILL CROSSING") and game.route_preview_label.text.contains("Known route") and game.route_preview_label.text.contains("LOW risk"), "keyboard or controller focus should expose readable route intel above the map")
+	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#9fddbd"), "low-risk route intel should use the safe scan color while retaining its text label")
+	game.campaign_map.button_for("soot_orchard").grab_focus()
+	await process_frame
+	_expect(game.route_preview_label.text.contains("GUARDED risk") and game.route_preview_label.get_theme_color("font_color") == Color("#e8c58e"), "guarded route intel should be visually distinct from a low-risk road")
+	game.campaign_map.button_for("rill_crossing").grab_focus()
+	await process_frame
 	await _press_campaign_node("rill_crossing")
 	await process_frame
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
@@ -243,6 +249,7 @@ func _run() -> void:
 	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
 	await process_frame
 	_expect(game.route_preview_label.text.contains("Unscouted route") and game.route_preview_label.text.contains("unknown"), "focusing an unscouted road should preserve uncertainty in the visible route intel")
+	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#cbb8e8"), "unscouted route intel should carry a distinct unknown-information tone")
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should not reveal its hidden risk in the commit action")

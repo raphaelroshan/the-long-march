@@ -22,6 +22,13 @@ const DOCTRINE_DESCRIPTIONS := {
 	"run_hot": "Overdrive · All attacks gain +1 damage, but the fortress gains +2 heat; overheating raises route risk and incoming damage."
 }
 const ONBOARDING_LABELS := ["COMMAND", "CHASSIS", "ROUTE", "SURVIVE"]
+const ROUTE_INTEL_COLORS := {
+	"neutral": Color("#d8c389"),
+	"safe": Color("#9fddbd"),
+	"warning": Color("#e8c58e"),
+	"danger": Color("#ef8375"),
+	"unknown": Color("#cbb8e8")
+}
 const ONBOARDING_STEPS := [
 	{
 		"title": "Your job is continuity",
@@ -1246,7 +1253,11 @@ func _on_campaign_node_inspected(node_id: String, detail: String) -> void:
 	if not campaign_map.visible:
 		return
 	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id))
-	route_preview_label.text = "ROUTE INTEL · %s\n%s" % [node_name.to_upper(), detail]
+	_set_route_preview("ROUTE INTEL · %s\n%s" % [node_name.to_upper(), detail], campaign_map.intel_tone_for(node_id))
+
+func _set_route_preview(text: String, tone: String = "neutral") -> void:
+	route_preview_label.text = text
+	route_preview_label.add_theme_color_override("font_color", ROUTE_INTEL_COLORS.get(tone, ROUTE_INTEL_COLORS.neutral))
 
 func _on_campaign_route_committed(node_id: String) -> void:
 	if node_id.is_empty() or node_id != selected_campaign_node_id:
@@ -1847,25 +1858,27 @@ func _refresh_ui() -> void:
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
 	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:
 		if not state.campaign_event_pending.is_empty():
-			route_preview_label.text = "A local decision blocks departure. Resolve it before choosing the next road."
+			_set_route_preview("A local decision blocks departure. Resolve it before choosing the next road.", "warning")
 		elif state.guard_contract_status == "offered":
-			route_preview_label.text = "The first map branches are visible after the Ashgate contract is answered."
+			_set_route_preview("The first map branches are visible after the Ashgate contract is answered.")
 		elif not selected_campaign_node_id.is_empty():
 			var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 			var selected_detail := campaign_map.detail_for(selected_campaign_node_id)
-			route_preview_label.text = "ROUTE READY · %s\n%s%s" % [String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id)).to_upper(), selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else ""]
+			_set_route_preview("ROUTE READY · %s\n%s%s" % [String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id)).to_upper(), selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else ""], "danger" if not block_reason.is_empty() else campaign_map.intel_tone_for(selected_campaign_node_id))
 		else:
-			route_preview_label.text = "Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals."
+			_set_route_preview("Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals.")
 	elif state.phase == "refit":
 		var departure := state.route_preview(_selected_id(route_option), _selected_id(doctrine_option))
 		if bool(departure.get("ok", false)):
-			route_preview_label.text = "Departure forecast — %d day(s), %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [int(departure.days), int(departure.fuel), float(departure.risk) * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT]
+			var risk := float(departure.risk)
+			_set_route_preview("Departure forecast — %d day(s), %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [int(departure.days), int(departure.fuel), risk * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT], "safe" if risk <= 0.18 else ("warning" if risk <= 0.32 else "danger"))
 	elif state.phase == "settlement":
-		route_preview_label.text = "Morrowline recovery — %d service action(s) remain. Refit freely, then choose a doctrine for Meridian Pass." % state.settlement_actions_remaining
+		_set_route_preview("Morrowline recovery — %d service action(s) remain. Refit freely, then choose a doctrine for Meridian Pass." % state.settlement_actions_remaining, "safe")
 	elif state.phase == "results":
-		route_preview_label.text = "Run complete — %s." % state.final_result.replace("_", " ").capitalize()
+		_set_route_preview("Run complete — %s." % state.final_result.replace("_", " ").capitalize(), "safe")
 	else:
-		route_preview_label.text = "On the road — risk %.0f%%, pressure %d, doctrine %s." % [state.current_route_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()]
+		var active_risk := state.current_route_risk
+		_set_route_preview("On the road — risk %.0f%%, pressure %d, doctrine %s." % [active_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()], "safe" if active_risk <= 0.18 else ("warning" if active_risk <= 0.32 else "danger"))
 	var focus_owner := get_viewport().gui_get_focus_owner()
 	if campaign_map.visible and focus_owner in campaign_node_buttons:
 		var focused_node_id := String(focus_owner.get_meta("node_id", ""))

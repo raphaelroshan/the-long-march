@@ -169,6 +169,27 @@ func _risk_band(risk: float) -> String:
 		return "GUARDED"
 	return "HIGH"
 
+func intel_tone_for(node_id: String) -> String:
+	var status := status_for(node_id)
+	if status == "closed":
+		return "danger"
+	if status == "blocked":
+		return "warning"
+	if status in ["current", "secured"]:
+		return "safe"
+	if status not in ["available", "selected"]:
+		return "neutral"
+	var preview: Dictionary = current_previews.get(node_id, {})
+	if String(preview.get("visibility", "forecast")) == "unscouted":
+		return "unknown"
+	match _risk_band(float(preview.get("risk", 0.0))):
+		"LOW":
+			return "safe"
+		"GUARDED":
+			return "warning"
+		_:
+			return "danger"
+
 func _show_node_detail(node_id: String) -> void:
 	node_inspected.emit(node_id, detail_for(node_id))
 
