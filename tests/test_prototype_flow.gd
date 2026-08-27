@@ -97,6 +97,8 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
+	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
 	_expect(game.doctrine_detail_label.text.contains("Raiders") and game.doctrine_detail_label.text.contains("−1 damage"), "the default doctrine should explain its real targeting and mitigation effects")
 	game.doctrine_option.select(2)
 	game.doctrine_option.item_selected.emit(2)
@@ -129,6 +131,7 @@ func _run() -> void:
 	game.module_option.item_selected.emit(engine_index)
 	await process_frame
 	_expect(game.focus_chassis_button.visible and not game.focus_chassis_button.disabled, "refit should expose an explicit keyboard and controller path into the chassis")
+	_expect(game.module_option.get_node_or_null(game.module_option.focus_neighbor_bottom) == game.focus_chassis_button and game.focus_chassis_button.get_node_or_null(game.focus_chassis_button.focus_neighbor_bottom) == game.rotate_button, "planning navigation should include module selection, chassis editing, and refit actions in visible order")
 	game.focus_chassis_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell, "Edit Chassis should focus the selected module cell")
@@ -228,7 +231,8 @@ func _run() -> void:
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("FULL DURABILITY"), "a fully repaired selected module should not present a dead-end repair action")
 	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
-	_expect(game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) == game.how_to_play_button, "settlement Tab navigation should skip the unavailable repair action and wrap through visible controls")
+	var recovery_previous := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) as BaseButton
+	_expect(recovery_previous != null and recovery_previous != game.settlement_repair_button and not recovery_previous.disabled, "settlement Tab navigation should skip the unavailable repair action while retaining refit controls")
 	var recovery_next := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_next) as BaseButton
 	_expect(recovery_next != null and not recovery_next.disabled, "settlement navigation should lead only to an enabled recovery or route action")
 	var saved_pressure: int = game.state.campaign_pressure

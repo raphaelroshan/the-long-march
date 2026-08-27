@@ -238,6 +238,8 @@ Nested stage actions use an explicit bottom-edge scroll target instead of relyin
 
 Refitting exposes a visible `Edit Chassis` handoff instead of requiring a controller player to discover the grid through incidental focus traversal. Activating it places focus and the gold cursor on the selected module; arrows move the cursor, confirm selects or places, and cancel returns to the same desk action. The spatial editor remains direct with a mouse while becoming a deliberate, reversible mode on keyboard and controller.
 
+Every planning phase builds one navigation loop from controls that are both visible and currently usable. Contract choices, doctrine, route commitment, refit actions, settlement services, local decisions, recruitable specialists, route nodes, and the field briefing therefore remain reachable without crossing a hidden or disabled control. Morrowline keeps refitting inside that loop rather than trapping controller users among service and route actions.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.

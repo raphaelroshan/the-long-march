@@ -226,20 +226,23 @@ func _configure_vertical_focus_cycle(controls: Array) -> void:
 		control.focus_neighbor_top = control.get_path_to(previous)
 		control.focus_neighbor_bottom = control.get_path_to(next)
 
-func _refresh_settlement_focus() -> void:
-	if state.phase != "settlement":
+func _refresh_planning_focus() -> void:
+	if state.phase not in ["refit", "map", "settlement"]:
 		return
 	var active_controls: Array = []
-	if not selected_campaign_node_id.is_empty() and not campaign_commit_button.disabled:
-		active_controls.append(campaign_commit_button)
-	for service_button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
-		if service_button.visible and not service_button.disabled:
-			active_controls.append(service_button)
-	if selected_campaign_node_id.is_empty():
-		for node_button in campaign_node_buttons:
-			if node_button.visible and not node_button.disabled:
-				active_controls.append(node_button)
-	active_controls.append(how_to_play_button)
+	for control in [contract_accept_button, contract_decline_button, doctrine_option, campaign_commit_button, module_option, focus_chassis_button, rotate_button, remove_button, settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
+		if _control_can_receive_focus(control):
+			active_controls.append(control)
+	for event_button in campaign_event_buttons:
+		if _control_can_receive_focus(event_button):
+			active_controls.append(event_button)
+	if _control_can_receive_focus(recruit_iven_button):
+		active_controls.append(recruit_iven_button)
+	for node_button in campaign_node_buttons:
+		if _control_can_receive_focus(node_button):
+			active_controls.append(node_button)
+	if _control_can_receive_focus(how_to_play_button):
+		active_controls.append(how_to_play_button)
 	_configure_vertical_focus_cycle(active_controls)
 
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
@@ -1783,7 +1786,7 @@ func _refresh_ui() -> void:
 	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +2 HULL · 10 ASHMARKS"
 	settlement_hull_button.disabled = not services_open or state.hull_condition >= 10 or state.money < 10
 	final_journey_button.disabled = state.phase != "settlement"
-	_refresh_settlement_focus()
+	_refresh_planning_focus()
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
 	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:
 		if not state.campaign_event_pending.is_empty():
