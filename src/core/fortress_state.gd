@@ -1389,6 +1389,30 @@ func encounter_cut_loose_preview() -> Dictionary:
 		return {"valid": false, "reason": "no cargo to cut loose", "retargets": []}
 	return {"valid": true, "target_module": target_module, "retargets": _encounter_target_redirect_preview(target_module)}
 
+func encounter_vent_heat_preview() -> Dictionary:
+	var heat_after := maxi(0, total_heat() + heat_surge - (heat_relief + 3))
+	var affected_hits: Array[Dictionary] = []
+	for enemy in encounter_enemies:
+		if bool(enemy.get("defeated", false)) or not bool(enemy.get("arrived", false)):
+			continue
+		var target_id := String(enemy.get("target", ""))
+		var target_index := _module_index_by_id(target_id)
+		if target_index < 0 or not bool(modules[target_index].get("exterior", false)):
+			continue
+		var impact := encounter_enemy_impact_preview(enemy)
+		if impact.is_empty():
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		affected_hits.append({
+			"enemy_id": enemy_id,
+			"enemy_name": String(ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id.replace("_", " ").capitalize())),
+			"target": target_id,
+			"target_name": String(module_definition(target_id).get("name", target_id.replace("_", " ").capitalize())),
+			"damage_before": int(impact.get("damage", 0)),
+			"damage_after": int(impact.get("damage", 0)) + (0 if vent_exposure else 1)
+		})
+	return {"heat_before": heat, "heat_after": heat_after, "heat_removed": maxi(0, heat - heat_after), "affected_hits": affected_hits}
+
 func _encounter_retarget_unavailable_module(target_module: String, cause: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []
 	for index in range(encounter_enemies.size()):
@@ -1902,6 +1926,7 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 		return {"ok": false, "reason": "interventions are only available during an active encounter"}
 	if encounter_intervention_used:
 		return {"ok": false, "reason": "one intervention has already been used in this encounter"}
+	var vent_preview: Dictionary = encounter_vent_heat_preview() if intervention_id == "vent_heat" else {}
 	var result: Dictionary = intervene(intervention_id, target_module)
 	if bool(result.get("ok", false)):
 		encounter_intervention_used = true
@@ -1909,6 +1934,8 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 			result["retargets"] = _encounter_retarget_unavailable_module(target_module, "its target compartment is sealed")
 		elif intervention_id == "cut_loose_cargo":
 			result["retargets"] = _encounter_retarget_unavailable_module(String(result.get("removed_module", "")), "its target module is cut loose")
+		elif intervention_id == "vent_heat":
+			result["affected_hits"] = vent_preview.get("affected_hits", [])
 		var effect := _intervention_effect_text(intervention_id, result)
 		result["effect"] = effect
 		_encounter_log("Intervention: %s." % effect)
@@ -1929,7 +1956,14 @@ func _intervention_effect_text(intervention_id: String, result: Dictionary) -> S
 				effect += "; redirected %s" % ", ".join(redirects)
 			return effect
 		"vent_heat":
-			return "%d heat vented; the next exterior hit deals +1 damage" % int(result.get("heat_removed", 0))
+			var effect := "%d heat vented; the next exterior hit deals +1 damage" % int(result.get("heat_removed", 0))
+			var affected_hits: Array = result.get("affected_hits", [])
+			if not affected_hits.is_empty():
+				var exposure_lines: Array[String] = []
+				for hit in affected_hits:
+					exposure_lines.append("%s → %s %d→%d" % [String(hit.get("enemy_name", "Threat")), String(hit.get("target_name", "system")), int(hit.get("damage_before", 0)), int(hit.get("damage_after", 0))])
+				effect += "; exposed %s" % ", ".join(exposure_lines)
+			return effect
 		"cut_loose_cargo":
 			var removed_module := String(result.get("removed_module", "cargo"))
 			var effect := "%s discarded; mass and cargo incentive reduced" % String(module_definition(removed_module).get("name", removed_module))

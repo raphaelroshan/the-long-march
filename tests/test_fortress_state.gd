@@ -218,6 +218,8 @@ func _test_route_doctrine_and_heat_tradeoffs() -> void:
 	hot_state.advance_encounter(1.0)
 	_expect(int(hot_state.encounter_enemies[1].damage_taken) > int(cargo_state.encounter_enemies[1].damage_taken), "Run Hot should increase damage against a Climber")
 	var heat_before := hot_state.heat
+	var vent_preview := hot_state.encounter_vent_heat_preview()
+	_expect(int(vent_preview.get("heat_before", -1)) == heat_before and int(vent_preview.get("heat_after", -1)) == maxi(0, heat_before - 3) and int(vent_preview.get("heat_removed", -1)) == mini(3, heat_before), "Vent Heat should preview the exact current heat reduction")
 	var vent := hot_state.use_encounter_intervention("vent_heat")
 	_expect(bool(vent.get("ok", false)) and hot_state.heat < heat_before and int(vent.heat_removed) == heat_before - hot_state.heat, "Vent Heat should report the exact heat removed during an encounter")
 	_expect(hot_state.vent_exposure, "Vent Heat should create a temporary exterior exposure tradeoff")
@@ -258,6 +260,17 @@ func _test_spatial_targeting_and_causality() -> void:
 	destroyed_target.modules[0]["durability"] = 0
 	var command_points_before := destroyed_target.command_points
 	_expect(not bool(destroyed_target.intervene("seal_compartment", "coal_cell").get("ok", false)) and destroyed_target.command_points == command_points_before, "destroyed systems should reject Seal without spending a command point")
+
+	var exposed_target := LongMarchState.new(1107)
+	_install_encounter_loadout(exposed_target)
+	exposed_target.begin_journey("safe_road", "run_hot")
+	exposed_target.encounter_enemies[0]["arrived"] = true
+	exposed_target.encounter_enemies[0]["target"] = "shell_cannon"
+	var exposure_preview := exposed_target.encounter_vent_heat_preview()
+	var affected_hits: Array = exposure_preview.get("affected_hits", [])
+	_expect(affected_hits.size() == 1 and String(affected_hits[0].get("target", "")) == "shell_cannon" and int(affected_hits[0].get("damage_after", 0)) == int(affected_hits[0].get("damage_before", 0)) + 1, "Vent Heat should identify the active exterior hit and its exact damage increase")
+	var vented := exposed_target.use_encounter_intervention("vent_heat")
+	_expect(String(vented.get("effect", "")).contains("Shell Cannon") and String(vented.get("effect", "")).contains("exposed"), "the Vent Heat receipt should preserve the forecast exterior consequence")
 
 	var sacrificed_target := LongMarchState.new(1107)
 	_install_encounter_loadout(sacrificed_target)

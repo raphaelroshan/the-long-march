@@ -302,6 +302,19 @@ func _run() -> void:
 	game.last_synced_combat_target_id = ""
 	game._refresh_ui()
 	var pre_cut_state: Dictionary = game.state.serialize()
+	var exterior_target_id := ""
+	for instance in game.state.modules:
+		if bool(instance.get("exterior", false)):
+			exterior_target_id = String(instance.get("id", ""))
+			break
+	game.state.encounter_enemies[0]["arrived"] = true
+	game.state.encounter_enemies[0]["target"] = exterior_target_id
+	game.last_synced_combat_target_id = ""
+	game._refresh_ui()
+	var displayed_vent_preview: Dictionary = game.state.encounter_vent_heat_preview()
+	var displayed_vent_hits: Array = displayed_vent_preview.get("affected_hits", [])
+	var displayed_vent_target := String(displayed_vent_hits[0].get("target_name", "")) if not displayed_vent_hits.is_empty() else ""
+	_expect(game.intervention_buttons[2].text.contains("-%d heat" % int(displayed_vent_preview.get("heat_removed", 0))) and game.intervention_help_label.text.contains("Vent preview") and game.intervention_help_label.text.contains(displayed_vent_target), "Vent Heat should preview its exact cooling and the exterior system exposed to extra damage")
 	var sacrificed_cargo_id: String = game.state.sacrificable_cargo_id()
 	game.state.encounter_enemies[0]["arrived"] = true
 	game.state.encounter_enemies[0]["target"] = sacrificed_cargo_id

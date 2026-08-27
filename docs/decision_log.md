@@ -411,3 +411,7 @@ Cut Loose Cargo now applies the same atomic targeting rule as Seal Compartment. 
 ## 2026-08-28 — Cargo sacrifice previews both losses
 
 The emergency-order guidance now previews Cut Loose Cargo alongside Seal Compartment. It names the deterministic cargo module that will be removed, the capability lost with it, and any active threat's replacement target. This keeps the permanent build cost and immediate defensive benefit visible together before the once-per-encounter order is committed.
+
+## 2026-08-28 — Vent Heat reports the actual exchange
+
+Vent Heat derives its displayed cooling from the live fortress state instead of promising a fixed three-point reduction when less heat is present. Before commitment, the order guidance also names every active exterior target whose next hit will gain one damage and shows the before-and-after damage. The completed-order receipt retains that exposure, keeping the immediate benefit and combat liability together.
