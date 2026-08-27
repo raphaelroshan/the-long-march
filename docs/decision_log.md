@@ -152,6 +152,8 @@ During combat, Advance, every currently available emergency order, and Field Bri
 
 `Cut Loose Cargo` names the exact installed module that its deterministic priority will sacrifice before the player commits the once-per-encounter order. Its visible label also warns whether that means losing shelter, repair supply, or a fuel feed; the result report repeats the discarded module. A desperate mobility action should be costly, not opaque.
 
+Combat describes the intervention budget consistently as one emergency order rather than exposing the underlying two-point legacy value beside a once-per-encounter lock. After any order, the immediate report names its concrete outcome: power and heat change, sealed module and downtime, heat removed and exposure, or discarded cargo and reduced incentive.
+
 ## 2026-08-27 — The application shell starts outside the simulation
 
 The packaged build opens on a title menu instead of constructing a run immediately. Start Game creates a fresh Ashgate stage, Continue restores the explicit local save, and Escape opens a pause layer with resume, restart, and return-to-title actions. The shell owns these lifecycle transitions while `Main.tscn` remains the playable stage and `LongMarchState` remains presentation-independent. This keeps menu state from leaking into deterministic campaign state and leaves the stage independently testable.

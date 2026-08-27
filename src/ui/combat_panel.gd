@@ -105,10 +105,9 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 	var step := int(view.get("step", 0))
 	var active := bool(view.get("active", false))
 	var doctrine := String(view.get("doctrine", "protect_cargo")).replace("_", " ").capitalize()
-	var command_points := int(view.get("command_points", 0))
 	var intervention_used := bool(view.get("intervention_used", false))
 	title_label.text = "ACTIVE CONTACT · %s" % String(view.get("location_name", "Unknown road")).to_upper()
-	order_label.text = "Doctrine: %s   ·   Emergency order: %s   ·   Step %d/%d" % [doctrine, "spent" if intervention_used else "ready (%d CP)" % command_points, step, MAX_STEPS]
+	order_label.text = "Doctrine: %s   ·   Emergency order: %s   ·   Step %d/%d" % [doctrine, "spent" if intervention_used else "1 available", step, MAX_STEPS]
 	for index in range(MAX_STEPS):
 		var fill := Color("#1b272d")
 		var border := Color("#3c4d54")

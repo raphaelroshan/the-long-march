@@ -788,11 +788,12 @@ func intervene(intervention_id: String, target_module: String = "") -> Dictionar
 	if intervention_id == "shift_power":
 		command_points -= 1
 		power_priority = "weapons" if power_priority != "weapons" else "engines"
-		heat_surge += 1 if power_priority == "weapons" else -1
+		var heat_change := 1 if power_priority == "weapons" else -1
+		heat_surge += heat_change
 		heat_surge = maxi(0, heat_surge)
 		_recalculate()
 		log.append("Shifted power priority to %s." % power_priority)
-		return {"ok": true, "intervention": intervention_id, "summary": summary()}
+		return {"ok": true, "intervention": intervention_id, "priority": power_priority, "heat_change": heat_change, "summary": summary()}
 	if intervention_id == "seal_compartment":
 		var sealed := _set_sealed(target_module, true)
 		if not sealed:
@@ -800,14 +801,15 @@ func intervene(intervention_id: String, target_module: String = "") -> Dictionar
 		command_points -= 1
 		log.append("Sealed %s to contain damage." % target_module)
 		_recalculate()
-		return {"ok": true, "intervention": intervention_id, "summary": summary()}
+		return {"ok": true, "intervention": intervention_id, "target_module": target_module, "summary": summary()}
 	if intervention_id == "vent_heat":
+		var heat_before := heat
 		command_points -= 1
 		heat_relief += 3
 		vent_exposure = true
 		_recalculate()
 		log.append("Vented heat; exterior exposure increased temporarily.")
-		return {"ok": true, "intervention": intervention_id, "summary": summary()}
+		return {"ok": true, "intervention": intervention_id, "heat_removed": maxi(0, heat_before - heat), "exterior_exposed": true, "summary": summary()}
 	if intervention_id == "cut_loose_cargo":
 		var removed_module := _remove_first_sacrificable_cargo()
 		if removed_module.is_empty():

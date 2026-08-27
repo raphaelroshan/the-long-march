@@ -169,7 +169,7 @@ func _test_city_journey_and_battle() -> void:
 	var first_step := state.advance_encounter(1.0)
 	_expect(not bool(first_step.get("resolved", false)), "the first encounter step should leave time to intervene")
 	var intervention := state.use_encounter_intervention("shift_power")
-	_expect(bool(intervention.get("ok", false)), "the Marchmaster should be able to shift power once during the encounter")
+	_expect(bool(intervention.get("ok", false)) and intervention.priority == "weapons" and int(intervention.heat_change) == 1, "the Marchmaster should receive the exact power and heat result from an intervention")
 	_expect(not bool(state.use_encounter_intervention("vent_heat").get("ok", false)), "the journey encounter should allow only one intervention")
 	var result := state.advance_encounter(5.0)
 	_expect(bool(result.get("resolved", false)), "the safe road encounter should resolve within six steps")
@@ -212,7 +212,7 @@ func _test_route_doctrine_and_heat_tradeoffs() -> void:
 	_expect(int(hot_state.encounter_enemies[1].damage_taken) > int(cargo_state.encounter_enemies[1].damage_taken), "Run Hot should increase damage against a Climber")
 	var heat_before := hot_state.heat
 	var vent := hot_state.use_encounter_intervention("vent_heat")
-	_expect(bool(vent.get("ok", false)) and hot_state.heat < heat_before, "Vent Heat should reduce current heat during an encounter")
+	_expect(bool(vent.get("ok", false)) and hot_state.heat < heat_before and int(vent.heat_removed) == heat_before - hot_state.heat, "Vent Heat should report the exact heat removed during an encounter")
 	_expect(hot_state.vent_exposure, "Vent Heat should create a temporary exterior exposure tradeoff")
 	hot_state.advance_encounter(6.0)
 	_expect(not hot_state.vent_exposure, "Vent Heat exposure should clear when the encounter ends")

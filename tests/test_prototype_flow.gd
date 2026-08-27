@@ -55,6 +55,7 @@ func _advance_until_phase(expected_phase: String) -> void:
 		if game.state.encounter_active and not game.state.encounter_intervention_used:
 			game.intervention_buttons[0].pressed.emit()
 			await process_frame
+			_expect(game.event_label.text.contains("Weapon priority") and game.event_label.text.contains("heat +1"), "an emergency order should immediately report its exact benefit and cost")
 			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.advance_encounter_button, "spending the emergency order should remove disabled interventions from controller navigation")
 			_expect(game.advance_encounter_button.has_focus(), "spending an emergency order should return focus to encounter advancement")
 	for _step in range(8):
@@ -230,6 +231,7 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	_expect(game.combat_panel.step_labels[0].text == "NEXT · 1" and game.advance_encounter_button.text.contains("STEP 1 OF 6"), "combat controls should identify the exact next timeline step")
 	_expect(game.combat_panel.enemy_states[0].text.contains("2 STEPS OUT") and game.guidance_label.text.contains("2 steps out"), "approaching enemies should use a live countdown before contact")
+	_expect(game.combat_panel.order_label.text.contains("Emergency order: 1 available") and not game.combat_panel.order_label.text.contains("CP"), "combat status should describe the actual once-per-encounter order instead of exposing contradictory command points")
 	_expect(game.intervention_buttons[3].text.contains("Coal Cell") and game.intervention_buttons[3].text.contains("fuel feed"), "cutting loose cargo should disclose the exact module and dependency cost before use")
 	game.fortress_panel.grab_focus()
 	var battle_chassis_cancel := InputEventAction.new()
