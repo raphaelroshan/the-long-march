@@ -798,6 +798,17 @@ func _refresh_title_state() -> void:
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
+	var checkpoint_condition := String(save_info.get("condition", ""))
+	if not has_valid_save and bool(save_info.get("exists", false)):
+		save_status_label.add_theme_color_override("font_color", Color("#e98b72"))
+	elif checkpoint_condition == "critical":
+		save_status_label.add_theme_color_override("font_color", Color("#e98b72"))
+	elif checkpoint_condition == "watch":
+		save_status_label.add_theme_color_override("font_color", Color("#d8b568"))
+	elif checkpoint_condition == "stable":
+		save_status_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	else:
+		save_status_label.add_theme_color_override("font_color", Color("#9aa8aa"))
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
 	_accent_button(continue_button if has_valid_save else start_button)
@@ -836,6 +847,7 @@ func _saved_run_info() -> Dictionary:
 	var fuel := int(parsed.get("fuel", 0))
 	var hull := int(parsed.get("hull_condition", 0))
 	var heat := int(parsed.get("heat", 0))
+	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
 	return {
 		"exists": true,
 		"valid": true,
@@ -843,9 +855,10 @@ func _saved_run_info() -> Dictionary:
 		"location": location,
 		"phase": phase,
 		"encounters": encounters,
+		"condition": condition,
 		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Resume at %s during %s with %d of 5 encounters secured." % [location, phase, encounters],
-		"summary": "Checkpoint · %s · %d/5 · Fuel %d · Hull %d/10 · Heat %d/%d" % [phase, encounters, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
+		"summary": "Checkpoint · %s · %s · %d/5 · Fuel %d · Hull %d/10 · Heat %d/%d" % [condition.capitalize(), phase, encounters, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
 	}
 
 func _empty_save_summary() -> String:
