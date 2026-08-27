@@ -100,6 +100,8 @@ var campaign_progress_bar: ProgressBar
 var how_to_play_button: Button
 var feedback_button: Button
 var results_group: VBoxContainer
+var results_summary_label: Label
+var results_replay_label: Label
 var play_again_button: Button
 var results_title_button: Button
 var onboarding_overlay: Control
@@ -640,6 +642,22 @@ func _build_ui() -> void:
 	results_heading.add_theme_font_size_override("font_size", 17)
 	results_heading.add_theme_color_override("font_color", Color("#e8c58e"))
 	results_group.add_child(results_heading)
+	var results_summary_panel := PanelContainer.new()
+	results_summary_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 12))
+	results_group.add_child(results_summary_panel)
+	var results_summary_stack := VBoxContainer.new()
+	results_summary_stack.add_theme_constant_override("separation", 7)
+	results_summary_panel.add_child(results_summary_stack)
+	results_summary_label = Label.new()
+	results_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	results_summary_label.add_theme_font_size_override("font_size", 14)
+	results_summary_label.add_theme_color_override("font_color", Color("#d6dfdf"))
+	results_summary_stack.add_child(results_summary_label)
+	results_replay_label = Label.new()
+	results_replay_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	results_replay_label.add_theme_font_size_override("font_size", 12)
+	results_replay_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	results_summary_stack.add_child(results_replay_label)
 	feedback_button = Button.new()
 	feedback_button.text = "RECORD PLAYTEST NOTES"
 	feedback_button.custom_minimum_size = Vector2(0, 50)
@@ -1444,6 +1462,9 @@ func _refresh_ui() -> void:
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	_refresh_run_flow_tracker()
 	results_group.visible = state.phase == "results"
+	if state.phase == "results":
+		results_summary_label.text = _result_summary_text()
+		results_replay_label.text = _result_replay_text()
 	guidance_label.text = _current_guidance()
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
 	refit_title.visible = is_refit_phase
@@ -1614,6 +1635,36 @@ func _current_guidance() -> String:
 	if state.campaign_active and state.phase in ["refit", "map"]:
 		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
 	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
+
+func _result_summary_text() -> String:
+	match state.final_result:
+		"decisive_march":
+			return "DECISIVE MARCH · Meridian Pass is open. Every final contact was defeated, the fortress retained at least 7 hull, and the convoy contract survived."
+		"scarred_march":
+			var missed: Array[String] = []
+			if state.hull_condition < 7:
+				missed.append("hull ended at %d/10 (7 required)" % state.hull_condition)
+			var undefeated := 0
+			for enemy in state.encounter_enemies:
+				if not bool(enemy.get("defeated", false)):
+					undefeated += 1
+			if undefeated > 0:
+				missed.append("%d final contact%s remained" % [undefeated, "" if undefeated == 1 else "s"])
+			if state.guard_contract_status == "failed":
+				missed.append("the convoy contract failed")
+			return "SCARRED MARCH · The fortress crossed, but missed a decisive result because %s." % (", ".join(missed) if not missed.is_empty() else "the final approach left lasting damage")
+		"march_failed":
+			if state.hull_condition <= 0:
+				return "MARCH FAILED · The fortress hull reached zero at Meridian Pass."
+			return "MARCH FAILED · No operational, fuel-connected engine remained to carry the fortress through Meridian Pass."
+	return "RUN COMPLETE · The chapter ended with an unclassified result."
+
+func _result_replay_text() -> String:
+	if state.final_result == "decisive_march":
+		return "NEXT RUN · Test a different doctrine or road and see whether the fortress can remain decisive."
+	if state.final_result == "scarred_march":
+		return "NEXT RUN · Preserve hull before Meridian Pass and use the Morrowline service budget on the system that protects the final approach."
+	return "NEXT RUN · Protect movement first: keep one engine fuel-connected, then preserve hull for the final commitment."
 
 class FortressPanel extends Control:
 	signal grid_cell_pressed(cell: Vector2i)
