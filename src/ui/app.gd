@@ -902,6 +902,8 @@ func _refresh_title_state() -> void:
 		start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
 	quick_start_button.visible = not briefing_complete
 	quick_start_button.text = "QUICK REPLAY · SKIP BRIEFING" if has_completed_save else ("NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING")
+	guide_quick_start_button.text = "QUICK REPLAY ASHGATE" if has_completed_save else ("START NEW ASHGATE RUN" if has_valid_save else "QUICK START ASHGATE")
+	guide_quick_start_button.tooltip_text = "Begin a fresh Ashgate run without opening the introductory briefing."
 	continue_button.visible = has_valid_save
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save

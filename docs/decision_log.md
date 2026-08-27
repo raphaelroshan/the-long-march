@@ -479,3 +479,7 @@ Quick Start can be launched from either the title action stack or the Field Guid
 ## 2026-08-28 — Quick Start preserves checkpoint semantics, not files
 
 The Field Guide now states that Quick Start changes only whether the introductory briefing opens. Simulation, seed, route graph, and checkpoint rules remain identical. It no longer claims that Quick Start cannot change the save file, since a fresh run can legitimately replace Continue after its first automatic or manual checkpoint.
+
+## 2026-08-28 — Field Guide launch language follows save state
+
+The Field Guide's Ashgate action mirrors the title state: Quick Start when no checkpoint exists, Start New Ashgate Run while an active march is saved, and Quick Replay after a completed result. Confirmation behavior is unchanged, but the button now communicates whether it resumes nothing, branches away from active progress, or begins another attempt.

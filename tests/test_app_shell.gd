@@ -37,6 +37,7 @@ func _run() -> void:
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.settings_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.quick_start_button, "no-save navigation should route around disabled Continue")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should skip Continue and wrap through visible title actions")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("checkpoints"), "the title should use player-facing guide and autosave language")
+	_expect(app.guide_quick_start_button.text == "QUICK START ASHGATE", "the no-save Field Guide should offer a direct quick start")
 	_expect(_tree_contains_text(app.menu_view, "5 ENCOUNTERS TOTAL") and _tree_contains_text(app.menu_view, "FINALE AT 5"), "the title should make clear that the final battle is the fifth encounter, not an additional sixth fight")
 	_expect(_tree_contains_text(app.menu_view, "D-pad / arrows move") and _tree_contains_text(app.menu_view, "B / Esc closes panels"), "the title should describe its own navigation behavior instead of claiming that cancel pauses the game")
 	var completed_briefing := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
@@ -257,6 +258,7 @@ func _run() -> void:
 	_expect(app.save_status_label.text.contains("Saved just now"), "the title should show how recently the local checkpoint was written")
 	_expect(app.save_status_label.text.contains("Fuel 6") and app.save_status_label.text.contains("Hull 10/10") and app.save_status_label.text.contains("Heat 5/6"), "the title should summarize the saved fortress condition")
 	_expect(app.continue_button.tooltip_text.contains(String(ProjectSettings.get_setting("application/config/version"))), "Continue should expose the build that created the checkpoint")
+	_expect(app.guide_quick_start_button.text == "START NEW ASHGATE RUN", "the Field Guide should identify that Quick Start begins a different run when progress exists")
 	app.guide_button.pressed.emit()
 	app.guide_quick_start_button.pressed.emit()
 	await process_frame
@@ -285,6 +287,7 @@ func _run() -> void:
 	_expect(bool(completed_info.get("completed", false)) and String(completed_info.get("result", "")) == "Scarred March", "completed checkpoint metadata should remain available to title actions")
 	app._refresh_title_state()
 	_expect(app.start_button.text == "PLAY AGAIN · GUIDED BRIEFING" and app.quick_start_button.text == "QUICK REPLAY · SKIP BRIEFING", "a completed checkpoint should offer replay actions instead of implying an unfinished new game")
+	_expect(app.guide_quick_start_button.text == "QUICK REPLAY ASHGATE", "the Field Guide action should use the same completed-run vocabulary as the title")
 	app.start_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN", "starting from a completed title checkpoint should use replay confirmation language")
