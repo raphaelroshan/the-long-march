@@ -138,6 +138,10 @@ The alpha presents the entire regional route graph instead of reducing each choi
 
 Route selection and departure are separate actions. Selecting a node highlights the road and preserves the current state while the player reviews time, fuel, risk, pressure, visibility, and doctrine. A dedicated commit control begins travel, preventing accidental departures and making controller navigation predictable.
 
+That Commit control sits directly beneath the campaign map. Earlier layouts placed it near doctrine controls at the top of the scrollable desk, visually separating the confirmation from the selected node and leaving a disabled route action above unrelated refit controls. Keeping preview, graph, and commitment together makes the sequence read as one decision.
+
+Selecting a road also pins that road's detail above the map after focus moves to Commit. A previously focused node can no longer overwrite the selected destination during the same refresh, preventing a dangerous mismatch between the route named in the intel panel and the route named on the confirmation action.
+
 The stage status names the selected road during that review, and controller B or Escape cancels the preview without changing campaign state. Focus returns to the same route node so comparing another path requires one deliberate movement rather than restarting navigation from elsewhere.
 
 Route inspection remains available when the fortress cannot move. The selected route, desk order, detail copy, and disabled Commit control all state the exact fuel shortfall or fuel-connected-engine requirement. This keeps “learn about the road” separate from “pay its cost and leave,” making recovery failures diagnosable instead of turning the map inert.

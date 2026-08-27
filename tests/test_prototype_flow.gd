@@ -34,7 +34,7 @@ func _press_campaign_node(node_id: String) -> void:
 			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
 			_expect(game.campaign_map.commit_button.has_focus(), "route selection should move keyboard or controller focus to confirmation")
-			_expect(game.right_scroll.get_global_rect().encloses(game.guidance_label.get_global_rect()), "route confirmation should keep its current objective visible when both fit")
+			_expect(game.right_scroll.get_global_rect().encloses(game.route_preview_label.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_map.get_global_rect()), "route confirmation should keep its intel and map visible with the adjacent Commit action")
 			game.campaign_map.commit_button.pressed.emit()
 			await process_frame
 			return
@@ -168,6 +168,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
+	_expect(game.campaign_commit_button.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_button.get_index() == game.campaign_map.get_index() + 1, "route commitment should remain directly below the map it confirms")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.contract_accept_button.pressed.emit()
@@ -191,6 +192,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
 	_expect(game.encounter_label.text.contains("Rill Crossing selected"), "the route-review status should name the road being considered")
+	_expect(game.route_preview_label.text.contains("ROUTE READY · RILL CROSSING") and not game.route_preview_label.text.contains("SOOT ORCHARD"), "route selection should replace stale focus intel with the road being committed")
 	var route_cancel := InputEventJoypadButton.new()
 	route_cancel.button_index = JOY_BUTTON_B
 	route_cancel.pressed = true

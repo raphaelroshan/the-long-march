@@ -623,8 +623,6 @@ func _build_ui() -> void:
 	campaign_node_buttons = campaign_map.node_buttons
 	campaign_commit_button = campaign_map.commit_button
 	campaign_map.remove_child(campaign_commit_button)
-	controls.add_child(campaign_commit_button)
-	controls.move_child(campaign_commit_button, doctrine_detail_label.get_index() + 1)
 
 	campaign_event_title = Label.new()
 	campaign_event_title.add_theme_font_size_override("font_size", 17)
@@ -647,6 +645,7 @@ func _build_ui() -> void:
 	recruit_iven_button.pressed.connect(_on_recruit_iven_pressed)
 	controls.add_child(recruit_iven_button)
 	controls.add_child(campaign_map)
+	controls.add_child(campaign_commit_button)
 
 	route_option = OptionButton.new()
 	for route_id in LongMarchState.ROUTES.keys():
@@ -1249,6 +1248,7 @@ func _on_campaign_node_selected(node_id: String) -> void:
 	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready." % String(preview.get("name", node_id)))
 	_refresh_ui()
 	_focus_control(campaign_commit_button)
+	_show_selected_route_preview(node_id)
 
 func _on_campaign_node_inspected(node_id: String, detail: String) -> void:
 	if not campaign_map.visible:
@@ -1259,6 +1259,12 @@ func _on_campaign_node_inspected(node_id: String, detail: String) -> void:
 func _set_route_preview(text: String, tone: String = "neutral") -> void:
 	route_preview_label.text = text
 	route_preview_label.add_theme_color_override("font_color", ROUTE_INTEL_COLORS.get(tone, ROUTE_INTEL_COLORS.neutral))
+
+func _show_selected_route_preview(node_id: String) -> void:
+	var block_reason := _campaign_departure_block_reason(node_id)
+	var selected_detail := campaign_map.detail_for(node_id)
+	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)).to_upper()
+	_set_route_preview("ROUTE READY · %s\n%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else ""], "danger" if not block_reason.is_empty() else campaign_map.intel_tone_for(node_id))
 
 func _on_campaign_route_committed(node_id: String) -> void:
 	if node_id.is_empty() or node_id != selected_campaign_node_id:
@@ -1873,9 +1879,7 @@ func _refresh_ui() -> void:
 		elif state.guard_contract_status == "offered":
 			_set_route_preview("The first map branches are visible after the Ashgate contract is answered.")
 		elif not selected_campaign_node_id.is_empty():
-			var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
-			var selected_detail := campaign_map.detail_for(selected_campaign_node_id)
-			_set_route_preview("ROUTE READY · %s\n%s%s" % [String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id)).to_upper(), selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else ""], "danger" if not block_reason.is_empty() else campaign_map.intel_tone_for(selected_campaign_node_id))
+			_show_selected_route_preview(selected_campaign_node_id)
 		else:
 			_set_route_preview("Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals.")
 	elif state.phase == "refit":
