@@ -61,6 +61,72 @@
     {"id": "cartography", "nodes": ["weather_log", "salvage_marks", "shared_routes"], "principle": "better route decisions without certainty"},
     {"id": "crew_trust", "nodes": ["emergency_shift", "controlled_sacrifice", "last_stand_protocol"], "principle": "new interventions and character choices"}
   ],
+  "facilities": [
+    {"id": "boiler_heart", "name": "Boiler Heart", "category": "movement", "space": "chassis_grid", "benefit": "enables movement and route access", "cost": "heat and fuel demand", "dependencies": ["coal_bunker", "water_condenser"], "threats": ["burrowers", "storm_front"]},
+    {"id": "ash_runner_drive", "name": "Ash Runner Drive", "category": "movement", "space": "chassis_grid", "benefit": "shortens travel and improves escape odds", "cost": "high heat and low durability", "dependencies": ["coal_bunker"], "threats": ["burrowers", "heat_overload"]},
+    {"id": "generator_core_facility", "name": "Generator Core", "category": "power", "space": "chassis_grid", "benefit": "sustains weapons, signals, workshops, and life support", "cost": "mass and critical-failure risk", "dependencies": ["crew_quarters"], "threats": ["rival_fortress", "burrowers"]},
+    {"id": "coal_bunker", "name": "Coal Bunker", "category": "logistics", "space": "chassis_grid", "benefit": "extends range and stabilizes engine output", "cost": "fire risk and cargo space", "dependencies": ["firebreak_bulkhead"], "threats": ["road_raiders", "storm_front"]},
+    {"id": "ammunition_lift_facility", "name": "Ammunition Lift", "category": "weapon_logistics", "space": "chassis_grid", "benefit": "connects guns to ammunition and improves reload", "cost": "occupies a vertical corridor", "dependencies": ["cargo_hold", "generator_core_facility"], "threats": ["burrowers", "climbers"]},
+    {"id": "shell_cannon_facility", "name": "Shell Cannon", "category": "weapon", "space": "exterior_mounts", "benefit": "high burst damage against beasts and fortresses", "cost": "exposure, heat, and ammunition", "dependencies": ["ammunition_lift_facility", "generator_core_facility"], "threats": ["climbers", "storm_front"]},
+    {"id": "repeater_gallery", "name": "Repeater Gallery", "category": "weapon", "space": "exterior_mounts", "benefit": "suppresses raiders and climbers", "cost": "lower peak damage and crew demand", "dependencies": ["ammunition_lift_facility", "crew_quarters"], "threats": ["climbers", "road_raiders"]},
+    {"id": "field_workshop_facility", "name": "Field Workshop", "category": "recovery", "space": "chassis_grid", "benefit": "repairs modules and converts salvage", "cost": "space, parts, and crew time", "dependencies": ["crew_quarters", "parts_crate"], "threats": ["burrowers"]},
+    {"id": "salvage_crane", "name": "Salvage Crane", "category": "recovery", "space": "exterior_mounts", "benefit": "recovers more from sites and handles heavy objects", "cost": "exposure and slower travel", "dependencies": ["field_workshop_facility"], "threats": ["storm_front", "climbers"]},
+    {"id": "signal_mast_facility", "name": "Signal Mast", "category": "information", "space": "exterior_mounts", "benefit": "reveals threats, weather, and settlement requests", "cost": "broadcast visibility and exposure", "dependencies": ["generator_core_facility", "command_deck"], "threats": ["climbers", "storm_front"]},
+    {"id": "relay_coil_facility", "name": "Relay Coil", "category": "information", "space": "chassis_grid", "benefit": "improves forecast confidence and settlement trust", "cost": "power draw and political visibility", "dependencies": ["signal_mast_facility"], "threats": ["climbers", "rival_fortress"]},
+    {"id": "crew_quarters_facility", "name": "Crew Quarters", "category": "crew", "space": "chassis_grid", "benefit": "houses specialists and creates command capacity", "cost": "power draw and vulnerable occupants", "dependencies": ["generator_core_facility", "infirmary"], "threats": ["climbers", "siege_beast"]},
+    {"id": "infirmary", "name": "Infirmary", "category": "crew", "space": "chassis_grid", "benefit": "turns medical stores into wound recovery", "cost": "space and medical supply", "dependencies": ["crew_quarters_facility", "water_condenser"], "threats": ["road_raiders", "siege_beast"]},
+    {"id": "command_deck", "name": "Command Deck", "category": "doctrine", "space": "chassis_grid", "benefit": "adds target priorities and emergency capacity", "cost": "high-value target and crew demand", "dependencies": ["crew_quarters_facility", "signal_mast_facility"], "threats": ["climbers", "rival_fortress"]},
+    {"id": "cargo_hold_facility", "name": "Cargo Hold", "category": "contracts", "space": "chassis_grid", "benefit": "carries supplies, contracts, and salvage", "cost": "mass and raider incentive", "dependencies": ["crew_quarters_facility", "access_hatch"], "threats": ["road_raiders"]},
+    {"id": "refugee_berths", "name": "Refugee Berths", "category": "shelter", "space": "chassis_grid", "benefit": "unlocks evacuation and shelter contracts", "cost": "mass, food, and slower travel", "dependencies": ["infirmary", "cargo_hold_facility"], "threats": ["road_raiders", "storm_front"]},
+    {"id": "water_condenser", "name": "Water Condenser", "category": "sustain", "space": "chassis_grid", "benefit": "reduces supply drain and enables arid routes", "cost": "heat and maintenance", "dependencies": ["generator_core_facility", "field_workshop_facility"], "threats": ["burrowers", "storm_front"]},
+    {"id": "firebreak_bulkhead", "name": "Firebreak Bulkhead", "category": "containment", "space": "chassis_grid", "benefit": "contains area damage and chain failures", "cost": "consumes cells and divides access", "dependencies": ["crew_quarters_facility"], "threats": ["siege_beast", "storm_front"]}
+  ],
+  "facility_rules": [
+    {"id": "fuel_transfer", "relationship": "boiler_heart beside coal_bunker", "benefit": "reduced fuel waste", "risk": "chain fire can damage both"},
+    {"id": "protected_command", "relationship": "generator_core near command_deck behind armor", "benefit": "faster reprioritization and safer interventions", "risk": "concentrated breach removes power and command"},
+    {"id": "reload_corridor", "relationship": "ammunition_lift connected to cargo_hold and weapon", "benefit": "faster reload", "risk": "lift failure disables the gun line"},
+    {"id": "repair_reach", "relationship": "field_workshop beside exterior mount", "benefit": "faster exposed-module repairs", "risk": "workshop becomes a predictable target"},
+    {"id": "signal_high_ground", "relationship": "signal_mast above command_deck", "benefit": "better forecast confidence", "risk": "one exposed cluster attracts climbers and storms"},
+    {"id": "shelter_medical", "relationship": "refugee_berths beside infirmary", "benefit": "better civilian recovery and trust", "risk": "food and mass pressure"}
+  ],
+  "regions": [
+    {"id": "ashgate_lowlands", "name": "The Ashgate Lowlands", "terrain": "rail embankments, dry canals, depot towns", "pressure": "red_wheel_blockade", "lesson": "speed, cargo value, and first dependencies"},
+    {"id": "flooded_veyru", "name": "The Flooded Veyru Undercroft", "terrain": "waterlogged civic ruins and submerged rails", "pressure": "rising_water", "lesson": "condition, signals, and lower-hull integrity"},
+    {"id": "cinder_spine", "name": "The Cinder Spine", "terrain": "volcanic grades and narrow industrial passes", "pressure": "spreading_fireline", "lesson": "heat, mass, and repair capacity"},
+    {"id": "white_salt_expanse", "name": "The White Salt Expanse", "terrain": "open salt flats with no cover", "pressure": "approaching_ash_front", "lesson": "visibility, water, convoy, and trust"},
+    {"id": "meridian_refuge_corridor", "name": "The Meridian Refuge Corridor", "terrain": "contested shelters and collapsing passes", "pressure": "final_storm_season", "lesson": "what the fortress exists to preserve"}
+  ],
+  "settlements": [
+    {"id": "ashgate_depot", "region": "ashgate_lowlands", "identity": "crowded repair and departure yard", "services": ["fuel", "recruit", "refit", "contracts"], "conflict": "who receives the last working parts"},
+    {"id": "morrowline_camp", "region": "ashgate_lowlands", "identity": "moving convoy shelter", "services": ["trade", "escort", "rumors"], "conflict": "protect the convoy or preserve speed"},
+    {"id": "lantern_quay", "region": "flooded_veyru", "identity": "flood-edge market", "services": ["repair", "water", "divers"], "conflict": "sell relics or save the archive"},
+    {"id": "dry_archive", "region": "flooded_veyru", "identity": "knowledge settlement", "services": ["forecast", "map", "identify"], "conflict": "share information or keep secrecy"},
+    {"id": "blackkiln", "region": "cinder_spine", "identity": "industrial forge town", "services": ["armor", "heat_tools", "salvage"], "conflict": "production versus shelter"},
+    {"id": "switchback_commune", "region": "cinder_spine", "identity": "cooperative mountain settlement", "services": ["crew_training", "alternate_route", "shelter"], "conflict": "slow safe pass or abandon others"},
+    {"id": "saltglass_haven", "region": "white_salt_expanse", "identity": "water and signal hub", "services": ["supplies", "relay", "guides"], "conflict": "trust is priced through promises"},
+    {"id": "meridian_refuge", "region": "meridian_refuge_corridor", "identity": "campaign destination and shelter network", "services": ["final_refit", "shelter", "ending"], "conflict": "decide what the fortress becomes"}
+  ],
+  "map_rules": [
+    {"id": "authored_branching", "rule": "Each chapter presents two or three connected choices from deterministic node templates."},
+    {"id": "visibility_bands", "rule": "Known, forecast, and unscouted nodes reveal progressively more information."},
+    {"id": "closure_pressure", "rule": "A visible regional clock changes or closes optional nodes without deleting the only viable recovery path."},
+    {"id": "guaranteed_recovery", "rule": "Every boss approach and failed encounter retains a settlement, camp, or lower-value route."},
+    {"id": "route_tradeoff", "rule": "Every shortcut saves at least one visible resource while increasing a visible risk."}
+  ],
+  "characters": [
+    {"id": "mara_flint", "facility": "field_workshop_facility", "belief": "repair is a moral practice", "benefit": "extra condition recovery", "pressure": "resists wasteful sacrifice"},
+    {"id": "iven_pell", "facility": "signal_mast_facility", "belief": "information is shared infrastructure", "benefit": "higher forecast confidence", "pressure": "broadcasting makes the fortress visible"},
+    {"id": "sela_vonn", "facility": "command_deck", "belief": "a delayed fortress can be dangerous", "benefit": "predictable rush and detour posture", "pressure": "pushes speed during repair windows"},
+    {"id": "tomas_reed", "facility": "cargo_hold_facility", "belief": "cargo is leverage", "benefit": "protects one marked contract", "pressure": "treats human obligations as negotiable weight"},
+    {"id": "nera_quill", "facility": "infirmary", "belief": "people are not spare parts", "benefit": "prevents one wound cascade", "pressure": "prioritizes civilians over machinery"},
+    {"id": "orris_vale", "facility": "boiler_heart", "belief": "the road must keep moving", "benefit": "reduces long-route fuel waste", "pressure": "hides early engine failure"}
+  ],
+  "campaign_pressures": [
+    {"id": "mobility", "raised_by": ["rush_routes", "light_builds", "speed_contracts"], "unlocks": ["shortcuts", "rapid_evacuation"], "cost": "less repair time and shelter capacity"},
+    {"id": "shelter", "raised_by": ["refugee_berths", "convoy_contracts", "infirmary_use"], "unlocks": ["refugee_routes", "shelter_ending"], "cost": "mass, food, and slower travel"},
+    {"id": "knowledge", "raised_by": ["repair_relays", "share_warnings", "preserve_records"], "unlocks": ["forecasts", "hidden_sites", "archive_ending"], "cost": "visibility and political exposure"},
+    {"id": "industry", "raised_by": ["forge_contracts", "machine_delivery", "salvage_processing"], "unlocks": ["strong_modules", "repair_efficiency"], "cost": "heat, labor obligations, and faction dependence"}
+  ],
   "vertical_slice": {
     "chassis_dimensions": [6, 4],
     "exterior_mounts": 2,

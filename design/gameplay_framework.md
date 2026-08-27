@@ -155,3 +155,9 @@ The simulation should have deterministic tests for:
 ## Anti-patterns
 
 Do not create a large board where a mathematically dominant layout is obvious. Do not add several hidden currencies. Do not make the best weapon always the heaviest weapon. Do not make every enemy attack the nearest module. Do not let the player lose without a post-battle explanation or recovery option. Do not add a second full crew inventory until the primary chassis space is already compelling.
+
+## Expanded design package
+
+The production-facing facility catalog, dependency web, operating budgets, staffing model, damage states, and building progression are specified in [`fortress_facilities_and_mechanics.md`](fortress_facilities_and_mechanics.md). The FTL-like overland node map, visibility bands, closure-pressure clock, five regions, settlement services, and route archetypes are specified in [`map_regions_and_settlements.md`](map_regions_and_settlements.md). The expanded crew, rival characters, factions, campaign tendencies, regional arcs, and character-driven contracts are specified in [`characters_factions_and_campaign.md`](characters_factions_and_campaign.md).
+
+These documents are deliberately broader than the current vertical slice. The first playable implementation should keep the existing 6×4 chassis, two exterior mounts, three route choices, two settlements, five encounter scope, and deterministic simulation contract. New buildings, regions, and characters enter only through narrow tested slices.

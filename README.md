@@ -45,3 +45,13 @@ The recommended sequence is:
 ## Related follow-up concept
 
 The dungeon-and-shop inventory battler remains a separate follow-up concept. It is not part of this repository. The Long March should first prove that a moving fortress creates a compelling spatial and strategic identity.
+
+## Expanded design package
+
+The broader fortress plan is documented separately so agents can implement it in controlled slices:
+
+- [`design/fortress_facilities_and_mechanics.md`](design/fortress_facilities_and_mechanics.md) — buildings, dependencies, budgets, staffing, damage, and recovery.
+- [`design/map_regions_and_settlements.md`](design/map_regions_and_settlements.md) — FTL-like node map, visibility, closure pressure, regions, settlements, and route archetypes.
+- [`design/characters_factions_and_campaign.md`](design/characters_factions_and_campaign.md) — crew, rivals, factions, campaign pressures, regional arcs, and endings.
+
+The machine-readable campaign manifest now includes regions, settlements, extended character hooks, map rules, and additional authored events. The gameplay framework includes the planned facility catalog and campaign-pressure model; these future-facing definitions remain distinct from the current vertical slice until each one has runtime behavior and deterministic tests.
