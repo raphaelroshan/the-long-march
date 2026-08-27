@@ -198,6 +198,8 @@ An active contact's preview shows the target's current and predicted durability,
 
 If that predicted hit disables a dependency source, the same card names up to two downstream systems and their resulting Ready, Strained, or Offline state, with a count for any additional cascade. The preview temporarily evaluates the damaged layout and restores it immediately, so its warning uses the real dependency rules without changing the run before Advance is confirmed.
 
+The persistent Current Order promotes the most severe imminent consequence from those previews: hull collapse first, then a disabled module and its dependency cascade, then a breaking armor plate. Its action language changes when the emergency order has already been spent, so a critical warning never recommends a control the player can no longer use.
+
 When armor intercepts that hit, the preview names the specific plate and shows its own before-and-after durability, including a break warning. Armor is a second damaged system rather than an invisible subtraction, so sacrificing a plate to preserve a dependency is visible before the step resolves.
 
 Hull-directed attacks explicitly state that sealing a module cannot prevent the current hit. Chassis inspection remains available for reviewing the surviving layout, but its action and encounter-order help describe the exposed hull so the player is steered toward a relevant intervention rather than a false defensive promise.

@@ -2120,6 +2120,10 @@ func _current_guidance() -> String:
 					nearest_enemy = String(definition.get("name", enemy_id))
 		var order_status := "The emergency order is spent." if state.encounter_intervention_used else "One emergency order remains."
 		if not active_targets.is_empty():
+			var critical_warning := _critical_combat_warning()
+			if not critical_warning.is_empty():
+				var critical_action := "No emergency order remains; inspect the forecast, then advance." if state.encounter_intervention_used else "Review the emergency orders before advancing."
+				return "CURRENT ORDER · %s %s" % [critical_warning, critical_action]
 			return "CURRENT ORDER · %s under threat. Read cause and effect, then advance. %s" % [" and ".join(active_targets), order_status]
 		if not nearest_enemy.is_empty():
 			return "CURRENT ORDER · %s is %d step%s out. Advance to step %d. %s" % [nearest_enemy, nearest_steps, "" if nearest_steps == 1 else "s", mini(state.encounter_step + 1, 6), order_status]
@@ -2139,6 +2143,44 @@ func _current_guidance() -> String:
 	if state.campaign_active and state.phase in ["refit", "map"]:
 		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
 	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
+
+func _critical_combat_warning() -> String:
+	var best_priority := 0
+	var best_warning := ""
+	for enemy in state.encounter_enemies:
+		if bool(enemy.get("defeated", false)) or not bool(enemy.get("arrived", false)):
+			continue
+		var impact: Dictionary = state.encounter_enemy_impact_preview(enemy)
+		if impact.is_empty():
+			continue
+		var target_id := String(impact.get("target", ""))
+		var target_name := "Hull" if target_id == "hull" else String(state.module_definition(target_id).get("name", target_id.replace("_", " ").capitalize()))
+		var remaining := int(impact.get("remaining_durability", 1))
+		var priority := 0
+		var warning := ""
+		if target_id == "hull" and remaining <= 0:
+			priority = 3
+			warning = "Hull collapse is predicted on the next step."
+		elif remaining <= 0:
+			priority = 2
+			warning = "%s will be disabled." % target_name
+			var dependency_changes: Array = impact.get("dependency_changes", [])
+			if not dependency_changes.is_empty():
+				var cascade_names: Array[String] = []
+				for index in range(mini(2, dependency_changes.size())):
+					var change: Dictionary = dependency_changes[index]
+					cascade_names.append("%s → %s" % [String(change.get("name", "System")), String(change.get("to", "offline")).capitalize()])
+				var hidden_count := dependency_changes.size() - cascade_names.size()
+				warning = "%s Cascade: %s%s." % [warning.trim_suffix("."), ", ".join(cascade_names), ", and %d more" % hidden_count if hidden_count > 0 else ""]
+		elif int(impact.get("armor_absorbed", 0)) > 0 and int(impact.get("armor_remaining_durability", 1)) <= 0:
+			priority = 1
+			var armor_id := String(impact.get("armor_id", ""))
+			var armor_name := String(state.module_definition(armor_id).get("name", armor_id.replace("_", " ").capitalize()))
+			warning = "%s will break while protecting %s." % [armor_name, target_name]
+		if priority > best_priority:
+			best_priority = priority
+			best_warning = warning
+	return best_warning
 
 func _advance_encounter_action_text() -> String:
 	var next_step := mini(state.encounter_step + 1, 6)

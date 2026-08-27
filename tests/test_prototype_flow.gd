@@ -275,8 +275,20 @@ func _run() -> void:
 	game._select_module_option("steam_lance_engine")
 	game.state.encounter_enemies[0]["arrived"] = true
 	game.state.encounter_enemies[0]["target"] = "coal_cell"
+	var coal_index: int = game.state._module_index_by_id("coal_cell")
+	var coal_durability := int(game.state.modules[coal_index].get("durability", 0))
+	var raider_damage_bonus := int(game.state.encounter_enemies[0].get("damage_bonus", 0))
+	game.state.modules[coal_index]["durability"] = 1
+	game.state.encounter_enemies[0]["damage_bonus"] = 1
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
+	_expect(game.guidance_label.text.contains("Coal Cell will be disabled") and game.guidance_label.text.contains("Steam Lance Engine → Offline") and game.guidance_label.text.contains("Review the emergency orders"), "the current order should promote a predicted dependency cascade before the player advances")
+	game.state.encounter_intervention_used = true
+	game._refresh_ui()
+	_expect(game.guidance_label.text.contains("No emergency order remains") and not game.guidance_label.text.contains("Review the emergency orders"), "critical guidance should stop recommending unavailable orders after the encounter budget is spent")
+	game.state.encounter_intervention_used = false
+	game.state.modules[coal_index]["durability"] = coal_durability
+	game.state.encounter_enemies[0]["damage_bonus"] = raider_damage_bonus
 	game.selected_module_id = "steam_lance_engine"
 	game._sync_selected_module_context()
 	game._select_module_option("steam_lance_engine")
