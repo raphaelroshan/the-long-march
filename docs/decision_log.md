@@ -403,3 +403,7 @@ Seal Compartment resolves its targeting consequence in the same committed action
 ## 2026-08-28 — The Seal order previews its redirected threat
 
 The selected module's Seal Compartment control previews every active threat that would be redirected and its replacement target before the order is spent. The forecast is calculated without mutating the encounter and uses the same deterministic targeting rules as resolution. Sealing a system that is not currently targeted remains available and is explicitly described as preventative rather than implying an immediate benefit.
+
+## 2026-08-28 — Cargo sacrifice resolves targeting immediately
+
+Cut Loose Cargo now applies the same atomic targeting rule as Seal Compartment. If the discarded module was under attack, affected threats choose their replacement targets during the emergency order, and both the receipt and persistent combat report name the redirection. The chassis, enemy cards, current order, and next-hit forecast cannot point at cargo that no longer exists.

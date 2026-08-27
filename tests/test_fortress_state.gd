@@ -259,6 +259,18 @@ func _test_spatial_targeting_and_causality() -> void:
 	var command_points_before := destroyed_target.command_points
 	_expect(not bool(destroyed_target.intervene("seal_compartment", "coal_cell").get("ok", false)) and destroyed_target.command_points == command_points_before, "destroyed systems should reject Seal without spending a command point")
 
+	var sacrificed_target := LongMarchState.new(1107)
+	_install_encounter_loadout(sacrificed_target)
+	sacrificed_target.begin_journey("safe_road", "run_hot")
+	sacrificed_target.encounter_enemies[0]["arrived"] = true
+	sacrificed_target.encounter_enemies[0]["target"] = "coal_cell"
+	var cut_loose := sacrificed_target.use_encounter_intervention("cut_loose_cargo")
+	var cut_retargets: Array = cut_loose.get("retargets", [])
+	var cut_target := String(sacrificed_target.encounter_enemies[0].get("target", ""))
+	_expect(bool(cut_loose.get("ok", false)) and String(cut_loose.get("removed_module", "")) == "coal_cell" and cut_target != "coal_cell", "cutting loose an active cargo target should redirect its threat immediately")
+	_expect(cut_retargets.size() == 1 and String(cut_retargets[0].get("target", "")) == cut_target and String(cut_loose.get("effect", "")).contains("redirected"), "the cargo-sacrifice receipt should name the replacement target")
+	_expect(String(sacrificed_target.encounter_enemy_impact_preview(sacrificed_target.encounter_enemies[0]).get("target", "")) == cut_target, "cargo sacrifice should replace its stale impact forecast before another combat step")
+
 	var armored := LongMarchState.new(1107)
 	armored.place_module("generator_core", Vector2i(0, 0))
 	armored.place_module("crew_quarters", Vector2i(2, 1))

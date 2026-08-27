@@ -301,6 +301,21 @@ func _run() -> void:
 	game.state.load_serialized(pre_seal_state)
 	game.last_synced_combat_target_id = ""
 	game._refresh_ui()
+	var pre_cut_state: Dictionary = game.state.serialize()
+	var sacrificed_cargo_id: String = game.state.sacrificable_cargo_id()
+	game.state.encounter_enemies[0]["arrived"] = true
+	game.state.encounter_enemies[0]["target"] = sacrificed_cargo_id
+	game.last_synced_combat_target_id = ""
+	game._refresh_ui()
+	game.intervention_buttons[3].pressed.emit()
+	await process_frame
+	var post_cut_target: String = String(game.state.encounter_enemies[0].get("target", ""))
+	var post_cut_name: String = "Hull" if post_cut_target == "hull" else String(game.state.module_definition(post_cut_target).get("name", post_cut_target))
+	_expect(post_cut_target != sacrificed_cargo_id and game.event_label.text.contains("redirected") and game.event_label.text.contains(post_cut_name), "cutting loose targeted cargo should immediately disclose where the threat redirects")
+	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · %s" % post_cut_name.to_upper()), "enemy cards should immediately replace a discarded cargo target")
+	game.state.load_serialized(pre_cut_state)
+	game.last_synced_combat_target_id = ""
+	game._refresh_ui()
 	game.state.encounter_intervention_used = true
 	game._refresh_ui()
 	_expect(game.guidance_label.text.contains("No emergency order remains") and not game.guidance_label.text.contains("Review the emergency orders"), "critical guidance should stop recommending unavailable orders after the encounter budget is spent")

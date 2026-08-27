@@ -1380,7 +1380,7 @@ func encounter_seal_preview(target_module: String) -> Dictionary:
 		retargets.append({"enemy_index": index, "enemy_id": enemy_id, "enemy_name": enemy_name, "previous_target": target_module, "target": replacement_target, "target_name": replacement_name})
 	return {"valid": true, "target_module": target_module, "retargets": retargets}
 
-func _encounter_retarget_sealed_module(target_module: String) -> Array[Dictionary]:
+func _encounter_retarget_unavailable_module(target_module: String, cause: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []
 	for index in range(encounter_enemies.size()):
 		var enemy: Dictionary = encounter_enemies[index]
@@ -1394,7 +1394,7 @@ func _encounter_retarget_sealed_module(target_module: String) -> Array[Dictionar
 		var replacement_name := "Hull" if replacement_target == "hull" else String(module_definition(replacement_target).get("name", replacement_target.replace("_", " ").capitalize()))
 		var change := {"enemy_id": enemy_id, "enemy_name": enemy_name, "previous_target": target_module, "target": replacement_target, "target_name": replacement_name}
 		retargets.append(change)
-		_encounter_log("%s redirects to %s after its target compartment is sealed." % [enemy_name, replacement_name])
+		_encounter_log("%s redirects to %s after %s." % [enemy_name, replacement_name, cause])
 	return retargets
 
 func _module_index_by_id(module_id: String) -> int:
@@ -1897,7 +1897,9 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 	if bool(result.get("ok", false)):
 		encounter_intervention_used = true
 		if intervention_id == "seal_compartment":
-			result["retargets"] = _encounter_retarget_sealed_module(target_module)
+			result["retargets"] = _encounter_retarget_unavailable_module(target_module, "its target compartment is sealed")
+		elif intervention_id == "cut_loose_cargo":
+			result["retargets"] = _encounter_retarget_unavailable_module(String(result.get("removed_module", "")), "its target module is cut loose")
 		var effect := _intervention_effect_text(intervention_id, result)
 		result["effect"] = effect
 		_encounter_log("Intervention: %s." % effect)
@@ -1921,7 +1923,14 @@ func _intervention_effect_text(intervention_id: String, result: Dictionary) -> S
 			return "%d heat vented; the next exterior hit deals +1 damage" % int(result.get("heat_removed", 0))
 		"cut_loose_cargo":
 			var removed_module := String(result.get("removed_module", "cargo"))
-			return "%s discarded; mass and cargo incentive reduced" % String(module_definition(removed_module).get("name", removed_module))
+			var effect := "%s discarded; mass and cargo incentive reduced" % String(module_definition(removed_module).get("name", removed_module))
+			var retargets: Array = result.get("retargets", [])
+			if not retargets.is_empty():
+				var redirects: Array[String] = []
+				for retarget in retargets:
+					redirects.append("%s → %s" % [String(retarget.get("enemy_name", "Threat")), String(retarget.get("target_name", "Hull"))])
+				effect += "; redirected %s" % ", ".join(redirects)
+			return effect
 	return intervention_id.replace("_", " ").capitalize()
 
 func _all_encounter_enemies_defeated() -> bool:
