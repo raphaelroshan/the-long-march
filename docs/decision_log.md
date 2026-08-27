@@ -463,3 +463,7 @@ A completed checkpoint changes the title's fresh-run actions to Play Again and Q
 ## 2026-08-28 — Restart warnings reflect actual recovery
 
 Restart confirmation inspects the local checkpoint before describing what survives. With a compatible save it names the saved day and location, or completed result, and explains when the restarted run can replace it. Without a usable checkpoint it explicitly warns that there is nothing to return to, avoiding false reassurance on a player's first unsaved attempt.
+
+## 2026-08-28 — Skipping does not complete the briefing
+
+The first-run briefing distinguishes temporary dismissal from completion. Skip and B/Esc now close it for the current run without writing the completed marker, while advancing through all four cards still suppresses it on later guided starts. This prevents an accidental cancel input from permanently hiding onboarding and keeps the existing Settings reset limited to genuinely completed briefings.

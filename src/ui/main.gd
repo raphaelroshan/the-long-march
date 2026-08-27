@@ -1055,7 +1055,7 @@ func _refresh_onboarding() -> void:
 	onboarding_title_label.text = String(step.title)
 	onboarding_body_label.text = String(step.body)
 	onboarding_action_label.text = String(step.action)
-	onboarding_progress_label.text = "Briefing %d of %d  ·  D-pad / arrows or Tab move  ·  A / Enter confirms  ·  B / Esc %s" % [onboarding_step + 1, ONBOARDING_STEPS.size(), "closes" if onboarding_reopened else "skips"]
+	onboarding_progress_label.text = "Briefing %d of %d  ·  D-pad / arrows or Tab move  ·  A / Enter confirms  ·  B / Esc %s" % [onboarding_step + 1, ONBOARDING_STEPS.size(), "closes" if onboarding_reopened else "closes for this run"]
 	for index in range(onboarding_step_panels.size()):
 		var panel := onboarding_step_panels[index]
 		var label := onboarding_step_labels[index]
@@ -1080,7 +1080,7 @@ func _refresh_onboarding() -> void:
 	active_actions.append(onboarding_next_button)
 	_configure_focus_cycle(active_actions)
 	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER ASHGATE") if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
-	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP BRIEFING"
+	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP FOR THIS RUN"
 
 func _on_onboarding_back() -> void:
 	onboarding_step = maxi(0, onboarding_step - 1)
@@ -1095,7 +1095,7 @@ func _on_onboarding_next() -> void:
 
 func _finish_onboarding(skipped: bool) -> void:
 	var was_reopened := onboarding_reopened
-	if not was_reopened:
+	if not was_reopened and not skipped:
 		var marker := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
 		if marker != null:
 			marker.store_string(String(ProjectSettings.get_setting("application/config/version", "unknown")))

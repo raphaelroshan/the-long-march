@@ -166,6 +166,13 @@ func _run() -> void:
 	_expect(app.game_view.onboarding_overlay.visible, "the guided Start Game path should open the Marchmaster briefing")
 	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
 	_expect(not app.game_view.save_button.visible and not app.game_view.load_button.visible, "pause-owned persistence controls should not be duplicated in the live stage")
+	_expect(app.game_view.onboarding_skip_button.text == "SKIP FOR THIS RUN" and app.game_view.onboarding_progress_label.text.contains("closes for this run"), "the first-run briefing should describe Skip and B/Esc as temporary choices")
+	app.game_view._finish_onboarding(true)
+	await process_frame
+	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "skipping should not permanently mark an unread briefing complete")
+	app.game_view._show_onboarding(false)
+	await process_frame
+	_expect(app.game_view.onboarding_overlay.visible and app.game_view.onboarding_step == 0, "a skipped briefing should remain available from its first card in the current run")
 
 	app.game_view._finish_onboarding(false)
 	await process_frame
