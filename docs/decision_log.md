@@ -142,6 +142,8 @@ The retreat after-action line is generated from a structured simulation receipt 
 
 Morrowline's service controls expose the remaining action budget in the heading and disable choices that cannot succeed because the selected module or hull is already whole, funds are insufficient, or no actions remain. Module repair names the selected system, restored durability, and exact cost. Focus skips unavailable services so arrival never lands on a dead-end action.
 
+Disabled fuel, hull, and module services state whether the player has insufficient Ashmarks or has exhausted the shared service-action budget. These blockers appear in the controls themselves, not only in hover text, so controller and keyboard players can understand why a tempting recovery option is unavailable.
+
 The complete Morrowline controller loop is rebuilt from usable services and currently open roads. Fully repaired modules, unaffordable services, exhausted service slots, and closed routes are omitted; route commitment joins the loop only after the player deliberately selects a road.
 
 When the selected chassis system is already healthy but another installed system is damaged, the disabled Repair row names the most damaged candidate and its current durability. If nothing needs work it says `All systems full`. Recovery therefore points the player back to the exact Module entry that will enable repair instead of reporting only the irrelevant health of the current selection.

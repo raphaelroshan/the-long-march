@@ -343,6 +343,21 @@ func _run() -> void:
 	game.state.modules[damaged_workshop_index]["durability"] = workshop_before
 	game.state._recalculate()
 	game._refresh_ui()
+	var recovery_money: int = game.state.money
+	var recovery_hull: int = game.state.hull_condition
+	var recovery_actions: int = game.state.settlement_actions_remaining
+	game.state.money = 3
+	game.state.hull_condition = 8
+	game._refresh_ui()
+	_expect(game.settlement_refuel_button.disabled and game.settlement_refuel_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable fuel service should name the player's current funds")
+	_expect(game.settlement_hull_button.disabled and game.settlement_hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable hull service should name the player's current funds")
+	game.state.money = recovery_money
+	game.state.settlement_actions_remaining = 0
+	game._refresh_ui()
+	_expect(game.settlement_repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
+	game.state.hull_condition = recovery_hull
+	game.state.settlement_actions_remaining = recovery_actions
+	game._refresh_ui()
 	var saved_pressure: int = game.state.campaign_pressure
 	game.state.campaign_pressure = 5
 	game._refresh_ui()
