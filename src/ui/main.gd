@@ -1,5 +1,7 @@
 extends Control
 
+signal return_to_title_requested
+
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
@@ -95,6 +97,9 @@ var phase_badge: Label
 var campaign_progress_bar: ProgressBar
 var how_to_play_button: Button
 var feedback_button: Button
+var results_group: VBoxContainer
+var play_again_button: Button
+var results_title_button: Button
 var onboarding_overlay: Control
 var onboarding_title_label: Label
 var onboarding_body_label: Label
@@ -621,19 +626,39 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_on_reset_pressed)
 	controls.add_child(reset_button)
 
-	var playtest_actions := HBoxContainer.new()
-	playtest_actions.add_theme_constant_override("separation", 8)
+	results_group = VBoxContainer.new()
+	results_group.add_theme_constant_override("separation", 8)
+	controls.add_child(results_group)
+	var results_heading := Label.new()
+	results_heading.text = "RUN COMPLETE"
+	results_heading.add_theme_font_size_override("font_size", 17)
+	results_heading.add_theme_color_override("font_color", Color("#e8c58e"))
+	results_group.add_child(results_heading)
+	feedback_button = Button.new()
+	feedback_button.text = "RECORD PLAYTEST NOTES"
+	feedback_button.custom_minimum_size = Vector2(0, 50)
+	feedback_button.pressed.connect(_show_feedback)
+	_accent_button(feedback_button, Color("#285348"), Color("#73c99b"))
+	results_group.add_child(feedback_button)
+	var results_actions := HBoxContainer.new()
+	results_actions.add_theme_constant_override("separation", 8)
+	results_group.add_child(results_actions)
+	play_again_button = Button.new()
+	play_again_button.text = "PLAY AGAIN"
+	play_again_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	play_again_button.pressed.connect(_on_play_again_pressed)
+	results_actions.add_child(play_again_button)
+	results_title_button = Button.new()
+	results_title_button.text = "RETURN TO TITLE"
+	results_title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	results_title_button.pressed.connect(_on_results_title_pressed)
+	results_actions.add_child(results_title_button)
+	controls.move_child(results_group, guidance_label.get_index() + 1)
+
 	how_to_play_button = Button.new()
 	how_to_play_button.text = "How to play"
-	how_to_play_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	how_to_play_button.pressed.connect(_show_onboarding.bind(true))
-	playtest_actions.add_child(how_to_play_button)
-	feedback_button = Button.new()
-	feedback_button.text = "Playtest feedback"
-	feedback_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	feedback_button.pressed.connect(_show_feedback)
-	playtest_actions.add_child(feedback_button)
-	controls.add_child(playtest_actions)
+	controls.add_child(how_to_play_button)
 
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
@@ -1227,6 +1252,18 @@ func _on_reset_pressed() -> void:
 	_journal_event("run_reset")
 	_refresh_ui()
 
+func _on_play_again_pressed() -> void:
+	_reset_state()
+	fortress_panel.state = state
+	_set_event("A new Ashgate march is ready. Answer the contract, inspect the chassis, and choose the first road.")
+	_journal_event("run_restarted_from_results")
+	_refresh_ui()
+	focus_current_action.call_deferred()
+
+func _on_results_title_pressed() -> void:
+	_journal_event("return_to_title", {"phase": state.phase, "result": state.final_result})
+	return_to_title_requested.emit()
+
 func _set_event(text: String) -> void:
 	event_label.text = text
 
@@ -1337,6 +1374,7 @@ func _refresh_ui() -> void:
 	journey_banner.visible = not is_battle_phase
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	_refresh_run_flow_tracker()
+	results_group.visible = state.phase == "results"
 	match state.phase:
 		"refit":
 			guidance_label.text = "NEXT — Configure dependencies, answer the contract, then select and commit to a highlighted map node."

@@ -2,10 +2,14 @@ extends SceneTree
 
 var game: Control
 var failures: Array[String] = []
+var return_to_title_requested: bool = false
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+func _mark_return_to_title_requested() -> void:
+	return_to_title_requested = true
 
 func _init() -> void:
 	call_deferred("_run")
@@ -55,6 +59,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	game = load("res://scenes/Main.tscn").instantiate()
+	game.return_to_title_requested.connect(_mark_return_to_title_requested)
 	root.add_child(game)
 	await process_frame
 	await process_frame
@@ -127,12 +132,19 @@ func _run() -> void:
 	await _advance_until_phase("results")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
+	_expect(game.results_group.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose replay and return-to-title actions")
 	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")
 	game.feedback_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
 	game._hide_feedback()
 	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
+	game.results_title_button.pressed.emit()
+	await process_frame
+	_expect(return_to_title_requested, "the completed stage should be able to request the application title")
+	game.play_again_button.pressed.emit()
+	await process_frame
+	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.contract_accept_button.has_focus(), "Play Again should create a fresh focused Ashgate stage")
 	for path in [save_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
