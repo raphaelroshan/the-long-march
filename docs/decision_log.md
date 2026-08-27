@@ -152,6 +152,8 @@ Save, load, and reset controls remain callable by the test harness but are hidde
 
 The settings overlay is shared by the title and pause menus, but it names the context it was opened from and changes its return action accordingly. This avoids telling a player that an in-run action will return to the title when it actually restores the paused march.
 
+Cancel input is resolved by the foremost application overlay before the underlying session state. Esc or a controller back action therefore closes in-run Settings and restores pause instead of reopening pause behind a still-visible settings panel.
+
 One-shot settings actions such as resetting the completed briefing or clearing the only save disable themselves after success. Focus moves to the enabled return action instead of remaining attached to a control that can no longer be activated, preserving a complete keyboard and controller path.
 
 The first-run briefing and the in-run Field Briefing reuse one layout but have distinct semantics. First-run controls say `Skip Briefing` and `Enter Ashgate` and persist completion; reference mode says `Close Briefing` and `Return to March` and records only that the reference was closed. Re-reading help therefore cannot masquerade as onboarding progress.

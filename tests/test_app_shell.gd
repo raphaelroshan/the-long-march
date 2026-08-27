@@ -170,9 +170,12 @@ func _run() -> void:
 	app.reset_briefing_button.pressed.emit()
 	await process_frame
 	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
-	app.settings_close_button.pressed.emit()
+	var cancel_input := InputEventAction.new()
+	cancel_input.action = "ui_cancel"
+	cancel_input.pressed = true
+	app._unhandled_key_input(cancel_input)
 	await process_frame
-	_expect(app.pause_view.visible and app.pause_settings_button.has_focus(), "closing in-run Settings should return to the pause menu")
+	_expect(not app.settings_view.visible and app.pause_view.visible and app.pause_settings_button.has_focus(), "cancelling in-run Settings should close it and return to the pause menu")
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "restart should require confirmation before discarding progress")

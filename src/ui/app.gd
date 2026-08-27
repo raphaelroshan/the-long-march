@@ -1181,12 +1181,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_cancel_confirmation()
 		get_viewport().set_input_as_handled()
 		return
+	if settings_view.visible:
+		_hide_settings()
+		get_viewport().set_input_as_handled()
+		return
 	if game_view == null:
 		if guide_view.visible:
 			_hide_guide()
-			get_viewport().set_input_as_handled()
-		elif settings_view.visible:
-			_hide_settings()
 			get_viewport().set_input_as_handled()
 		return
 	if pause_view.visible:
