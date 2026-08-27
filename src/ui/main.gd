@@ -1921,7 +1921,8 @@ func _refresh_ui() -> void:
 		var path_names: Array[String] = []
 		for node_id in state.campaign_path:
 			path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
-		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | Encounter %d/5" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), state.campaign_encounters_completed]
+		var progress_text := "Encounter %d/5 underway" % mini(state.campaign_encounters_completed + 1, 5) if is_battle_phase else "%d/5 encounters secured" % state.campaign_encounters_completed
+		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | %s" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), progress_text]
 	else:
 		journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
 	if state.phase == "results":

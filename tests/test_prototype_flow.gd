@@ -225,6 +225,7 @@ func _run() -> void:
 	await _press_campaign_node("rill_crossing")
 	await process_frame
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
+	_expect(game.journey_label.text.contains("Encounter 1/5 underway") and not game.journey_label.text.contains("Encounter 0/5"), "the journey header should count the active first encounter rather than showing zero progress")
 	_expect(game.advance_encounter_button.has_focus(), "committing a route should hand controller focus to the encounter timeline")
 	_expect(game.right_scroll.get_global_rect().encloses(game.advance_encounter_button.get_global_rect()), "battle focus should scroll encounter advancement into view")
 	var battle_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
@@ -252,6 +253,7 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_states[0].text.contains("1 STEP OUT") and game.advance_encounter_button.text.contains("STEP 2 OF 6") and game.advance_encounter_button.text.contains("CONTACT NEXT · ROAD RAIDER") and game.combat_panel.order_label.text.contains("Next step 2/6") and game.combat_panel.step_labels[1].text == "CONTACT · 2", "the arrival countdown, timeline, combat status, and advance action should agree and warn before contact")
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
+	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
 	_expect(game.campaign_map.button_for("red_wheel_toll_bridge").text.contains("UNSCOUTED · UNKNOWN"), "an available unscouted node should advertise uncertainty without exposing its hidden risk")
 	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
