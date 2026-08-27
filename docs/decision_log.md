@@ -395,3 +395,7 @@ Successful automatic checkpoints display a short corner notice naming the commit
 The checkpoint notice occupies the clear header space between the game title and Pause control. It must not cover a persistent action while acknowledging a save, especially during the contract-to-route transition when the player is likely to pause and inspect the new state.
 
 Checkpoint reasons are translated from internal event identifiers into player-facing action names such as `Route Committed`, `Battle Step`, and `Emergency Order`. The same vocabulary appears in the transient toast and pause summary, keeping implementation identifiers out of the playtest experience.
+
+## 2026-08-28 — Sealing a target redirects threats immediately
+
+Seal Compartment resolves its targeting consequence in the same committed action. Any arrived threat aimed at the sealed system immediately chooses a valid replacement, and the emergency-order receipt names each redirection. Enemy cards, chassis highlighting, current guidance, and impact forecasts therefore agree before the player advances; the next combat step no longer silently corrects stale information that was presented as a prediction.

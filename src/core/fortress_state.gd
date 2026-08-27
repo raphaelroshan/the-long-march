@@ -1352,6 +1352,23 @@ func _encounter_choose_target(enemy_id: String) -> String:
 		return String(modules[best_index].get("id", ""))
 	return "hull"
 
+func _encounter_retarget_sealed_module(target_module: String) -> Array[Dictionary]:
+	var retargets: Array[Dictionary] = []
+	for index in range(encounter_enemies.size()):
+		var enemy: Dictionary = encounter_enemies[index]
+		if bool(enemy.get("defeated", false)) or not bool(enemy.get("arrived", false)) or String(enemy.get("target", "")) != target_module:
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var replacement_target := _encounter_choose_target(enemy_id)
+		enemy["target"] = replacement_target
+		encounter_enemies[index] = enemy
+		var enemy_name := String(ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id.replace("_", " ").capitalize()))
+		var replacement_name := "Hull" if replacement_target == "hull" else String(module_definition(replacement_target).get("name", replacement_target.replace("_", " ").capitalize()))
+		var change := {"enemy_id": enemy_id, "enemy_name": enemy_name, "previous_target": target_module, "target": replacement_target, "target_name": replacement_name}
+		retargets.append(change)
+		_encounter_log("%s redirects to %s after its target compartment is sealed." % [enemy_name, replacement_name])
+	return retargets
+
 func _module_index_by_id(module_id: String) -> int:
 	for index in range(modules.size()):
 		if String(modules[index].get("id", "")) == module_id:
@@ -1851,6 +1868,8 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 	var result: Dictionary = intervene(intervention_id, target_module)
 	if bool(result.get("ok", false)):
 		encounter_intervention_used = true
+		if intervention_id == "seal_compartment":
+			result["retargets"] = _encounter_retarget_sealed_module(target_module)
 		var effect := _intervention_effect_text(intervention_id, result)
 		result["effect"] = effect
 		_encounter_log("Intervention: %s." % effect)
@@ -1862,7 +1881,14 @@ func _intervention_effect_text(intervention_id: String, result: Dictionary) -> S
 			return "Weapon priority set; weapon output +1, heat +%d" % int(result.get("heat_change", 1))
 		"seal_compartment":
 			var target_module := String(result.get("target_module", "module"))
-			return "%s sealed; protected from targeting, offline until the encounter ends" % String(module_definition(target_module).get("name", target_module))
+			var effect := "%s sealed; protected from targeting, offline until the encounter ends" % String(module_definition(target_module).get("name", target_module))
+			var retargets: Array = result.get("retargets", [])
+			if not retargets.is_empty():
+				var redirects: Array[String] = []
+				for retarget in retargets:
+					redirects.append("%s → %s" % [String(retarget.get("enemy_name", "Threat")), String(retarget.get("target_name", "Hull"))])
+				effect += "; redirected %s" % ", ".join(redirects)
+			return effect
 		"vent_heat":
 			return "%d heat vented; the next exterior hit deals +1 damage" % int(result.get("heat_removed", 0))
 		"cut_loose_cargo":

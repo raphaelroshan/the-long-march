@@ -234,6 +234,20 @@ func _test_spatial_targeting_and_causality() -> void:
 	targeting.encounter_target_doctrine = "protect_cargo"
 	_expect(targeting._encounter_choose_target("road_raiders") == "shell_cannon", "Protect Cargo should redirect raiders toward an exterior weapon")
 
+	var sealed_target := LongMarchState.new(1107)
+	_install_encounter_loadout(sealed_target)
+	sealed_target.begin_journey("safe_road", "run_hot")
+	sealed_target.encounter_enemies[0]["arrived"] = true
+	sealed_target.encounter_enemies[0]["target"] = "coal_cell"
+	var sealed := sealed_target.use_encounter_intervention("seal_compartment", "coal_cell")
+	var redirected_target := String(sealed_target.encounter_enemies[0].get("target", ""))
+	var retargets: Array = sealed.get("retargets", [])
+	_expect(bool(sealed.get("ok", false)) and redirected_target != "coal_cell" and not redirected_target.is_empty(), "sealing an active target should redirect the threat immediately")
+	_expect(retargets.size() == 1 and String(retargets[0].get("target", "")) == redirected_target and String(sealed.get("effect", "")).contains("redirected"), "the emergency-order receipt should name the immediate retarget")
+	var redirected_preview := sealed_target.encounter_enemy_impact_preview(sealed_target.encounter_enemies[0])
+	_expect(String(redirected_preview.get("target", "")) == redirected_target, "the impact forecast should update to the replacement target without requiring another combat step")
+	_expect(sealed_target.encounter_report.filter(func(line: String) -> bool: return line.contains("redirects to")).size() == 1, "the lasting combat report should preserve why the enemy target changed")
+
 	var armored := LongMarchState.new(1107)
 	armored.place_module("generator_core", Vector2i(0, 0))
 	armored.place_module("crew_quarters", Vector2i(2, 1))

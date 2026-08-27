@@ -287,6 +287,16 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
 	_expect(game.guidance_label.text.contains("Coal Cell will be disabled") and game.guidance_label.text.contains("Steam Lance Engine → Offline") and game.guidance_label.text.contains("Review the emergency orders"), "the current order should promote a predicted dependency cascade before the player advances")
+	var pre_seal_state: Dictionary = game.state.serialize()
+	game.intervention_buttons[1].pressed.emit()
+	await process_frame
+	var redirected_target := String(game.state.encounter_enemies[0].get("target", ""))
+	var redirected_name := "Hull" if redirected_target == "hull" else String(game.state.module_definition(redirected_target).get("name", redirected_target))
+	_expect(redirected_target != "coal_cell" and game.event_label.text.contains("redirected") and game.event_label.text.contains(redirected_name), "Seal should immediately disclose the threat's replacement target in its receipt")
+	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · %s" % redirected_name.to_upper()) and not game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL"), "enemy cards should replace the sealed target and its stale impact preview before the player advances")
+	game.state.load_serialized(pre_seal_state)
+	game.last_synced_combat_target_id = ""
+	game._refresh_ui()
 	game.state.encounter_intervention_used = true
 	game._refresh_ui()
 	_expect(game.guidance_label.text.contains("No emergency order remains") and not game.guidance_label.text.contains("Review the emergency orders"), "critical guidance should stop recommending unavailable orders after the encounter budget is spent")
