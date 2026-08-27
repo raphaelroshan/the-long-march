@@ -235,6 +235,7 @@ func configure(view: Dictionary) -> void:
 	if not selected_node.is_empty() and selected_node in available_nodes:
 		var selected_preview: Dictionary = current_previews.get(selected_node, {})
 		var predicted_heat := int(selected_preview.get("predicted_heat", 0))
+		var visibility := String(selected_preview.get("visibility", "forecast"))
 		var overheated := predicted_heat > heat_limit
 		var commit_fill := Color("#55312d") if overheated else Color("#285348")
 		var commit_border := Color("#ef8375") if overheated else Color("#73c99b")
@@ -245,6 +246,10 @@ func configure(view: Dictionary) -> void:
 		if not departure_block_reason.is_empty() or not can_depart:
 			commit_button.text = "DEPARTURE BLOCKED\n%s" % (departure_block_reason.to_upper() if not departure_block_reason.is_empty() else "FORTRESS NOT READY")
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
+		elif visibility == "unscouted":
+			var days := int(selected_preview.get("days", 0))
+			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · RISK UNKNOWN\nHEAT %d/%d · PRESSURE UNKNOWN" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), predicted_heat, heat_limit]
+			commit_button.tooltip_text = "Pay the known travel costs and enter an unscouted encounter."
 		else:
 			var days := int(selected_preview.get("days", 0))
 			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %.0f%% RISK\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]

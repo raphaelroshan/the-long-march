@@ -240,6 +240,14 @@ func _run() -> void:
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
+	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
+	await process_frame
+	_expect(game.route_preview_label.text.contains("Unscouted route") and game.route_preview_label.text.contains("unknown"), "focusing an unscouted road should preserve uncertainty in the visible route intel")
+	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
+	await process_frame
+	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should not reveal its hidden risk in the commit action")
+	game._unhandled_input(route_cancel)
+	await process_frame
 	await _press_campaign_node("broken_relay")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_event_pending == "lost_signal", "the Broken Relay should surface its authored decision")

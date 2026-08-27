@@ -1851,9 +1851,9 @@ func _refresh_ui() -> void:
 		elif state.guard_contract_status == "offered":
 			route_preview_label.text = "The first map branches are visible after the Ashgate contract is answered."
 		elif not selected_campaign_node_id.is_empty():
-			var selected_preview := state.campaign_node_preview(selected_campaign_node_id, _selected_id(doctrine_option))
 			var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
-			route_preview_label.text = "Selected %s — %d day(s), %d fuel, %.0f%% risk, pressure +%d, heat %d/%d.%s" % [String(selected_preview.get("name", selected_campaign_node_id)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0)), int(selected_preview.get("predicted_heat", 0)), LongMarchState.BASE_HEAT_LIMIT, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else " Commit on the map when ready."]
+			var selected_detail := campaign_map.detail_for(selected_campaign_node_id)
+			route_preview_label.text = "ROUTE READY · %s\n%s%s" % [String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id)).to_upper(), selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else ""]
 		else:
 			route_preview_label.text = "Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals."
 	elif state.phase == "refit":
