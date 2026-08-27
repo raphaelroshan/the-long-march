@@ -262,7 +262,13 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_counters[0].text.contains("Seeks: cargo / exterior") and game.combat_panel.enemy_counters[0].text.contains("Protect Cargo active") and game.combat_panel.enemy_counters[0].text.contains("Counter:"), "enemy cards should expose targeting priorities, active doctrine protection, and counters without relying on a tooltip")
 	_expect(game.combat_panel.order_label.text.contains("Emergency order: 1 available") and game.combat_panel.order_label.text.contains("Next step 1/6") and not game.combat_panel.order_label.text.contains("CP") and not game.combat_panel.order_label.text.contains("Step 0"), "combat status should describe the actual order budget and next timeline step without exposing internal counters")
 	var initial_shift_preview: Dictionary = game.state.encounter_shift_power_preview()
-	_expect(game.intervention_help_label.text.contains("Shift preview") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "Shift Power should expose its exact heat and attack changes before commitment")
+	_expect(game.intervention_help_label.text.contains("Focus or hover") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the order panel should stay concise until a player requests exact detail")
+	game.intervention_buttons[0].grab_focus()
+	await process_frame
+	_expect(game.intervention_help_label.text.begins_with("SHIFT POWER") and game.intervention_help_label.text.contains("Heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "focusing Shift Power should expose its exact heat and attack changes")
+	game.advance_encounter_button.grab_focus()
+	await process_frame
+	_expect(game.intervention_help_label.text.contains("Focus or hover"), "leaving the emergency orders should restore the concise comparison prompt")
 	_expect(game.intervention_buttons[3].text.contains("Coal Cell") and game.intervention_buttons[3].text.contains("fuel feed"), "cutting loose cargo should disclose the exact module and dependency cost before use")
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
 	game.combat_inspect_button.pressed.emit()
@@ -288,10 +294,12 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["damage_bonus"] = 1
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
+	game.intervention_buttons[1].grab_focus()
+	await process_frame
 	var displayed_seal_preview: Dictionary = game.state.encounter_seal_preview("coal_cell")
 	var displayed_redirects: Array = displayed_seal_preview.get("retargets", [])
 	var displayed_redirect_text: String = "%s → %s" % [String(displayed_redirects[0].get("enemy_name", "")), String(displayed_redirects[0].get("target_name", ""))] if not displayed_redirects.is_empty() else ""
-	_expect(displayed_redirects.size() == 1 and game.intervention_help_label.text.contains("Seal preview") and game.intervention_help_label.text.contains(displayed_redirect_text) and game.intervention_buttons[1].text.contains(displayed_redirect_text), "the only Seal order should preview its replacement target before commitment")
+	_expect(displayed_redirects.size() == 1 and game.intervention_help_label.text.begins_with("SEAL COMPARTMENT") and game.intervention_help_label.text.contains(displayed_redirect_text) and game.intervention_buttons[1].text.contains(displayed_redirect_text), "the only Seal order should preview its replacement target before commitment")
 	_expect(game.guidance_label.text.contains("Coal Cell will be disabled") and game.guidance_label.text.contains("Steam Lance Engine → Offline") and game.guidance_label.text.contains("Review the emergency orders"), "the current order should promote a predicted dependency cascade before the player advances")
 	var pre_seal_state: Dictionary = game.state.serialize()
 	game.intervention_buttons[1].pressed.emit()
@@ -316,7 +324,9 @@ func _run() -> void:
 	var displayed_vent_preview: Dictionary = game.state.encounter_vent_heat_preview()
 	var displayed_vent_hits: Array = displayed_vent_preview.get("affected_hits", [])
 	var displayed_vent_target := String(displayed_vent_hits[0].get("target_name", "")) if not displayed_vent_hits.is_empty() else ""
-	_expect(game.intervention_buttons[2].text.contains("-%d heat" % int(displayed_vent_preview.get("heat_removed", 0))) and game.intervention_help_label.text.contains("Vent preview") and game.intervention_help_label.text.contains(displayed_vent_target), "Vent Heat should preview its exact cooling and the exterior system exposed to extra damage")
+	game.intervention_buttons[2].grab_focus()
+	await process_frame
+	_expect(game.intervention_buttons[2].text.contains("-%d heat" % int(displayed_vent_preview.get("heat_removed", 0))) and game.intervention_help_label.text.begins_with("VENT HEAT") and game.intervention_help_label.text.contains(displayed_vent_target), "Vent Heat should preview its exact cooling and the exterior system exposed to extra damage")
 	var sacrificed_cargo_id: String = game.state.sacrificable_cargo_id()
 	game.state.encounter_enemies[0]["arrived"] = true
 	game.state.encounter_enemies[0]["target"] = sacrificed_cargo_id
@@ -325,7 +335,9 @@ func _run() -> void:
 	var displayed_cut_preview: Dictionary = game.state.encounter_cut_loose_preview()
 	var displayed_cut_redirects: Array = displayed_cut_preview.get("retargets", [])
 	var displayed_cut_text: String = "%s → %s" % [String(displayed_cut_redirects[0].get("enemy_name", "")), String(displayed_cut_redirects[0].get("target_name", ""))] if not displayed_cut_redirects.is_empty() else ""
-	_expect(game.intervention_help_label.text.contains("Cut loose preview") and game.intervention_help_label.text.contains(displayed_cut_text), "the cargo-sacrifice order should preview its permanent loss and replacement target before commitment")
+	game.intervention_buttons[3].grab_focus()
+	await process_frame
+	_expect(game.intervention_help_label.text.begins_with("CUT LOOSE CARGO") and game.intervention_help_label.text.contains(displayed_cut_text), "the cargo-sacrifice order should preview its permanent loss and replacement target before commitment")
 	game.intervention_buttons[3].pressed.emit()
 	await process_frame
 	var post_cut_target: String = String(game.state.encounter_enemies[0].get("target", ""))
@@ -380,7 +392,9 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["arrived"] = true
 	game.state.encounter_enemies[0]["target"] = "hull"
 	game._refresh_ui()
-	_expect(game.combat_inspect_button.text.contains("HULL EXPOSED") and game.intervention_help_label.text.contains("Sealing a module will not prevent this hit"), "a hull-directed contact should explain that Seal cannot prevent its current attack")
+	game.intervention_buttons[1].grab_focus()
+	await process_frame
+	_expect(game.combat_inspect_button.text.contains("HULL EXPOSED") and game.intervention_help_label.text.contains("does not prevent the hull-directed hit"), "a hull-directed contact should explain that Seal cannot prevent its current attack")
 	game.state.encounter_enemies[0] = pre_hull_preview_enemy
 	game._refresh_ui()
 	await _advance_until_phase("map")

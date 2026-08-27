@@ -89,6 +89,8 @@ var doctrine_group: Control
 var doctrine_detail_label: Label
 var intervention_title: Label
 var intervention_help_label: Label
+var intervention_preview_texts: Dictionary = {}
+var intervention_overview_text: String = ""
 var settlement_title: Label
 var settlement_group: Control
 var campaign_title: Label
@@ -709,7 +711,12 @@ func _build_ui() -> void:
 		var intervention := Button.new()
 		intervention.text = String(action.label)
 		intervention.tooltip_text = String(action.tip)
+		intervention.set_meta("intervention_id", String(action.id))
 		intervention.pressed.connect(_use_intervention.bind(String(action.id)))
+		intervention.focus_entered.connect(_show_intervention_preview.bind(String(action.id)))
+		intervention.focus_exited.connect(_restore_intervention_preview_deferred)
+		intervention.mouse_entered.connect(_show_intervention_preview.bind(String(action.id)))
+		intervention.mouse_exited.connect(_restore_intervention_preview_deferred)
 		intervention_buttons.append(intervention)
 		controls.add_child(intervention)
 
@@ -831,6 +838,27 @@ func _connect_desk_focus_scrolling() -> void:
 
 func _on_desk_control_focused(control: Control) -> void:
 	_scroll_action_context_into_view.call_deferred(control)
+
+func _show_intervention_preview(intervention_id: String) -> void:
+	if state.phase not in ["battle", "final_battle"] or state.encounter_intervention_used:
+		return
+	var preview_text := String(intervention_preview_texts.get(intervention_id, ""))
+	if not preview_text.is_empty():
+		intervention_help_label.text = preview_text
+
+func _restore_intervention_preview_deferred() -> void:
+	_apply_focused_intervention_preview.call_deferred()
+
+func _apply_focused_intervention_preview() -> void:
+	if state.phase not in ["battle", "final_battle"] or state.encounter_intervention_used:
+		return
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is Button:
+		var focused_button := focused as Button
+		if focused_button in intervention_buttons:
+			_show_intervention_preview(String(focused_button.get_meta("intervention_id", "")))
+			return
+	intervention_help_label.text = intervention_overview_text
 
 func _build_onboarding_overlay() -> void:
 	onboarding_overlay = Control.new()
@@ -1994,23 +2022,19 @@ func _refresh_ui() -> void:
 		var attack_text := "%s %d→%d damage" % [String(attack.get("enemy_name", "Threat")), int(attack.get("damage_before", 0)), int(attack.get("damage_after", 0))]
 		if attack_text not in shift_attacks:
 			shift_attacks.append(attack_text)
+	var selected_name := String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "no module selected"
+	var shift_help := "SHIFT POWER · Heat %d→%d%s." % [int(shift_preview.get("heat_before", state.heat)), int(shift_preview.get("heat_after", state.heat)), "; attacks %s" % ", ".join(shift_attacks) if not shift_attacks.is_empty() else "; no operational weapon attack changes"]
+	var seal_help := "SEAL COMPARTMENT · %s goes offline%s." % [selected_name, "; redirects %s" % ", ".join(seal_redirects) if not seal_redirects.is_empty() else "; no active threat currently targets it"] if bool(seal_preview.get("valid", false)) else "SEAL COMPARTMENT · %s." % String(seal_preview.get("reason", "select a chassis module first"))
+	if hull_under_threat:
+		seal_help += " This does not prevent the hull-directed hit."
+	var cut_help := "CUT LOOSE CARGO · No installed cargo is available." if cargo_id.is_empty() else "CUT LOOSE CARGO · %s permanently removed (%s)%s." % [String(cargo_definition.get("name", cargo_id)), cargo_cost, "; redirects %s" % ", ".join(cut_redirects) if not cut_redirects.is_empty() else "; no active threat currently targets it"]
+	var vent_help := "VENT HEAT · %d heat removed%s." % [int(vent_preview.get("heat_removed", 0)), "; exposed %s" % ", ".join(vent_exposures) if not vent_exposures.is_empty() else "; no current exterior target"]
+	intervention_preview_texts = {"shift_power": shift_help, "seal_compartment": seal_help, "vent_heat": vent_help, "cut_loose_cargo": cut_help}
+	intervention_overview_text = "Choose one emergency order. Focus or hover an action for its exact benefit and cost. Seal target: %s." % selected_name
 	if state.encounter_intervention_used:
 		intervention_help_label.text = "Emergency order spent. Hull is exposed; review the predicted hit, then advance." if hull_under_threat else "Emergency order spent. Inspect the predicted damage, then advance; one order returns next encounter."
 	else:
-		if hull_under_threat:
-			intervention_help_label.text = "Hull is under threat. Sealing a module will not prevent this hit; choose another order or preserve a system for later."
-		elif selected_installed.is_empty():
-			intervention_help_label.text = "Choose once per encounter. Select a chassis module to preview Seal Compartment."
-		elif not bool(seal_preview.get("valid", false)):
-			intervention_help_label.text = "Seal unavailable: %s." % String(seal_preview.get("reason", "select another module"))
-		elif not seal_redirects.is_empty():
-			intervention_help_label.text = "Seal preview · %s goes offline; redirects %s." % [String(selected_definition.get("name", selected_module_id)), ", ".join(seal_redirects)]
-		else:
-			intervention_help_label.text = "Seal preview · %s goes offline; no active threat currently targets it." % String(selected_definition.get("name", selected_module_id))
-		intervention_help_label.text = "Shift preview · heat %d→%d%s.\n%s" % [int(shift_preview.get("heat_before", state.heat)), int(shift_preview.get("heat_after", state.heat)), "; attacks %s" % ", ".join(shift_attacks) if not shift_attacks.is_empty() else "; no weapon attack changes", intervention_help_label.text]
-		if not cargo_id.is_empty():
-			intervention_help_label.text += "\nCut loose preview · %s permanently removed (%s)%s." % [String(cargo_definition.get("name", cargo_id)), cargo_cost, "; redirects %s" % ", ".join(cut_redirects) if not cut_redirects.is_empty() else "; no active threat currently targets it"]
-		intervention_help_label.text += "\nVent preview · %d heat removed%s." % [int(vent_preview.get("heat_removed", 0)), "; exposed %s" % ", ".join(vent_exposures) if not vent_exposures.is_empty() else "; no current exterior target"]
+		_apply_focused_intervention_preview()
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and (selected_installed.is_empty() or not bool(seal_preview.get("valid", false)))) or (index == 3 and state.sacrificable_cargo_id().is_empty())

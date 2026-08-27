@@ -419,3 +419,7 @@ Vent Heat derives its displayed cooling from the live fortress state instead of 
 ## 2026-08-28 — Shift Power previews total attack output
 
 Shift Power compares each surviving contact's current incoming fortress damage with the weapon-priority result and reports the exact heat change before commitment. Duplicate contacts with the same result are collapsed in the command-desk copy. The completed-order receipt preserves those totals, clarifying that the one-point bonus applies to each operational weapon rather than once to the fortress as a whole.
+
+## 2026-08-28 — Emergency-order detail follows focus and hover
+
+The command desk no longer displays four dense forecasts simultaneously. Its resting copy explains how to inspect an order and names the current Seal target; focusing or hovering Shift Power, Seal Compartment, Vent Heat, or Cut Loose Cargo replaces that copy with only the selected action's exact benefit and cost. Keyboard, controller, and pointer interactions use the same preview data, and leaving the order controls restores the concise overview.
