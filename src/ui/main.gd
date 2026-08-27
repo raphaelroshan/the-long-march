@@ -1130,7 +1130,7 @@ func _scroll_action_context_into_view(control: Control) -> void:
 	if context_height <= viewport_rect.size.y - 16.0:
 		right_scroll.scroll_vertical = maxi(0, ceili(guidance_top - 8.0))
 	else:
-		right_scroll.ensure_control_visible(control)
+		right_scroll.scroll_vertical = maxi(0, ceili(control_bottom - viewport_rect.size.y + 8.0))
 
 func focus_current_action() -> void:
 	if onboarding_overlay != null and onboarding_overlay.visible:
