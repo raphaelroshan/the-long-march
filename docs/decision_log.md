@@ -172,6 +172,8 @@ Campaign progress distinguishes an active encounter from completed progress. Dur
 
 The blockade summary uses the same vocabulary and reports `secured 0/5` during that first fight. Its count tracks the progress bar rather than the active encounter number, so the two simultaneous values describe different states explicitly instead of appearing to disagree.
 
+During battle, the road breadcrumb includes the active destination before that node is marked secured in simulation state. `Ashgate Depot → Rill Crossing` therefore matches the separately named current node throughout the fight; completing it still remains the moment that permanently extends the campaign path.
+
 ## 2026-08-27 — The application shell starts outside the simulation
 
 The packaged build opens on a title menu instead of constructing a run immediately. Start Game creates a fresh Ashgate stage, Continue restores the explicit local save, and Escape opens a pause layer with resume, restart, and return-to-title actions. The shell owns these lifecycle transitions while `Main.tscn` remains the playable stage and `LongMarchState` remains presentation-independent. This keeps menu state from leaking into deterministic campaign state and leaves the stage independently testable.

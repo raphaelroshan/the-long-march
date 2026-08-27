@@ -225,7 +225,7 @@ func _run() -> void:
 	await _press_campaign_node("rill_crossing")
 	await process_frame
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
-	_expect(game.journey_label.text.contains("Encounter 1/5 underway") and not game.journey_label.text.contains("Encounter 0/5"), "the journey header should count the active first encounter rather than showing zero progress")
+	_expect(game.journey_label.text.contains("Ashgate Depot → Rill Crossing") and game.journey_label.text.contains("Encounter 1/5 underway") and not game.journey_label.text.contains("Encounter 0/5"), "the journey header should include the active road destination and count the first encounter rather than showing zero progress")
 	_expect(game.campaign_pressure_label.text.contains("secured 0/5") and not game.campaign_pressure_label.text.contains("encounters 0/5"), "the blockade summary should identify its zero as secured encounters while the first battle is underway")
 	_expect(game.advance_encounter_button.has_focus(), "committing a route should hand controller focus to the encounter timeline")
 	_expect(game.right_scroll.get_global_rect().encloses(game.advance_encounter_button.get_global_rect()), "battle focus should scroll encounter advancement into view")

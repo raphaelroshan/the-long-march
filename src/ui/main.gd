@@ -1924,7 +1924,10 @@ func _refresh_ui() -> void:
 	var route_name := String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "Meridian Pass" if state.journey_route == "meridian_pass" else "not chosen"))
 	if state.campaign_active:
 		var path_names: Array[String] = []
-		for node_id in state.campaign_path:
+		var visible_path: Array[String] = state.campaign_path.duplicate()
+		if is_battle_phase and state.journey_node not in visible_path:
+			visible_path.append(state.journey_node)
+		for node_id in visible_path:
 			path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
 		var progress_text := "Encounter %d/5 underway" % mini(state.campaign_encounters_completed + 1, 5) if is_battle_phase else "%d/5 encounters secured" % state.campaign_encounters_completed
 		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | %s" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), progress_text]
