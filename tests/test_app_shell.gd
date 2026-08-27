@@ -43,8 +43,13 @@ func _run() -> void:
 	app._refresh_title_state()
 	_expect(app.continue_button.disabled and app.continue_button.text.contains("UNAVAILABLE"), "invalid save data should never enable Continue")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
-	app._refresh_title_state()
+	_expect(app.save_recovery_button.visible and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose a direct recovery action in the title flow")
+	app.save_recovery_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "REMOVE SAVE" and app.confirmation_cancel_button.text == "KEEP FILE", "invalid-save removal should require a specific confirmation")
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.save_recovery_button.visible and app.start_button.has_focus(), "confirmed recovery should remove the invalid save and restore the primary start action")
 	app.settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")

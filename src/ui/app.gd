@@ -34,6 +34,7 @@ var game_view: Control
 var start_button: Button
 var quick_start_button: Button
 var continue_button: Button
+var save_recovery_button: Button
 var guide_button: Button
 var settings_button: Button
 var quit_button: Button
@@ -207,6 +208,14 @@ func _build_title_menu() -> void:
 	continue_button.tooltip_text = "Load the last locally saved fortress state."
 	continue_button.pressed.connect(_continue_game)
 	actions.add_child(continue_button)
+	save_recovery_button = Button.new()
+	save_recovery_button.name = "SaveRecoveryButton"
+	save_recovery_button.text = "REMOVE UNREADABLE SAVE"
+	save_recovery_button.custom_minimum_size = Vector2(0, 44)
+	save_recovery_button.tooltip_text = "Remove the local save that cannot be loaded."
+	save_recovery_button.visible = false
+	save_recovery_button.pressed.connect(_request_confirmation.bind("clear_invalid_save"))
+	actions.add_child(save_recovery_button)
 
 	var utility_actions := HBoxContainer.new()
 	utility_actions.add_theme_constant_override("separation", 8)
@@ -293,6 +302,8 @@ func _configure_title_focus() -> void:
 	quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
 	continue_button.focus_neighbor_top = continue_button.get_path_to(quick_start_button)
 	continue_button.focus_neighbor_bottom = continue_button.get_path_to(settings_button)
+	save_recovery_button.focus_neighbor_top = save_recovery_button.get_path_to(quick_start_button)
+	save_recovery_button.focus_neighbor_bottom = save_recovery_button.get_path_to(settings_button)
 	guide_button.focus_neighbor_right = guide_button.get_path_to(settings_button)
 	guide_button.focus_neighbor_bottom = guide_button.get_path_to(start_button)
 	settings_button.focus_neighbor_left = settings_button.get_path_to(guide_button)
@@ -301,9 +312,9 @@ func _configure_title_focus() -> void:
 	quit_button.focus_neighbor_left = quit_button.get_path_to(settings_button)
 	quit_button.focus_neighbor_bottom = quit_button.get_path_to(start_button)
 
-func _refresh_title_focus(has_valid_save: bool) -> void:
-	var upper_action := continue_button if has_valid_save else quick_start_button
-	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(continue_button if has_valid_save else settings_button)
+func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false) -> void:
+	var upper_action := continue_button if has_valid_save else (save_recovery_button if has_invalid_save else quick_start_button)
+	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(upper_action if upper_action != quick_start_button else settings_button)
 	guide_button.focus_neighbor_top = guide_button.get_path_to(upper_action)
 	settings_button.focus_neighbor_top = settings_button.get_path_to(upper_action)
 	quit_button.focus_neighbor_top = quit_button.get_path_to(upper_action)
@@ -806,10 +817,12 @@ func _reset_briefing() -> void:
 func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
+	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
 	start_button.text = "NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN"
 	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
 	continue_button.disabled = not has_valid_save
-	_refresh_title_focus(has_valid_save)
+	save_recovery_button.visible = has_invalid_save
+	_refresh_title_focus(has_valid_save, has_invalid_save)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
@@ -1063,7 +1076,7 @@ func _restart_game() -> void:
 	_open_stage(false, false)
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "title", "clear_save", "new_guided", "new_quick"]:
+	if action not in ["restart", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick"]:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1077,17 +1090,17 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Return without saving?"
 		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
 		confirmation_confirm_button.text = "RETURN"
-	elif action == "clear_save":
+	elif action in ["clear_save", "clear_invalid_save"]:
 		confirmation_title_label.text = "Clear the local save?"
-		confirmation_body_label.text = "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
-		confirmation_confirm_button.text = "CLEAR SAVE"
+		confirmation_body_label.text = "This unreadable local file will be permanently removed. Your settings and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
+		confirmation_confirm_button.text = "REMOVE SAVE" if action == "clear_invalid_save" else "CLEAR SAVE"
 	else:
 		var save_info := _saved_run_info()
 		var saved_context := "Day %d at %s" % [int(save_info.get("day", 1)), String(save_info.get("location", "the last checkpoint"))]
 		confirmation_title_label.text = "Begin a new march?"
 		confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
 		confirmation_confirm_button.text = "START NEW"
-	confirmation_cancel_button.text = "KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else "KEEP PLAYING"
+	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else ("KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else "KEEP PLAYING")
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
@@ -1099,6 +1112,8 @@ func _cancel_confirmation() -> void:
 		restart_button.grab_focus()
 	elif previous_action == "clear_save":
 		clear_save_button.grab_focus()
+	elif previous_action == "clear_invalid_save":
+		save_recovery_button.grab_focus()
 	elif previous_action == "new_quick":
 		quick_start_button.grab_focus()
 	elif previous_action == "new_guided":
@@ -1114,13 +1129,16 @@ func _confirm_pending_action() -> void:
 		_restart_game()
 	elif action == "title":
 		_return_to_title()
-	elif action == "clear_save":
+	elif action in ["clear_save", "clear_invalid_save"]:
 		var absolute_path := ProjectSettings.globalize_path(SAVE_PATH)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)
 		_refresh_title_state()
-		_refresh_settings("Local save cleared. Start Game begins a fresh march.")
-		settings_close_button.grab_focus()
+		if action == "clear_invalid_save":
+			start_button.grab_focus()
+		else:
+			_refresh_settings("Local save cleared. Start Game begins a fresh march.")
+			settings_close_button.grab_focus()
 	elif action == "new_guided":
 		_open_stage(false, true)
 	elif action == "new_quick":

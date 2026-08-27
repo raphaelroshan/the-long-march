@@ -190,6 +190,8 @@ The title screen additionally defines explicit directional neighbors across its 
 
 That navigation graph updates with save availability. With no valid checkpoint, movement bypasses disabled Continue and links Quick Start directly to the utility row; once a save exists, Continue is restored to the same route. Disabled state never creates a controller dead end.
 
+An unreadable or incompatible local save exposes a dedicated `Remove Unreadable Save` action directly beneath disabled Continue. Removal requires a confirmation that distinguishes the broken file from settings and briefing data; success returns focus to Guided Start and removes the temporary action from the navigation graph.
+
 The field guide, pause menu, and confirmation dialog use the same explicit-neighbor rule for paired actions and stacked rows. Their safe or primary control still receives focus on entry, while directional input now follows the visible grouping consistently across every application-level modal.
 
 Stage-owned overlays follow the same rule. The briefing routes around its disabled Previous action on page one, restores it on later pages, and wraps between close and progression actions; the feedback form links its return and save actions in both horizontal directions.
