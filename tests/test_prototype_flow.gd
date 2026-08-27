@@ -64,7 +64,11 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
+	_expect(game.ONBOARDING_STEPS.size() == 4 and game.onboarding_step_panels.size() == 4, "the guided briefing should use four concise, visible stages")
+	_expect(game.onboarding_action_label.text.begins_with("FIRST ACTION"), "each briefing page should name a concrete player action")
 	for _step in range(game.ONBOARDING_STEPS.size()):
+		if _step == game.ONBOARDING_STEPS.size() - 1:
+			_expect(game.onboarding_next_button.text == "ENTER ASHGATE", "the final briefing action should clearly enter the playable stage")
 		game.onboarding_next_button.pressed.emit()
 		await process_frame
 	_expect(not game.onboarding_overlay.visible and FileAccess.file_exists(onboarding_path), "completing onboarding should dismiss it and persist the choice")

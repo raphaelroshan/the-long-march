@@ -15,26 +15,27 @@ const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
+const ONBOARDING_LABELS := ["COMMAND", "CHASSIS", "ROUTE", "SURVIVE"]
 const ONBOARDING_STEPS := [
 	{
-		"title": "Keep the fortress moving",
-		"body": "You are the Marchmaster of a walking fortress. Your job is not to build the largest machine; it is to keep a connected, repairable machine moving from Ashgate to Meridian Pass. Every useful module costs space, mass, power, heat, or exposure."
+		"title": "Your job is continuity",
+		"body": "You command a walking fortress through five encounters. Success means reaching Meridian Pass with a machine that can still move and people who can still rely on it—not collecting the largest pile of parts.",
+		"action": "FIRST ACTION · Answer the Ashgate convoy contract. The choice changes reward, trust, and road pressure."
 	},
 	{
-		"title": "Build around dependencies",
-		"body": "Select a module on the chassis to inspect it. Engines need orthogonally adjacent fuel. Weapons prefer an adjacent Ammunition Lift. Workshops need adjacent Crew Quarters and work better beside Parts. Ready, strained, and offline states update immediately as you refit."
+		"title": "Read the machine",
+		"body": "Select an installed module to see what keeps it Ready. Engines need adjacent fuel; weapons benefit from ammunition lifts; workshops need crew and work better beside parts. Moving one system can weaken another.",
+		"action": "TRY THIS · Select the Steam Lance Engine and read its dependency status before changing the layout."
 	},
 	{
-		"title": "Choose a road and a promise",
-		"body": "The authored map shows two or three forward nodes with known, forecast, or unscouted information. The visible blockade clock changes optional routes but never removes the only recovery road. Your doctrine changes who the fortress protects and how it fights."
+		"title": "Choose, review, then commit",
+		"body": "Cyan map nodes are reachable. Known routes reveal exact danger; forecasts reveal a class of danger; unscouted roads remain uncertain. Selecting a route is only a preview. A separate Commit action pays its fuel and time cost.",
+		"action": "LOOK FOR · Compare risk, fuel, pressure, visibility, and doctrine before committing the fortress."
 	},
 	{
-		"title": "Read the battle",
-		"body": "Advance one encounter step at a time. Enemies name their target, modules explain their attacks, and dependency failures appear in the report. You may issue one emergency order per encounter. Select a module first if you intend to seal it."
-	},
-	{
-		"title": "Recover, adapt, finish",
-		"body": "Morrowline gives you two paid service actions and free refitting midway through the five-encounter chapter. Save whenever you need to stop. At the end, use Playtest feedback to create a local JSON bundle; nothing is uploaded automatically."
+		"title": "Read, intervene, recover",
+		"body": "Battles advance one readable step at a time. Enemies name their targets and the report explains dependency failures. You may issue one emergency order per encounter, then refit and recover at Morrowline before the final road.",
+		"action": "IN CONTACT · Read the current target before advancing. At the end, record what felt clear or confusing."
 	}
 ]
 
@@ -104,7 +105,10 @@ var results_title_button: Button
 var onboarding_overlay: Control
 var onboarding_title_label: Label
 var onboarding_body_label: Label
+var onboarding_action_label: Label
 var onboarding_progress_label: Label
+var onboarding_step_panels: Array[PanelContainer] = []
+var onboarding_step_labels: Array[Label] = []
 var onboarding_back_button: Button
 var onboarding_next_button: Button
 var onboarding_skip_button: Button
@@ -678,30 +682,56 @@ func _build_onboarding_overlay() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	onboarding_overlay.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(660, 430)
+	panel.custom_minimum_size = Vector2(720, 520)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#111a1ff7"), Color("#688587"), 2, 8, 0))
 	center.add_child(panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 28)
 	panel.add_child(margin)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 18)
+	content.add_theme_constant_override("separation", 14)
 	margin.add_child(content)
 	var eyebrow := Label.new()
 	eyebrow.text = "MARCHMASTER'S FIELD BRIEFING"
 	eyebrow.add_theme_color_override("font_color", Color("#d8c389"))
 	content.add_child(eyebrow)
+	var stepper := HBoxContainer.new()
+	stepper.add_theme_constant_override("separation", 6)
+	content.add_child(stepper)
+	for step_label in ONBOARDING_LABELS:
+		var step_panel := PanelContainer.new()
+		step_panel.custom_minimum_size = Vector2(0, 38)
+		step_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stepper.add_child(step_panel)
+		var label := Label.new()
+		label.text = String(step_label)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 10)
+		step_panel.add_child(label)
+		onboarding_step_panels.append(step_panel)
+		onboarding_step_labels.append(label)
 	onboarding_title_label = Label.new()
 	onboarding_title_label.add_theme_font_size_override("font_size", 28)
 	onboarding_title_label.add_theme_color_override("font_color", Color("#e8c58e"))
 	content.add_child(onboarding_title_label)
 	onboarding_body_label = Label.new()
 	onboarding_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	onboarding_body_label.custom_minimum_size = Vector2(600, 190)
+	onboarding_body_label.custom_minimum_size = Vector2(650, 120)
 	onboarding_body_label.add_theme_font_size_override("font_size", 17)
 	onboarding_body_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	content.add_child(onboarding_body_label)
+	var action_panel := PanelContainer.new()
+	action_panel.add_theme_stylebox_override("panel", _flat_style(Color("#17292a"), Color("#5b8c83"), 1, 5, 12))
+	content.add_child(action_panel)
+	onboarding_action_label = Label.new()
+	onboarding_action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	onboarding_action_label.custom_minimum_size = Vector2(620, 48)
+	onboarding_action_label.add_theme_color_override("font_color", Color("#aee4cf"))
+	action_panel.add_child(onboarding_action_label)
 	onboarding_progress_label = Label.new()
+	onboarding_progress_label.text = "Arrows or Tab move focus · Enter confirms · Esc skips"
 	onboarding_progress_label.add_theme_color_override("font_color", Color("#8fa3a7"))
 	content.add_child(onboarding_progress_label)
 	var actions := HBoxContainer.new()
@@ -714,7 +744,7 @@ func _build_onboarding_overlay() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(spacer)
 	onboarding_back_button = Button.new()
-	onboarding_back_button.text = "Back"
+	onboarding_back_button.text = "Previous"
 	onboarding_back_button.pressed.connect(_on_onboarding_back)
 	actions.add_child(onboarding_back_button)
 	onboarding_next_button = Button.new()
@@ -806,9 +836,25 @@ func _refresh_onboarding() -> void:
 	var step: Dictionary = ONBOARDING_STEPS[onboarding_step]
 	onboarding_title_label.text = String(step.title)
 	onboarding_body_label.text = String(step.body)
-	onboarding_progress_label.text = "Briefing %d of %d" % [onboarding_step + 1, ONBOARDING_STEPS.size()]
+	onboarding_action_label.text = String(step.action)
+	onboarding_progress_label.text = "Briefing %d of %d  ·  Arrows or Tab move focus  ·  Enter confirms  ·  Esc skips" % [onboarding_step + 1, ONBOARDING_STEPS.size()]
+	for index in range(onboarding_step_panels.size()):
+		var panel := onboarding_step_panels[index]
+		var label := onboarding_step_labels[index]
+		if index < onboarding_step:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#183329"), Color("#4e8d72"), 1, 4, 3))
+			label.text = "✓ %s" % ONBOARDING_LABELS[index]
+			label.add_theme_color_override("font_color", Color("#9fddbd"))
+		elif index == onboarding_step:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#4b405d"), Color("#eee2ff"), 2, 4, 2))
+			label.text = "%02d %s" % [index + 1, ONBOARDING_LABELS[index]]
+			label.add_theme_color_override("font_color", Color("#ffffff"))
+		else:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#182127"), Color("#35474d"), 1, 4, 3))
+			label.text = "— %s" % ONBOARDING_LABELS[index]
+			label.add_theme_color_override("font_color", Color("#738286"))
 	onboarding_back_button.disabled = onboarding_step == 0
-	onboarding_next_button.text = "Begin the march" if onboarding_step == ONBOARDING_STEPS.size() - 1 else "Next"
+	onboarding_next_button.text = "ENTER ASHGATE" if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
 
 func _on_onboarding_back() -> void:
 	onboarding_step = maxi(0, onboarding_step - 1)

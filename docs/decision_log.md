@@ -74,6 +74,8 @@ The prototype also treats the starter palette as a finite inventory. Removing a 
 
 The first-run briefing explains dependencies, route commitments, encounter reading, intervention limits, and recovery. A short phase-specific NEXT line remains visible after onboarding, but it does not prescribe a layout or route. Testers can reopen the briefing at any time, and completion is remembered locally.
 
+The briefing is four short stages rather than five prose-heavy pages. Each stage pairs one concept with a concrete next action and a visible Command → Chassis → Route → Survive progress rail. The final action says Enter Ashgate and hands focus directly to the live contract, preserving teaching without delaying the first decision.
+
 ## 2026-08-27 — Feedback collection is local and explicit
 
 The prototype records a small local journal of gameplay decisions and outcomes. It contains no account, machine identifier, analytics SDK, or network upload. A tester may add two written answers and a replay score, then explicitly save a JSON bundle and decide whether to share it. This gives early playtests enough causal context without building production telemetry before consent and retention policies exist.

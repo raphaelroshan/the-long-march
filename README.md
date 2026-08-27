@@ -22,6 +22,7 @@ The repository contains an agent-first Godot project with:
 - Confirmation before a new autosaved run can supersede an existing saved march.
 - Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, autosave, briefing reset, and confirmed save clearing.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
+- A four-part guided briefing with concrete first actions for command, chassis, routes, and survival.
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.
 - Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
