@@ -436,12 +436,14 @@ func choose_guard_contract(accept: bool) -> Dictionary:
 	if guard_contract_status != "offered":
 		return {"ok": false, "reason": "the guard contract has already been answered"}
 	guard_contract_status = "accepted" if accept else "declined"
+	var message := ""
 	if accept:
-		log.append("Accepted the Morrowline Parts Guard contract. The convoy approach gains additional enemy endurance, but pays 30 Ashmarks and 2 trust.")
+		message = "Contract accepted: each enemy on the Morrowline approach gains 1 HP; safe arrival pays 30 Ashmarks and 2 trust."
 	else:
 		mobility_tendency += 1
-		log.append("Declined the Morrowline Parts Guard contract to preserve freedom of movement.")
-	return {"ok": true, "status": guard_contract_status, "summary": summary()}
+		message = "Contract declined: Morrowline enemies keep normal endurance; the fortress gives up the 30-Ashmark and 2-trust payout."
+	log.append(message)
+	return {"ok": true, "status": guard_contract_status, "message": message, "summary": summary()}
 
 func campaign_event_details() -> Dictionary:
 	match campaign_event_pending:

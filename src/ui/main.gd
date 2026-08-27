@@ -1244,13 +1244,14 @@ func _on_departure_option_changed(_index: int) -> void:
 func _on_guard_contract_pressed(accept: bool) -> void:
 	var result := state.choose_guard_contract(accept)
 	if bool(result.get("ok", false)):
-		_set_event("Accepted the Morrowline Parts Guard contract." if accept else "Declined the guard contract. The fortress will travel without the convoy obligation.")
+		_set_event("CONTRACT DECISION\n%s" % String(result.get("message", "Contract decision recorded.")))
 		_journal_event("guard_contract_answered", {"accepted": accept})
 		_checkpoint("contract_answered")
 	else:
 		_set_event("Contract choice blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 	if bool(result.get("ok", false)):
+		encounter_label.text = "CONTRACT DECISION\n%s" % String(result.get("message", "Contract decision recorded."))
 		focus_current_action.call_deferred()
 
 func _on_campaign_node_pressed(index: int) -> void:

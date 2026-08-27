@@ -130,6 +130,8 @@ The first guard contract deliberately increases Morrowline encounter endurance i
 
 The two Ashgate contract actions are stacked full-width and carry their complete tradeoff. Guard explicitly previews one extra HP for every Morrowline enemy and the conditional 30-Ashmark/two-trust payout; Travel Unbound states that it avoids the extra endurance and forfeits that reward. The introductory prose now frames the decision instead of carrying mechanics that disappear once focus reaches a button.
 
+Resolving the contract returns the same concrete combat and reward consequences from the simulation and promotes them into the stage's above-fold event receipt. Once the choice cards disappear, the player can still verify the commitment without reconstructing it from the status line or waiting to reach Morrowline.
+
 Iven's recruitment control follows the same visible-prerequisite rule as authored events. When recruitment is unavailable, the action names the exact missing relay, crew-space, location, staffing, or supply condition in its disabled state rather than relying on hover-only help.
 
 The recruitment control also carries Iven's mechanical offer in full: exact contact reveals, up to eight points of route-risk reduction, one less encounter pressure, and two anti-Storm damage. The benefits remain visible beside a lock reason, allowing a player who cannot recruit him to understand what that alternate build path would have changed.
