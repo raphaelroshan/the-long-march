@@ -932,7 +932,9 @@ func _build_feedback_overlay() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	feedback_overlay.add_child(center)
 	var panel := PanelContainer.new()
+	panel.name = "FeedbackPanel"
 	panel.custom_minimum_size = Vector2(700, 650)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191dfa"), Color("#688587"), 2, 8, 0))
 	center.add_child(panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:

@@ -379,6 +379,10 @@ func _run() -> void:
 	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.results_title_button, "the result actions should form a closed Tab cycle")
 	game.feedback_button.pressed.emit()
 	await process_frame
+	var feedback_panel := game.feedback_overlay.find_child("FeedbackPanel", true, false) as PanelContainer
+	var feedback_surface := feedback_panel.get_theme_stylebox("panel") as StyleBoxFlat if feedback_panel != null else null
+	_expect(feedback_panel != null and feedback_surface != null and feedback_surface.bg_color.a > 0.95 and feedback_surface.border_width_left == 2, "the feedback form should use an opaque bordered modal surface over the completed run")
+	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
 	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY", "the feedback form should expose clear local-only actions")
 	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_close_button, "the feedback actions should have explicit horizontal controller navigation")

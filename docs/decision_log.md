@@ -90,6 +90,8 @@ The debrief card retains a compact run record beside that explanation: the compl
 
 The results feedback form uses explicit local-only actions, returns to the debrief rather than generically closing, and replaces a successful save action with `Save Again`. Its receipt shows the generated filename while retaining the full path as a tooltip, giving playtesters useful proof without filling the modal with machine-specific directory text.
 
+The feedback form uses an opaque bordered modal surface rather than relying on the full-screen shade alone. Long prompts, text-entry fields, privacy copy, and save controls remain visually isolated from the dense result screen beneath them at the target 1280×720 resolution.
+
 Every exported feedback bundle records the exact application build at the top level and repeats it in the visible save receipt. Reports can therefore be matched to behavior after the repository has moved on, without asking the tester to copy a version string manually.
 
 Closing and reopening the feedback form retains the last successful local filename and keeps `Save Again` available while the file still exists. The form falls back to its unsaved message if that file has been removed, so its receipt reflects durable state rather than only the most recent button press.
