@@ -448,8 +448,17 @@ func _test_campaign_recoverable_failure() -> void:
 	state.place_module("coal_cell", Vector2i(0, 1))
 	state.start_campaign()
 	state.choose_guard_contract(false)
+	state.money = 4
 	state.begin_campaign_route("rill_crossing", "protect_crew")
-	state.advance_encounter(6.0)
+	var retreat := state.advance_encounter(6.0)
 	_expect(state.phase == "refit" and state.current_location == "ashgate_depot", "an early route failure should retreat to Ashgate instead of ending the run")
 	_expect(state.campaign_retreats == 1 and state.campaign_pressure >= 2, "retreat should be recorded and advance closure pressure")
 	_expect(state.operational("steam_lance_engine") and state.fuel >= 2 and state.hull_condition >= 3, "the road crew should restore a viable limping recovery state")
+	var receipt: Dictionary = retreat.get("retreat", {})
+	_expect(int(receipt.get("day_added", 0)) == 1 and int(receipt.get("pressure_added", 0)) == 2, "the retreat receipt should report its exact time and closure-pressure penalties")
+	_expect(int(receipt.get("ashmarks_lost", -1)) == 4 and state.money == 0, "the retreat receipt should report a partial charge when fewer than 10 Ashmarks remain")
+	_expect(int(receipt.get("hull_after", 0)) == state.hull_condition and int(receipt.get("fuel_after", 0)) == state.fuel, "the retreat receipt should match the recovered hull and fuel state")
+	_expect(not Array(receipt.get("system_repairs", [])).is_empty(), "the retreat receipt should name the disabled mobility system restored by the road crew")
+	var report: Array = retreat.get("report", [])
+	var final_line := String(report.back()) if not report.is_empty() else ""
+	_expect(final_line.contains("Ashmarks -%d" % int(receipt.get("ashmarks_lost", -1))) and final_line.contains("hull %d→%d" % [int(receipt.get("hull_before", -1)), int(receipt.get("hull_after", -1))]), "the visible retreat report should be generated from the structured receipt")

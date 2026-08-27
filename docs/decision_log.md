@@ -130,6 +130,8 @@ Resolving an authored event returns its human-readable mechanical result from th
 
 A failed regional encounter returns the fortress to its last secured node with explicit time, money, and pressure penalties. A road crew restores only enough hull, fuel, engine, and fuel-module durability to make another decision possible. Meridian Pass remains a hard endpoint because it is presented as the chapter's final commitment; earlier failures remain recoverable and retain their consequences.
 
+The retreat after-action line is generated from a structured simulation receipt rather than a fixed description. It names the actual Ashmarks removed, pressure and day added, hull and fuel before-and-after values, and every disabled mobility system raised to limping durability. This keeps partial charges and already-healthy resources truthful while making the next viable state auditable in the same place as the defeat.
+
 Morrowline's service controls expose the remaining action budget in the heading and disable choices that cannot succeed because the selected module or hull is already whole, funds are insufficient, or no actions remain. Module repair names the selected system, restored durability, and exact cost. Focus skips unavailable services so arrival never lands on a dead-end action.
 
 The complete Morrowline controller loop is rebuilt from usable services and currently open roads. Fully repaired modules, unaffordable services, exhausted service slots, and closed routes are omitted; route commitment joins the loop only after the player deliberately selects a road.

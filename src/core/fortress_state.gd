@@ -1518,15 +1518,27 @@ func _campaign_event_for_node(node_id: String) -> String:
 			return "toll_decision"
 	return ""
 
-func _campaign_restore_limping_engine() -> void:
+func _campaign_restore_limping_engine() -> Array[String]:
+	var repairs: Array[String] = []
 	for index in range(modules.size()):
 		var module_id := String(modules[index].get("id", ""))
-		if "engine" in module_definition(module_id).get("tags", []):
-			modules[index]["durability"] = maxi(1, int(modules[index].get("durability", 0)))
-		if "fuel" in module_definition(module_id).get("tags", []):
-			modules[index]["durability"] = maxi(1, int(modules[index].get("durability", 0)))
+		var definition := module_definition(module_id)
+		var tags: Array = definition.get("tags", [])
+		if "engine" not in tags and "fuel" not in tags:
+			continue
+		var durability_before := int(modules[index].get("durability", 0))
+		var durability_after := maxi(1, durability_before)
+		modules[index]["durability"] = durability_after
+		if durability_after > durability_before:
+			repairs.append("%s %d→%d" % [String(definition.get("name", module_id)), durability_before, durability_after])
+	return repairs
 
 func _campaign_recover_from_failure() -> Dictionary:
+	var day_before := day
+	var money_before := money
+	var pressure_before := campaign_pressure
+	var fuel_before := fuel
+	var hull_before := hull_condition
 	encounter_outcome = "forced_retreat"
 	campaign_retreats += 1
 	campaign_pressure += 2
@@ -1534,7 +1546,7 @@ func _campaign_recover_from_failure() -> Dictionary:
 	money = maxi(0, money - 10)
 	fuel = maxi(2, fuel)
 	hull_condition = maxi(3, hull_condition)
-	_campaign_restore_limping_engine()
+	var system_repairs := _campaign_restore_limping_engine()
 	command_points = 2
 	power_priority = "balanced"
 	heat_surge = 0
@@ -1548,9 +1560,30 @@ func _campaign_recover_from_failure() -> Dictionary:
 	if phase == "settlement":
 		settlement_actions_remaining = maxi(1, settlement_actions_remaining)
 	_recalculate()
-	_encounter_log("Outcome: forced retreat to %s. A road crew patches one engine, restores a limping hull, and charges 10 Ashmarks; closure pressure rises." % String(JOURNEY_NODES.get(campaign_last_safe_node, {}).get("name", campaign_last_safe_node)))
+	var retreat_receipt := {
+		"day_added": day - day_before,
+		"ashmarks_lost": money_before - money,
+		"pressure_added": campaign_pressure - pressure_before,
+		"fuel_before": fuel_before,
+		"fuel_after": fuel,
+		"hull_before": hull_before,
+		"hull_after": hull_condition,
+		"system_repairs": system_repairs.duplicate()
+	}
+	var repair_text := ", ".join(system_repairs) if not system_repairs.is_empty() else "no disabled engine or fuel module"
+	_encounter_log("Outcome: forced retreat to %s · day +%d · Ashmarks -%d · pressure +%d · hull %d→%d · fuel %d→%d. Crew repair: %s." % [
+		String(JOURNEY_NODES.get(campaign_last_safe_node, {}).get("name", campaign_last_safe_node)),
+		int(retreat_receipt.day_added),
+		int(retreat_receipt.ashmarks_lost),
+		int(retreat_receipt.pressure_added),
+		int(retreat_receipt.hull_before),
+		int(retreat_receipt.hull_after),
+		int(retreat_receipt.fuel_before),
+		int(retreat_receipt.fuel_after),
+		repair_text
+	])
 	_clear_temporary_seals()
-	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "recovered_to": campaign_last_safe_node, "report": encounter_report.duplicate(), "summary": summary()}
+	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "recovered_to": campaign_last_safe_node, "retreat": retreat_receipt, "report": encounter_report.duplicate(), "summary": summary()}
 
 func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 	var arrived_node := campaign_target_node
