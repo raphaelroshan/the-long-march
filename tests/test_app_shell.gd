@@ -29,6 +29,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.menu_view.visible, "the application should open on the title menu")
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
+	_expect(app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should expose the exact build version for playtest reports")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
 	var invalid_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -97,6 +98,7 @@ func _run() -> void:
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
+	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
 	app.pause_settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")

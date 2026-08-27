@@ -35,6 +35,8 @@ var save_return_button: Button
 var pause_settings_button: Button
 var restart_button: Button
 var title_button: Button
+var title_build_label: Label
+var pause_build_label: Label
 var confirmation_title_label: Label
 var confirmation_body_label: Label
 var confirmation_confirm_button: Button
@@ -123,11 +125,11 @@ func _build_title_menu() -> void:
 	left.add_theme_constant_override("separation", 12)
 	columns.add_child(left)
 
-	var build_label := Label.new()
-	build_label.text = "ASHGATE LOWLANDS · PLAYABLE ALPHA"
-	build_label.add_theme_font_size_override("font_size", 13)
-	build_label.add_theme_color_override("font_color", Color("#9fd2c2"))
-	left.add_child(build_label)
+	title_build_label = Label.new()
+	title_build_label.text = "ASHGATE LOWLANDS · PLAYABLE ALPHA · %s" % _build_version()
+	title_build_label.add_theme_font_size_override("font_size", 13)
+	title_build_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	left.add_child(title_build_label)
 
 	var title := Label.new()
 	title.text = "THE LONG\nMARCH"
@@ -557,6 +559,12 @@ func _build_pause_menu() -> void:
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", Color("#829092"))
 	content.add_child(hint)
+	pause_build_label = Label.new()
+	pause_build_label.text = _build_version()
+	pause_build_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_build_label.add_theme_font_size_override("font_size", 10)
+	pause_build_label.add_theme_color_override("font_color", Color("#667477"))
+	content.add_child(pause_build_label)
 
 func _build_confirmation_overlay() -> void:
 	confirmation_view = Control.new()
@@ -616,6 +624,9 @@ func _load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
+
+func _build_version() -> String:
+	return "v%s" % String(ProjectSettings.get_setting("application/config/version", "development"))
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
