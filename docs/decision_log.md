@@ -190,6 +190,8 @@ The Field Guide describes the rules a player must actually read in the interface
 
 The pause menu is a session boundary rather than a decorative overlay. It reports the current day, location, phase, and secured encounters; supports Save and Save & Return; and asks for confirmation before restart or return without saving. The safe cancellation action receives focus by default. This makes repeated tests faster while keeping accidental loss visible and reversible through the existing local save.
 
+The playable stage includes a persistent Pause control in its header with the matching Esc and controller-B shortcuts. Mouse-first testers can discover saving, settings, briefing, restart, and title navigation without already knowing a hidden keyboard command; the shell remains the owner of the actual pause state.
+
 ## 2026-08-27 — The stage shows the whole run without hiding the next decision
 
 The Marchmaster's Desk carries a persistent five-milestone tracker: Prep, Roads, Recover, Final, and Result. Completed, current, and upcoming milestones use both symbols and color. The tracker is explanatory rather than a second simulation state; its current position derives from the deterministic campaign state and is verified across a complete run.

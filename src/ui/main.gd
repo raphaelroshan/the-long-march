@@ -2,6 +2,7 @@ extends Control
 
 signal return_to_title_requested
 signal checkpoint_reached(reason: String)
+signal pause_requested
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
@@ -47,6 +48,7 @@ const ONBOARDING_STEPS := [
 var state: LongMarchState
 var metric_labels: Dictionary = {}
 var subtitle_label: Label
+var pause_button: Button
 var journey_banner: TextureRect
 var status_label: Label
 var right_scroll: ScrollContainer
@@ -326,11 +328,21 @@ func _build_ui() -> void:
 	left.add_theme_constant_override("separation", 10)
 	left_scroll.add_child(left)
 
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 12)
+	left.add_child(header)
 	var title := Label.new()
 	title.text = "THE LONG MARCH"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color("#e8c58e"))
-	left.add_child(title)
+	header.add_child(title)
+	pause_button = Button.new()
+	pause_button.text = "PAUSE · ESC / B"
+	pause_button.custom_minimum_size = Vector2(150, 42)
+	pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
+	pause_button.pressed.connect(func() -> void: pause_requested.emit())
+	header.add_child(pause_button)
 
 	subtitle_label = Label.new()
 	subtitle_label.text = "A fortress is only strong if it can keep moving."

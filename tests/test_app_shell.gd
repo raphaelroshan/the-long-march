@@ -100,8 +100,11 @@ func _run() -> void:
 	_expect(not app.game_view.onboarding_overlay.visible, "Quick Start should skip the briefing for repeated flow tests")
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "Quick Start should not permanently mark the briefing complete")
 	_expect(app.game_view.contract_accept_button.has_focus(), "Quick Start should focus the first required Ashgate decision")
+	_expect(app.game_view.pause_button.visible and app.game_view.pause_button.text.contains("ESC / B"), "the live stage should expose a visible mouse and controller pause action")
 	app.game_view.contract_decline_button.grab_focus()
-	app._show_pause()
+	app.game_view.pause_button.pressed.emit()
+	await process_frame
+	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the visible stage pause action should open and suspend the march")
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.contract_decline_button.has_focus(), "resuming should restore the stage control that had focus")

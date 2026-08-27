@@ -990,6 +990,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	game_view.set("show_onboarding_on_ready", show_briefing)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
+	game_view.connect("pause_requested", Callable(self, "_show_pause"))
 	add_child(game_view)
 	move_child(game_view, 0)
 	menu_view.visible = false
