@@ -1089,16 +1089,23 @@ func _focus_control(control: Control) -> bool:
 	return true
 
 func _scroll_action_context_into_view(control: Control) -> void:
+	await get_tree().process_frame
 	if not _control_can_receive_focus(control) or right_scroll == null or not right_scroll.is_ancestor_of(control):
 		return
-	right_scroll.ensure_control_visible(control)
 	var viewport_rect := right_scroll.get_global_rect()
+	var previous_scroll := right_scroll.scroll_vertical
 	var guidance_rect := guidance_label.get_global_rect()
 	var control_rect := control.get_global_rect()
-	var context_height := control_rect.end.y - guidance_rect.position.y
-	if guidance_rect.position.y < viewport_rect.position.y and context_height <= viewport_rect.size.y - 16.0:
-		var correction := ceili(viewport_rect.position.y - guidance_rect.position.y + 8.0)
-		right_scroll.scroll_vertical = maxi(0, right_scroll.scroll_vertical - correction)
+	var guidance_top := guidance_rect.position.y - viewport_rect.position.y + previous_scroll
+	var control_bottom := control_rect.end.y - viewport_rect.position.y + previous_scroll
+	var context_height := control_bottom - guidance_top
+	right_scroll.scroll_vertical = 0
+	if control_bottom <= viewport_rect.size.y - 8.0:
+		return
+	if context_height <= viewport_rect.size.y - 16.0:
+		right_scroll.scroll_vertical = maxi(0, ceili(guidance_top - 8.0))
+	else:
+		right_scroll.ensure_control_visible(control)
 
 func focus_current_action() -> void:
 	if onboarding_overlay != null and onboarding_overlay.visible:

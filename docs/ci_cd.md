@@ -26,7 +26,7 @@ python tools/validate_gameplay_framework.py --data content/gameplay_framework.js
 bash scripts/verify.sh
 ```
 
-A missing local Godot executable is an environment limitation and causes `scripts/verify.sh` to exit with status `2`. GitHub Actions installs Godot 4.4.1 and runs the actual test suite on both operating systems.
+A missing local Godot executable is an environment limitation and causes `scripts/verify.sh` to exit with status `2`. The verifier requires each suite's explicit PASS marker and rejects Godot `ERROR:` or `SCRIPT ERROR:` output even if the engine process exits zero. GitHub Actions installs Godot 4.4.1 and runs the actual test suite on both operating systems.
 
 ## AI review roles
 

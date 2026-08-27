@@ -28,6 +28,7 @@ func _press_campaign_node(node_id: String) -> void:
 				return
 			button.pressed.emit()
 			await process_frame
+			await process_frame
 			_expect(game.selected_campaign_node_id == node_id and game.state.phase in ["refit", "map", "settlement"], "selecting a map node should wait for explicit route confirmation: " + node_id)
 			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
@@ -136,6 +137,9 @@ func _run() -> void:
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
 	_expect(game.encounter_label.text.begins_with("ROUTE PLANNING"), "the post-contract status should name the next actionable phase")
 	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
+	var route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
+	var route_asset_rect: Rect2 = game.asset_row.get_global_rect()
+	_expect(not route_asset_rect.intersects(route_viewport_rect) or route_viewport_rect.encloses(route_asset_rect), "route focus should not leave the command-desk icon row partially clipped")
 	game.doctrine_option.select(2)
 	game.doctrine_option.item_selected.emit(2)
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
@@ -170,6 +174,9 @@ func _run() -> void:
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
 	_expect(game.advance_encounter_button.has_focus(), "committing a route should hand controller focus to the encounter timeline")
 	_expect(game.right_scroll.get_global_rect().encloses(game.advance_encounter_button.get_global_rect()), "battle focus should scroll encounter advancement into view")
+	var battle_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
+	var battle_asset_rect: Rect2 = game.asset_row.get_global_rect()
+	_expect(not battle_asset_rect.intersects(battle_viewport_rect) or battle_viewport_rect.encloses(battle_asset_rect), "battle focus should settle after layout changes without clipping the icon row")
 	_expect(game.combat_panel.visible and game.combat_panel.step_panels.size() == 6, "battle state should expose the six-step encounter timeline")
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	_expect(game.combat_panel.step_labels[0].text == "NEXT · 1" and game.advance_encounter_button.text.contains("STEP 1 OF 6"), "combat controls should identify the exact next timeline step")

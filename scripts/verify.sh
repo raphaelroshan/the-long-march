@@ -2,18 +2,37 @@
 set -euo pipefail
 
 if command -v godot >/dev/null 2>&1; then
-	godot --headless --path . --import
-	godot --headless --path . --script res://tests/test_fortress_state.gd
-	godot --headless --path . --script res://tests/test_playtest_journal.gd
-	godot --headless --path . --script res://tests/test_app_shell.gd
-	godot --headless --path . --script res://tests/test_prototype_flow.gd
+	GODOT_BIN="godot"
 elif command -v godot4 >/dev/null 2>&1; then
-	godot4 --headless --path . --import
-	godot4 --headless --path . --script res://tests/test_fortress_state.gd
-	godot4 --headless --path . --script res://tests/test_playtest_journal.gd
-	godot4 --headless --path . --script res://tests/test_app_shell.gd
-	godot4 --headless --path . --script res://tests/test_prototype_flow.gd
+	GODOT_BIN="godot4"
 else
   echo "Godot 4.x is required for headless verification but was not found." >&2
   exit 2
 fi
+
+run_checked() {
+	local expected="$1"
+	shift
+	local output_file
+	output_file="$(mktemp)"
+	set +e
+	"$@" 2>&1 | tee "$output_file"
+	local command_status=${PIPESTATUS[0]}
+	set -e
+	if [[ $command_status -ne 0 ]] || grep -Eq 'SCRIPT ERROR:|(^| )ERROR:' "$output_file"; then
+		rm -f "$output_file"
+		return 1
+	fi
+	if [[ -n "$expected" ]] && ! grep -Fq "$expected" "$output_file"; then
+		echo "Expected test marker was not produced: $expected" >&2
+		rm -f "$output_file"
+		return 1
+	fi
+	rm -f "$output_file"
+}
+
+run_checked "" "$GODOT_BIN" --headless --path . --import
+run_checked "PASS: The Long March fortress-state tests" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_state.gd
+run_checked "PASS: The Long March local playtest journal" "$GODOT_BIN" --headless --path . --script res://tests/test_playtest_journal.gd
+run_checked "PASS: The Long March application shell" "$GODOT_BIN" --headless --path . --script res://tests/test_app_shell.gd
+run_checked "PASS: The Long March complete prototype flow" "$GODOT_BIN" --headless --path . --script res://tests/test_prototype_flow.gd

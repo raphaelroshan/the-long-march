@@ -226,6 +226,8 @@ Stage-owned overlays follow the same rule. The briefing routes around its disabl
 
 Focus handoff also scrolls the Marchmaster's Desk until the target control is fully visible. Logical focus alone was insufficient because the route map and later encounter actions can sit below the 720p fold. Automated flow coverage now checks both focus ownership and viewport containment after the contract and first route commitment.
 
+Focus scrolling waits for one layout frame after phase changes before choosing its final position. Controls hidden between preparation, route review, and battle otherwise leave stale geometry behind, which can produce visibly sliced headings or icon rows even when the focused action itself is technically on screen.
+
 When the focused action and current-order text fit in the viewport together, scrolling preserves both rather than aligning only the control. This matters for taller commitment cards and doctrine warnings: the player should never have to choose between seeing what to press and why they are pressing it.
 
 ## 2026-08-27 — Continue is offered only for a readable compatible save
