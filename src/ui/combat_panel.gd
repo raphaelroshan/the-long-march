@@ -106,6 +106,7 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 	var active := bool(view.get("active", false))
 	var doctrine := String(view.get("doctrine", "protect_cargo")).replace("_", " ").capitalize()
 	var intervention_used := bool(view.get("intervention_used", false))
+	var enemies: Array = view.get("enemies", [])
 	title_label.text = "ACTIVE CONTACT · %s" % String(view.get("location_name", "Unknown road")).to_upper()
 	var timeline_status := "Complete" if not active else "Next step %d/%d" % [mini(step + 1, MAX_STEPS), MAX_STEPS]
 	order_label.text = "Doctrine: %s   ·   Emergency order: %s   ·   %s" % [doctrine, "spent" if intervention_used else "1 available", timeline_status]
@@ -119,16 +120,22 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 			text_color = Color("#d4f1e4")
 			step_labels[index].text = "DONE · %d" % (index + 1)
 		elif index == step and active:
-			fill = Color("#5a4029")
-			border = Color("#e8c58e")
-			text_color = Color("#fff1ce")
-			step_labels[index].text = "NEXT · %d" % (index + 1)
+			var contact_next := false
+			for enemy in enemies:
+				if not bool(enemy.get("defeated", false)) and not bool(enemy.get("arrived", false)):
+					var definition: Dictionary = enemy_definitions.get(String(enemy.get("id", "")), {})
+					if int(definition.get("arrival_step", 0)) == index + 1:
+						contact_next = true
+						break
+			fill = Color("#512f2c") if contact_next else Color("#5a4029")
+			border = Color("#ef8375") if contact_next else Color("#e8c58e")
+			text_color = Color("#ffd2ca") if contact_next else Color("#fff1ce")
+			step_labels[index].text = "%s · %d" % ["CONTACT" if contact_next else "NEXT", index + 1]
 		else:
 			step_labels[index].text = str(index + 1)
 		step_panels[index].add_theme_stylebox_override("panel", _panel_style(fill, border, 2 if index == step and active else 1))
 		step_labels[index].add_theme_color_override("font_color", text_color)
 
-	var enemies: Array = view.get("enemies", [])
 	for index in range(MAX_ENEMIES):
 		var card := enemy_panels[index]
 		if index >= enemies.size():

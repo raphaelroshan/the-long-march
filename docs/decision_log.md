@@ -160,6 +160,8 @@ The combat header names the next action as `Next step 1/6` rather than presentin
 
 The Advance button previews immediate contact. When an approaching threat reaches the fortress on the next step, the action names it before confirmation; once contact is active, it names the threatened system. Ordinary travel steps remain concise. This puts the irreversible consequence on the control itself without replacing the fuller enemy cards and current-order guidance.
 
+The matching timeline cell changes from `Next` to `Contact` and uses the danger treatment when that step contains an arrival. This creates one consistent warning across the enemy countdown, timeline, and Advance action instead of making the player reconcile three differently phrased clocks.
+
 ## 2026-08-27 — The application shell starts outside the simulation
 
 The packaged build opens on a title menu instead of constructing a run immediately. Start Game creates a fresh Ashgate stage, Continue restores the explicit local save, and Escape opens a pause layer with resume, restart, and return-to-title actions. The shell owns these lifecycle transitions while `Main.tscn` remains the playable stage and `LongMarchState` remains presentation-independent. This keeps menu state from leaking into deterministic campaign state and leaves the stage independently testable.
