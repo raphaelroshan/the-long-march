@@ -300,6 +300,12 @@ func _run() -> void:
 	target_card_preview["target_names"] = {"hull": "Hull", "coal_cell": "Coal Cell"}
 	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
 	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR ABSORBS 1") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose damage, absorption, remaining durability, and disablement")
+	var pre_hull_preview_enemy: Dictionary = game.state.encounter_enemies[0].duplicate(true)
+	game.state.encounter_enemies[0]["arrived"] = true
+	game.state.encounter_enemies[0]["target"] = "hull"
+	game._refresh_ui()
+	_expect(game.combat_inspect_button.text.contains("HULL EXPOSED") and game.intervention_help_label.text.contains("Sealing a module will not prevent this hit"), "a hull-directed contact should explain that Seal cannot prevent its current attack")
+	game.state.encounter_enemies[0] = pre_hull_preview_enemy
 	game._refresh_ui()
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")

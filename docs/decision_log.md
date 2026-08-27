@@ -190,6 +190,8 @@ When a new non-hull target first becomes active, it also becomes the default sel
 
 An active contact's preview shows the target's current and predicted durability, flags a disabling hit or hull collapse, and names any damage absorbed by adjacent armor. The player can therefore compare advancing with sealing or another emergency order before the deterministic step resolves.
 
+Hull-directed attacks explicitly state that sealing a module cannot prevent the current hit. Chassis inspection remains available for reviewing the surviving layout, but its action and encounter-order help describe the exposed hull so the player is steered toward a relevant intervention rather than a false defensive promise.
+
 `Cut Loose Cargo` names the exact installed module that its deterministic priority will sacrifice before the player commits the once-per-encounter order. Its visible label also warns whether that means losing shelter, repair supply, or a fuel feed; the result report repeats the discarded module. A desperate mobility action should be costly, not opaque.
 
 Combat describes the intervention budget consistently as one emergency order rather than exposing the underlying two-point legacy value beside a once-per-encounter lock. After any order, the immediate report names its concrete outcome: power and heat change, sealed module and downtime, heat removed and exposure, or discarded cargo and reduced incentive.

@@ -1368,6 +1368,12 @@ func _active_combat_target_id() -> String:
 			return target_id
 	return ""
 
+func _hull_is_under_threat() -> bool:
+	for enemy in state.encounter_enemies:
+		if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and String(enemy.get("target", "")) == "hull":
+			return true
+	return false
+
 func _sync_new_active_combat_target() -> void:
 	if state.phase not in ["battle", "final_battle"]:
 		last_synced_combat_target_id = ""
@@ -1899,15 +1905,18 @@ func _refresh_ui() -> void:
 	combat_inspect_button.visible = is_battle_phase
 	combat_inspect_button.disabled = not state.encounter_active
 	var active_combat_target_id := _active_combat_target_id()
+	var hull_under_threat := _hull_is_under_threat()
 	if not active_combat_target_id.is_empty():
 		var active_combat_target_name := String(state.module_definition(active_combat_target_id).get("name", active_combat_target_id.replace("_", " ").capitalize()))
 		combat_inspect_button.text = "INSPECT TARGET · %s" % active_combat_target_name.to_upper()
+	elif hull_under_threat:
+		combat_inspect_button.text = "INSPECT CHASSIS · HULL EXPOSED"
 	else:
 		combat_inspect_button.text = "INSPECT CHASSIS · %s" % ("REVIEW DAMAGE" if state.encounter_intervention_used else "CHOOSE SEAL TARGET")
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
-	intervention_help_label.text = "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
+	intervention_help_label.text = "Hull is under threat. Sealing a module will not prevent this hit; choose another order or preserve a system for later." if hull_under_threat else "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty()) or (index == 3 and state.sacrificable_cargo_id().is_empty())
