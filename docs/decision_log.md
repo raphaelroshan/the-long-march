@@ -475,3 +475,7 @@ The title footer describes directional navigation, confirmation, and closing tit
 ## 2026-08-28 — Guide-launched confirmations return to the guide
 
 Quick Start can be launched from either the title action stack or the Field Guide. When an existing checkpoint requires confirmation, cancelling now restores focus to the visible guide action if that panel is still open; title-launched cancellations still return to the title's Quick Start action. This prevents keyboard and controller focus from landing behind the active overlay.
+
+## 2026-08-28 — Quick Start preserves checkpoint semantics, not files
+
+The Field Guide now states that Quick Start changes only whether the introductory briefing opens. Simulation, seed, route graph, and checkpoint rules remain identical. It no longer claims that Quick Start cannot change the save file, since a fresh run can legitimately replace Continue after its first automatic or manual checkpoint.

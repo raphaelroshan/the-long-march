@@ -473,7 +473,7 @@ func _build_guide_overlay() -> void:
 	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend at most two service actions, then refit around lasting damage. Disabled services state the exact missing money, damage, or action."))
 	content.add_child(_flow_step("5", "MERIDIAN · DEBRIEF", "Commit to the final road, resolve the Siege Beast, then use the result thresholds and replay goal to plan one deliberate change."))
 	var note := Label.new()
-	note.text = "QUICK START skips only the introductory briefing. It does not change the simulation, seed, route graph, or save file."
+	note.text = "QUICK START skips only the introductory briefing. The same simulation, seed, route graph, and checkpoint rules apply."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color("#d8c389"))
