@@ -313,29 +313,29 @@ func _configure_title_focus() -> void:
 	quit_button.focus_neighbor_bottom = quit_button.get_path_to(start_button)
 
 func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, show_quick_start: bool = true) -> void:
-	var saved_action: Button = continue_button if has_valid_save else (save_recovery_button if has_invalid_save else null)
-	var first_after_start: Button = quick_start_button if show_quick_start else (saved_action if saved_action != null else settings_button)
-	var upper_action: Button = saved_action if saved_action != null else (quick_start_button if show_quick_start else start_button)
-	var active_controls: Array = [start_button]
-	if show_quick_start:
-		active_controls.append(quick_start_button)
+	var title_actions: Array[Button] = []
 	if has_valid_save:
-		active_controls.append(continue_button)
-	elif has_invalid_save:
-		active_controls.append(save_recovery_button)
+		title_actions.append(continue_button)
+	title_actions.append(start_button)
+	if show_quick_start:
+		title_actions.append(quick_start_button)
+	if has_invalid_save:
+		title_actions.append(save_recovery_button)
+	var active_controls: Array = []
+	active_controls.append_array(title_actions)
 	active_controls.append_array([guide_button, settings_button, quit_button])
 	_configure_focus_cycle(active_controls)
-	start_button.focus_neighbor_bottom = start_button.get_path_to(first_after_start)
-	if show_quick_start:
-		quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
-		quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(upper_action if upper_action != quick_start_button else settings_button)
-	if has_valid_save:
-		continue_button.focus_neighbor_top = continue_button.get_path_to(quick_start_button if show_quick_start else start_button)
-	elif has_invalid_save:
-		save_recovery_button.focus_neighbor_top = save_recovery_button.get_path_to(quick_start_button if show_quick_start else start_button)
-	guide_button.focus_neighbor_top = guide_button.get_path_to(upper_action)
-	settings_button.focus_neighbor_top = settings_button.get_path_to(upper_action)
-	quit_button.focus_neighbor_top = quit_button.get_path_to(upper_action)
+	for index in range(title_actions.size()):
+		var action := title_actions[index]
+		var previous: Control = quit_button if index == 0 else title_actions[index - 1]
+		var following: Control = settings_button if index == title_actions.size() - 1 else title_actions[index + 1]
+		action.focus_neighbor_top = action.get_path_to(previous)
+		action.focus_neighbor_bottom = action.get_path_to(following)
+	var first_action: Button = title_actions[0]
+	var last_action: Button = title_actions[-1]
+	for utility in [guide_button, settings_button, quit_button]:
+		utility.focus_neighbor_top = utility.get_path_to(last_action)
+		utility.focus_neighbor_bottom = utility.get_path_to(first_action)
 
 func _configure_overlay_focus() -> void:
 	_configure_focus_pair(guide_close_button, guide_quick_start_button)
@@ -902,6 +902,16 @@ func _refresh_title_state() -> void:
 	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save
+	var actions := start_button.get_parent()
+	if has_valid_save:
+		actions.move_child(continue_button, 0)
+		actions.move_child(start_button, 1)
+		actions.move_child(quick_start_button, 2)
+	else:
+		actions.move_child(start_button, 0)
+		actions.move_child(quick_start_button, 1)
+		actions.move_child(continue_button, 2)
+		actions.move_child(save_recovery_button, 3)
 	_refresh_title_focus(has_valid_save, has_invalid_save, not briefing_complete)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
