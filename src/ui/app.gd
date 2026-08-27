@@ -320,8 +320,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false) 
 	quit_button.focus_neighbor_top = quit_button.get_path_to(upper_action)
 
 func _configure_overlay_focus() -> void:
-	guide_close_button.focus_neighbor_right = guide_close_button.get_path_to(guide_quick_start_button)
-	guide_quick_start_button.focus_neighbor_left = guide_quick_start_button.get_path_to(guide_close_button)
+	_configure_focus_pair(guide_close_button, guide_quick_start_button)
 	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
 	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(motion_button)
 	motion_button.focus_neighbor_top = motion_button.get_path_to(display_mode_button)
@@ -346,8 +345,30 @@ func _configure_overlay_focus() -> void:
 	title_button.focus_neighbor_top = title_button.get_path_to(pause_settings_button)
 	title_button.focus_neighbor_left = title_button.get_path_to(restart_button)
 	title_button.focus_neighbor_bottom = title_button.get_path_to(resume_button)
-	confirmation_cancel_button.focus_neighbor_right = confirmation_cancel_button.get_path_to(confirmation_confirm_button)
-	confirmation_confirm_button.focus_neighbor_left = confirmation_confirm_button.get_path_to(confirmation_cancel_button)
+	_configure_focus_cycle([resume_button, pause_save_button, save_return_button, pause_briefing_button, pause_settings_button, restart_button, title_button])
+	_configure_focus_pair(confirmation_cancel_button, confirmation_confirm_button)
+
+func _configure_focus_pair(first: Control, second: Control) -> void:
+	first.focus_neighbor_left = first.get_path_to(second)
+	first.focus_neighbor_right = first.get_path_to(second)
+	first.focus_neighbor_top = first.get_path_to(first)
+	first.focus_neighbor_bottom = first.get_path_to(first)
+	first.focus_previous = first.get_path_to(second)
+	first.focus_next = first.get_path_to(second)
+	second.focus_neighbor_left = second.get_path_to(first)
+	second.focus_neighbor_right = second.get_path_to(first)
+	second.focus_neighbor_top = second.get_path_to(second)
+	second.focus_neighbor_bottom = second.get_path_to(second)
+	second.focus_previous = second.get_path_to(first)
+	second.focus_next = second.get_path_to(first)
+
+func _configure_focus_cycle(controls: Array) -> void:
+	for index in range(controls.size()):
+		var control: Control = controls[index]
+		var previous: Control = controls[(index - 1 + controls.size()) % controls.size()]
+		var next: Control = controls[(index + 1) % controls.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
 
 func _accent_button(button: Button) -> void:
 	button.add_theme_stylebox_override("normal", _flat_style(Color("#285348f2"), Color("#89d9b1"), 2, 6, 12))
@@ -795,6 +816,13 @@ func _refresh_settings(message: String = "") -> void:
 func _refresh_settings_focus() -> void:
 	var first_optional: Button = reset_briefing_button if not reset_briefing_button.disabled else (clear_save_button if not clear_save_button.disabled else settings_close_button)
 	var last_optional: Button = clear_save_button if not clear_save_button.disabled else (reset_briefing_button if not reset_briefing_button.disabled else autosave_button)
+	var active_controls: Array = [display_mode_button, motion_button, autosave_button]
+	if not reset_briefing_button.disabled:
+		active_controls.append(reset_briefing_button)
+	if not clear_save_button.disabled:
+		active_controls.append(clear_save_button)
+	active_controls.append(settings_close_button)
+	_configure_focus_cycle(active_controls)
 	autosave_button.focus_neighbor_bottom = autosave_button.get_path_to(first_optional)
 	reset_briefing_button.focus_neighbor_top = reset_briefing_button.get_path_to(autosave_button)
 	reset_briefing_button.focus_neighbor_bottom = reset_briefing_button.get_path_to(clear_save_button if not clear_save_button.disabled else settings_close_button)

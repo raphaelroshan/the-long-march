@@ -206,6 +206,14 @@ func _accent_button(button: Button, background: Color, border: Color) -> void:
 	button.add_theme_stylebox_override("pressed", _flat_style(background.darkened(0.1), Color("#ffffff"), 2, 5, 7))
 	button.add_theme_stylebox_override("focus", _flat_style(background, Color("#ffffff"), 3, 5, 6))
 
+func _configure_focus_cycle(controls: Array) -> void:
+	for index in range(controls.size()):
+		var control: Control = controls[index]
+		var previous: Control = controls[(index - 1 + controls.size()) % controls.size()]
+		var next: Control = controls[(index + 1) % controls.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	var heading := Label.new()
 	heading.text = "RUN FLOW"
@@ -789,10 +797,12 @@ func _build_onboarding_overlay() -> void:
 	actions.add_child(onboarding_next_button)
 	content.add_child(actions)
 	onboarding_skip_button.focus_neighbor_left = onboarding_skip_button.get_path_to(onboarding_next_button)
-	onboarding_skip_button.focus_neighbor_right = onboarding_skip_button.get_path_to(onboarding_next_button)
 	onboarding_back_button.focus_neighbor_left = onboarding_back_button.get_path_to(onboarding_skip_button)
 	onboarding_back_button.focus_neighbor_right = onboarding_back_button.get_path_to(onboarding_next_button)
 	onboarding_next_button.focus_neighbor_right = onboarding_next_button.get_path_to(onboarding_skip_button)
+	for button in [onboarding_skip_button, onboarding_back_button, onboarding_next_button]:
+		button.focus_neighbor_top = button.get_path_to(button)
+		button.focus_neighbor_bottom = button.get_path_to(button)
 
 func _build_feedback_overlay() -> void:
 	feedback_overlay = Control.new()
@@ -868,6 +878,17 @@ func _build_feedback_overlay() -> void:
 	feedback_close_button.focus_neighbor_right = feedback_close_button.get_path_to(feedback_save_button)
 	feedback_save_button.focus_neighbor_left = feedback_save_button.get_path_to(feedback_close_button)
 	feedback_save_button.focus_neighbor_right = feedback_save_button.get_path_to(feedback_close_button)
+	feedback_clear_text.focus_neighbor_top = feedback_clear_text.get_path_to(feedback_save_button)
+	feedback_clear_text.focus_neighbor_bottom = feedback_clear_text.get_path_to(feedback_confusing_text)
+	feedback_confusing_text.focus_neighbor_top = feedback_confusing_text.get_path_to(feedback_clear_text)
+	feedback_confusing_text.focus_neighbor_bottom = feedback_confusing_text.get_path_to(feedback_score_option)
+	feedback_score_option.focus_neighbor_top = feedback_score_option.get_path_to(feedback_confusing_text)
+	feedback_score_option.focus_neighbor_bottom = feedback_score_option.get_path_to(feedback_close_button)
+	feedback_close_button.focus_neighbor_top = feedback_close_button.get_path_to(feedback_score_option)
+	feedback_close_button.focus_neighbor_bottom = feedback_close_button.get_path_to(feedback_clear_text)
+	feedback_save_button.focus_neighbor_top = feedback_save_button.get_path_to(feedback_score_option)
+	feedback_save_button.focus_neighbor_bottom = feedback_save_button.get_path_to(feedback_clear_text)
+	_configure_focus_cycle([feedback_clear_text, feedback_confusing_text, feedback_score_option, feedback_close_button, feedback_save_button])
 
 func _show_onboarding(reopened: bool = false) -> void:
 	onboarding_reopened = reopened
@@ -900,7 +921,13 @@ func _refresh_onboarding() -> void:
 			label.text = "— %s" % ONBOARDING_LABELS[index]
 			label.add_theme_color_override("font_color", Color("#738286"))
 	onboarding_back_button.disabled = onboarding_step == 0
+	onboarding_skip_button.focus_neighbor_right = onboarding_skip_button.get_path_to(onboarding_next_button if onboarding_back_button.disabled else onboarding_back_button)
 	onboarding_next_button.focus_neighbor_left = onboarding_next_button.get_path_to(onboarding_skip_button if onboarding_back_button.disabled else onboarding_back_button)
+	var active_actions: Array = [onboarding_skip_button]
+	if not onboarding_back_button.disabled:
+		active_actions.append(onboarding_back_button)
+	active_actions.append(onboarding_next_button)
+	_configure_focus_cycle(active_actions)
 	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER ASHGATE") if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
 	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP BRIEFING"
 

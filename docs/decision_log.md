@@ -204,6 +204,8 @@ If validation changes between drawing the title and attempting Continue—for ex
 
 The field guide, pause menu, and confirmation dialog use the same explicit-neighbor rule for paired actions and stacked rows. Their safe or primary control still receives focus on entry, while directional input now follows the visible grouping consistently across every application-level modal.
 
+Modal navigation is closed over both directional input and Tab traversal. The field guide and confirmation dialog cannot hand focus to covered title or pause controls; the pause menu loops through its own actions; and the briefing and feedback form include only their currently available controls in their focus cycles.
+
 Stage-owned overlays follow the same rule. The briefing routes around its disabled Previous action on page one, restores it on later pages, and wraps between close and progression actions; the feedback form links its return and save actions in both horizontal directions.
 
 Focus handoff also scrolls the Marchmaster's Desk until the target control is fully visible. Logical focus alone was insufficient because the route map and later encounter actions can sit below the 720p fold. Automated flow coverage now checks both focus ownership and viewport containment after the contract and first route commitment.

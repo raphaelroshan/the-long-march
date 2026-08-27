@@ -74,6 +74,7 @@ func _run() -> void:
 	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
 	_expect(game.ONBOARDING_STEPS.size() == 4 and game.onboarding_step_panels.size() == 4, "the guided briefing should use four concise, visible stages")
 	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_skip_button, "the first briefing step should route left around its disabled Previous action")
+	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_next) == game.onboarding_skip_button and game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_top) == game.onboarding_next_button, "the briefing should trap Tab and vertical focus inside its actions")
 	_expect(game.onboarding_progress_label.text.contains("D-pad") and game.onboarding_progress_label.text.contains("A / Enter"), "the briefing should name controller and keyboard navigation together")
 	_expect(game.onboarding_action_label.text.begins_with("FIRST ACTION"), "each briefing page should name a concrete player action")
 	_expect(game.guidance_label.text.begins_with("CURRENT ORDER") and game.guidance_label.text.contains("convoy"), "the opening objective should identify the contract decision")
@@ -81,6 +82,7 @@ func _run() -> void:
 	for _step in range(game.ONBOARDING_STEPS.size()):
 		if _step == 1:
 			_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_back_button, "later briefing steps should restore Previous to controller navigation")
+			_expect(game.onboarding_skip_button.get_node_or_null(game.onboarding_skip_button.focus_next) == game.onboarding_back_button, "later briefing steps should restore Previous to the modal Tab cycle")
 		if _step == game.ONBOARDING_STEPS.size() - 1:
 			_expect(game.onboarding_next_button.text == "ENTER ASHGATE", "the final briefing action should clearly enter the playable stage")
 		game.onboarding_next_button.pressed.emit()
@@ -226,6 +228,7 @@ func _run() -> void:
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
 	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY", "the feedback form should expose clear local-only actions")
 	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_close_button, "the feedback actions should have explicit horizontal controller navigation")
+	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_next) == game.feedback_clear_text and game.feedback_clear_text.get_node_or_null(game.feedback_clear_text.focus_previous) == game.feedback_save_button, "the feedback form should trap Tab navigation across fields and actions")
 	game.feedback_clear_text.text = "The route consequences were clear."
 	game.feedback_confusing_text.text = "The final repair tradeoff needs another run."
 	game.feedback_score_option.select(3)
