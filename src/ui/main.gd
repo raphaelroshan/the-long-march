@@ -1305,6 +1305,9 @@ func _on_campaign_node_selected(node_id: String) -> void:
 func _on_campaign_node_inspected(node_id: String, detail: String) -> void:
 	if not campaign_map.visible:
 		return
+	if node_id == selected_campaign_node_id:
+		_show_selected_route_preview(node_id)
+		return
 	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id))
 	_set_route_preview("ROUTE INTEL · %s\n%s" % [node_name.to_upper(), detail], campaign_map.intel_tone_for(node_id))
 
@@ -1568,7 +1571,7 @@ func _campaign_departure_block_reason(node_id: String) -> String:
 	if node_id.is_empty():
 		return ""
 	if not (state.operational("steam_lance_engine") or state.operational("ash_runner_engine")):
-		return "Restore a fuel-connected engine"
+		return String(_movement_failure_diagnosis().get("cause", "No operational, fuel-connected engine remained"))
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
 	var fuel_required := int(preview.get("fuel", 0))
 	if state.fuel < fuel_required:

@@ -447,3 +447,7 @@ The result card records the final doctrine and names every damaged or unavailabl
 ## 2026-08-28 — Replay confirms before replacing Continue
 
 Play Again from the result screen uses the application confirmation layer before resetting the stage. With autosave enabled, the dialog states that Continue will immediately switch to the fresh Ashgate checkpoint; with autosave disabled, it explains that the completed checkpoint remains until a later save. Cancelling restores the intact result and focus, while saved local feedback files remain independent from campaign state.
+
+## 2026-08-28 — Blocked departure names the broken movement chain
+
+When no engine can move the fortress, selected-route guidance now reuses the exact movement diagnosis shown at failure: the installed engine, its durability when destroyed, or its first missing dependency such as an adjacent Coal Cell. The map remains inspectable while blocked, but the Commit control and route summary point back to a concrete chassis correction instead of the generic instruction to restore an engine.

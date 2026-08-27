@@ -231,6 +231,14 @@ func _run() -> void:
 	_expect(game.campaign_map.commit_button.disabled and game.campaign_map.commit_button.text.contains("NEED 1 FUEL"), "route commitment should explain an exact fuel shortfall")
 	_expect(game.guidance_label.text.begins_with("DEPARTURE BLOCKED"), "the current order should explain why the selected route cannot begin")
 	game.state.fuel = available_fuel
+	var departure_coal_index: int = game.state._module_index_by_id("coal_cell")
+	var departure_coal_durability: int = int(game.state.modules[departure_coal_index].get("durability", 0))
+	game.state.modules[departure_coal_index]["durability"] = 0
+	game.state._recalculate()
+	game._refresh_ui()
+	_expect(game.campaign_map.commit_button.disabled and game.campaign_map.commit_button.text.contains("STEAM LANCE ENGINE WAS OFFLINE") and game.campaign_map.commit_button.text.contains("ENGINE HAS NO ADJACENT COAL CELL") and game.route_preview_label.text.contains("engine has no adjacent Coal Cell"), "an engine-blocked departure should name the exact system and missing dependency")
+	game.state.modules[departure_coal_index]["durability"] = departure_coal_durability
+	game.state._recalculate()
 	game.selected_campaign_node_id = ""
 	game._refresh_ui()
 	game.campaign_map.button_for("rill_crossing").grab_focus()
