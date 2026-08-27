@@ -116,10 +116,12 @@ func _run() -> void:
 	app._show_pause()
 	_expect(not app.checkpoint_toast.visible, "opening the pause menu should dismiss transient checkpoint notices")
 	_expect(app.title_button.text == "RETURN TO TITLE" and app.pause_save_status_label.text.begins_with("Current decision saved"), "the pause menu should recognize a current automatic checkpoint")
+	_expect(app.restart_button.has_theme_stylebox_override("normal") and not app.title_button.has_theme_stylebox_override("normal"), "pause should distinguish destructive restart from a safely checkpointed title return")
 	_expect(app.pause_summary_label.text.contains("FUEL 6") and app.pause_summary_label.text.contains("HULL 10/10") and app.pause_summary_label.text.contains("HEAT 5/6"), "the pause menu should preserve the critical fortress resource snapshot")
 	app.game_view.state.money += 1
 	app._refresh_pause_summary()
 	_expect(app.title_button.text == "EXIT UNSAVED" and app.pause_save_status_label.text.begins_with("Unsaved changes"), "the pause menu should reveal progress made after the last checkpoint")
+	_expect(app.title_button.has_theme_stylebox_override("normal"), "an unsaved title exit should receive the destructive warning treatment")
 	app.title_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "returning without saving should require confirmation")
@@ -200,6 +202,7 @@ func _run() -> void:
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "Save March should create the local save from the pause menu")
 	_expect(app.pause_save_status_label.text.begins_with("Saved."), "the pause menu should confirm a successful save")
 	_expect(app.title_button.text == "RETURN TO TITLE", "saving should make the safe return action explicit")
+	_expect(not app.title_button.has_theme_stylebox_override("normal"), "saving should remove the destructive warning treatment from Return to Title")
 	app.title_button.pressed.emit()
 	await process_frame
 	await process_frame

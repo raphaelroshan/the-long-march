@@ -192,6 +192,8 @@ The pause menu is a session boundary rather than a decorative overlay. It report
 
 The playable stage includes a persistent Pause control in its header with the matching Esc and controller-B shortcuts. Mouse-first testers can discover saving, settings, briefing, restart, and title navigation without already knowing a hidden keyboard command; the shell remains the owner of the actual pause state.
 
+The pause menu reserves a muted warning treatment for actions that currently discard progress. Restart always carries it; Exit Unsaved carries it only while the live state differs from the checkpoint, then returns to neutral styling as soon as saving makes the title transition safe.
+
 ## 2026-08-27 — The stage shows the whole run without hiding the next decision
 
 The Marchmaster's Desk carries a persistent five-milestone tracker: Prep, Roads, Recover, Final, and Result. Completed, current, and upcoming milestones use both symbols and color. The tracker is explanatory rather than a second simulation state; its current position derives from the deterministic campaign state and is verified across a complete run.

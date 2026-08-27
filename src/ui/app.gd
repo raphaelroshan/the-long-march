@@ -387,6 +387,12 @@ func _clear_button_accent(button: Button) -> void:
 	for style_name in ["normal", "hover", "pressed", "focus"]:
 		button.remove_theme_stylebox_override(style_name)
 
+func _warning_button(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", _flat_style(Color("#2d211fe8"), Color("#8f6254"), 1, 6, 12))
+	button.add_theme_stylebox_override("hover", _flat_style(Color("#3c2925f2"), Color("#d48a70"), 2, 6, 11))
+	button.add_theme_stylebox_override("pressed", _flat_style(Color("#211714f2"), Color("#efb39d"), 2, 6, 11))
+	button.add_theme_stylebox_override("focus", _flat_style(Color("#3c2925f2"), Color("#ffffff"), 3, 6, 10))
+
 func _stage_rule(number: String, title: String, detail: String) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
@@ -679,6 +685,7 @@ func _build_pause_menu() -> void:
 	restart_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	restart_button.tooltip_text = "Discard the current unsaved stage state and begin again."
 	restart_button.pressed.connect(_request_confirmation.bind("restart"))
+	_warning_button(restart_button)
 	session_actions.add_child(restart_button)
 	title_button = Button.new()
 	title_button.text = "EXIT UNSAVED"
@@ -686,9 +693,10 @@ func _build_pause_menu() -> void:
 	title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_button.tooltip_text = "Return to the title without updating the local save."
 	title_button.pressed.connect(_request_confirmation.bind("title"))
+	_warning_button(title_button)
 	session_actions.add_child(title_button)
 	var hint := Label.new()
-	hint.text = "Esc resumes"
+	hint.text = "B / Esc resumes"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", Color("#829092"))
@@ -1037,6 +1045,10 @@ func _refresh_pause_summary(message: String = "") -> void:
 	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
 	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."
+	if current_run_saved:
+		_clear_button_accent(title_button)
+	else:
+		_warning_button(title_button)
 	if not message.is_empty():
 		pause_save_status_label.text = message
 	elif not autosave_enabled:
