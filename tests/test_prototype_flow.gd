@@ -145,6 +145,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.selected_module_cell.x < 0 and game.module_option.get_item_text(cannon_index).contains("STORED"), "the module picker should distinguish stored modules ready for placement")
 	_expect(game.refit_label.text.contains("power −2") and game.refit_label.text.contains("Deals 3 damage to Raiders and Siege Beasts") and game.refit_label.text.contains("adjacent ammunition"), "stored module planning should show Shell Cannon consumption and explain its exact combat role and dependency")
+	_expect(game.fortress_panel.cursor_cell == Vector2i(0, 2) and game.fortress_panel.placement_status_text().contains("MASS LIMIT") and game.refit_label.text.contains("CAPACITY · Remove at least 3 mass"), "selecting a stored module should move its preview to the first open footprint and disclose a global capacity blocker immediately")
 	var stored_cannon: Dictionary = {}
 	for index in range(game.state.stored_modules.size()):
 		if String(game.state.stored_modules[index].get("id", "")) == "shell_cannon":

@@ -1334,6 +1334,9 @@ func _on_module_selected(index: int) -> void:
 	if selected_module_cell.x >= 0:
 		_set_event("Selected %s on the chassis for inspection or refitting." % module_name)
 	elif state.stored_module_count(selected_module_id) > 0:
+		var preview_cell := _first_open_cell_for_selected_module()
+		if preview_cell.x >= 0:
+			fortress_panel.cursor_cell = preview_cell
 		_set_event("Selected stored %s. Choose an empty chassis cell to install it." % module_name)
 	else:
 		_set_event("%s is no longer available in this run." % module_name)
@@ -1473,6 +1476,39 @@ func _module_power_text(definition: Dictionary) -> String:
 	if draw > 0:
 		return "−%d" % draw
 	return "0"
+
+func _stored_module_capacity_warning(definition: Dictionary, selected_installed: Dictionary) -> String:
+	if not selected_installed.is_empty():
+		return ""
+	var warnings: Array[String] = []
+	var excess_mass := state.total_mass() + int(definition.get("mass", 0)) - LongMarchState.BASE_MASS_LIMIT
+	if excess_mass > 0:
+		warnings.append("Remove at least %d mass" % excess_mass)
+	if "exterior" in definition.get("tags", []):
+		var mounts_used := 0
+		for instance in state.modules:
+			if bool(instance.get("exterior", false)):
+				mounts_used += 1
+		if mounts_used >= LongMarchState.MAX_EXTERIOR_MOUNTS:
+			warnings.append("free one exterior mount")
+	return "\nCAPACITY · %s." % "; ".join(warnings) if not warnings.is_empty() else ""
+
+func _first_open_cell_for_selected_module() -> Vector2i:
+	var shape := state.module_shape(selected_module_id, placement_rotated)
+	for y in range(LongMarchState.GRID_HEIGHT - shape.y + 1):
+		for x in range(LongMarchState.GRID_WIDTH - shape.x + 1):
+			var origin := Vector2i(x, y)
+			var clear := true
+			for offset_y in range(shape.y):
+				for offset_x in range(shape.x):
+					if not state.module_at(origin + Vector2i(offset_x, offset_y)).is_empty():
+						clear = false
+						break
+				if not clear:
+					break
+			if clear:
+				return origin
+	return Vector2i(-1, -1)
 
 func _selected_installed_module() -> Dictionary:
 	if selected_module_cell.x < 0 or selected_module_cell.y < 0:
@@ -1858,7 +1894,8 @@ func _refresh_ui() -> void:
 			var dependency := state.dependency_status(selected_installed)
 			var reasons: Array = dependency.get("reasons", [])
 			dependency_text = "%s%s" % [String(dependency.get("state", "offline")).capitalize(), ": " + String(reasons[0]) if not reasons.is_empty() else "."]
-		refit_label.text = "%s · %dx%d · mass %d · power %s · heat %d · %s. %s %s\nROLE · %s" % [
+		var capacity_warning := _stored_module_capacity_warning(selected_definition, selected_installed)
+		refit_label.text = "%s · %dx%d · mass %d · power %s · heat %d · %s. %s %s\nROLE · %s%s" % [
 			String(selected_definition.get("name", "Select a module")),
 			selected_shape.x,
 			selected_shape.y,
@@ -1868,7 +1905,8 @@ func _refresh_ui() -> void:
 			mount_text,
 			"Selected on chassis; choose an empty cell to move it." if not selected_installed.is_empty() else "Choose an empty cell to place it.",
 			dependency_text,
-			String(selected_definition.get("capability", "No field capability recorded."))
+			String(selected_definition.get("capability", "No field capability recorded.")),
+			capacity_warning
 		]
 	else:
 		refit_label.text = "Refit locked during the journey. The current chassis remains visible for battle inspection."
