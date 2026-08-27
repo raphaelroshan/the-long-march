@@ -133,3 +133,7 @@ Menu and stage transitions explicitly hand keyboard/controller focus to the next
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.
+
+## 2026-08-27 — Playtest preferences remain local and outside campaign state
+
+The title screen exposes fullscreen mode, persisted reduced transition motion, briefing reset, and confirmed local-save clearing. These preferences live in a separate local configuration file and never enter deterministic campaign serialization. Destructive save clearing reuses the safe confirmation layer, while briefing reset affects only whether the guided introduction appears on the next run.

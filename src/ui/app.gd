@@ -5,9 +5,12 @@ const GAME_SCENE = preload("res://scenes/Main.tscn")
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
+const SETTINGS_PATH := "user://the_long_march_settings.cfg"
+const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 
 var menu_view: Control
 var guide_view: Control
+var settings_view: Control
 var pause_view: Control
 var confirmation_view: Control
 var game_view: Control
@@ -15,8 +18,15 @@ var start_button: Button
 var quick_start_button: Button
 var continue_button: Button
 var guide_button: Button
+var settings_button: Button
 var guide_close_button: Button
 var guide_quick_start_button: Button
+var settings_close_button: Button
+var display_mode_button: Button
+var motion_button: Button
+var reset_briefing_button: Button
+var clear_save_button: Button
+var settings_status_label: Label
 var resume_button: Button
 var pause_summary_label: Label
 var pause_save_status_label: Label
@@ -31,6 +41,7 @@ var confirmation_cancel_button: Button
 var save_status_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
+var reduced_motion: bool = false
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -62,9 +73,11 @@ func _create_menu_theme() -> Theme:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_load_preferences()
 	theme = _create_menu_theme()
 	_build_title_menu()
 	_build_guide_overlay()
+	_build_settings_overlay()
 	_build_pause_menu()
 	_build_confirmation_overlay()
 	_refresh_title_state()
@@ -173,6 +186,13 @@ func _build_title_menu() -> void:
 	guide_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	guide_button.pressed.connect(_show_guide)
 	utility_actions.add_child(guide_button)
+	settings_button = Button.new()
+	settings_button.name = "SettingsButton"
+	settings_button.text = "SETTINGS"
+	settings_button.custom_minimum_size = Vector2(0, 44)
+	settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_button.pressed.connect(_show_settings)
+	utility_actions.add_child(settings_button)
 	var quit_button := Button.new()
 	quit_button.name = "QuitButton"
 	quit_button.text = "QUIT"
@@ -360,6 +380,76 @@ func _flow_step(number: String, title: String, detail: String) -> Control:
 	copy.add_child(detail_label)
 	return row
 
+func _build_settings_overlay() -> void:
+	settings_view = Control.new()
+	settings_view.name = "SettingsMenu"
+	settings_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	settings_view.visible = false
+	add_child(settings_view)
+	var shade := ColorRect.new()
+	shade.color = Color(0.015, 0.02, 0.024, 0.88)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings_view.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings_view.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(620, 570)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#688587"), 2, 8, 28))
+	center.add_child(panel)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 12)
+	panel.add_child(content)
+	var eyebrow := Label.new()
+	eyebrow.text = "APPLICATION SETTINGS"
+	eyebrow.add_theme_font_size_override("font_size", 12)
+	eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(eyebrow)
+	var title := Label.new()
+	title.text = "Playtest preferences"
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color("#f0d29d"))
+	content.add_child(title)
+	var intro := Label.new()
+	intro.text = "Display and onboarding controls live outside campaign state. Changing them never alters the simulation or route seed."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.custom_minimum_size = Vector2(550, 52)
+	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
+	content.add_child(intro)
+	display_mode_button = _settings_action(content, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
+	motion_button = _settings_action(content, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
+	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the five-part Marchmaster briefing on the next guided run.", _reset_briefing)
+	clear_save_button = _settings_action(content, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
+	settings_status_label = Label.new()
+	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	settings_status_label.custom_minimum_size = Vector2(550, 34)
+	settings_status_label.add_theme_font_size_override("font_size", 12)
+	settings_status_label.add_theme_color_override("font_color", Color("#d8c389"))
+	content.add_child(settings_status_label)
+	settings_close_button = Button.new()
+	settings_close_button.text = "BACK TO TITLE"
+	settings_close_button.custom_minimum_size = Vector2(0, 52)
+	settings_close_button.pressed.connect(_hide_settings)
+	_accent_button(settings_close_button)
+	content.add_child(settings_close_button)
+
+func _settings_action(parent: VBoxContainer, title: String, detail: String, callback: Callable) -> Button:
+	var group := VBoxContainer.new()
+	group.add_theme_constant_override("separation", 3)
+	parent.add_child(group)
+	var label := Label.new()
+	label.text = title
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color("#98a8aa"))
+	group.add_child(label)
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(0, 46)
+	button.tooltip_text = detail
+	button.pressed.connect(callback)
+	group.add_child(button)
+	return button
+
 func _build_pause_menu() -> void:
 	pause_view = Control.new()
 	pause_view.name = "PauseMenu"
@@ -513,6 +603,55 @@ func _build_confirmation_overlay() -> void:
 	confirmation_confirm_button.pressed.connect(_confirm_pending_action)
 	actions.add_child(confirmation_confirm_button)
 
+func _load_preferences() -> void:
+	var config := ConfigFile.new()
+	if config.load(SETTINGS_PATH) == OK:
+		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
+
+func _save_preferences() -> void:
+	var config := ConfigFile.new()
+	config.set_value("accessibility", "reduced_motion", reduced_motion)
+	config.save(SETTINGS_PATH)
+
+func _show_settings() -> void:
+	settings_view.visible = true
+	_refresh_settings()
+	display_mode_button.grab_focus()
+
+func _hide_settings() -> void:
+	settings_view.visible = false
+	settings_button.grab_focus()
+
+func _refresh_settings(message: String = "") -> void:
+	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
+	display_mode_button.text = "FULLSCREEN · ON" if fullscreen else "FULLSCREEN · OFF"
+	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
+	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
+	reset_briefing_button.text = "RESET COMPLETED BRIEFING" if briefing_complete else "BRIEFING · ENABLED FOR NEXT RUN"
+	reset_briefing_button.disabled = not briefing_complete
+	clear_save_button.text = "CLEAR LOCAL SAVE · " + ("AVAILABLE" if FileAccess.file_exists(SAVE_PATH) else "NO SAVE")
+	clear_save_button.disabled = not FileAccess.file_exists(SAVE_PATH)
+	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
+
+func _toggle_display_mode() -> void:
+	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)
+	_refresh_settings("Display mode changed. Press the same control to switch back.")
+	display_mode_button.grab_focus()
+
+func _toggle_reduced_motion() -> void:
+	reduced_motion = not reduced_motion
+	_save_preferences()
+	_refresh_settings("Reduced motion enabled." if reduced_motion else "Standard transition motion enabled.")
+	motion_button.grab_focus()
+
+func _reset_briefing() -> void:
+	var absolute_path := ProjectSettings.globalize_path(ONBOARDING_PATH)
+	if FileAccess.file_exists(absolute_path):
+		DirAccess.remove_absolute(absolute_path)
+	_refresh_settings("The guided briefing will open on the next Guided First Run.")
+	reset_briefing_button.grab_focus()
+
 func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
@@ -562,11 +701,12 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	move_child(game_view, 0)
 	menu_view.visible = false
 	guide_view.visible = false
+	settings_view.visible = false
 	pause_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
-	game_view.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	game_view.modulate = Color.WHITE if reduced_motion else Color(1.0, 1.0, 1.0, 0.0)
 	if load_saved and not bool(game_view.call("load_saved_run")):
 		var failed_game := game_view
 		game_view = null
@@ -576,8 +716,9 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 		start_button.grab_focus()
 		return
 	game_view.call_deferred("focus_current_action")
-	var tween := create_tween()
-	tween.tween_property(game_view, "modulate", Color.WHITE, 0.22)
+	if not reduced_motion:
+		var tween := create_tween()
+		tween.tween_property(game_view, "modulate", Color.WHITE, 0.22)
 
 func _show_pause() -> void:
 	if game_view == null or pause_view.visible:
@@ -633,12 +774,21 @@ func _restart_game() -> void:
 	_open_stage(false, false)
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "title"]:
+	if action not in ["restart", "title", "clear_save"]:
 		return
 	pending_confirmation = action
-	confirmation_title_label.text = "Restart from Ashgate?" if action == "restart" else "Return without saving?"
-	confirmation_body_label.text = "Current stage progress will be discarded. Your existing local save remains available." if action == "restart" else "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
-	confirmation_confirm_button.text = "RESTART" if action == "restart" else "RETURN"
+	if action == "restart":
+		confirmation_title_label.text = "Restart from Ashgate?"
+		confirmation_body_label.text = "Current stage progress will be discarded. Your existing local save remains available."
+		confirmation_confirm_button.text = "RESTART"
+	elif action == "title":
+		confirmation_title_label.text = "Return without saving?"
+		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
+		confirmation_confirm_button.text = "RETURN"
+	else:
+		confirmation_title_label.text = "Clear the local save?"
+		confirmation_body_label.text = "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
+		confirmation_confirm_button.text = "CLEAR SAVE"
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
@@ -648,6 +798,8 @@ func _cancel_confirmation() -> void:
 	confirmation_view.visible = false
 	if previous_action == "restart":
 		restart_button.grab_focus()
+	elif previous_action == "clear_save":
+		clear_save_button.grab_focus()
 	else:
 		title_button.grab_focus()
 
@@ -659,6 +811,13 @@ func _confirm_pending_action() -> void:
 		_restart_game()
 	elif action == "title":
 		_return_to_title()
+	elif action == "clear_save":
+		var absolute_path := ProjectSettings.globalize_path(SAVE_PATH)
+		if FileAccess.file_exists(absolute_path):
+			DirAccess.remove_absolute(absolute_path)
+		_refresh_title_state()
+		_refresh_settings("Local save cleared. Start Game begins a fresh march.")
+		clear_save_button.grab_focus()
 
 func _show_guide() -> void:
 	guide_view.visible = true
@@ -671,6 +830,7 @@ func _hide_guide() -> void:
 func _return_to_title() -> void:
 	pause_view.visible = false
 	guide_view.visible = false
+	settings_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
 	paused_stage_focus = null
@@ -688,14 +848,17 @@ func _quit_game() -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
+	if confirmation_view.visible:
+		_cancel_confirmation()
+		get_viewport().set_input_as_handled()
+		return
 	if game_view == null:
 		if guide_view.visible:
 			_hide_guide()
 			get_viewport().set_input_as_handled()
-		return
-	if confirmation_view.visible:
-		_cancel_confirmation()
-		get_viewport().set_input_as_handled()
+		elif settings_view.visible:
+			_hide_settings()
+			get_viewport().set_input_as_handled()
 		return
 	if pause_view.visible:
 		_resume_game()

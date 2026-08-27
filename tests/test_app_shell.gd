@@ -3,6 +3,7 @@ extends SceneTree
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
+const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 
 var app: Control
 var failures: Array[String] = []
@@ -12,7 +13,7 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _remove_local_test_files() -> void:
-	for path in [SAVE_PATH, ONBOARDING_PATH, JOURNAL_PATH]:
+	for path in [SAVE_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH]:
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)
@@ -38,6 +39,15 @@ func _run() -> void:
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	app._refresh_title_state()
+	app.settings_button.pressed.emit()
+	await process_frame
+	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
+	app.motion_button.pressed.emit()
+	await process_frame
+	_expect(app.reduced_motion and FileAccess.file_exists(ProjectSettings.globalize_path(SETTINGS_PATH)), "reduced motion should persist as a local preference")
+	app.settings_close_button.pressed.emit()
+	await process_frame
+	_expect(not app.settings_view.visible and app.settings_button.has_focus(), "closing Settings should restore title-menu focus")
 
 	app.guide_button.pressed.emit()
 	await process_frame
@@ -114,6 +124,19 @@ func _run() -> void:
 	_expect(app.game_view != null and app.game_view.state.money == 42, "Continue should restore the locally saved stage")
 	if app.game_view != null:
 		_expect(not app.game_view.onboarding_overlay.visible, "Continue should return directly to the saved decision state")
+		app._show_pause()
+		app.save_return_button.pressed.emit()
+		await process_frame
+		await process_frame
+		app.settings_button.pressed.emit()
+		await process_frame
+		_expect(not app.clear_save_button.disabled, "Settings should offer clearing an existing local save")
+		app.clear_save_button.pressed.emit()
+		await process_frame
+		_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "CLEAR SAVE", "clearing a save should require explicit confirmation")
+		app.confirmation_confirm_button.pressed.emit()
+		await process_frame
+		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and app.continue_button.disabled, "confirmed save clearing should remove Continue progress")
 
 	_remove_local_test_files()
 	if failures.is_empty():
