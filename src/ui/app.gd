@@ -875,6 +875,7 @@ func _saved_run_info() -> Dictionary:
 	var fuel := int(parsed.get("fuel", 0))
 	var hull := int(parsed.get("hull_condition", 0))
 	var heat := int(parsed.get("heat", 0))
+	var saved_build := String(parsed.get("build_version", "earlier build"))
 	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
 	return {
 		"exists": true,
@@ -885,7 +886,7 @@ func _saved_run_info() -> Dictionary:
 		"encounters": encounters,
 		"condition": condition,
 		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
-		"tooltip": "Resume at %s during %s with %d of 5 encounters secured." % [location, phase, encounters],
+		"tooltip": "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
 		"summary": "Checkpoint · %s · %s · %d/5 · Fuel %d · Hull %d/10 · Heat %d/%d" % [condition.capitalize(), phase, encounters, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
 	}
 

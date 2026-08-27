@@ -1417,7 +1417,9 @@ func save_run(silent: bool = false) -> bool:
 	if file == null:
 		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
 		return false
-	file.store_string(JSON.stringify(state.serialize()))
+	var payload := state.serialize()
+	payload["build_version"] = String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	file.store_string(JSON.stringify(payload))
 	if not silent:
 		_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
 		_journal_event("run_saved", {"phase": state.phase, "day": state.day})

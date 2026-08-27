@@ -210,6 +210,9 @@ func _run() -> void:
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Watch") and app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify checkpoint condition, phase, and encounter progress")
 	_expect(app.save_status_label.text.contains("Fuel 6") and app.save_status_label.text.contains("Hull 10/10") and app.save_status_label.text.contains("Heat 5/6"), "the title should summarize the saved fortress condition")
+	_expect(app.continue_button.tooltip_text.contains(String(ProjectSettings.get_setting("application/config/version"))), "Continue should expose the build that created the checkpoint")
+	var saved_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	_expect(saved_payload is Dictionary and String(saved_payload.get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version")), "campaign saves should record their exact application build")
 	app.settings_button.pressed.emit()
 	await process_frame
 	app.autosave_button.pressed.emit()
