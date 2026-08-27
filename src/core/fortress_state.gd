@@ -1412,12 +1412,16 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 		return profile
 	var armor_index := _protecting_armor_index(target_index, enemy_id)
 	if armor_index >= 0 and armor_index != target_index:
-		var armor_tags: Array = module_definition(String(modules[armor_index].get("id", ""))).get("tags", [])
+		var armor_id := String(modules[armor_index].get("id", ""))
+		var armor_tags: Array = module_definition(armor_id).get("tags", [])
 		var absorbed := 2 if enemy_id == "burrowers" and "lower_hull" in armor_tags else 1
 		absorbed = mini(absorbed, damage)
 		damage = maxi(0, damage - absorbed)
 		profile["armor_index"] = armor_index
+		profile["armor_id"] = armor_id
 		profile["armor_absorbed"] = absorbed
+		profile["armor_current_durability"] = int(modules[armor_index].get("durability", 0))
+		profile["armor_remaining_durability"] = maxi(0, int(modules[armor_index].get("durability", 0)) - absorbed)
 	var instance: Dictionary = modules[target_index]
 	var module_def: Dictionary = module_definition(target_id)
 	var target_tags: Array = module_def.get("tags", [])

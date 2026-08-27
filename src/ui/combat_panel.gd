@@ -176,7 +176,12 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 			target_text = "\nTARGET · %s\nNEXT · %d DAMAGE · %d→%d%s" % [target_name.to_upper(), damage, current_durability, remaining_durability, terminal_warning]
 			var armor_absorbed := int(impact.get("armor_absorbed", 0))
 			if armor_absorbed > 0:
-				target_text += "\nARMOR ABSORBS %d" % armor_absorbed
+				var armor_id := String(impact.get("armor_id", "armor"))
+				var armor_name := String(target_names.get(armor_id, armor_id.replace("_", " ").capitalize()))
+				var armor_before := int(impact.get("armor_current_durability", 0))
+				var armor_after := int(impact.get("armor_remaining_durability", maxi(0, armor_before - armor_absorbed)))
+				var armor_warning := " · BREAKS" if armor_after <= 0 else ""
+				target_text += "\nARMOR · %s · %d→%d%s" % [armor_name.to_upper(), armor_before, armor_after, armor_warning]
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
 		enemy_counters[index].text = "Counter: %s" % String(definition.get("counter", "unknown"))

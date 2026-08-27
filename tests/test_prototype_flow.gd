@@ -295,11 +295,11 @@ func _run() -> void:
 	target_enemy["arrived"] = true
 	target_enemy["defeated"] = false
 	target_enemy["target"] = "coal_cell"
-	target_enemy["impact"] = {"damage": 1, "current_durability": 1, "remaining_durability": 0, "armor_absorbed": 1}
+	target_enemy["impact"] = {"damage": 1, "current_durability": 1, "remaining_durability": 0, "armor_absorbed": 1, "armor_id": "front_armor_plate", "armor_current_durability": 1, "armor_remaining_durability": 0}
 	target_card_preview.enemies[0] = target_enemy
-	target_card_preview["target_names"] = {"hull": "Hull", "coal_cell": "Coal Cell"}
+	target_card_preview["target_names"] = {"hull": "Hull", "coal_cell": "Coal Cell", "front_armor_plate": "Front Armor Plate"}
 	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
-	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR ABSORBS 1") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose damage, absorption, remaining durability, and disablement")
+	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR · FRONT ARMOR PLATE · 1→0 · BREAKS") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose target and armor durability consequences")
 	var pre_hull_preview_enemy: Dictionary = game.state.encounter_enemies[0].duplicate(true)
 	game.state.encounter_enemies[0]["arrived"] = true
 	game.state.encounter_enemies[0]["target"] = "hull"
