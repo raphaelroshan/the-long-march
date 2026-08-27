@@ -431,3 +431,7 @@ Morrowline's hull service calculates the actual durability restored before prese
 ## 2026-08-28 — Repair recommendations are actionable handoffs
 
 When the currently inspected module is healthy but another installed system is damaged, the Morrowline repair row becomes a no-cost selection action instead of a disabled instruction. Activating it moves chassis and module-list context to the most damaged system, reveals the exact durability and Ashmark repair offer, retains focus on the same row, and spends no service action until the player confirms again.
+
+## 2026-08-28 — Route commitment shows the state after departure
+
+The Commit control presents day, fuel, and known pressure as before-and-after values rather than isolated costs. Unscouted routes preserve unknown risk and pressure while still showing the resource balances the crew can calculate. Meridian Pass uses a distinct `Final Commit` label and states that failure ends the run with no retreat before the player confirms the chapter's final encounter.

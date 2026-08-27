@@ -411,7 +411,7 @@ func _run() -> void:
 	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#cbb8e8"), "unscouted route intel should carry a distinct unknown-information tone")
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
 	await process_frame
-	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should not reveal its hidden risk in the commit action")
+	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and game.campaign_commit_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel - int(game.state.campaign_node_preview("red_wheel_toll_bridge", game._selected_id(game.doctrine_option)).get("fuel", 0))]) and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should show known resource balances without revealing hidden risk")
 	_expect(not game.route_preview_label.text.contains("Visible risk factors:") and not game.route_preview_label.text.contains("Intel upgrade:"), "selected-route confirmation should collapse optional scouting guidance to keep Commit adjacent to the map")
 	var unknown_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat
 	_expect(unknown_commit_style != null and unknown_commit_style.border_color == Color("#cbb8e8"), "an unscouted commitment should use the same unknown-information tone as its intel")
@@ -504,7 +504,12 @@ func _run() -> void:
 	_expect(game.current_run_flow_step == 3 and game.run_flow_labels[3].text.contains("FINAL"), "leaving Morrowline should advance the tracker to the final approach")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_encounters_completed == 4, "the lower-hull route should become the fourth encounter")
-	await _press_campaign_node("meridian_pass")
+	game.campaign_map.button_for("meridian_pass").pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(game.campaign_commit_button.text.begins_with("FINAL COMMIT · MERIDIAN PASS") and game.campaign_commit_button.text.contains("FUEL %d→" % game.state.fuel) and game.route_preview_label.text.contains("FINAL COMMITMENT") and game.route_preview_label.text.contains("no retreat"), "Meridian Pass selection should expose resulting resources and its run-ending stakes before commitment")
+	game.campaign_commit_button.pressed.emit()
+	await process_frame
 	_expect(game.state.phase == "final_battle", "the fifth map node should begin the final battle")
 	await _advance_until_phase("results")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")

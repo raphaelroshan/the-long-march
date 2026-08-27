@@ -1315,7 +1315,8 @@ func _show_selected_route_preview(node_id: String) -> void:
 	var block_reason := _campaign_departure_block_reason(node_id)
 	var selected_detail := campaign_map.detail_for(node_id)
 	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)).to_upper()
-	_set_route_preview("ROUTE READY · %s\n%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else ""], "danger" if not block_reason.is_empty() else campaign_map.intel_tone_for(node_id))
+	var final_warning := "\nFINAL COMMITMENT · Failure ends the run; there is no retreat." if node_id == "meridian_pass" else ""
+	_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == "meridian_pass" else campaign_map.intel_tone_for(node_id))
 
 func _on_campaign_route_committed(node_id: String) -> void:
 	if node_id.is_empty() or node_id != selected_campaign_node_id:
@@ -1884,6 +1885,9 @@ func _refresh_campaign_controls() -> void:
 		"can_depart": phase_can_depart,
 		"departure_block_reason": departure_block_reason,
 		"heat_limit": LongMarchState.BASE_HEAT_LIMIT,
+		"current_fuel": state.fuel,
+		"current_day": state.day,
+		"current_pressure": state.campaign_pressure,
 		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})

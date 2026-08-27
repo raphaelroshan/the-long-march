@@ -53,6 +53,9 @@ var outgoing_nodes: Array[String] = []
 var current_previews: Dictionary = {}
 var interaction_is_blocked: bool = false
 var selected_node: String = ""
+var current_fuel: int = 0
+var current_day: int = 0
+var current_pressure: int = 0
 var commit_button: Button
 
 func _init() -> void:
@@ -233,6 +236,9 @@ func configure(view: Dictionary) -> void:
 	closed_nodes = _to_string_array(view.get("closed_nodes", []))
 	outgoing_nodes = _to_string_array(view.get("outgoing_nodes", []))
 	selected_node = String(view.get("selected_node", ""))
+	current_fuel = int(view.get("current_fuel", 0))
+	current_day = int(view.get("current_day", 0))
+	current_pressure = int(view.get("current_pressure", 0))
 	current_previews = view.get("previews", {}).duplicate(true)
 	var can_depart := bool(view.get("can_depart", false))
 	var departure_block_reason := String(view.get("departure_block_reason", ""))
@@ -279,6 +285,11 @@ func configure(view: Dictionary) -> void:
 		var predicted_heat := int(selected_preview.get("predicted_heat", 0))
 		var visibility := String(selected_preview.get("visibility", "forecast"))
 		var risk := float(selected_preview.get("risk", 0.0))
+		var fuel_cost := int(selected_preview.get("fuel", 0))
+		var fuel_after := maxi(0, current_fuel - fuel_cost)
+		var day_after := current_day + int(selected_preview.get("days", 0))
+		var pressure_after := current_pressure + int(selected_preview.get("pressure_gain", 0))
+		var commit_prefix := "FINAL COMMIT" if selected_node == "meridian_pass" else "COMMIT"
 		var overheated := predicted_heat > heat_limit
 		var departure_blocked := not departure_block_reason.is_empty() or not can_depart
 		var commit_fill := Color("#285348")
@@ -302,12 +313,12 @@ func configure(view: Dictionary) -> void:
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
 		elif visibility == "unscouted":
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · RISK UNKNOWN\nHEAT %d/%d · PRESSURE UNKNOWN" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), predicted_heat, heat_limit]
-			commit_button.tooltip_text = "Pay the known travel costs and enter an unscouted encounter."
+			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\nRISK UNKNOWN · HEAT %d/%d · PRESSURE UNKNOWN" % [commit_prefix, String(SHORT_NAMES.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, predicted_heat, heat_limit]
+			commit_button.tooltip_text = "Pay %d fuel and advance %d day(s) into an unscouted encounter.%s" % [fuel_cost, days, " Failure ends the run; there is no retreat." if selected_node == "meridian_pass" else ""]
 		else:
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %s RISK (%.0f%%)\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]
-			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
+			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\n%s RISK (%.0f%%) · HEAT %d/%d · PRESSURE %d→%d" % [commit_prefix, String(SHORT_NAMES.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, current_pressure, pressure_after]
+			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter.%s" % [" Failure ends the run; there is no retreat." if selected_node == "meridian_pass" else ""]
 	elif not available_nodes.is_empty():
 		commit_button.text = "Select a route to continue"
 		commit_button.tooltip_text = "Choose one of the cyan route nodes before committing."
