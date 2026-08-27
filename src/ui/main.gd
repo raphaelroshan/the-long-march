@@ -1689,9 +1689,21 @@ func _on_advance_encounter_pressed() -> void:
 
 func _on_settlement_repair_pressed() -> void:
 	var selected := _selected_installed_module()
-	if selected.is_empty():
-		_set_event("Select a damaged module on the chassis before requesting a Morrowline repair.")
-		encounter_label.text = "SERVICE UNAVAILABLE\nSelect a damaged chassis module first."
+	var selected_definition := state.module_definition(String(selected.get("id", ""))) if not selected.is_empty() else {}
+	var selected_maximum := int(selected_definition.get("durability", 0))
+	if selected.is_empty() or int(selected.get("durability", 0)) >= selected_maximum:
+		var candidate := _most_damaged_installed_module()
+		if candidate.is_empty():
+			_set_event("Every installed module is already fully repaired.")
+			encounter_label.text = "SERVICE UNAVAILABLE\nEvery installed module is already fully repaired."
+			return
+		selected_module_id = String(candidate.get("id", ""))
+		selected_module_cell = Vector2i(candidate.get("position", Vector2i.ZERO))
+		placement_rotated = bool(candidate.get("rotated", false))
+		_select_module_option(selected_module_id)
+		_set_event("Selected %s for repair review. No service action spent." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+		_refresh_ui()
+		_focus_control(settlement_repair_button)
 		return
 	var result := state.settlement_repair(String(selected.get("id", "")))
 	var service_message := "%s restored +%d durability for %d Ashmarks. %s remains." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
@@ -2075,7 +2087,7 @@ func _refresh_ui() -> void:
 		repair_missing = maxi(0, repair_maximum - int(selected_installed.get("durability", 0)))
 		repair_cost = mini(2, repair_missing) * 4
 	var services_open := state.phase == "settlement" and state.settlement_actions_remaining > 0
-	settlement_repair_button.disabled = not services_open or selected_installed.is_empty() or repair_missing <= 0 or state.money < repair_cost
+	settlement_repair_button.disabled = not services_open
 	if not services_open:
 		settlement_repair_button.text = "REPAIR MODULE\nLOCKED · NO SERVICE ACTIONS LEFT"
 		settlement_repair_button.tooltip_text = "No Morrowline service actions remain."
@@ -2083,15 +2095,17 @@ func _refresh_ui() -> void:
 		if repair_candidate.is_empty():
 			settlement_repair_button.text = "REPAIR MODULE · ALL SYSTEMS FULL"
 			settlement_repair_button.tooltip_text = "No installed system currently needs repair."
+			settlement_repair_button.disabled = true
 		else:
 			var candidate_id := String(repair_candidate.get("id", ""))
 			var candidate_name := String(state.module_definition(candidate_id).get("name", candidate_id))
-			settlement_repair_button.text = "REPAIR · SELECT %s (%d/%d)" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
-			settlement_repair_button.tooltip_text = "Choose %s in the Module list to inspect its repair cost." % candidate_name
+			settlement_repair_button.text = "SELECT %s FOR REPAIR · %d/%d" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
+			settlement_repair_button.tooltip_text = "Select and inspect %s without spending a service action; press again to confirm its repair." % candidate_name
 	else:
 		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS" % [String(selected_definition.get("name", "module")).to_upper(), mini(2, repair_missing), repair_cost]
 		settlement_repair_button.tooltip_text = "Restore %d durability to %s for %d Ashmarks." % [mini(2, repair_missing), String(selected_definition.get("name", "the selected module")), repair_cost]
 		if state.money < repair_cost:
+			settlement_repair_button.disabled = true
 			settlement_repair_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
 	settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS"
 	settlement_refuel_button.disabled = not services_open or state.money < 8

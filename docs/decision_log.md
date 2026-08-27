@@ -427,3 +427,7 @@ The command desk no longer displays four dense forecasts simultaneously. Its res
 ## 2026-08-28 — Recovery services report delivered value
 
 Morrowline's hull service calculates the actual durability restored before presenting or recording the action. A fortress at 9/10 hull therefore sees and receives `+1 hull` for the fixed service cost rather than being told that two points were delivered. This keeps the scarce two-action recovery budget numerically trustworthy at the health cap.
+
+## 2026-08-28 — Repair recommendations are actionable handoffs
+
+When the currently inspected module is healthy but another installed system is damaged, the Morrowline repair row becomes a no-cost selection action instead of a disabled instruction. Activating it moves chassis and module-list context to the most damaged system, reveals the exact durability and Ashmark repair offer, retains focus on the same row, and spends no service action until the player confirms again.
