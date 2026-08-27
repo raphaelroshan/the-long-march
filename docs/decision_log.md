@@ -178,6 +178,8 @@ Combat timing is expressed relative to the present state. Approaching enemy card
 
 During combat, Advance, every currently available emergency order, and Field Briefing form one explicit vertical and Tab loop. Once the encounter's single intervention is spent, its disabled actions leave that loop automatically, keeping controller focus on commands that can still respond.
 
+The encounter-order help also changes after that one intervention is spent. It stops instructing the player to choose an order, directs them back to the predicted damage and Advance action, and reminds them that the budget returns next encounter; a simultaneous hull threat keeps its exposed-hull warning.
+
 Battle controls include a dedicated `Inspect Chassis` action in that loop. Keyboard and controller players can enter the grid, choose the system they intend to seal, and return directly to the matching Seal order; cancelling inspection returns to its visible desk action. Once the order is spent, the same control remains useful for reviewing damage without implying that refitting is available on the road.
 
 The focused chassis names its mode explicitly. Planning phases say `Chassis Edit Mode`, while battles say `Chassis Inspection` and describe A/Enter as selection rather than editing. The same grid interaction can therefore serve both phases without promising an unavailable move or placement action.

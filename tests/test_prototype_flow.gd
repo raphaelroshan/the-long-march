@@ -61,6 +61,7 @@ func _advance_until_phase(expected_phase: String) -> void:
 			await process_frame
 			_expect(game.event_label.text.contains("Weapon priority") and game.event_label.text.contains("heat +1"), "an emergency order should immediately report its exact benefit and cost")
 			_expect(game.combat_panel.causal_label.text.contains("Weapon priority") and game.combat_panel.causal_label.text.contains("heat +1"), "the persistent cause-and-effect report should retain the emergency order result")
+			_expect(game.intervention_title.text.contains("SPENT") and game.intervention_help_label.text.begins_with("Emergency order spent") and game.intervention_help_label.text.contains("one order returns next encounter"), "spent intervention guidance should direct the player back to damage review and advancement")
 			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.combat_inspect_button, "spending the emergency order should remove disabled interventions while retaining chassis inspection in controller navigation")
 			_expect(game.advance_encounter_button.has_focus(), "spending an emergency order should return focus to encounter advancement")
 	for _step in range(8):

@@ -1916,7 +1916,10 @@ func _refresh_ui() -> void:
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
-	intervention_help_label.text = "Hull is under threat. Sealing a module will not prevent this hit; choose another order or preserve a system for later." if hull_under_threat else "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
+	if state.encounter_intervention_used:
+		intervention_help_label.text = "Emergency order spent. Hull is exposed; review the predicted hit, then advance." if hull_under_threat else "Emergency order spent. Inspect the predicted damage, then advance; one order returns next encounter."
+	else:
+		intervention_help_label.text = "Hull is under threat. Sealing a module will not prevent this hit; choose another order or preserve a system for later." if hull_under_threat else "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty()) or (index == 3 and state.sacrificable_cargo_id().is_empty())
