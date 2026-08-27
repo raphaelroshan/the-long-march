@@ -1672,7 +1672,7 @@ func _refresh_campaign_controls() -> void:
 	campaign_pressure_label.visible = state.campaign_active
 	campaign_path_label.visible = state.campaign_active
 	campaign_map.visible = state.campaign_active and planning_phase
-	campaign_pressure_label.text = "Blockade — %s · pressure %d · encounters %d/5" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure, state.campaign_encounters_completed]
+	campaign_pressure_label.text = "Blockade — %s · pressure %d · secured %d/5" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure, state.campaign_encounters_completed]
 	campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [state.guard_contract_status.replace("_", " ").capitalize(), "Iven Pell" if state.specialist_id == "iven_pell" else "none"]
 
 	var contract_offered := state.campaign_active and state.guard_contract_status == "offered" and state.current_location == "ashgate_depot"

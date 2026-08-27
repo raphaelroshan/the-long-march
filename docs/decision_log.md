@@ -170,6 +170,8 @@ Enemy contact cards translate simulation target IDs into the installed system's 
 
 Campaign progress distinguishes an active encounter from completed progress. During the first fight the header says `Encounter 1/5 underway`; between roads it says `1/5 encounters secured`. The progress bar continues to represent secured encounters, avoiding the previous `Encounter 0/5` label while the player was visibly already in combat.
 
+The blockade summary uses the same vocabulary and reports `secured 0/5` during that first fight. Its count tracks the progress bar rather than the active encounter number, so the two simultaneous values describe different states explicitly instead of appearing to disagree.
+
 ## 2026-08-27 — The application shell starts outside the simulation
 
 The packaged build opens on a title menu instead of constructing a run immediately. Start Game creates a fresh Ashgate stage, Continue restores the explicit local save, and Escape opens a pause layer with resume, restart, and return-to-title actions. The shell owns these lifecycle transitions while `Main.tscn` remains the playable stage and `LongMarchState` remains presentation-independent. This keeps menu state from leaking into deterministic campaign state and leaves the stage independently testable.
