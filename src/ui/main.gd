@@ -34,6 +34,7 @@ const ONBOARDING_STEPS := [
 ]
 
 var state: LongMarchState
+var metric_labels: Dictionary = {}
 var status_label: Label
 var journey_label: Label
 var encounter_label: Label
@@ -77,6 +78,10 @@ var recruit_iven_button: Button
 var save_button: Button
 var load_button: Button
 var guidance_label: Label
+var asset_row: HBoxContainer
+var phase_badge: Label
+var campaign_progress_bar: ProgressBar
+var encounter_progress_bar: ProgressBar
 var how_to_play_button: Button
 var feedback_button: Button
 var onboarding_overlay: Control
@@ -100,7 +105,76 @@ var selected_module_id: String = ""
 var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
 
+func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_color = border
+	style.set_border_width_all(width)
+	style.set_corner_radius_all(radius)
+	style.content_margin_left = padding
+	style.content_margin_right = padding
+	style.content_margin_top = padding
+	style.content_margin_bottom = padding
+	return style
+
+func _create_ui_theme() -> Theme:
+	var ui_theme := Theme.new()
+	ui_theme.default_font_size = 14
+	for control_type in ["Button", "OptionButton"]:
+		ui_theme.set_stylebox("normal", control_type, _flat_style(Color("#24323a"), Color("#50636b"), 1, 5, 7))
+		ui_theme.set_stylebox("hover", control_type, _flat_style(Color("#30434c"), Color("#79cfc3"), 2, 5, 6))
+		ui_theme.set_stylebox("pressed", control_type, _flat_style(Color("#172229"), Color("#e8c58e"), 2, 5, 6))
+		ui_theme.set_stylebox("focus", control_type, _flat_style(Color("#283942"), Color("#f3dfad"), 2, 5, 6))
+		ui_theme.set_stylebox("disabled", control_type, _flat_style(Color("#182127"), Color("#39474d"), 1, 5, 7))
+		ui_theme.set_color("font_color", control_type, Color("#eef3ef"))
+		ui_theme.set_color("font_hover_color", control_type, Color("#ffffff"))
+		ui_theme.set_color("font_pressed_color", control_type, Color("#fff1ce"))
+		ui_theme.set_color("font_focus_color", control_type, Color("#ffffff"))
+		ui_theme.set_color("font_disabled_color", control_type, Color("#718087"))
+	ui_theme.set_stylebox("background", "ProgressBar", _flat_style(Color("#18242b"), Color("#34454c"), 1, 3, 0))
+	ui_theme.set_stylebox("fill", "ProgressBar", _flat_style(Color("#5fae91"), Color("#79cfc3"), 0, 3, 0))
+	ui_theme.set_color("font_color", "ProgressBar", Color("#f1e6cf"))
+	return ui_theme
+
+func _add_metric_chip(parent: HBoxContainer, metric_id: String, title: String, tooltip: String) -> void:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(92, 48)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.tooltip_text = tooltip
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#172229"), Color("#34454c"), 1, 4, 5))
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 0)
+	panel.add_child(stack)
+	var title_label := Label.new()
+	title_label.text = title.to_upper()
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 9)
+	title_label.add_theme_color_override("font_color", Color("#89999e"))
+	stack.add_child(title_label)
+	var value_label := Label.new()
+	value_label.text = "—"
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.add_theme_font_size_override("font_size", 16)
+	value_label.add_theme_color_override("font_color", Color("#f1e6cf"))
+	stack.add_child(value_label)
+	metric_labels[metric_id] = value_label
+	parent.add_child(panel)
+
+func _set_metric(metric_id: String, value: String, color: Color = Color("#f1e6cf")) -> void:
+	var label := metric_labels.get(metric_id) as Label
+	if label == null:
+		return
+	label.text = value
+	label.add_theme_color_override("font_color", color)
+
+func _accent_button(button: Button, background: Color, border: Color) -> void:
+	button.add_theme_stylebox_override("normal", _flat_style(background, border, 2, 5, 7))
+	button.add_theme_stylebox_override("hover", _flat_style(background.lightened(0.08), border.lightened(0.12), 2, 5, 7))
+	button.add_theme_stylebox_override("pressed", _flat_style(background.darkened(0.1), Color("#ffffff"), 2, 5, 7))
+	button.add_theme_stylebox_override("focus", _flat_style(background, Color("#ffffff"), 3, 5, 6))
+
 func _ready() -> void:
+	theme = _create_ui_theme()
 	journal = PlaytestJournal.new()
 	_reset_state()
 	_build_ui()
@@ -168,29 +242,55 @@ func _build_ui() -> void:
 	left.add_child(subtitle)
 	var journey_banner := TextureRect.new()
 	journey_banner.texture = JOURNEY_BACKGROUND
-	journey_banner.custom_minimum_size = Vector2(0, 96)
+	journey_banner.custom_minimum_size = Vector2(0, 82)
 	journey_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	journey_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	journey_banner.modulate = Color(1.0, 1.0, 1.0, 0.78)
 	left.add_child(journey_banner)
 
+	var metric_row := HBoxContainer.new()
+	metric_row.add_theme_constant_override("separation", 6)
+	_add_metric_chip(metric_row, "day", "Day", "Current campaign day. Travel and some local decisions advance time.")
+	_add_metric_chip(metric_row, "fuel", "Fuel", "Routes consume fuel. A connected operational engine is also required.")
+	_add_metric_chip(metric_row, "money", "Ashmarks", "Spend Ashmarks on contracts, specialists, repairs, and supplies.")
+	_add_metric_chip(metric_row, "hull", "Hull", "The run ends if the fortress hull reaches zero at Meridian Pass.")
+	_add_metric_chip(metric_row, "mass", "Mass", "Heavy builds can consume additional fuel on mass-sensitive roads.")
+	_add_metric_chip(metric_row, "power", "Power", "Power draw must not exceed available generation.")
+	_add_metric_chip(metric_row, "heat", "Heat", "Heat above the limit increases route and combat danger.")
+	left.add_child(metric_row)
 	status_label = Label.new()
-	status_label.add_theme_font_size_override("font_size", 18)
-	status_label.add_theme_color_override("font_color", Color("#f1e6cf"))
+	status_label.add_theme_font_size_override("font_size", 13)
+	status_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	left.add_child(status_label)
+	phase_badge = Label.new()
+	phase_badge.add_theme_font_size_override("font_size", 12)
+	phase_badge.add_theme_color_override("font_color", Color("#e8c58e"))
+	left.add_child(phase_badge)
 	journey_label = Label.new()
 	journey_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	journey_label.custom_minimum_size = Vector2(740, 42)
 	journey_label.add_theme_color_override("font_color", Color("#d8c389"))
 	left.add_child(journey_label)
+	campaign_progress_bar = ProgressBar.new()
+	campaign_progress_bar.max_value = 5
+	campaign_progress_bar.show_percentage = false
+	campaign_progress_bar.custom_minimum_size = Vector2(0, 8)
+	campaign_progress_bar.tooltip_text = "Secured encounters in the five-encounter Ashgate Lowlands chapter."
+	left.add_child(campaign_progress_bar)
 	encounter_label = Label.new()
 	encounter_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	encounter_label.custom_minimum_size = Vector2(740, 72)
+	encounter_label.custom_minimum_size = Vector2(740, 54)
 	encounter_label.add_theme_color_override("font_color", Color("#e89270"))
 	left.add_child(encounter_label)
+	encounter_progress_bar = ProgressBar.new()
+	encounter_progress_bar.max_value = 100
+	encounter_progress_bar.show_percentage = false
+	encounter_progress_bar.custom_minimum_size = Vector2(0, 7)
+	encounter_progress_bar.tooltip_text = "Progress through the current six-step encounter."
+	left.add_child(encounter_progress_bar)
 
 	fortress_panel = FortressPanel.new()
-	fortress_panel.custom_minimum_size = Vector2(760, 300)
+	fortress_panel.custom_minimum_size = Vector2(760, 260)
 	fortress_panel.state = state
 	fortress_panel.grid_cell_pressed.connect(_on_grid_cell_pressed)
 	fortress_panel.rotate_requested.connect(_on_rotate_pressed)
@@ -209,12 +309,13 @@ func _build_ui() -> void:
 	left.add_child(log_label)
 
 	var right_scroll := ScrollContainer.new()
-	right_scroll.custom_minimum_size = Vector2(350, 0)
+	right_scroll.custom_minimum_size = Vector2(370, 0)
 	right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	columns.add_child(right_scroll)
 	var right := PanelContainer.new()
-	right.custom_minimum_size = Vector2(350, 760)
+	right.custom_minimum_size = Vector2(370, 760)
+	right.add_theme_stylebox_override("panel", _flat_style(Color("#151d21"), Color("#2c3a40"), 1, 6, 10))
 	right_scroll.add_child(right)
 	var controls := VBoxContainer.new()
 	controls.add_theme_constant_override("separation", 10)
@@ -225,7 +326,7 @@ func _build_ui() -> void:
 	control_title.add_theme_font_size_override("font_size", 20)
 	control_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	controls.add_child(control_title)
-	var asset_row := HBoxContainer.new()
+	asset_row = HBoxContainer.new()
 	asset_row.add_theme_constant_override("separation", 5)
 	for asset in [ENGINE_ICON, CANNON_ICON, WORKSHOP_ICON, SIGNAL_ICON]:
 		var icon := TextureRect.new()
@@ -240,6 +341,14 @@ func _build_ui() -> void:
 	guidance_label.custom_minimum_size = Vector2(320, 54)
 	guidance_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	controls.add_child(guidance_label)
+
+	doctrine_option = OptionButton.new()
+	for doctrine_id in ["protect_cargo", "protect_crew", "run_hot"]:
+		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
+		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
+	doctrine_option.item_selected.connect(_on_departure_option_changed)
+	doctrine_group = _labeled_control("Journey doctrine", doctrine_option)
+	controls.add_child(doctrine_group)
 
 	refit_title = Label.new()
 	refit_title.text = "REFIT CHASSIS"
@@ -327,6 +436,7 @@ func _build_ui() -> void:
 	contract_accept_button.text = "Guard the convoy"
 	contract_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	contract_accept_button.pressed.connect(_on_guard_contract_pressed.bind(true))
+	_accent_button(contract_accept_button, Color("#285348"), Color("#73c99b"))
 	contract_actions.add_child(contract_accept_button)
 	contract_decline_button = Button.new()
 	contract_decline_button.text = "Travel unbound"
@@ -381,13 +491,6 @@ func _build_ui() -> void:
 	route_group = _labeled_control("Route", route_option)
 	controls.add_child(route_group)
 
-	doctrine_option = OptionButton.new()
-	for doctrine_id in ["protect_cargo", "protect_crew", "run_hot"]:
-		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
-		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
-	doctrine_option.item_selected.connect(_on_departure_option_changed)
-	doctrine_group = _labeled_control("Journey doctrine", doctrine_option)
-	controls.add_child(doctrine_group)
 	route_preview_label = Label.new()
 	route_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	route_preview_label.custom_minimum_size = Vector2(320, 64)
@@ -404,6 +507,7 @@ func _build_ui() -> void:
 	advance_encounter_button.text = "Advance journey battle"
 	advance_encounter_button.tooltip_text = "Resolve one readable encounter step."
 	advance_encounter_button.pressed.connect(_on_advance_encounter_pressed)
+	_accent_button(advance_encounter_button, Color("#593e28"), Color("#e8c58e"))
 	controls.add_child(advance_encounter_button)
 
 	intervention_title = Label.new()
@@ -1066,17 +1170,19 @@ func _refresh_ui() -> void:
 	remove_button.disabled = not state.can_refit() or selected_installed.is_empty()
 	var is_refit_phase := state.phase in ["refit", "settlement"]
 	var is_battle_phase := state.phase in ["battle", "final_battle"]
+	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	match state.phase:
 		"refit":
-			guidance_label.text = "NEXT — Inspect dependencies, answer the guard contract, then choose one of the visible map nodes."
+			guidance_label.text = "NEXT — Configure dependencies, answer the contract, then choose a highlighted map node."
 		"map":
-			guidance_label.text = "NEXT — Resolve any local decision, compare the forward nodes, then commit to the next road."
+			guidance_label.text = "NEXT — Resolve any local decision, then compare and choose a cyan map node."
 		"battle", "final_battle":
 			guidance_label.text = "NEXT — Advance one step, read each target and causal line, then spend at most one emergency order."
 		"settlement":
 			guidance_label.text = "NEXT — Spend up to two service actions, refit around the damage, then choose a doctrine for Meridian Pass."
 		"results":
 			guidance_label.text = "RUN COMPLETE — Inspect the surviving systems, then save a local playtest feedback bundle while the decisions are fresh."
+	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
 	refit_title.visible = is_refit_phase
 	module_group.visible = is_refit_phase
 	refit_actions.visible = is_refit_phase
@@ -1122,7 +1228,21 @@ func _refresh_ui() -> void:
 	else:
 		route_preview_label.text = "On the road — risk %.0f%%, pressure %d, doctrine %s." % [state.current_route_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()]
 	var dependencies: Dictionary = snapshot.dependencies
-	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d\nSystems — %d ready · %d strained · %d offline%s" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit, int(dependencies.ready), int(dependencies.strained), int(dependencies.offline), " · Blockade %s %d" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure] if state.campaign_active else ""]
+	var safe_color := Color("#8bd6ad")
+	var warning_color := Color("#e8c58e")
+	var danger_color := Color("#ef8375")
+	_set_metric("day", str(snapshot.day))
+	_set_metric("fuel", str(snapshot.fuel), danger_color if snapshot.fuel <= 2 else (warning_color if snapshot.fuel <= 4 else safe_color))
+	_set_metric("money", str(snapshot.money))
+	_set_metric("hull", "%d/10" % snapshot.hull_condition, danger_color if snapshot.hull_condition <= 3 else (warning_color if snapshot.hull_condition <= 6 else safe_color))
+	_set_metric("mass", "%d/%d" % [snapshot.mass, snapshot.mass_limit], danger_color if snapshot.mass > snapshot.mass_limit else (warning_color if snapshot.mass >= snapshot.mass_limit else Color("#f1e6cf")))
+	_set_metric("power", "%d/%d" % [snapshot.power_draw, snapshot.power_output], danger_color if snapshot.power_draw > snapshot.power_output else safe_color)
+	_set_metric("heat", "%d/%d" % [snapshot.heat, snapshot.heat_limit], danger_color if snapshot.heat > snapshot.heat_limit else (warning_color if snapshot.heat >= snapshot.heat_limit - 1 else safe_color))
+	status_label.text = "SYSTEMS · %d ready   %d strained   %d offline%s" % [int(dependencies.ready), int(dependencies.strained), int(dependencies.offline), "   ·   BLOCKADE %s %d" % [state.campaign_pressure_band().to_upper(), state.campaign_pressure] if state.campaign_active else ""]
+	campaign_progress_bar.visible = state.campaign_active
+	campaign_progress_bar.value = state.campaign_encounters_completed
+	encounter_progress_bar.visible = is_battle_phase
+	encounter_progress_bar.value = state.encounter_progress * 100.0
 	var route_name := String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "Meridian Pass" if state.journey_route == "meridian_pass" else "not chosen"))
 	if state.campaign_active:
 		var path_names: Array[String] = []
@@ -1147,14 +1267,14 @@ func _refresh_ui() -> void:
 	if state.phase == "results":
 		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
 	else:
-		encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Depart from Ashgate Depot to begin the test battle."]
+		encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Choose a highlighted route when the fortress is ready."]
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
 	for index in range(start, state.log.size()):
 		recent.append(state.log[index])
-	log_label.text = "Log: " + (" | ".join(recent) if not recent.is_empty() else "The crew is waiting for a route order.")
+	log_label.text = "RECENT ORDERS & DAMAGE\n• " + ("\n• ".join(recent) if not recent.is_empty() else "The crew is waiting for a route order.")
 	if event_label.text.is_empty():
-		event_label.text = "Refit at Ashgate: choose a module, click the chassis to place or select it, then depart when the machine is ready."
+		event_label.text = "Ashgate is ready. Inspect the chassis, answer the contract, then choose a highlighted map node."
 	fortress_panel.state = state
 	fortress_panel.placement_module_id = selected_module_id
 	fortress_panel.placement_rotated = placement_rotated
@@ -1167,7 +1287,7 @@ class FortressPanel extends Control:
 	signal remove_requested
 
 	var state: LongMarchState
-	const CELL := 58.0
+	const CELL := 50.0
 	const ORIGIN := Vector2(28, 22)
 	var placement_module_id: String = ""
 	var placement_rotated: bool = false
@@ -1268,7 +1388,7 @@ class FortressPanel extends Control:
 				draw_rect(Rect2(ORIGIN + Vector2(cell.x * CELL, cell.y * CELL), Vector2(CELL - 3, CELL - 3)), color, true)
 
 	func _draw_refit_details() -> void:
-		var x := 410.0
+		var x := 370.0
 		draw_string(ThemeDB.fallback_font, Vector2(x, 40), "REFIT STATUS" if state != null and state.can_refit() else "SYSTEM STATUS", HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
 		if state == null or placement_module_id.is_empty():
 			return
@@ -1291,10 +1411,10 @@ class FortressPanel extends Control:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: click empty cell to place", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		if state.can_refit():
-			draw_string(ThemeDB.fallback_font, Vector2(x, 236), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
-			draw_string(ThemeDB.fallback_font, Vector2(x, 258), "Arrows + confirm · R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows + confirm · R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
-			draw_string(ThemeDB.fallback_font, Vector2(x, 236), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)

@@ -59,6 +59,7 @@ func _run() -> void:
 		await process_frame
 	_expect(not game.onboarding_overlay.visible and FileAccess.file_exists(onboarding_path), "completing onboarding should dismiss it and persist the choice")
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
+	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
@@ -71,7 +72,9 @@ func _run() -> void:
 	_expect(game.campaign_map.detail_label.text.contains("Known route"), "keyboard or controller focus should expose the same route detail as mouse hover")
 	await _press_campaign_node("rill_crossing")
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
+	_expect(game.encounter_progress_bar.visible, "battle state should expose encounter progress")
 	await _advance_until_phase("map")
+	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
 	await _press_campaign_node("broken_relay")
 	await _advance_until_phase("map")
