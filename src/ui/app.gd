@@ -6,10 +6,15 @@ const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png"
 const SAVE_PATH := "user://the_long_march_prototype.save"
 
 var menu_view: Control
+var guide_view: Control
 var pause_view: Control
 var game_view: Control
 var start_button: Button
+var quick_start_button: Button
 var continue_button: Button
+var guide_button: Button
+var guide_close_button: Button
+var guide_quick_start_button: Button
 var resume_button: Button
 var restart_button: Button
 var title_button: Button
@@ -47,6 +52,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	theme = _create_menu_theme()
 	_build_title_menu()
+	_build_guide_overlay()
 	_build_pause_menu()
 	_refresh_title_state()
 	start_button.grab_focus()
@@ -122,12 +128,20 @@ func _build_title_menu() -> void:
 
 	start_button = Button.new()
 	start_button.name = "StartGameButton"
-	start_button.text = "START GAME  ·  ASHGATE DEPOT"
+	start_button.text = "START GAME  ·  GUIDED FIRST RUN"
 	start_button.custom_minimum_size = Vector2(0, 62)
-	start_button.tooltip_text = "Begin a new five-encounter march from Ashgate Depot."
+	start_button.tooltip_text = "Begin at Ashgate Depot with the five-part Marchmaster briefing."
 	start_button.pressed.connect(_start_new_game)
 	_accent_button(start_button)
 	actions.add_child(start_button)
+
+	quick_start_button = Button.new()
+	quick_start_button.name = "QuickStartButton"
+	quick_start_button.text = "QUICK START  ·  SKIP BRIEFING"
+	quick_start_button.custom_minimum_size = Vector2(0, 50)
+	quick_start_button.tooltip_text = "Open a fresh Ashgate stage immediately without changing the saved briefing preference."
+	quick_start_button.pressed.connect(_quick_start_game)
+	actions.add_child(quick_start_button)
 
 	continue_button = Button.new()
 	continue_button.name = "ContinueButton"
@@ -136,12 +150,23 @@ func _build_title_menu() -> void:
 	continue_button.pressed.connect(_continue_game)
 	actions.add_child(continue_button)
 
+	var utility_actions := HBoxContainer.new()
+	utility_actions.add_theme_constant_override("separation", 8)
+	actions.add_child(utility_actions)
+	guide_button = Button.new()
+	guide_button.name = "GuideButton"
+	guide_button.text = "VIEW TEST FLOW"
+	guide_button.custom_minimum_size = Vector2(0, 44)
+	guide_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	guide_button.pressed.connect(_show_guide)
+	utility_actions.add_child(guide_button)
 	var quit_button := Button.new()
 	quit_button.name = "QuitButton"
-	quit_button.text = "QUIT TO DESKTOP"
-	quit_button.custom_minimum_size = Vector2(0, 46)
+	quit_button.text = "QUIT"
+	quit_button.custom_minimum_size = Vector2(0, 44)
+	quit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	quit_button.pressed.connect(_quit_game)
-	actions.add_child(quit_button)
+	utility_actions.add_child(quit_button)
 
 	save_status_label = Label.new()
 	save_status_label.add_theme_font_size_override("font_size", 12)
@@ -165,7 +190,7 @@ func _build_title_menu() -> void:
 	stage_panel.add_child(stage)
 
 	var stage_eyebrow := Label.new()
-	stage_eyebrow.text = "FIRST PLAYABLE STAGE"
+	stage_eyebrow.text = "PLAYTEST TARGET · 15–25 MINUTES"
 	stage_eyebrow.add_theme_font_size_override("font_size", 12)
 	stage_eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
 	stage.add_child(stage_eyebrow)
@@ -180,6 +205,11 @@ func _build_title_menu() -> void:
 	briefing.custom_minimum_size = Vector2(330, 72)
 	briefing.add_theme_color_override("font_color", Color("#d0d8d5"))
 	stage.add_child(briefing)
+	var scope := Label.new()
+	scope.text = "5 ENCOUNTERS   ·   1 RECOVERY STOP   ·   1 FINAL BATTLE"
+	scope.add_theme_font_size_override("font_size", 11)
+	scope.add_theme_color_override("font_color", Color("#d8a650"))
+	stage.add_child(scope)
 	stage.add_child(_stage_rule("01", "Inspect the chassis", "Keep fuel, ammunition, crew, and power connected."))
 	stage.add_child(_stage_rule("02", "Choose the first road", "Compare risk, fuel, time, pressure, and what your signal crew can see."))
 	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once, and recover at Morrowline."))
@@ -219,6 +249,101 @@ func _stage_rule(number: String, title: String, detail: String) -> Control:
 	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_label.add_theme_font_size_override("font_size", 12)
 	detail_label.add_theme_color_override("font_color", Color("#98a5a5"))
+	copy.add_child(detail_label)
+	return row
+
+func _build_guide_overlay() -> void:
+	guide_view = Control.new()
+	guide_view.name = "TestFlowGuide"
+	guide_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	guide_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	guide_view.visible = false
+	add_child(guide_view)
+	var shade := ColorRect.new()
+	shade.color = Color(0.015, 0.02, 0.024, 0.88)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	guide_view.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	guide_view.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(760, 560)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#688587"), 2, 8, 28))
+	center.add_child(panel)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 12)
+	panel.add_child(content)
+	var eyebrow := Label.new()
+	eyebrow.text = "PLAYTEST FIELD GUIDE"
+	eyebrow.add_theme_font_size_override("font_size", 12)
+	eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(eyebrow)
+	var title := Label.new()
+	title.text = "One complete Ashgate run"
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color("#f0d29d"))
+	content.add_child(title)
+	var intro := Label.new()
+	intro.text = "Test the full decision loop once before optimizing a build. A successful or failed run is useful when you can explain what caused the outcome."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.custom_minimum_size = Vector2(690, 50)
+	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
+	content.add_child(intro)
+	content.add_child(_flow_step("1", "ASHGATE · REFIT", "Select modules on the chassis. Check at least one dependency explanation, then accept or decline the convoy contract."))
+	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Select a cyan node, compare its fuel, time, risk, pressure, and visibility, then use the separate Commit action."))
+	content.add_child(_flow_step("3", "ENCOUNTER · READ", "Advance each combat step. Identify the current enemy target and use no more than one emergency order."))
+	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend up to two settlement actions, refit around damage, and choose the final approach."))
+	content.add_child(_flow_step("5", "MERIDIAN · REPORT", "Finish the Siege Beast battle, read the causal result, then record what felt clear or confusing."))
+	var note := Label.new()
+	note.text = "QUICK START skips only the introductory briefing. It does not change the simulation, seed, route graph, or save file."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", Color("#d8c389"))
+	content.add_child(note)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	content.add_child(actions)
+	guide_close_button = Button.new()
+	guide_close_button.text = "BACK TO TITLE"
+	guide_close_button.custom_minimum_size = Vector2(180, 50)
+	guide_close_button.pressed.connect(_hide_guide)
+	actions.add_child(guide_close_button)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(spacer)
+	guide_quick_start_button = Button.new()
+	guide_quick_start_button.text = "QUICK START ASHGATE"
+	guide_quick_start_button.custom_minimum_size = Vector2(220, 50)
+	guide_quick_start_button.pressed.connect(_quick_start_game)
+	_accent_button(guide_quick_start_button)
+	actions.add_child(guide_quick_start_button)
+
+func _flow_step(number: String, title: String, detail: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	var badge := Label.new()
+	badge.text = number
+	badge.custom_minimum_size = Vector2(36, 36)
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_font_size_override("font_size", 18)
+	badge.add_theme_color_override("font_color", Color("#f0cf96"))
+	badge.add_theme_stylebox_override("normal", _flat_style(Color("#25383a"), Color("#668b85"), 1, 18, 4))
+	row.add_child(badge)
+	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.add_theme_constant_override("separation", 1)
+	row.add_child(copy)
+	var title_label := Label.new()
+	title_label.text = title
+	title_label.add_theme_font_size_override("font_size", 14)
+	title_label.add_theme_color_override("font_color", Color("#edf1eb"))
+	copy.add_child(title_label)
+	var detail_label := Label.new()
+	detail_label.text = detail
+	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail_label.add_theme_font_size_override("font_size", 12)
+	detail_label.add_theme_color_override("font_color", Color("#9faead"))
 	copy.add_child(detail_label)
 	return row
 
@@ -290,25 +415,40 @@ func _refresh_title_state() -> void:
 	var has_save := FileAccess.file_exists(SAVE_PATH)
 	continue_button.disabled = not has_save
 	continue_button.text = "CONTINUE SAVED MARCH" if has_save else "CONTINUE  ·  NO SAVE FOUND"
-	save_status_label.text = "A saved march is available on this device." if has_save else "New runs do not overwrite a save until you choose Save."
+	save_status_label.text = _saved_run_summary() if has_save else "No save yet · New runs save only when you choose Save."
+
+func _saved_run_summary() -> String:
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return "A saved march is available on this device."
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		return "A saved march is available, but its summary is unreadable."
+	var location := String(parsed.get("current_location", "unknown road")).replace("_", " ").capitalize()
+	return "Saved · Day %d · %s · %d/5 encounters" % [int(parsed.get("day", 1)), location, int(parsed.get("campaign_encounters_completed", 0))]
 
 func _start_new_game() -> void:
-	_open_stage(false)
+	_open_stage(false, true)
+
+func _quick_start_game() -> void:
+	_open_stage(false, false)
 
 func _continue_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
 		_refresh_title_state()
 		start_button.grab_focus()
 		return
-	_open_stage(true)
+	_open_stage(true, false)
 
-func _open_stage(load_saved: bool) -> void:
+func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	if game_view != null:
 		game_view.queue_free()
 	game_view = GAME_SCENE.instantiate()
+	game_view.set("show_onboarding_on_ready", show_briefing)
 	add_child(game_view)
 	move_child(game_view, 0)
 	menu_view.visible = false
+	guide_view.visible = false
 	pause_view.visible = false
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	game_view.modulate = Color(1.0, 1.0, 1.0, 0.0)
@@ -331,10 +471,19 @@ func _resume_game() -> void:
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 
 func _restart_game() -> void:
-	_open_stage(false)
+	_open_stage(false, false)
+
+func _show_guide() -> void:
+	guide_view.visible = true
+	guide_quick_start_button.grab_focus()
+
+func _hide_guide() -> void:
+	guide_view.visible = false
+	guide_button.grab_focus()
 
 func _return_to_title() -> void:
 	pause_view.visible = false
+	guide_view.visible = false
 	if game_view != null:
 		var old_game := game_view
 		game_view = null
@@ -347,7 +496,12 @@ func _quit_game() -> void:
 	get_tree().quit()
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if game_view == null or not event.is_action_pressed("ui_cancel"):
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if game_view == null:
+		if guide_view.visible:
+			_hide_guide()
+			get_viewport().set_input_as_handled()
 		return
 	if pause_view.visible:
 		_resume_game()

@@ -31,12 +31,32 @@ func _run() -> void:
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
 
+	app.guide_button.pressed.emit()
+	await process_frame
+	_expect(app.guide_view.visible, "View Test Flow should open the field guide without starting a run")
+	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
+	app.guide_close_button.pressed.emit()
+	await process_frame
+	_expect(not app.guide_view.visible and app.guide_button.has_focus(), "closing the field guide should restore title-menu focus")
+
+	app.quick_start_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(not app.menu_view.visible and app.game_view != null, "Quick Start should open the playable Ashgate stage")
+	_expect(not app.game_view.onboarding_overlay.visible, "Quick Start should skip the briefing for repeated flow tests")
+	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "Quick Start should not permanently mark the briefing complete")
+	app._show_pause()
+	app.title_button.pressed.emit()
+	await process_frame
+	await process_frame
+
 	app.start_button.pressed.emit()
 	await process_frame
 	await process_frame
 	_expect(not app.menu_view.visible and app.game_view != null, "Start Game should open the playable Ashgate stage")
 	_expect(app.game_view.state.phase == "refit", "a new stage should begin at the Ashgate refit")
 	_expect(app.game_view.campaign_map.visible, "the opening stage should expose the playable campaign map")
+	_expect(app.game_view.onboarding_overlay.visible, "the guided Start Game path should open the Marchmaster briefing")
 
 	app._show_pause()
 	await process_frame
@@ -61,6 +81,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.money == 42, "Continue should restore the locally saved stage")
+	_expect(not app.game_view.onboarding_overlay.visible, "Continue should return directly to the saved decision state")
 
 	_remove_local_test_files()
 	if failures.is_empty():

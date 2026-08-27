@@ -110,6 +110,7 @@ var fortress_panel: Control
 var selected_module_id: String = ""
 var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
+var show_onboarding_on_ready: bool = true
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -186,7 +187,7 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
-	if not FileAccess.file_exists(ONBOARDING_PATH):
+	if show_onboarding_on_ready and not FileAccess.file_exists(ONBOARDING_PATH):
 		_show_onboarding()
 
 func _reset_state() -> void:
