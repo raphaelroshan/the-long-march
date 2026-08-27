@@ -19,12 +19,20 @@ func _advance_until_phase(expected_phase: String) -> void:
 
 func _run() -> void:
 	var save_path := ProjectSettings.globalize_path("user://the_long_march_prototype.save")
-	if FileAccess.file_exists(save_path):
-		DirAccess.remove_absolute(save_path)
+	var onboarding_path := ProjectSettings.globalize_path("user://the_long_march_onboarding_v1.complete")
+	var journal_path := ProjectSettings.globalize_path("user://the_long_march_playtest_journal.json")
+	for path in [save_path, onboarding_path, journal_path]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 	game = load("res://scenes/Main.tscn").instantiate()
 	root.add_child(game)
 	await process_frame
 	await process_frame
+	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
+	for _step in range(game.ONBOARDING_STEPS.size()):
+		game.onboarding_next_button.pressed.emit()
+		await process_frame
+	_expect(not game.onboarding_overlay.visible and FileAccess.file_exists(onboarding_path), "completing onboarding should dismiss it and persist the choice")
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	game.travel_button.pressed.emit()
 	await process_frame
@@ -47,8 +55,14 @@ func _run() -> void:
 	_expect(game.state.phase == "final_battle", "Morrowline departure should begin the final battle")
 	await _advance_until_phase("results")
 	_expect(game.state.phase == "results" and game.state.run_complete, "final battle should produce a completed run")
-	if FileAccess.file_exists(save_path):
-		DirAccess.remove_absolute(save_path)
+	game.feedback_button.pressed.emit()
+	await process_frame
+	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
+	game._hide_feedback()
+	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
+	for path in [save_path, onboarding_path, journal_path]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 	if failures.is_empty():
 		print("PASS: The Long March complete prototype flow")
 		quit(0)

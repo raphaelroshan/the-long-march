@@ -15,7 +15,7 @@ The AI review layer is advisory unless it reports a critical finding. It never r
 | Gameplay framework | Modules, shapes, spaces, connections, threats, interventions, progression, and slice scope | Blocks incomplete framework data. |
 | Godot tests | Placement, dependencies, power, heat, travel, threats, interventions, recovery, and save/load | Blocks failures on Ubuntu or Windows. |
 | AI review | Architecture, gameplay, QA, and security findings | Blocks critical findings; otherwise reports. |
-| Packaging | Project import and source snapshot; Windows export once presets exist | Produces an artifact; guarded release requires presets. |
+| Packaging | Project import, source snapshot, Windows build, and unsigned macOS playtest build | Produces guarded artifacts from reviewed export presets. |
 
 ## Local commands
 
@@ -34,4 +34,4 @@ The reviewer runs architecture, gameplay, QA, and security roles against the cha
 
 ## Release staging
 
-Pushes to `main` create a source release-candidate artifact. Tags matching `v*` or manual dispatch invoke the guarded Windows release workflow, which requires a reviewed `export_presets.cfg`. Steam and Epic credentials are not stored in the repository. Actual storefront publishing remains a human-controlled action in a protected environment.
+Pushes to `main` create a Windows release-candidate artifact and source snapshot. Tags matching `v*` or manual dispatch invoke the guarded desktop playtest workflow, which exports Windows and unsigned macOS builds from the reviewed presets. Steam, Epic, Apple signing, and notarization credentials are not stored in the repository. Storefront publishing remains a human-controlled action in a protected environment.

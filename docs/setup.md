@@ -2,11 +2,11 @@
 
 ## Requirements
 
-Use Godot 4.4.1 stable, standard GDScript, and a Windows or Ubuntu development environment. The project does not require external plugins for the deterministic prototype.
+Use Godot 4.4.1 stable with export templates and standard GDScript. Windows, macOS, and Ubuntu can run the deterministic project; Windows remains the primary commercial target. The prototype does not require external plugins.
 
 ## Open the project
 
-Open `/home/ubuntu/the_long_march/project.godot` in Godot 4.x, or launch it from the command line:
+Open the repository's `project.godot` in Godot 4.x, or launch it from the command line:
 
 ```bash
 godot --editor --path .
@@ -20,7 +20,7 @@ The current scene is `scenes/Main.tscn`. The UI is intentionally lightweight; th
 bash scripts/verify.sh
 ```
 
-The test entrypoint is `res://tests/test_fortress_state.gd`. If Godot is not installed, the script exits with status `2` rather than pretending that tests passed.
+The verification script imports assets and runs the simulation, local playtest-journal, and complete UI-flow tests. If Godot is not installed, it exits with status `2` rather than pretending that tests passed.
 
 ## Validate content
 
@@ -31,10 +31,10 @@ python tools/validate_gameplay_framework.py --data content/gameplay_framework.js
 
 Content files are authored source data. They are not executable scripts. New module, route, threat, event, or progression IDs must be added to the appropriate catalog and validated before implementation code references them.
 
-## Prototype save
+## Local saves and playtest notes
 
-The UI writes a local prototype save to `user://the_long_march_prototype.save`. Production save files require versioning, migrations, and platform cloud integration. Do not commit local saves.
+The UI writes a versioned prototype save to `user://the_long_march_prototype.save`. The playtest journal and explicitly exported feedback bundles also remain under Godot's local `user://` directory. They are never uploaded by the game. Do not commit local saves or tester feedback.
 
 ## Release staging
 
-The repository contains CI and a guarded release-candidate workflow. Windows export remains intentionally blocked until a reviewed `export_presets.cfg` and production export configuration exist. Steam and Epic distribution credentials must be added only through protected GitHub environments after a human release review.
+The repository contains reviewed Windows and unsigned macOS playtest export presets. Run `bash scripts/export_playtest.sh windows` or `bash scripts/export_playtest.sh macos` after installing matching Godot export templates. Tags matching `v*` produce both artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.

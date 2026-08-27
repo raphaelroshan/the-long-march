@@ -13,14 +13,15 @@ This is an internal, testable vertical slice for The Long March. It proves a sho
 5. Choose **The Long Road**, **The Exposed Cut**, or **The Salvage Detour**.
 6. Select a journey doctrine: protect cargo, protect crew, or run hot.
 7. Depart and read the forecast. Refit controls lock once the fortress leaves Ashgate.
-8. Advance the journey battle one step at a time. Use **Encounter: Shift Power** once if the weapon system needs priority.
+8. Advance the journey battle one step at a time. Use **Shift power to weapons** once if the weapon system needs priority.
 9. Read the report to see which module behaved, which enemy was targeted, and which module or hull section was damaged.
 10. Verify that the fortress reaches Morrowline Camp, arrives damaged, or returns to Ashgate Depot after a forced retreat.
 11. At Morrowline, spend up to two service actions on module repair, hull repair, or fuel; refit the layout and choose the doctrine for the final march.
 12. Depart for Meridian Pass, resolve the Siege Beast and Climber encounter, and verify a **Decisive March**, **Scarred March**, or **March Failed** result.
 13. Save and load during Morrowline recovery and confirm the phase, resources, module positions, orientation, damage, and reports are preserved.
+14. Open **Playtest feedback** after the result, answer the two short prompts, and save the local JSON bundle if the tester agrees to share it.
 
-The refit interaction is the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are now evaluated explicitly and displayed as ready, strained, or offline. More complex facility bonuses and chain-damage rules remain later slices.
+The first-run Marchmaster briefing explains the complete loop, while the phase-specific NEXT line keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 
 ## Implemented units and behaviors
 

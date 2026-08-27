@@ -24,6 +24,7 @@ The repository contains an agent-first Godot project with:
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
 - A Morrowline recovery phase with limited paid repairs/refueling, continued refitting, and a final Meridian Pass battle with decisive, scarred, or failed run results.
 - Versioned JSON save/load and an automated UI-level complete-run test.
+- A first-run Marchmaster briefing, phase-specific guidance, and a local-only playtest feedback bundle.
 - An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.
 
 ## Run locally
@@ -32,6 +33,13 @@ Open the project in Godot 4.x or use:
 
 ```bash
 bash scripts/verify.sh
+```
+
+With Godot export templates installed, create desktop playtest builds with:
+
+```bash
+bash scripts/export_playtest.sh windows
+bash scripts/export_playtest.sh macos
 ```
 
 The internal journey slice has been verified locally with Godot 4.4.1. On a development machine, install the pinned Godot version and run the same verification command before editing.
@@ -54,6 +62,7 @@ The recommended sequence is:
 The current focused test flow begins at Ashgate Depot, recovers at Morrowline Camp, and ends at Meridian Pass. The release contract, tester checklist, and known boundaries are in [`docs/internal_test_release.md`](docs/internal_test_release.md), while the authored first encounter contract is in [`design/ashgate_city_to_city_battle.md`](design/ashgate_city_to_city_battle.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
 
 The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
+The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
 
 ## Related follow-up concept
 

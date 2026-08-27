@@ -1,12 +1,36 @@
 extends Control
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
+const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
 const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
 const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
+const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
+const ONBOARDING_STEPS := [
+	{
+		"title": "Keep the fortress moving",
+		"body": "You are the Marchmaster of a walking fortress. Your job is not to build the largest machine; it is to keep a connected, repairable machine moving from Ashgate to Meridian Pass. Every useful module costs space, mass, power, heat, or exposure."
+	},
+	{
+		"title": "Build around dependencies",
+		"body": "Select a module on the chassis to inspect it. Engines need orthogonally adjacent fuel. Weapons prefer an adjacent Ammunition Lift. Workshops need adjacent Crew Quarters and work better beside Parts. Ready, strained, and offline states update immediately as you refit."
+	},
+	{
+		"title": "Choose a road and a promise",
+		"body": "The Long Road teaches the systems, the Exposed Cut is faster and harsher, and the Salvage Detour expects a purpose-built lower hull. Your doctrine changes who the fortress protects and how it fights. Read fuel, risk, pressure, and predicted heat before departing."
+	},
+	{
+		"title": "Read the battle",
+		"body": "Advance one encounter step at a time. Enemies name their target, modules explain their attacks, and dependency failures appear in the report. You may issue one emergency order per encounter. Select a module first if you intend to seal it."
+	},
+	{
+		"title": "Recover, adapt, finish",
+		"body": "Morrowline gives you two paid service actions and free refitting before the final march. Save whenever you need to stop. At the end, use Playtest feedback to create a local JSON bundle; nothing is uploaded automatically."
+	}
+]
 
 var state: LongMarchState
 var status_label: Label
@@ -37,15 +61,38 @@ var intervention_title: Label
 var settlement_title: Label
 var save_button: Button
 var load_button: Button
+var guidance_label: Label
+var how_to_play_button: Button
+var feedback_button: Button
+var onboarding_overlay: Control
+var onboarding_title_label: Label
+var onboarding_body_label: Label
+var onboarding_progress_label: Label
+var onboarding_back_button: Button
+var onboarding_next_button: Button
+var onboarding_skip_button: Button
+var onboarding_step: int = 0
+var feedback_overlay: Control
+var feedback_clear_text: TextEdit
+var feedback_confusing_text: TextEdit
+var feedback_score_option: OptionButton
+var feedback_status_label: Label
+var feedback_save_button: Button
+var journal: PlaytestJournal
+var result_recorded: bool = false
 var fortress_panel: Control
 var selected_module_id: String = ""
 var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
 
 func _ready() -> void:
+	journal = PlaytestJournal.new()
 	_reset_state()
 	_build_ui()
 	_refresh_ui()
+	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
+	if not FileAccess.file_exists(ONBOARDING_PATH):
+		_show_onboarding()
 
 func _reset_state() -> void:
 	state = LongMarchState.new(1107)
@@ -59,6 +106,7 @@ func _reset_state() -> void:
 	state.seed_starter_inventory()
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
+	result_recorded = false
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -171,6 +219,11 @@ func _build_ui() -> void:
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		asset_row.add_child(icon)
 	controls.add_child(asset_row)
+	guidance_label = Label.new()
+	guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	guidance_label.custom_minimum_size = Vector2(320, 54)
+	guidance_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	controls.add_child(guidance_label)
 
 	refit_title = Label.new()
 	refit_title.text = "REFIT CHASSIS"
@@ -303,6 +356,241 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_on_reset_pressed)
 	controls.add_child(reset_button)
 
+	var playtest_actions := HBoxContainer.new()
+	playtest_actions.add_theme_constant_override("separation", 8)
+	how_to_play_button = Button.new()
+	how_to_play_button.text = "How to play"
+	how_to_play_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	how_to_play_button.pressed.connect(_show_onboarding.bind(true))
+	playtest_actions.add_child(how_to_play_button)
+	feedback_button = Button.new()
+	feedback_button.text = "Playtest feedback"
+	feedback_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	feedback_button.pressed.connect(_show_feedback)
+	playtest_actions.add_child(feedback_button)
+	controls.add_child(playtest_actions)
+
+	_build_onboarding_overlay()
+	_build_feedback_overlay()
+
+func _build_onboarding_overlay() -> void:
+	onboarding_overlay = Control.new()
+	onboarding_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	onboarding_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	onboarding_overlay.visible = false
+	add_child(onboarding_overlay)
+	var shade := ColorRect.new()
+	shade.color = Color(0.02, 0.03, 0.04, 0.88)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	onboarding_overlay.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	onboarding_overlay.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(660, 430)
+	center.add_child(panel)
+	var margin := MarginContainer.new()
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 28)
+	panel.add_child(margin)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 18)
+	margin.add_child(content)
+	var eyebrow := Label.new()
+	eyebrow.text = "MARCHMASTER'S FIELD BRIEFING"
+	eyebrow.add_theme_color_override("font_color", Color("#d8c389"))
+	content.add_child(eyebrow)
+	onboarding_title_label = Label.new()
+	onboarding_title_label.add_theme_font_size_override("font_size", 28)
+	onboarding_title_label.add_theme_color_override("font_color", Color("#e8c58e"))
+	content.add_child(onboarding_title_label)
+	onboarding_body_label = Label.new()
+	onboarding_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	onboarding_body_label.custom_minimum_size = Vector2(600, 190)
+	onboarding_body_label.add_theme_font_size_override("font_size", 17)
+	onboarding_body_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	content.add_child(onboarding_body_label)
+	onboarding_progress_label = Label.new()
+	onboarding_progress_label.add_theme_color_override("font_color", Color("#8fa3a7"))
+	content.add_child(onboarding_progress_label)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	onboarding_skip_button = Button.new()
+	onboarding_skip_button.text = "Skip briefing"
+	onboarding_skip_button.pressed.connect(_finish_onboarding.bind(true))
+	actions.add_child(onboarding_skip_button)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(spacer)
+	onboarding_back_button = Button.new()
+	onboarding_back_button.text = "Back"
+	onboarding_back_button.pressed.connect(_on_onboarding_back)
+	actions.add_child(onboarding_back_button)
+	onboarding_next_button = Button.new()
+	onboarding_next_button.text = "Next"
+	onboarding_next_button.pressed.connect(_on_onboarding_next)
+	actions.add_child(onboarding_next_button)
+	content.add_child(actions)
+
+func _build_feedback_overlay() -> void:
+	feedback_overlay = Control.new()
+	feedback_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	feedback_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	feedback_overlay.visible = false
+	add_child(feedback_overlay)
+	var shade := ColorRect.new()
+	shade.color = Color(0.02, 0.03, 0.04, 0.9)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	feedback_overlay.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	feedback_overlay.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(700, 650)
+	center.add_child(panel)
+	var margin := MarginContainer.new()
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 24)
+	panel.add_child(margin)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 10)
+	margin.add_child(content)
+	var title := Label.new()
+	title.text = "PLAYTEST NOTES"
+	title.add_theme_font_size_override("font_size", 25)
+	title.add_theme_color_override("font_color", Color("#e8c58e"))
+	content.add_child(title)
+	var privacy := Label.new()
+	privacy.text = "This journal stays on this computer. Nothing is uploaded. Saving creates a JSON file you can choose to share."
+	privacy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	privacy.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(privacy)
+	var clear_label := Label.new()
+	clear_label.text = "What felt clear or satisfying?"
+	content.add_child(clear_label)
+	feedback_clear_text = TextEdit.new()
+	feedback_clear_text.custom_minimum_size = Vector2(640, 110)
+	feedback_clear_text.placeholder_text = "A decision, explanation, or moment that worked..."
+	content.add_child(feedback_clear_text)
+	var confusing_label := Label.new()
+	confusing_label.text = "What felt confusing or frustrating?"
+	content.add_child(confusing_label)
+	feedback_confusing_text = TextEdit.new()
+	feedback_confusing_text.custom_minimum_size = Vector2(640, 110)
+	feedback_confusing_text.placeholder_text = "Where you hesitated, guessed, or lost the causal thread..."
+	content.add_child(feedback_confusing_text)
+	feedback_score_option = OptionButton.new()
+	for label in ["1 — No", "2 — Probably not", "3 — Maybe", "4 — Probably", "5 — Definitely"]:
+		feedback_score_option.add_item(label)
+	feedback_score_option.select(2)
+	content.add_child(_labeled_control("Would you play another run?", feedback_score_option))
+	feedback_status_label = Label.new()
+	feedback_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	feedback_status_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	content.add_child(feedback_status_label)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	var close_button := Button.new()
+	close_button.text = "Close"
+	close_button.pressed.connect(_hide_feedback)
+	actions.add_child(close_button)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(spacer)
+	feedback_save_button = Button.new()
+	feedback_save_button.text = "Save feedback bundle"
+	feedback_save_button.pressed.connect(_save_feedback)
+	actions.add_child(feedback_save_button)
+	content.add_child(actions)
+
+func _show_onboarding(reopened: bool = false) -> void:
+	onboarding_step = 0
+	onboarding_overlay.visible = true
+	_refresh_onboarding()
+	onboarding_next_button.grab_focus()
+	if reopened:
+		_journal_event("onboarding_reopened")
+
+func _refresh_onboarding() -> void:
+	var step: Dictionary = ONBOARDING_STEPS[onboarding_step]
+	onboarding_title_label.text = String(step.title)
+	onboarding_body_label.text = String(step.body)
+	onboarding_progress_label.text = "Briefing %d of %d" % [onboarding_step + 1, ONBOARDING_STEPS.size()]
+	onboarding_back_button.disabled = onboarding_step == 0
+	onboarding_next_button.text = "Begin the march" if onboarding_step == ONBOARDING_STEPS.size() - 1 else "Next"
+
+func _on_onboarding_back() -> void:
+	onboarding_step = maxi(0, onboarding_step - 1)
+	_refresh_onboarding()
+
+func _on_onboarding_next() -> void:
+	if onboarding_step >= ONBOARDING_STEPS.size() - 1:
+		_finish_onboarding(false)
+		return
+	onboarding_step += 1
+	_refresh_onboarding()
+
+func _finish_onboarding(skipped: bool) -> void:
+	var marker := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
+	if marker != null:
+		marker.store_string(String(ProjectSettings.get_setting("application/config/version", "unknown")))
+	onboarding_overlay.visible = false
+	_journal_event("onboarding_skipped" if skipped else "onboarding_completed", {"step_reached": onboarding_step + 1})
+	travel_button.grab_focus()
+
+func _show_feedback() -> void:
+	feedback_status_label.text = ""
+	feedback_overlay.visible = true
+	feedback_clear_text.grab_focus()
+	_journal_event("feedback_opened", {"phase": state.phase})
+
+func _hide_feedback() -> void:
+	feedback_overlay.visible = false
+	feedback_button.grab_focus()
+
+func _save_feedback() -> void:
+	_journal_event("feedback_saved", {"phase": state.phase, "replay_score": feedback_score_option.selected + 1})
+	var result: Dictionary = journal.export_feedback(
+		feedback_clear_text.text,
+		feedback_confusing_text.text,
+		feedback_score_option.selected + 1,
+		_state_journal_summary()
+	)
+	if bool(result.get("ok", false)):
+		feedback_status_label.text = "Saved locally: %s" % String(result.get("path", ""))
+	else:
+		feedback_status_label.text = "Could not save feedback: %s" % String(result.get("reason", "unknown error"))
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if feedback_overlay.visible:
+		_hide_feedback()
+		get_viewport().set_input_as_handled()
+	elif onboarding_overlay.visible:
+		_finish_onboarding(true)
+		get_viewport().set_input_as_handled()
+
+func _journal_event(event_id: String, properties: Dictionary = {}) -> void:
+	if journal != null:
+		journal.record(event_id, properties)
+
+func _state_journal_summary() -> Dictionary:
+	var dependencies := state.dependency_summary()
+	return {
+		"phase": state.phase,
+		"day": state.day,
+		"fuel": state.fuel,
+		"money": state.money,
+		"hull": state.hull_condition,
+		"route": state.journey_route,
+		"doctrine": state.target_doctrine,
+		"result": state.final_result,
+		"ready_systems": int(dependencies.get("ready", 0)),
+		"strained_systems": int(dependencies.get("strained", 0)),
+		"offline_systems": int(dependencies.get("offline", 0))
+	}
+
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group := VBoxContainer.new()
 	var label := Label.new()
@@ -361,6 +649,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		if bool(result.get("ok", false)):
 			selected_module_cell = cell
 			_set_event("Moved %s to cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
+			_journal_event("module_moved", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
 		else:
 			_set_event("Move blocked: %s." % String(result.get("reason", "unknown")))
 	else:
@@ -371,6 +660,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		if bool(result.get("ok", false)):
 			selected_module_cell = cell
 			_set_event("Installed %s at cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
+			_journal_event("module_installed", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
 		else:
 			_set_event("Placement blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -397,6 +687,7 @@ func _on_rotate_pressed() -> void:
 			placement_rotated = next_rotation
 			selected_module_cell = origin
 			_set_event("Rotated %s in place." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+			_journal_event("module_rotated", {"module": selected_module_id, "rotated": placement_rotated})
 	_refresh_ui()
 
 func _on_remove_pressed() -> void:
@@ -414,6 +705,7 @@ func _on_remove_pressed() -> void:
 		placement_rotated = bool(removed.get("rotated", false))
 		selected_module_cell = Vector2i(-1, -1)
 		_set_event("Removed %s. Click an empty cell to place it again." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+		_journal_event("module_stored", {"module": selected_module_id, "durability": int(removed.get("durability", 0))})
 	else:
 		_set_event("Removal blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -425,6 +717,7 @@ func _on_travel_pressed() -> void:
 		_set_event("Departure blocked: %s." % String(result.get("reason", "unknown")))
 	else:
 		_set_event("Journey begun. Forecast: %s. Advance one battle step at a time." % ", ".join(result.get("forecast", {}).get("threats", [])))
+		_journal_event("route_started", {"route": route_id, "doctrine": _selected_id(doctrine_option), "risk": state.current_route_risk, "pressure": state.encounter_pressure})
 	_refresh_ui()
 
 func _on_advance_encounter_pressed() -> void:
@@ -433,8 +726,13 @@ func _on_advance_encounter_pressed() -> void:
 		_set_event("Journey battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif bool(result.get("resolved", false)):
 		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
+		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})
+		if state.phase == "results" and not result_recorded:
+			result_recorded = true
+			_journal_event("run_completed", _state_journal_summary())
 	else:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
+		_journal_event("encounter_step", {"leg": state.journey_leg, "step": state.encounter_step, "hull": state.hull_condition})
 	_refresh_ui()
 
 func _on_settlement_repair_pressed() -> void:
@@ -444,22 +742,26 @@ func _on_settlement_repair_pressed() -> void:
 		return
 	var result := state.settlement_repair(String(selected.get("id", "")))
 	_set_event("Settlement repair complete." if bool(result.get("ok", false)) else "Settlement repair blocked: %s." % String(result.get("reason", "unknown")))
+	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	_refresh_ui()
 
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
 	_set_event("Morrowline loaded 2 fuel." if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown")))
+	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	_refresh_ui()
 
 func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
 	_set_event("Morrowline repaired the hull." if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown")))
+	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
 	_refresh_ui()
 
 func _on_final_journey_pressed() -> void:
 	var result := state.begin_final_journey(_selected_id(doctrine_option))
 	if bool(result.get("ok", false)):
 		_set_event("Final march begun. The Siege Beast is blocking Meridian Pass.")
+		_journal_event("final_march_started", {"doctrine": _selected_id(doctrine_option), "fuel": state.fuel, "hull": state.hull_condition})
 	else:
 		_set_event("Final march blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -476,6 +778,7 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 		_set_event("Intervention blocked: %s." % result.reason)
 	else:
 		_set_event("Intervention used: %s." % intervention_id.replace("_", " ").capitalize())
+		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
 	_refresh_ui()
 
 func _on_save_pressed() -> void:
@@ -485,6 +788,7 @@ func _on_save_pressed() -> void:
 		return
 	file.store_string(JSON.stringify(state.serialize()))
 	_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
+	_journal_event("run_saved", {"phase": state.phase, "day": state.day})
 	_refresh_ui()
 
 func _on_load_pressed() -> void:
@@ -513,12 +817,15 @@ func _on_load_pressed() -> void:
 		_select_module_option(selected_module_id)
 	fortress_panel.state = state
 	_set_event("Prototype state loaded.")
+	result_recorded = state.phase == "results"
+	_journal_event("run_loaded", {"phase": state.phase, "day": state.day})
 	_refresh_ui()
 
 func _on_reset_pressed() -> void:
 	_reset_state()
 	fortress_panel.state = state
 	_set_event("The fortress is back at Ashgate Depot with a clean maintenance slate.")
+	_journal_event("run_reset")
 	_refresh_ui()
 
 func _set_event(text: String) -> void:
@@ -551,6 +858,15 @@ func _refresh_ui() -> void:
 	remove_button.disabled = not state.can_refit() or selected_installed.is_empty()
 	var is_refit_phase := state.phase in ["refit", "settlement"]
 	var is_battle_phase := state.phase in ["battle", "final_battle"]
+	match state.phase:
+		"refit":
+			guidance_label.text = "NEXT — Inspect the dependency state, compare the three routes, then choose the promise your doctrine will protect."
+		"battle", "final_battle":
+			guidance_label.text = "NEXT — Advance one step, read each target and causal line, then spend at most one emergency order."
+		"settlement":
+			guidance_label.text = "NEXT — Spend up to two service actions, refit around the damage, then choose a doctrine for Meridian Pass."
+		"results":
+			guidance_label.text = "RUN COMPLETE — Inspect the surviving systems, then save a local playtest feedback bundle while the decisions are fresh."
 	refit_title.visible = is_refit_phase
 	module_group.visible = is_refit_phase
 	refit_actions.visible = is_refit_phase
