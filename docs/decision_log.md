@@ -180,6 +180,8 @@ Menu and stage transitions explicitly hand keyboard/controller focus to the next
 
 The title screen additionally defines explicit directional neighbors across its vertical start actions and horizontal utility row. Controller movement therefore follows the reading order and loops back to the primary action instead of depending on engine heuristics that can change with label width or save-state text.
 
+That navigation graph updates with save availability. With no valid checkpoint, movement bypasses disabled Continue and links Quick Start directly to the utility row; once a save exists, Continue is restored to the same route. Disabled state never creates a controller dead end.
+
 The field guide, pause menu, and confirmation dialog use the same explicit-neighbor rule for paired actions and stacked rows. Their safe or primary control still receives focus on entry, while directional input now follows the visible grouping consistently across every application-level modal.
 
 Stage-owned overlays follow the same rule. The briefing routes around its disabled Previous action on page one, restores it on later pages, and wraps between close and progression actions; the feedback form links its return and save actions in both horizontal directions.

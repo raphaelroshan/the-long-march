@@ -276,19 +276,22 @@ func _configure_title_focus() -> void:
 	start_button.focus_neighbor_top = start_button.get_path_to(quit_button)
 	start_button.focus_neighbor_bottom = start_button.get_path_to(quick_start_button)
 	quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
-	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(continue_button)
 	continue_button.focus_neighbor_top = continue_button.get_path_to(quick_start_button)
 	continue_button.focus_neighbor_bottom = continue_button.get_path_to(settings_button)
-	guide_button.focus_neighbor_top = guide_button.get_path_to(continue_button)
 	guide_button.focus_neighbor_right = guide_button.get_path_to(settings_button)
 	guide_button.focus_neighbor_bottom = guide_button.get_path_to(start_button)
-	settings_button.focus_neighbor_top = settings_button.get_path_to(continue_button)
 	settings_button.focus_neighbor_left = settings_button.get_path_to(guide_button)
 	settings_button.focus_neighbor_right = settings_button.get_path_to(quit_button)
 	settings_button.focus_neighbor_bottom = settings_button.get_path_to(start_button)
-	quit_button.focus_neighbor_top = quit_button.get_path_to(continue_button)
 	quit_button.focus_neighbor_left = quit_button.get_path_to(settings_button)
 	quit_button.focus_neighbor_bottom = quit_button.get_path_to(start_button)
+
+func _refresh_title_focus(has_valid_save: bool) -> void:
+	var upper_action := continue_button if has_valid_save else quick_start_button
+	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(continue_button if has_valid_save else settings_button)
+	guide_button.focus_neighbor_top = guide_button.get_path_to(upper_action)
+	settings_button.focus_neighbor_top = settings_button.get_path_to(upper_action)
+	quit_button.focus_neighbor_top = quit_button.get_path_to(upper_action)
 
 func _configure_overlay_focus() -> void:
 	guide_close_button.focus_neighbor_right = guide_close_button.get_path_to(guide_quick_start_button)
@@ -791,6 +794,7 @@ func _refresh_title_state() -> void:
 	start_button.text = "NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN"
 	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
 	continue_button.disabled = not has_valid_save
+	_refresh_title_focus(has_valid_save)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))

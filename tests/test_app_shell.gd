@@ -35,6 +35,7 @@ func _run() -> void:
 	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.settings_button, "title navigation should move from Continue to the central utility action")
 	_expect(app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_left) == app.guide_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_right) != null, "title navigation should traverse the utility row explicitly")
 	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.settings_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.quick_start_button, "no-save navigation should route around disabled Continue")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("checkpoints"), "the title should use player-facing guide and autosave language")
 	var invalid_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	invalid_save.store_string("{not valid save data")
@@ -194,6 +195,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.continue_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.continue_button, "save-aware navigation should restore Continue to the title loop")
 	_expect(app.start_button.text.begins_with("NEW GAME") and app.quick_start_button.text.begins_with("NEW QUICK RUN"), "existing progress should make both fresh-start actions explicit")
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
