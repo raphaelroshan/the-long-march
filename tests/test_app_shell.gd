@@ -84,6 +84,10 @@ func _run() -> void:
 	_expect(app.last_checkpoint_reason == "contract_answered", "the application should report the latest automatic checkpoint reason")
 	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text.contains("CONTRACT ANSWERED"), "a successful automatic checkpoint should produce a brief non-blocking notice")
 	app._show_pause()
+	_expect(app.title_button.text == "RETURN TO TITLE" and app.pause_save_status_label.text.begins_with("Current decision saved"), "the pause menu should recognize a current automatic checkpoint")
+	app.game_view.state.money += 1
+	app._refresh_pause_summary()
+	_expect(app.title_button.text == "EXIT UNSAVED" and app.pause_save_status_label.text.begins_with("Unsaved changes"), "the pause menu should reveal progress made after the last checkpoint")
 	app.title_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "returning without saving should require confirmation")
@@ -143,6 +147,16 @@ func _run() -> void:
 	await process_frame
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "Save March should create the local save from the pause menu")
 	_expect(app.pause_save_status_label.text.begins_with("Saved."), "the pause menu should confirm a successful save")
+	_expect(app.title_button.text == "RETURN TO TITLE", "saving should make the safe return action explicit")
+	app.title_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.menu_view.visible and not app.confirmation_view.visible, "a fully saved run should return to title without a redundant warning")
+	app.continue_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.game_view != null, "Continue should restore the run after a safe return")
+	app._show_pause()
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT, "Resume should restore the stage")

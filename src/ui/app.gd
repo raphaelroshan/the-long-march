@@ -843,17 +843,55 @@ func _refresh_pause_summary(message: String = "") -> void:
 	var run_state = game_view.get("state")
 	var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
 	var phase := String(run_state.get("phase")).replace("_", " ").capitalize()
+	var current_run_saved := _current_run_matches_save()
 	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed"))]
+	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
+	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."
 	if not message.is_empty():
 		pause_save_status_label.text = message
 	elif not autosave_enabled:
 		pause_save_status_label.text = "Autosave is off · use Save March to preserve progress."
 	elif not last_checkpoint_reason.is_empty():
-		pause_save_status_label.text = "Autosaved · %s" % last_checkpoint_reason.replace("_", " ").capitalize()
+		pause_save_status_label.text = "Current decision saved · %s" % last_checkpoint_reason.replace("_", " ").capitalize() if current_run_saved else "Unsaved changes since · %s" % last_checkpoint_reason.replace("_", " ").capitalize()
 	elif FileAccess.file_exists(SAVE_PATH):
-		pause_save_status_label.text = "A local save is available. Save again to capture current progress."
+		pause_save_status_label.text = "Current decision is saved." if current_run_saved else "A previous local save is available. Save to capture this decision."
 	else:
 		pause_save_status_label.text = "This run has not been saved yet."
+
+func _current_run_matches_save() -> bool:
+	if game_view == null or not FileAccess.file_exists(SAVE_PATH):
+		return false
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		return false
+	var saved_state := LongMarchState.new(0)
+	var validation := saved_state.load_serialized(parsed)
+	if not bool(validation.get("ok", false)):
+		return false
+	var run_state = game_view.get("state")
+	return _saved_values_match(saved_state.serialize(), run_state.serialize())
+
+func _saved_values_match(saved: Variant, live: Variant) -> bool:
+	if saved is Dictionary and live is Dictionary:
+		if saved.size() != live.size():
+			return false
+		for key in saved:
+			if not live.has(key) or not _saved_values_match(saved[key], live[key]):
+				return false
+		return true
+	if saved is Array and live is Array:
+		if saved.size() != live.size():
+			return false
+		for index in range(saved.size()):
+			if not _saved_values_match(saved[index], live[index]):
+				return false
+		return true
+	if (saved is int or saved is float) and (live is int or live is float):
+		return is_equal_approx(float(saved), float(live))
+	return saved == live
 
 func _save_from_pause() -> bool:
 	if game_view == null:
@@ -914,6 +952,9 @@ func _restart_game() -> void:
 
 func _request_confirmation(action: String) -> void:
 	if action not in ["restart", "title", "clear_save", "new_guided", "new_quick"]:
+		return
+	if action == "title" and _current_run_matches_save():
+		_return_to_title()
 		return
 	pending_confirmation = action
 	if action == "restart":
