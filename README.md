@@ -8,6 +8,8 @@ The battles resolve automatically, but the player chooses the fortress layout, r
 
 The repository contains an agent-first Godot project with:
 
+- A full title-menu flow with Start Game, save-aware Continue, pause/resume, restart, and return-to-title actions.
+- A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.
 - Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
@@ -39,6 +41,8 @@ Open the project in Godot 4.x or use:
 ```bash
 bash scripts/verify.sh
 ```
+
+Running the project opens on the title menu. Choose **Start Game · Ashgate Depot** to begin a new stage, or **Continue Saved March** when a local save exists. Press Escape during the stage to open the pause menu.
 
 With Godot export templates installed, create desktop playtest builds with:
 
