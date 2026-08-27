@@ -901,6 +901,7 @@ func _refresh_title_state() -> void:
 		start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
 	quick_start_button.visible = not briefing_complete
 	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
+	continue_button.visible = has_valid_save
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save
 	var actions := start_button.get_parent()

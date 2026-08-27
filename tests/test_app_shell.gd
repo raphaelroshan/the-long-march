@@ -32,9 +32,8 @@ func _run() -> void:
 	_expect(app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should expose the exact build version for playtest reports")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.quick_start_button, "title navigation should move down from Guided Start to Quick Start")
-	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.settings_button, "title navigation should move from Continue to the central utility action")
 	_expect(app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_left) == app.guide_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_right) != null, "title navigation should traverse the utility row explicitly")
-	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
+	_expect(not app.continue_button.visible and app.continue_button.disabled, "Continue should stay out of the action stack when no local save exists")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.settings_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.quick_start_button, "no-save navigation should route around disabled Continue")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should skip Continue and wrap through visible title actions")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("checkpoints"), "the title should use player-facing guide and autosave language")
@@ -51,7 +50,7 @@ func _run() -> void:
 	invalid_save.store_string("{not valid save data")
 	invalid_save.close()
 	app._refresh_title_state()
-	_expect(app.continue_button.disabled and app.continue_button.text.contains("UNAVAILABLE"), "invalid save data should never enable Continue")
+	_expect(not app.continue_button.visible and app.continue_button.disabled, "invalid save data should never expose Continue as an actionable choice")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
 	_expect(app.save_recovery_button.visible and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose a direct recovery action in the title flow")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save Tab navigation should include the recovery action")
@@ -300,7 +299,7 @@ func _run() -> void:
 		_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "CLEAR SAVE", "clearing a save should require explicit confirmation")
 		app.confirmation_confirm_button.pressed.emit()
 		await process_frame
-		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and app.continue_button.disabled, "confirmed save clearing should remove Continue progress")
+		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.continue_button.visible and app.continue_button.disabled, "confirmed save clearing should remove Continue from the title action stack")
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
 		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should collapse cleanly after the last one-shot action is consumed")
 

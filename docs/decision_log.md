@@ -262,7 +262,7 @@ The fresh-start actions also switch from `Start` to `New` when Continue progress
 
 The title menu separates a guided first run from a briefing-free Quick Start. Quick Start suppresses onboarding only for that stage and does not write the onboarding marker, alter the deterministic seed, or touch the save. A field-guide overlay states the intended five-part test flow so repeated playtests can reach the actual decisions quickly without introducing simulation-only debug shortcuts.
 
-The title presents that material as a chapter and field guide rather than as internal test tooling. Its no-save line follows the autosave preference: automatic checkpoints are explained when enabled, while manual saving through pause is named when disabled. This keeps the first screen truthful without exposing implementation vocabulary.
+The title presents that material as a chapter and field guide rather than as internal test tooling. Its no-save line follows the autosave preference: automatic checkpoints are explained when enabled, while manual saving through pause is named when disabled. Continue is omitted until a readable checkpoint exists, so the primary action stack contains choices the player can actually take instead of spending a full row restating the no-save message.
 
 A saved results screen appears on the title as `View Result` with its Decisive, Scarred, or Failed outcome instead of masquerading as an active `Continue` checkpoint. It remains reopenable for debrief and feedback, while the adjacent new-run actions make the next campaign path explicit.
 
@@ -288,11 +288,11 @@ Menu and stage transitions explicitly hand keyboard/controller focus to the next
 
 The title screen additionally defines explicit directional neighbors across its vertical start actions and horizontal utility row. Controller movement therefore follows the reading order and loops back to the primary action instead of depending on engine heuristics that can change with label width or save-state text.
 
-That navigation graph updates with save availability. With no valid checkpoint, movement bypasses disabled Continue and links Quick Start directly to the utility row; once a save exists, Continue is restored to the same route. Disabled state never creates a controller dead end.
+That navigation graph updates with save availability. With no valid checkpoint, Continue is absent and Quick Start links directly to the utility row; once a save exists, Continue is restored at the top of the same route. Missing state never creates a controller dead end or a dead visual action.
 
 The title applies the same state-aware graph to Tab traversal. A valid Continue or invalid-save recovery action is inserted in visual order, while absent actions are removed and the remaining controls wrap cleanly from Quit back to Guided Start.
 
-An unreadable or incompatible local save exposes a dedicated `Remove Unreadable Save` action directly beneath disabled Continue. Removal requires a confirmation that distinguishes the broken file from settings and briefing data; success returns focus to Guided Start and removes the temporary action from the navigation graph.
+An unreadable or incompatible local save replaces Continue with a dedicated `Remove Unreadable Save` action. Removal requires a confirmation that distinguishes the broken file from settings and briefing data; success returns focus to Guided Start and removes the temporary action from the navigation graph.
 
 If validation changes between drawing the title and attempting Continue—for example because the file was externally replaced—the failed load refreshes the title and focuses `Remove Unreadable Save`. The recovery path remains immediate even under that race instead of sending focus to an unrelated new-run action.
 
