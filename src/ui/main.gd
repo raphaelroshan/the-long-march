@@ -11,6 +11,7 @@ const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
 const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
+const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
 const ONBOARDING_STEPS := [
 	{
 		"title": "Keep the fortress moving",
@@ -85,6 +86,9 @@ var recruit_iven_button: Button
 var save_button: Button
 var load_button: Button
 var guidance_label: Label
+var run_flow_panels: Array[PanelContainer] = []
+var run_flow_labels: Array[Label] = []
+var current_run_flow_step: int = 0
 var asset_row: HBoxContainer
 var phase_badge: Label
 var campaign_progress_bar: ProgressBar
@@ -179,6 +183,60 @@ func _accent_button(button: Button, background: Color, border: Color) -> void:
 	button.add_theme_stylebox_override("hover", _flat_style(background.lightened(0.08), border.lightened(0.12), 2, 5, 7))
 	button.add_theme_stylebox_override("pressed", _flat_style(background.darkened(0.1), Color("#ffffff"), 2, 5, 7))
 	button.add_theme_stylebox_override("focus", _flat_style(background, Color("#ffffff"), 3, 5, 6))
+
+func _build_run_flow_tracker(parent: VBoxContainer) -> void:
+	var heading := Label.new()
+	heading.text = "RUN FLOW"
+	heading.add_theme_font_size_override("font_size", 10)
+	heading.add_theme_color_override("font_color", Color("#89999e"))
+	parent.add_child(heading)
+	var tracker := HBoxContainer.new()
+	tracker.add_theme_constant_override("separation", 4)
+	parent.add_child(tracker)
+	for step_name in RUN_FLOW_STEPS:
+		var panel := PanelContainer.new()
+		panel.custom_minimum_size = Vector2(0, 42)
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tracker.add_child(panel)
+		var label := Label.new()
+		label.text = String(step_name)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 9)
+		panel.add_child(label)
+		run_flow_panels.append(panel)
+		run_flow_labels.append(label)
+
+func _run_flow_step() -> int:
+	if state.phase == "results":
+		return 4
+	if state.phase == "final_battle" or state.current_location == "meridian_pass" or state.campaign_encounters_completed >= 4:
+		return 3
+	if state.current_location == "morrowline_camp" or state.campaign_encounters_completed >= 3:
+		if state.current_location != "morrowline_camp" and state.campaign_encounters_completed >= 3:
+			return 3
+		return 2
+	if state.guard_contract_status != "offered" or state.campaign_encounters_completed > 0 or state.phase in ["map", "battle"]:
+		return 1
+	return 0
+
+func _refresh_run_flow_tracker() -> void:
+	current_run_flow_step = _run_flow_step()
+	for index in range(run_flow_panels.size()):
+		var panel := run_flow_panels[index]
+		var label := run_flow_labels[index]
+		if index < current_run_flow_step:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#183329"), Color("#4e8d72"), 1, 4, 3))
+			label.text = "✓\n%s" % RUN_FLOW_STEPS[index]
+			label.add_theme_color_override("font_color", Color("#9fddbd"))
+		elif index == current_run_flow_step:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#4b405d"), Color("#eee2ff"), 2, 4, 2))
+			label.text = "%02d\n%s" % [index + 1, RUN_FLOW_STEPS[index]]
+			label.add_theme_color_override("font_color", Color("#ffffff"))
+		else:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#182127"), Color("#35474d"), 1, 4, 3))
+			label.text = "—\n%s" % RUN_FLOW_STEPS[index]
+			label.add_theme_color_override("font_color", Color("#738286"))
 
 func _ready() -> void:
 	theme = _create_ui_theme()
@@ -341,6 +399,7 @@ func _build_ui() -> void:
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		asset_row.add_child(icon)
 	controls.add_child(asset_row)
+	_build_run_flow_tracker(controls)
 	guidance_label = Label.new()
 	guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guidance_label.custom_minimum_size = Vector2(320, 54)
@@ -425,16 +484,19 @@ func _build_ui() -> void:
 	settlement_group.add_child(final_journey_button)
 	controls.add_child(settlement_group)
 
+	var contract_group := VBoxContainer.new()
+	contract_group.add_theme_constant_override("separation", 8)
+	controls.add_child(contract_group)
 	contract_title = Label.new()
 	contract_title.text = "ASHGATE CONTRACT"
 	contract_title.add_theme_font_size_override("font_size", 17)
 	contract_title.add_theme_color_override("font_color", Color("#e8c58e"))
-	controls.add_child(contract_title)
+	contract_group.add_child(contract_title)
 	contract_label = Label.new()
 	contract_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	contract_label.custom_minimum_size = Vector2(320, 54)
 	contract_label.add_theme_color_override("font_color", Color("#c8d1d1"))
-	controls.add_child(contract_label)
+	contract_group.add_child(contract_label)
 	var contract_actions := HBoxContainer.new()
 	contract_actions.add_theme_constant_override("separation", 8)
 	contract_accept_button = Button.new()
@@ -448,7 +510,8 @@ func _build_ui() -> void:
 	contract_decline_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	contract_decline_button.pressed.connect(_on_guard_contract_pressed.bind(false))
 	contract_actions.add_child(contract_decline_button)
-	controls.add_child(contract_actions)
+	contract_group.add_child(contract_actions)
+	controls.move_child(contract_group, guidance_label.get_index() + 1)
 
 	campaign_title = Label.new()
 	campaign_title.text = "ASHGATE LOWLANDS MAP"
@@ -1221,6 +1284,7 @@ func _refresh_ui() -> void:
 	subtitle_label.visible = not is_battle_phase
 	journey_banner.visible = not is_battle_phase
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
+	_refresh_run_flow_tracker()
 	match state.phase:
 		"refit":
 			guidance_label.text = "NEXT — Configure dependencies, answer the contract, then select and commit to a highlighted map node."

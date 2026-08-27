@@ -10,6 +10,7 @@ The repository contains an agent-first Godot project with:
 
 - A playtest-focused title flow with guided Start Game, briefing-free Quick Start, save-aware Continue, and a concise run guide.
 - A session-safe pause menu with live run status, Save, Save & Return, and confirmation before discarding progress.
+- A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.

@@ -64,6 +64,7 @@ func _run() -> void:
 		await process_frame
 	_expect(not game.onboarding_overlay.visible and FileAccess.file_exists(onboarding_path), "completing onboarding should dismiss it and persist the choice")
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
+	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
@@ -71,6 +72,7 @@ func _run() -> void:
 	game.contract_accept_button.pressed.emit()
 	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
+	_expect(game.current_run_flow_step == 1 and game.run_flow_labels[0].text.begins_with("✓"), "answering the contract should advance the tracker to the Lowlands roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
@@ -91,6 +93,7 @@ func _run() -> void:
 	await _press_campaign_node("morrowline_camp")
 	await _advance_until_phase("settlement")
 	_expect(game.state.phase == "settlement" and game.state.campaign_encounters_completed == 3, "the third encounter should open Morrowline services")
+	_expect(game.current_run_flow_step == 2 and game.run_flow_labels[2].text.contains("RECOVER"), "reaching Morrowline should advance the tracker to recovery")
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	var saved_pressure: int = game.state.campaign_pressure
 	game.state.campaign_pressure = 5
@@ -110,12 +113,14 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	await _press_campaign_node("lower_ash_road")
+	_expect(game.current_run_flow_step == 3 and game.run_flow_labels[3].text.contains("FINAL"), "leaving Morrowline should advance the tracker to the final approach")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_encounters_completed == 4, "the lower-hull route should become the fourth encounter")
 	await _press_campaign_node("meridian_pass")
 	_expect(game.state.phase == "final_battle", "the fifth map node should begin the final battle")
 	await _advance_until_phase("results")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
+	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
 	game.feedback_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
