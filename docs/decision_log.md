@@ -170,6 +170,8 @@ The title menu separates a guided first run from a briefing-free Quick Start. Qu
 
 The title presents that material as a chapter and field guide rather than as internal test tooling. Its no-save line follows the autosave preference: automatic checkpoints are explained when enabled, while manual saving through pause is named when disabled. This keeps the first screen truthful without exposing implementation vocabulary.
 
+The Field Guide describes the rules a player must actually read in the interface: system-state colors, finite stored parts, route visibility tiers, previewed costs, one emergency order, limited recovery actions, and result thresholds. It remains a five-step orientation rather than expanding into a second manual.
+
 The pause menu is a session boundary rather than a decorative overlay. It reports the current day, location, phase, and secured encounters; supports Save and Save & Return; and asks for confirmation before restart or return without saving. The safe cancellation action receives focus by default. This makes repeated tests faster while keeping accidental loss visible and reversible through the existing local save.
 
 ## 2026-08-27 — The stage shows the whole run without hiding the next decision

@@ -74,6 +74,7 @@ func _run() -> void:
 	_expect(app.guide_view.visible, "Field Guide should open without starting a run")
 	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
 	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_left) == app.guide_close_button, "the field guide should have explicit horizontal controller navigation")
+	_expect(_tree_contains_text(app.guide_view, "Known roads name the threat") and _tree_contains_text(app.guide_view, "only one emergency order"), "the field guide should explain visibility and intervention rules, not only list screens")
 	app.guide_close_button.pressed.emit()
 	await process_frame
 	_expect(not app.guide_view.visible and app.guide_button.has_focus(), "closing the field guide should restore title-menu focus")
@@ -245,3 +246,11 @@ func _run() -> void:
 		for failure in failures:
 			push_error(failure)
 		quit(1)
+
+func _tree_contains_text(node: Node, fragment: String) -> bool:
+	if node is Label and String(node.text).contains(fragment):
+		return true
+	for child in node.get_children():
+		if _tree_contains_text(child, fragment):
+			return true
+	return false

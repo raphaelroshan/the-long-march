@@ -390,11 +390,11 @@ func _build_guide_overlay() -> void:
 	intro.custom_minimum_size = Vector2(690, 50)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
-	content.add_child(_flow_step("1", "ASHGATE · REFIT", "Select modules on the chassis. Check at least one dependency explanation, then accept or decline the convoy contract."))
-	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Select a cyan node, compare its fuel, time, risk, pressure, and visibility, then use the separate Commit action."))
-	content.add_child(_flow_step("3", "ENCOUNTER · READ", "Advance each combat step. Identify the current enemy target and use no more than one emergency order."))
-	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend up to two settlement actions, refit around damage, and choose the final approach."))
-	content.add_child(_flow_step("5", "MERIDIAN · DEBRIEF", "Finish the Siege Beast battle, read the causal result, then record what felt clear or confusing."))
+	content.add_child(_flow_step("1", "ASHGATE · REFIT", "Green systems are ready, amber are strained, and red are offline or blocked. Stored parts are finite; inspect dependencies before moving one."))
+	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Known roads name the threat, forecasts reveal its class, and unscouted roads stay broad. Preview fuel, time, risk, pressure, and heat before Commit."))
+	content.add_child(_flow_step("3", "ENCOUNTER · READ", "Each advance resolves one combat step. Read arriving enemies and named targets first; only one emergency order is available per encounter."))
+	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend at most two service actions, then refit around lasting damage. Disabled services state the exact missing money, damage, or action."))
+	content.add_child(_flow_step("5", "MERIDIAN · DEBRIEF", "Commit to the final road, resolve the Siege Beast, then use the result thresholds and replay goal to plan one deliberate change."))
 	var note := Label.new()
 	note.text = "QUICK START skips only the introductory briefing. It does not change the simulation, seed, route graph, or save file."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
