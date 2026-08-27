@@ -79,6 +79,7 @@ Failure at Meridian Pass ends the run because it is the chapter's declared final
 ## Alpha exit criteria
 
 - A fresh run can complete the authored graph through visible UI controls.
+- The graph distinguishes current, secured, available, decision-blocked, closed, and future nodes without relying on color alone.
 - Exactly five encounters are counted on a successful run.
 - At least two distinct first-half paths and both Morrowline departures are viable with appropriate preparation.
 - Contract, event, specialist, pressure, route visibility, retreat, and save state are deterministic and serializable.

@@ -13,6 +13,9 @@ func _init() -> void:
 func _press_campaign_node(node_id: String) -> void:
 	for button in game.campaign_node_buttons:
 		if button.visible and String(button.get_meta("node_id", "")) == node_id:
+			_expect(not button.disabled, "campaign node button should be enabled: " + node_id)
+			if button.disabled:
+				return
 			button.pressed.emit()
 			await process_frame
 			return
@@ -56,20 +59,36 @@ func _run() -> void:
 		await process_frame
 	_expect(not game.onboarding_overlay.visible and FileAccess.file_exists(onboarding_path), "completing onboarding should dismiss it and persist the choice")
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
+	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
+	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
+	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.contract_accept_button.pressed.emit()
 	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
+	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
+	game.campaign_map.button_for("rill_crossing").grab_focus()
+	await process_frame
+	_expect(game.campaign_map.detail_label.text.contains("Known route"), "keyboard or controller focus should expose the same route detail as mouse hover")
 	await _press_campaign_node("rill_crossing")
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
 	await _advance_until_phase("map")
+	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
 	await _press_campaign_node("broken_relay")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_event_pending == "lost_signal", "the Broken Relay should surface its authored decision")
+	_expect(game.campaign_map.status_for("morrowline_camp") == "blocked", "the map should show that a local decision blocks the next road")
 	await _press_campaign_event("move_silent")
+	_expect(game.campaign_map.status_for("morrowline_camp") == "available", "resolving the relay decision should activate Morrowline")
 	await _press_campaign_node("morrowline_camp")
 	await _advance_until_phase("settlement")
 	_expect(game.state.phase == "settlement" and game.state.campaign_encounters_completed == 3, "the third encounter should open Morrowline services")
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
+	var saved_pressure: int = game.state.campaign_pressure
+	game.state.campaign_pressure = 5
+	game._refresh_ui()
+	_expect(game.campaign_map.status_for("signal_causeway") == "closed" and game.campaign_map.status_for("lower_ash_road") == "available", "the visual map should show Break closing only the optional causeway")
+	game.state.campaign_pressure = saved_pressure
+	game._refresh_ui()
 	var saved_money: int = game.state.money
 	game.save_button.pressed.emit()
 	await process_frame

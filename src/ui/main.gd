@@ -2,6 +2,7 @@ extends Control
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
+const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -63,6 +64,7 @@ var settlement_group: Control
 var campaign_title: Label
 var campaign_pressure_label: Label
 var campaign_path_label: Label
+var campaign_map: CampaignMapView
 var campaign_node_buttons: Array[Button] = []
 var contract_title: Label
 var contract_label: Label
@@ -345,12 +347,9 @@ func _build_ui() -> void:
 	campaign_path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_path_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	controls.add_child(campaign_path_label)
-	for index in range(3):
-		var node_button := Button.new()
-		node_button.text = "Route option %d" % (index + 1)
-		node_button.pressed.connect(_on_campaign_node_pressed.bind(index))
-		campaign_node_buttons.append(node_button)
-		controls.add_child(node_button)
+	campaign_map = CampaignMapView.new()
+	campaign_map.node_selected.connect(_on_campaign_node_selected)
+	campaign_node_buttons = campaign_map.node_buttons
 
 	campaign_event_title = Label.new()
 	campaign_event_title.add_theme_font_size_override("font_size", 17)
@@ -372,6 +371,7 @@ func _build_ui() -> void:
 	recruit_iven_button.tooltip_text = "Requires restored relay and operational Crew Quarters. Iven reveals exact immediate threats and helps navigate storms."
 	recruit_iven_button.pressed.connect(_on_recruit_iven_pressed)
 	controls.add_child(recruit_iven_button)
+	controls.add_child(campaign_map)
 
 	route_option = OptionButton.new()
 	for route_id in LongMarchState.ROUTES.keys():
@@ -707,6 +707,9 @@ func _on_campaign_node_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_node_buttons.size():
 		return
 	var node_id := String(campaign_node_buttons[index].get_meta("node_id", ""))
+	_on_campaign_node_selected(node_id)
+
+func _on_campaign_node_selected(node_id: String) -> void:
 	if node_id.is_empty():
 		return
 	var doctrine := _selected_id(doctrine_option)
@@ -969,11 +972,9 @@ func _refresh_campaign_controls() -> void:
 	campaign_title.visible = state.campaign_active and planning_phase
 	campaign_pressure_label.visible = state.campaign_active
 	campaign_path_label.visible = state.campaign_active
-	var path_names: Array[String] = []
-	for node_id in state.campaign_path:
-		path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
+	campaign_map.visible = state.campaign_active and planning_phase
 	campaign_pressure_label.text = "Blockade — %s · pressure %d · encounters %d/5" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure, state.campaign_encounters_completed]
-	campaign_path_label.text = "Secured route: %s\nGuard contract: %s · Specialist: %s" % [" → ".join(path_names), state.guard_contract_status.replace("_", " ").capitalize(), "Iven Pell" if state.specialist_id == "iven_pell" else "none"]
+	campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [state.guard_contract_status.replace("_", " ").capitalize(), "Iven Pell" if state.specialist_id == "iven_pell" else "none"]
 
 	var contract_offered := state.campaign_active and state.guard_contract_status == "offered" and state.current_location == "ashgate_depot"
 	contract_title.visible = contract_offered
@@ -990,27 +991,27 @@ func _refresh_campaign_controls() -> void:
 		phase_can_depart = bool(state_summary.can_travel)
 	elif state.phase == "settlement":
 		phase_can_depart = bool(state_summary.can_continue)
-	for index in range(campaign_node_buttons.size()):
-		var button := campaign_node_buttons[index]
-		if not planning_phase or index >= options.size():
-			button.visible = false
-			button.set_meta("node_id", "")
-			continue
-		var node_id := String(options[index])
-		var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
-		button.visible = true
-		button.set_meta("node_id", node_id)
-		var visibility := String(preview.get("visibility", "forecast"))
-		if visibility == "known":
-			button.text = "%s · Known\n%dd · %d fuel · %.0f%% risk · %d Ashmarks" % [String(preview.name), int(preview.days), int(preview.fuel), float(preview.risk) * 100.0, int(preview.reward)]
-			button.tooltip_text = "Threats: %s. Risk %.0f%%, reward %d Ashmarks, pressure +%d." % [", ".join(preview.threats), float(preview.risk) * 100.0, int(preview.reward), int(preview.pressure_gain)]
-		elif visibility == "forecast":
-			button.text = "%s · Forecast\n%dd · %d fuel · %.0f%% risk · pressure +%d" % [String(preview.name), int(preview.days), int(preview.fuel), float(preview.risk) * 100.0, int(preview.pressure_gain)]
-			button.tooltip_text = "Forecast: %s. Risk %.0f%%, pressure +%d. Exact contacts remain uncertain." % [String(preview.threat_hint), float(preview.risk) * 100.0, int(preview.pressure_gain)]
-		else:
-			button.text = "%s · Unscouted\n%dd · %d fuel · %s" % [String(preview.name), int(preview.days), int(preview.fuel), String(preview.threat_hint)]
-			button.tooltip_text = "Unscouted %s. Broad warning: %s. Reward and exact contacts are unknown." % [String(preview.type), String(preview.threat_hint)]
-		button.disabled = contract_offered or state.fuel < int(preview.fuel) or not phase_can_depart
+	var previews := {}
+	for node_id in options:
+		previews[node_id] = state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+	var outgoing_nodes: Array[String] = []
+	var closed_nodes: Array[String] = []
+	for raw_node_id in LongMarchState.CAMPAIGN_EDGES.get(state.current_location, []):
+		var node_id := String(raw_node_id)
+		outgoing_nodes.append(node_id)
+		if state.campaign_node_closed(node_id):
+			closed_nodes.append(node_id)
+	campaign_map.configure({
+		"edges": LongMarchState.CAMPAIGN_EDGES,
+		"current_node": state.current_location,
+		"secured_path": state.campaign_path,
+		"available_nodes": options,
+		"closed_nodes": closed_nodes,
+		"outgoing_nodes": outgoing_nodes,
+		"previews": previews,
+		"can_depart": phase_can_depart,
+		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
+	})
 
 	var event := state.campaign_event_details()
 	var event_pending := not event.is_empty()

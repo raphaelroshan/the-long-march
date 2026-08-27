@@ -13,7 +13,7 @@ The repository contains an agent-first Godot project with:
 - Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
 - Explicit dependency states for fuel-fed engines, ammunition-fed weapons, crew/parts-supported workshops, shared power, and signal visibility.
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
-- An authored branching campaign map with known, forecast, and unscouted route information.
+- An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.
