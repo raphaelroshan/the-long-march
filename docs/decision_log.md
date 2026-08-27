@@ -240,6 +240,8 @@ Refitting exposes a visible `Edit Chassis` handoff instead of requiring a contro
 
 Every planning phase builds one navigation loop from controls that are both visible and currently usable. Contract choices, doctrine, route commitment, refit actions, settlement services, local decisions, recruitable specialists, route nodes, and the field briefing therefore remain reachable without crossing a hidden or disabled control. Morrowline keeps refitting inside that loop rather than trapping controller users among service and route actions.
 
+The chassis preview states its verdict before placement. A valid cursor position reports that confirm will apply the move, while an invalid position names the actual overlap, bounds, mount, or mass constraint next to the grid. Green and red remain supporting cues; the player no longer has to submit an invalid move merely to learn why it cannot work.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.

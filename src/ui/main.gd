@@ -1996,6 +1996,21 @@ class FortressPanel extends Control:
 		var relative := point - ORIGIN
 		return Vector2i(int(relative.x / CELL), int(relative.y / CELL))
 
+	func _placement_validation() -> Dictionary:
+		if state == null or not state.can_refit() or placement_module_id.is_empty():
+			return {"ok": false, "reason": "refit is not available"}
+		var exterior: bool = "exterior" in state.module_definition(placement_module_id).get("tags", [])
+		var selected := state.module_at(selected_cell) if selected_cell.x >= 0 else {}
+		if selected.is_empty():
+			return state.validate_module_placement(placement_module_id, cursor_cell, exterior, placement_rotated)
+		return state.validate_module_reposition(selected_cell, cursor_cell, placement_rotated)
+
+	func placement_status_text() -> String:
+		var validation := _placement_validation()
+		if bool(validation.get("ok", false)):
+			return "PLACEMENT READY · A / ENTER TO APPLY"
+		return "BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
+
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			var next_cell := _cell_from_point(event.position)
@@ -2056,12 +2071,7 @@ class FortressPanel extends Control:
 		if state == null or not state.can_refit() or placement_module_id.is_empty():
 			return
 		var exterior: bool = "exterior" in state.module_definition(placement_module_id).get("tags", [])
-		var selected := state.module_at(selected_cell) if selected_cell.x >= 0 else {}
-		var validation: Dictionary
-		if selected.is_empty():
-			validation = state.validate_module_placement(placement_module_id, cursor_cell, exterior, placement_rotated)
-		else:
-			validation = state.validate_module_reposition(selected_cell, cursor_cell, placement_rotated)
+		var validation := _placement_validation()
 		var preview := state.module_instance(placement_module_id, cursor_cell, exterior, placement_rotated)
 		var color := Color(0.35, 0.85, 0.58, 0.42) if bool(validation.get("ok", false)) else Color(0.92, 0.3, 0.25, 0.42)
 		for cell in state.occupied_cells(preview):
@@ -2089,10 +2099,11 @@ class FortressPanel extends Control:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), String(reasons[0]) if not reasons.is_empty() else "All required connections are satisfied.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 200), String(benefits[0]) if not benefits.is_empty() else "Move it to change its dependency graph.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
-			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: click empty cell to place", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: choose an empty cell", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		if state.can_refit():
-			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			var placement_validation := _placement_validation()
+			draw_string(ThemeDB.fallback_font, Vector2(x, 228), placement_status_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#73c99b") if bool(placement_validation.get("ok", false)) else Color("#ef8375"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · A confirms · B returns", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
