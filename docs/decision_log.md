@@ -407,3 +407,7 @@ The selected module's Seal Compartment control previews every active threat that
 ## 2026-08-28 — Cargo sacrifice resolves targeting immediately
 
 Cut Loose Cargo now applies the same atomic targeting rule as Seal Compartment. If the discarded module was under attack, affected threats choose their replacement targets during the emergency order, and both the receipt and persistent combat report name the redirection. The chassis, enemy cards, current order, and next-hit forecast cannot point at cargo that no longer exists.
+
+## 2026-08-28 — Cargo sacrifice previews both losses
+
+The emergency-order guidance now previews Cut Loose Cargo alongside Seal Compartment. It names the deterministic cargo module that will be removed, the capability lost with it, and any active threat's replacement target. This keeps the permanent build cost and immediate defensive benefit visible together before the once-per-encounter order is committed.

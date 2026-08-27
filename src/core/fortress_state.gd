@@ -1360,14 +1360,7 @@ func _encounter_choose_target(enemy_id: String, excluded_module_id: String = "")
 		return String(modules[best_index].get("id", ""))
 	return "hull"
 
-func encounter_seal_preview(target_module: String) -> Dictionary:
-	var target_index := _module_index_by_id(target_module)
-	if target_index < 0:
-		return {"valid": false, "reason": "target module not found", "retargets": []}
-	if int(modules[target_index].get("durability", 0)) <= 0:
-		return {"valid": false, "reason": "destroyed modules cannot be sealed", "retargets": []}
-	if bool(modules[target_index].get("sealed", false)):
-		return {"valid": false, "reason": "module is already sealed", "retargets": []}
+func _encounter_target_redirect_preview(target_module: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []
 	for index in range(encounter_enemies.size()):
 		var enemy: Dictionary = encounter_enemies[index]
@@ -1378,7 +1371,23 @@ func encounter_seal_preview(target_module: String) -> Dictionary:
 		var enemy_name := String(ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id.replace("_", " ").capitalize()))
 		var replacement_name := "Hull" if replacement_target == "hull" else String(module_definition(replacement_target).get("name", replacement_target.replace("_", " ").capitalize()))
 		retargets.append({"enemy_index": index, "enemy_id": enemy_id, "enemy_name": enemy_name, "previous_target": target_module, "target": replacement_target, "target_name": replacement_name})
-	return {"valid": true, "target_module": target_module, "retargets": retargets}
+	return retargets
+
+func encounter_seal_preview(target_module: String) -> Dictionary:
+	var target_index := _module_index_by_id(target_module)
+	if target_index < 0:
+		return {"valid": false, "reason": "target module not found", "retargets": []}
+	if int(modules[target_index].get("durability", 0)) <= 0:
+		return {"valid": false, "reason": "destroyed modules cannot be sealed", "retargets": []}
+	if bool(modules[target_index].get("sealed", false)):
+		return {"valid": false, "reason": "module is already sealed", "retargets": []}
+	return {"valid": true, "target_module": target_module, "retargets": _encounter_target_redirect_preview(target_module)}
+
+func encounter_cut_loose_preview() -> Dictionary:
+	var target_module := sacrificable_cargo_id()
+	if target_module.is_empty():
+		return {"valid": false, "reason": "no cargo to cut loose", "retargets": []}
+	return {"valid": true, "target_module": target_module, "retargets": _encounter_target_redirect_preview(target_module)}
 
 func _encounter_retarget_unavailable_module(target_module: String, cause: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []

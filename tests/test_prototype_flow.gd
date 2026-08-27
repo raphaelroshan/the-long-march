@@ -307,6 +307,10 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["target"] = sacrificed_cargo_id
 	game.last_synced_combat_target_id = ""
 	game._refresh_ui()
+	var displayed_cut_preview: Dictionary = game.state.encounter_cut_loose_preview()
+	var displayed_cut_redirects: Array = displayed_cut_preview.get("retargets", [])
+	var displayed_cut_text: String = "%s → %s" % [String(displayed_cut_redirects[0].get("enemy_name", "")), String(displayed_cut_redirects[0].get("target_name", ""))] if not displayed_cut_redirects.is_empty() else ""
+	_expect(game.intervention_help_label.text.contains("Cut loose preview") and game.intervention_help_label.text.contains(displayed_cut_text), "the cargo-sacrifice order should preview its permanent loss and replacement target before commitment")
 	game.intervention_buttons[3].pressed.emit()
 	await process_frame
 	var post_cut_target: String = String(game.state.encounter_enemies[0].get("target", ""))

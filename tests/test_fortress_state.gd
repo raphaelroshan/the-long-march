@@ -264,11 +264,16 @@ func _test_spatial_targeting_and_causality() -> void:
 	sacrificed_target.begin_journey("safe_road", "run_hot")
 	sacrificed_target.encounter_enemies[0]["arrived"] = true
 	sacrificed_target.encounter_enemies[0]["target"] = "coal_cell"
+	var cut_preview := sacrificed_target.encounter_cut_loose_preview()
+	var previewed_cut_retargets: Array = cut_preview.get("retargets", [])
+	_expect(bool(cut_preview.get("valid", false)) and String(cut_preview.get("target_module", "")) == "coal_cell" and previewed_cut_retargets.size() == 1, "cargo-sacrifice preview should name the deterministic module and affected threat")
+	_expect(sacrificed_target.module_count("coal_cell") == 1 and String(sacrificed_target.encounter_enemies[0].get("target", "")) == "coal_cell", "cargo-sacrifice preview must not mutate the fortress or live target")
 	var cut_loose := sacrificed_target.use_encounter_intervention("cut_loose_cargo")
 	var cut_retargets: Array = cut_loose.get("retargets", [])
 	var cut_target := String(sacrificed_target.encounter_enemies[0].get("target", ""))
 	_expect(bool(cut_loose.get("ok", false)) and String(cut_loose.get("removed_module", "")) == "coal_cell" and cut_target != "coal_cell", "cutting loose an active cargo target should redirect its threat immediately")
 	_expect(cut_retargets.size() == 1 and String(cut_retargets[0].get("target", "")) == cut_target and String(cut_loose.get("effect", "")).contains("redirected"), "the cargo-sacrifice receipt should name the replacement target")
+	_expect(String(previewed_cut_retargets[0].get("target", "")) == cut_target, "the committed cargo sacrifice should match its pre-commit redirect forecast")
 	_expect(String(sacrificed_target.encounter_enemy_impact_preview(sacrificed_target.encounter_enemies[0]).get("target", "")) == cut_target, "cargo sacrifice should replace its stale impact forecast before another combat step")
 
 	var armored := LongMarchState.new(1107)
