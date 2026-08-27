@@ -701,6 +701,15 @@ func _build_ui() -> void:
 	results_title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	results_title_button.pressed.connect(_on_results_title_pressed)
 	results_actions.add_child(results_title_button)
+	feedback_button.focus_neighbor_top = feedback_button.get_path_to(play_again_button)
+	feedback_button.focus_neighbor_bottom = feedback_button.get_path_to(play_again_button)
+	play_again_button.focus_neighbor_top = play_again_button.get_path_to(feedback_button)
+	play_again_button.focus_neighbor_right = play_again_button.get_path_to(results_title_button)
+	play_again_button.focus_neighbor_bottom = play_again_button.get_path_to(feedback_button)
+	results_title_button.focus_neighbor_top = results_title_button.get_path_to(feedback_button)
+	results_title_button.focus_neighbor_left = results_title_button.get_path_to(play_again_button)
+	results_title_button.focus_neighbor_bottom = results_title_button.get_path_to(feedback_button)
+	_configure_focus_cycle([feedback_button, play_again_button, results_title_button])
 	controls.move_child(results_group, guidance_label.get_index() + 1)
 
 	how_to_play_button = Button.new()

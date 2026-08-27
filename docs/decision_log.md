@@ -232,6 +232,8 @@ Fullscreen joins reduced motion and autosave as a persisted device preference. T
 
 The results phase places Record Playtest Notes, Play Again, and Return to Title immediately below the current objective. Replay constructs a clean deterministic Ashgate state and restores focus to the opening contract. Return to Title is emitted as a stage lifecycle request handled by the application shell, keeping the playable scene independently testable while avoiding a dead end after the final encounter.
 
+Those three result actions form an explicit directional and Tab loop. The debrief therefore preserves the same controller guarantees as application-level menus and cannot strand focus among hidden controls from the completed run.
+
 The exact application version appears on both the title and pause screens. A tester can therefore include the build identifier in a screenshot or written report even when the stage is paused, without depending on filenames or external release notes.
 
 The title menu changes its primary action based on verified local state. Start Game is highlighted and focused when no compatible save exists; Continue becomes highlighted and focused after a manual or automatic save. This shortens the common resume path without making a corrupt save actionable.
