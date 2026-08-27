@@ -933,11 +933,12 @@ func _save_feedback() -> void:
 		feedback_clear_text.text,
 		feedback_confusing_text.text,
 		feedback_score_option.selected + 1,
-		_state_journal_summary()
+		_state_journal_summary(),
+		String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	)
 	if bool(result.get("ok", false)):
 		last_feedback_path = String(result.get("path", ""))
-		feedback_status_label.text = "SAVED LOCALLY · %s\nShare this file with the build number when reporting the playtest." % last_feedback_path.get_file()
+		feedback_status_label.text = "SAVED LOCALLY · %s\nBuild %s is included in the report." % [last_feedback_path.get_file(), String(ProjectSettings.get_setting("application/config/version", "unknown"))]
 		feedback_status_label.tooltip_text = last_feedback_path
 		feedback_save_button.text = "SAVE AGAIN"
 		feedback_save_button.grab_focus()

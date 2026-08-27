@@ -47,6 +47,7 @@ func export_feedback(
 	confusing_or_frustrating: String,
 	replay_score: int,
 	final_state: Dictionary,
+	build_version: String = "unknown",
 	output_path: String = ""
 ) -> Dictionary:
 	var destination := output_path
@@ -57,6 +58,7 @@ func export_feedback(
 		return {"ok": false, "reason": error_string(FileAccess.get_open_error())}
 	var payload := {
 		"schema_version": SCHEMA_VERSION,
+		"build_version": build_version,
 		"created_at_unix": _now(),
 		"privacy": "Local file only. No data was uploaded by the game.",
 		"answers": {

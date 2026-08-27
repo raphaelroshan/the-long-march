@@ -22,10 +22,11 @@ func _init() -> void:
 	var journal_data = JSON.parse_string(FileAccess.get_file_as_string(journal_path))
 	_expect(journal_data is Dictionary and journal_data.get("events", []).size() == 1, "the journal should contain the recorded event")
 
-	var exported: Dictionary = journal.export_feedback("Readable dependencies", "Route risk needs context", 4, {"phase": "results", "final_result": "scarred_march"}, feedback_path)
+	var exported: Dictionary = journal.export_feedback("Readable dependencies", "Route risk needs context", 4, {"phase": "results", "final_result": "scarred_march"}, "0.3.0-test", feedback_path)
 	_expect(bool(exported.get("ok", false)), "feedback should export to an explicit local path")
 	var feedback_data = JSON.parse_string(FileAccess.get_file_as_string(feedback_path))
 	_expect(feedback_data is Dictionary and String(feedback_data.get("privacy", "")).contains("No data was uploaded"), "feedback should state its local-only privacy contract")
+	_expect(String(feedback_data.get("build_version", "")) == "0.3.0-test", "feedback should identify the exact playtest build")
 	_expect(int(feedback_data.get("answers", {}).get("replay_score", 0)) == 4, "feedback should preserve the replay score")
 	_expect(String(feedback_data.get("final_state", {}).get("final_result", "")) == "scarred_march", "feedback should include the final prototype state")
 

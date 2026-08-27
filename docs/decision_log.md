@@ -88,6 +88,8 @@ The result screen explains its classification before asking for feedback. A Scar
 
 The results feedback form uses explicit local-only actions, returns to the debrief rather than generically closing, and replaces a successful save action with `Save Again`. Its receipt shows the generated filename while retaining the full path as a tooltip, giving playtesters useful proof without filling the modal with machine-specific directory text.
 
+Every exported feedback bundle records the exact application build at the top level and repeats it in the visible save receipt. Reports can therefore be matched to behavior after the repository has moved on, without asking the tester to copy a version string manually.
+
 ## 2026-08-27 — Tagged playtests produce desktop artifacts
 
 Windows remains the primary product target. The repository also provides an unsigned macOS playtest preset so development sessions can run on the current platform. Tagged GitHub Actions runs build both artifacts; signing, notarization, Steam, and Epic publishing remain human-controlled release steps.

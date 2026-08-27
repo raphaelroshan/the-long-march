@@ -227,7 +227,7 @@ func _run() -> void:
 	game.feedback_save_button.pressed.emit()
 	await process_frame
 	_expect(not game.last_feedback_path.is_empty() and FileAccess.file_exists(game.last_feedback_path), "saving feedback should create a local bundle")
-	_expect(game.feedback_status_label.text.begins_with("SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_save_button.has_focus(), "saved feedback should provide a clear receipt and repeat action")
+	_expect(game.feedback_status_label.text.begins_with("SAVED LOCALLY") and game.feedback_status_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_save_button.has_focus(), "saved feedback should provide a clear versioned receipt and repeat action")
 	game._hide_feedback()
 	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
 	game.results_title_button.pressed.emit()

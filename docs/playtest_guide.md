@@ -22,7 +22,7 @@ Do not coach testers toward the intended answer. Record where they hesitate, wha
 
 The prototype keeps a small playtest journal on the local machine. It records game events such as route choice, encounter steps, interventions, settlement services, and the final result. It does not record names, typed text outside the feedback form, machine identifiers, or network information.
 
-Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the tester's two written answers, replay score, final state, and local event journal. The receipt shows the filename; hovering it reveals the full local path. The tester chooses whether to share that file.
+Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the exact build version, the tester's two written answers, replay score, final state, and local event journal. The receipt shows the filename; hovering it reveals the full local path. The tester chooses whether to share that file.
 
 ## Building locally
 
