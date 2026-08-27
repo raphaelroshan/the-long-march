@@ -88,6 +88,7 @@ func _run() -> void:
 		if _step == 1:
 			_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_back_button, "later briefing steps should restore Previous to controller navigation")
 			_expect(game.onboarding_skip_button.get_node_or_null(game.onboarding_skip_button.focus_next) == game.onboarding_back_button, "later briefing steps should restore Previous to the modal Tab cycle")
+			_expect(game.onboarding_body_label.text.contains("Edit Chassis") and game.onboarding_body_label.text.contains("B or Escape returns"), "the briefing should explain how controller users enter and leave chassis editing")
 		if _step == game.ONBOARDING_STEPS.size() - 1:
 			_expect(game.onboarding_next_button.text == "ENTER ASHGATE", "the final briefing action should clearly enter the playable stage")
 		game.onboarding_next_button.pressed.emit()
@@ -127,10 +128,26 @@ func _run() -> void:
 	game.module_option.select(engine_index)
 	game.module_option.item_selected.emit(engine_index)
 	await process_frame
+	_expect(game.focus_chassis_button.visible and not game.focus_chassis_button.disabled, "refit should expose an explicit keyboard and controller path into the chassis")
+	game.focus_chassis_button.pressed.emit()
+	await process_frame
+	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell, "Edit Chassis should focus the selected module cell")
+	var chassis_right := InputEventAction.new()
+	chassis_right.action = "ui_right"
+	chassis_right.pressed = true
+	game.fortress_panel._gui_input(chassis_right)
+	_expect(game.fortress_panel.cursor_cell == Vector2i(1, 0), "focused chassis controls should move the gold cursor with directional input")
+	var chassis_cancel := InputEventAction.new()
+	chassis_cancel.action = "ui_cancel"
+	chassis_cancel.pressed = true
+	game.fortress_panel._gui_input(chassis_cancel)
+	await process_frame
+	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.contract_accept_button.pressed.emit()
+	await process_frame
 	await process_frame
 	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")

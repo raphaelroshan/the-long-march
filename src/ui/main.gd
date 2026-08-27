@@ -30,7 +30,7 @@ const ONBOARDING_STEPS := [
 	},
 	{
 		"title": "Read the machine",
-		"body": "Select an installed module to see what keeps it Ready. Engines need adjacent fuel; weapons benefit from ammunition lifts; workshops need crew and work better beside parts. Moving one system can weaken another.",
+		"body": "Select an installed module to see what keeps it Ready. Engines need adjacent fuel; weapons benefit from ammunition lifts; workshops need crew. Choose Edit Chassis; arrows move the gold cursor, A or Enter acts, and B or Escape returns.",
 		"action": "TRY THIS · Select the Steam Lance Engine and read its dependency status before changing the layout."
 	},
 	{
@@ -60,6 +60,7 @@ var log_label: Label
 var route_option: OptionButton
 var doctrine_option: OptionButton
 var module_option: OptionButton
+var focus_chassis_button: Button
 var rotate_button: Button
 var remove_button: Button
 var travel_button: Button
@@ -425,6 +426,7 @@ func _build_ui() -> void:
 	fortress_panel.grid_cell_pressed.connect(_on_grid_cell_pressed)
 	fortress_panel.rotate_requested.connect(_on_rotate_pressed)
 	fortress_panel.remove_requested.connect(_on_remove_pressed)
+	fortress_panel.focus_exit_requested.connect(_on_fortress_focus_exit_requested)
 	left.add_child(fortress_panel)
 
 	event_label = Label.new()
@@ -507,6 +509,11 @@ func _build_ui() -> void:
 	_select_module_option(selected_module_id)
 	module_group = _labeled_control("Module", module_option)
 	controls.add_child(module_group)
+	focus_chassis_button = Button.new()
+	focus_chassis_button.text = "EDIT CHASSIS · ARROWS + A"
+	focus_chassis_button.tooltip_text = "Move keyboard or controller focus to the chassis. Use arrows to move, A or Enter to select or place, and B or Escape to return."
+	focus_chassis_button.pressed.connect(_focus_chassis_for_refit)
+	controls.add_child(focus_chassis_button)
 
 	refit_actions = HBoxContainer.new()
 	refit_actions.add_theme_constant_override("separation", 8)
@@ -1176,6 +1183,8 @@ func _on_guard_contract_pressed(accept: bool) -> void:
 	else:
 		_set_event("Contract choice blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
+	if bool(result.get("ok", false)):
+		focus_current_action.call_deferred()
 
 func _on_campaign_node_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_node_buttons.size():
@@ -1249,6 +1258,18 @@ func _on_module_selected(index: int) -> void:
 	else:
 		_set_event("%s is no longer available in this run." % module_name)
 	_refresh_ui()
+
+func _focus_chassis_for_refit() -> void:
+	if not state.can_refit():
+		return
+	if selected_module_cell.x >= 0:
+		fortress_panel.cursor_cell = selected_module_cell
+	fortress_panel.queue_redraw()
+	fortress_panel.grab_focus()
+
+func _on_fortress_focus_exit_requested() -> void:
+	if _control_can_receive_focus(focus_chassis_button):
+		_focus_control(focus_chassis_button)
 
 func _sync_selected_module_context() -> void:
 	selected_module_cell = Vector2i(-1, -1)
@@ -1672,12 +1693,13 @@ func _refresh_ui() -> void:
 			selected_shape.x,
 			selected_shape.y,
 			mount_text,
-			"Selected on chassis; click an empty cell to move it." if not selected_installed.is_empty() else "Click an empty cell to place it.",
+			"Selected on chassis; choose an empty cell to move it." if not selected_installed.is_empty() else "Choose an empty cell to place it.",
 			dependency_text
 		]
 	else:
 		refit_label.text = "Refit locked during the journey. The current chassis remains visible for battle inspection."
 	module_option.disabled = not state.can_refit()
+	focus_chassis_button.disabled = not state.can_refit()
 	rotate_button.disabled = not state.can_refit()
 	remove_button.disabled = not state.can_refit() or selected_installed.is_empty()
 	var is_refit_phase := state.phase in ["refit", "settlement"]
@@ -1694,6 +1716,7 @@ func _refresh_ui() -> void:
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
 	refit_title.visible = is_refit_phase
 	module_group.visible = is_refit_phase
+	focus_chassis_button.visible = is_refit_phase
 	refit_actions.visible = is_refit_phase
 	refit_label.visible = is_refit_phase
 	route_group.visible = state.phase == "refit" and not state.campaign_active
@@ -1933,6 +1956,7 @@ class FortressPanel extends Control:
 	signal grid_cell_pressed(cell: Vector2i)
 	signal rotate_requested
 	signal remove_requested
+	signal focus_exit_requested
 
 	var state: LongMarchState
 	const CELL := 50.0
@@ -1956,7 +1980,9 @@ class FortressPanel extends Control:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		focus_mode = Control.FOCUS_ALL
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		tooltip_text = "Click a module to select it, or click an empty cell to place or move. Use arrow keys and Enter after focusing the chassis."
+		tooltip_text = "Click a module to select it, or click an empty cell to place or move. With keyboard or controller focus, use arrows and A or Enter; B or Escape returns to the desk."
+		focus_entered.connect(queue_redraw)
+		focus_exited.connect(queue_redraw)
 
 	func _grid_rect() -> Rect2:
 		return Rect2(ORIGIN, Vector2(LongMarchState.GRID_WIDTH * CELL, LongMarchState.GRID_HEIGHT * CELL))
@@ -1998,6 +2024,9 @@ class FortressPanel extends Control:
 			accept_event()
 		elif event.is_action_pressed("ui_accept"):
 			grid_cell_pressed.emit(cursor_cell)
+			accept_event()
+		elif event.is_action_pressed("ui_cancel"):
+			focus_exit_requested.emit()
 			accept_event()
 		elif event is InputEventKey and event.pressed and not event.echo:
 			if event.keycode == KEY_R:
@@ -2061,13 +2090,15 @@ class FortressPanel extends Control:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		if state.can_refit():
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
-			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows + confirm · R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · A confirms · B returns", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)
-		draw_string(ThemeDB.fallback_font, Vector2(ORIGIN.x, 14), "CHASSIS GRID — exterior mounts use a bright edge", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#b9c3bf"))
+		if has_focus():
+			draw_rect(Rect2(Vector2.ZERO, size).grow(-2), Color("#f0cf96"), false, 3.0)
+		draw_string(ThemeDB.fallback_font, Vector2(ORIGIN.x, 14), "CHASSIS EDIT MODE — arrows move · A acts · B returns" if has_focus() else "CHASSIS GRID — exterior mounts use a bright edge", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#f0cf96") if has_focus() else Color("#b9c3bf"))
 		for y in range(LongMarchState.GRID_HEIGHT):
 			for x in range(LongMarchState.GRID_WIDTH):
 				draw_rect(Rect2(ORIGIN + Vector2(x * CELL, y * CELL), Vector2(CELL - 3, CELL - 3)), Color("#223139"), true)

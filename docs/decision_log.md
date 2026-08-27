@@ -236,6 +236,8 @@ When the focused action and current-order text fit in the viewport together, scr
 
 Nested stage actions use an explicit bottom-edge scroll target instead of relying on `ScrollContainer.ensure_control_visible`. Godot 4.4 can under-scroll controls nested inside the campaign map even after layout settles, while newer engines happen to place them correctly. Calculating the required offset from the viewport and control rectangles makes the 720p focus guarantee stable on the pinned CI engine as well as the development engine.
 
+Refitting exposes a visible `Edit Chassis` handoff instead of requiring a controller player to discover the grid through incidental focus traversal. Activating it places focus and the gold cursor on the selected module; arrows move the cursor, confirm selects or places, and cancel returns to the same desk action. The spatial editor remains direct with a mouse while becoming a deliberate, reversible mode on keyboard and controller.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.
