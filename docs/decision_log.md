@@ -254,6 +254,8 @@ Route hover and focus publish their full scouting report into a dedicated summar
 
 Unscouted routes preserve their uncertainty through commitment. Their preview and Commit action reveal known time, fuel, broad danger, and projected fortress heat, but withhold exact risk, pressure gain, reward, and enemy composition until the road begins. Forecast and known routes continue to expose the information their scouting level permits.
 
+Exact risk values are paired with Low, Guarded, or High bands. The percentage remains available for deliberate planning, while the worded band makes the relative danger legible at a glance and does not introduce false precision on unscouted roads.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.

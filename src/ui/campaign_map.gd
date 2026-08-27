@@ -154,11 +154,20 @@ func _apply_button_style(button: Button, status: String) -> void:
 
 func _preview_tooltip(preview: Dictionary) -> String:
 	var visibility := String(preview.get("visibility", "forecast"))
+	var risk := float(preview.get("risk", 0.0))
+	var risk_band := _risk_band(risk)
 	if visibility == "known":
-		return "Known route · %d day(s) · %d fuel · %.0f%% risk · pressure +%d · reward %d\nThreats: %s" % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), float(preview.get("risk", 0.0)) * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", []))]
+		return "Known route · %d day(s) · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s" % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", []))]
 	if visibility == "forecast":
-		return "Forecast route · %d day(s) · %d fuel · %.0f%% risk · pressure +%d\nExpected: %s. Exact contacts remain uncertain." % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), float(preview.get("risk", 0.0)) * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure"))]
+		return "Forecast route · %d day(s) · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain." % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure"))]
 	return "Unscouted route · %d day(s) · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown." % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure"))]
+
+func _risk_band(risk: float) -> String:
+	if risk <= 0.18:
+		return "LOW"
+	if risk <= 0.32:
+		return "GUARDED"
+	return "HIGH"
 
 func _show_node_detail(node_id: String) -> void:
 	node_inspected.emit(node_id, detail_for(node_id))
@@ -252,7 +261,8 @@ func configure(view: Dictionary) -> void:
 			commit_button.tooltip_text = "Pay the known travel costs and enter an unscouted encounter."
 		else:
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %.0f%% RISK\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]
+			var risk := float(selected_preview.get("risk", 0.0))
+			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %s RISK (%.0f%%)\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]
 			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
 	elif not available_nodes.is_empty():
 		commit_button.text = "Select a route to continue"
