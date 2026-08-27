@@ -960,7 +960,10 @@ func _saved_run_info() -> Dictionary:
 	if not bool(validation.get("ok", false)):
 		return {"exists": true, "valid": false, "summary": "Save unavailable · %s." % String(validation.get("reason", "Campaign state could not be restored"))}
 	var location := String(parsed.get("current_location", "unknown road")).replace("_", " ").capitalize()
-	var phase := String(parsed.get("phase", "unknown")).replace("_", " ").capitalize()
+	var phase_id := String(parsed.get("phase", "unknown"))
+	var phase := phase_id.replace("_", " ").capitalize()
+	var result_id := String(parsed.get("final_result", ""))
+	var result_name := result_id.replace("_", " ").capitalize()
 	var day := int(parsed.get("day", 1))
 	var encounters := int(parsed.get("campaign_encounters_completed", 0))
 	var fuel := int(parsed.get("fuel", 0))
@@ -972,6 +975,9 @@ func _saved_run_info() -> Dictionary:
 	var current_build := String(ProjectSettings.get_setting("application/config/version", "development"))
 	var build_note := "" if saved_build == current_build else "\nCompatible checkpoint from %s" % saved_build
 	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
+	var completed := phase_id == "results" and not result_id.is_empty()
+	if completed:
+		condition = "stable" if result_id == "decisive_march" else ("watch" if result_id == "scarred_march" else "critical")
 	return {
 		"exists": true,
 		"valid": true,
@@ -980,9 +986,9 @@ func _saved_run_info() -> Dictionary:
 		"phase": phase,
 		"encounters": encounters,
 		"condition": condition,
-		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
-		"tooltip": "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
-		"summary": "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
+		"action": "VIEW RESULT · %s" % result_name.to_upper() if completed else "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
+		"tooltip": "Review the saved %s debrief from %s. Saved by %s." % [result_name, location, saved_build] if completed else "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
+		"summary": "Completed run · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
 	}
 
 func _save_age_label(saved_at_unix: int) -> String:

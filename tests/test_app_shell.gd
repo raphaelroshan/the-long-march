@@ -245,6 +245,22 @@ func _run() -> void:
 	var saved_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(saved_payload is Dictionary and String(saved_payload.get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version")), "campaign saves should record their exact application build")
 	_expect(saved_payload is Dictionary and int(saved_payload.get("saved_at_unix", 0)) > 0, "campaign saves should record when the checkpoint was created")
+	var completed_payload: Dictionary = saved_payload.duplicate(true)
+	completed_payload["phase"] = "results"
+	completed_payload["final_result"] = "scarred_march"
+	completed_payload["run_complete"] = true
+	completed_payload["journey_complete"] = true
+	completed_payload["current_location"] = "meridian_pass"
+	completed_payload["campaign_encounters_completed"] = 5
+	var completed_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	completed_save.store_string(JSON.stringify(completed_payload))
+	completed_save.close()
+	var completed_info: Dictionary = app._saved_run_info()
+	_expect(String(completed_info.get("action", "")).begins_with("VIEW RESULT · SCARRED MARCH"), "a completed save should be presented as a debrief rather than active gameplay")
+	_expect(String(completed_info.get("summary", "")).contains("Completed run · Scarred March · 5/5"), "the title summary should identify a completed run and its outcome")
+	var restored_active_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	restored_active_save.store_string(JSON.stringify(saved_payload))
+	restored_active_save.close()
 	saved_payload["build_version"] = "0.2.0-test"
 	var older_build_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	older_build_save.store_string(JSON.stringify(saved_payload))
