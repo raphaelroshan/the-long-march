@@ -114,6 +114,11 @@ func _run() -> void:
 	app.game_view.pause_button.pressed.emit()
 	await process_frame
 	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the visible stage pause action should open and suspend the march")
+	app.restart_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_body_label.text.contains("no usable checkpoint to return to"), "restart should not promise recovery when the current run has never been saved")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.contract_decline_button.has_focus(), "resuming should restore the stage control that had focus")
@@ -203,6 +208,7 @@ func _run() -> void:
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "restart should require confirmation before discarding progress")
+	_expect(app.confirmation_body_label.text.contains("Day 1 at Ashgate Depot checkpoint") and app.confirmation_body_label.text.contains("automatic checkpoint"), "restart should name the protected checkpoint and when autosave will replace it")
 	_expect(app.confirmation_cancel_button.get_node_or_null(app.confirmation_cancel_button.focus_neighbor_right) == app.confirmation_confirm_button, "confirmation actions should have explicit horizontal controller navigation")
 	_expect(app.confirmation_cancel_button.get_node_or_null(app.confirmation_cancel_button.focus_neighbor_top) == app.confirmation_cancel_button and app.confirmation_confirm_button.get_node_or_null(app.confirmation_confirm_button.focus_next) == app.confirmation_cancel_button, "confirmation dialogs should trap directional and Tab focus")
 	app.confirmation_cancel_button.pressed.emit()

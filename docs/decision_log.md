@@ -459,3 +459,7 @@ The Ashgate overview states that the chapter contains five encounters total, wit
 ## 2026-08-28 — Completed title checkpoints become replay choices
 
 A completed checkpoint changes the title's fresh-run actions to Play Again and Quick Replay. Starting either path uses result-aware confirmation copy, names the saved outcome, and defaults to Keep Result. Active checkpoints retain New Game and Keep Save language, so the shell distinguishes replaying a finished run from abandoning an unfinished one.
+
+## 2026-08-28 — Restart warnings reflect actual recovery
+
+Restart confirmation inspects the local checkpoint before describing what survives. With a compatible save it names the saved day and location, or completed result, and explains when the restarted run can replace it. Without a usable checkpoint it explicitly warns that there is nothing to return to, avoiding false reassurance on a player's first unsaved attempt.

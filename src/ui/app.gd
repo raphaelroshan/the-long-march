@@ -1215,8 +1215,13 @@ func _request_confirmation(action: String) -> void:
 		return
 	pending_confirmation = action
 	if action == "restart":
+		var restart_save := _saved_run_info()
 		confirmation_title_label.text = "Restart from Ashgate?"
-		confirmation_body_label.text = "Current stage progress will be discarded. Your existing local save remains available."
+		if bool(restart_save.get("valid", false)):
+			var saved_context := "%s result" % String(restart_save.get("result", "completed")) if bool(restart_save.get("completed", false)) else "Day %d at %s checkpoint" % [int(restart_save.get("day", 1)), String(restart_save.get("location", "the last location"))]
+			confirmation_body_label.text = ("Current stage progress will reset. Your %s remains under Continue until the restarted run reaches its first automatic checkpoint." if autosave_enabled else "Current stage progress will reset. Your %s remains under Continue until you save the restarted run.") % saved_context
+		else:
+			confirmation_body_label.text = "Current stage progress will reset to Ashgate. There is no usable checkpoint to return to."
 		confirmation_confirm_button.text = "RESTART"
 	elif action == "replay":
 		confirmation_title_label.text = "Begin another march?"
