@@ -200,6 +200,8 @@ The Marchmaster's Desk carries a persistent five-milestone tracker: Prep, Roads,
 
 Mandatory local decisions appear immediately below the current objective. In particular, the opening Ashgate contract sits above doctrine and refit controls so a new tester can act without scrolling. Optional configuration remains available after the blocking choice rather than visually competing with it.
 
+The large stage status line names constructive phases—Ashgate Preparation, Local Decision, Morrowline Recovery, and Route Planning—instead of announcing that no encounter exists. Empty-state language is reserved for actual absence; normal downtime tells the player what kind of work is underway and what action advances it.
+
 ## 2026-08-27 — Focus follows the decision flow
 
 Menu and stage transitions explicitly hand keyboard/controller focus to the next meaningful action: the opening contract, the first available route, route confirmation, encounter advancement, or final feedback. Pause records the previously focused stage control and restores it on resume. A fallback focus resolver activates whenever a refresh hides or disables the current owner, preventing focus from remaining trapped on an invisible control.
