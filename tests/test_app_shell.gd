@@ -32,6 +32,7 @@ func _run() -> void:
 	_expect(app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should expose the exact build version for playtest reports")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
+	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("checkpoints"), "the title should use player-facing guide and autosave language")
 	var invalid_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	invalid_save.store_string("{not valid save data")
 	invalid_save.close()
@@ -58,7 +59,7 @@ func _run() -> void:
 
 	app.guide_button.pressed.emit()
 	await process_frame
-	_expect(app.guide_view.visible, "View Test Flow should open the field guide without starting a run")
+	_expect(app.guide_view.visible, "Field Guide should open without starting a run")
 	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
 	app.guide_close_button.pressed.emit()
 	await process_frame

@@ -193,7 +193,7 @@ func _build_title_menu() -> void:
 	actions.add_child(utility_actions)
 	guide_button = Button.new()
 	guide_button.name = "GuideButton"
-	guide_button.text = "VIEW TEST FLOW"
+	guide_button.text = "FIELD GUIDE"
 	guide_button.custom_minimum_size = Vector2(0, 44)
 	guide_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	guide_button.pressed.connect(_show_guide)
@@ -235,7 +235,7 @@ func _build_title_menu() -> void:
 	stage_panel.add_child(stage)
 
 	var stage_eyebrow := Label.new()
-	stage_eyebrow.text = "PLAYTEST TARGET · 15–25 MINUTES"
+	stage_eyebrow.text = "CHAPTER ONE · 15–25 MINUTES"
 	stage_eyebrow.add_theme_font_size_override("font_size", 12)
 	stage_eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
 	stage.add_child(stage_eyebrow)
@@ -323,17 +323,17 @@ func _build_guide_overlay() -> void:
 	content.add_theme_constant_override("separation", 12)
 	panel.add_child(content)
 	var eyebrow := Label.new()
-	eyebrow.text = "PLAYTEST FIELD GUIDE"
+	eyebrow.text = "MARCHMASTER'S FIELD GUIDE"
 	eyebrow.add_theme_font_size_override("font_size", 12)
 	eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
 	content.add_child(eyebrow)
 	var title := Label.new()
-	title.text = "One complete Ashgate run"
+	title.text = "The road to Meridian Pass"
 	title.add_theme_font_size_override("font_size", 32)
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var intro := Label.new()
-	intro.text = "Test the full decision loop once before optimizing a build. A successful or failed run is useful when you can explain what caused the outcome."
+	intro.text = "Learn the complete march once before optimizing a build. Victory and failure both make sense when you can trace what caused the outcome."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.custom_minimum_size = Vector2(690, 50)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
@@ -342,7 +342,7 @@ func _build_guide_overlay() -> void:
 	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Select a cyan node, compare its fuel, time, risk, pressure, and visibility, then use the separate Commit action."))
 	content.add_child(_flow_step("3", "ENCOUNTER · READ", "Advance each combat step. Identify the current enemy target and use no more than one emergency order."))
 	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend up to two settlement actions, refit around damage, and choose the final approach."))
-	content.add_child(_flow_step("5", "MERIDIAN · REPORT", "Finish the Siege Beast battle, read the causal result, then record what felt clear or confusing."))
+	content.add_child(_flow_step("5", "MERIDIAN · DEBRIEF", "Finish the Siege Beast battle, read the causal result, then record what felt clear or confusing."))
 	var note := Label.new()
 	note.text = "QUICK START skips only the introductory briefing. It does not change the simulation, seed, route graph, or save file."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -688,6 +688,7 @@ func _hide_settings() -> void:
 		pause_view.visible = true
 		pause_settings_button.grab_focus()
 	else:
+		_refresh_title_state()
 		settings_button.grab_focus()
 	settings_opened_from_pause = false
 
@@ -733,7 +734,7 @@ func _refresh_title_state() -> void:
 	var has_valid_save := bool(save_info.get("valid", false))
 	continue_button.disabled = not has_valid_save
 	continue_button.text = "CONTINUE SAVED MARCH" if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
-	save_status_label.text = String(save_info.get("summary", "No save yet · New runs save only when you choose Save."))
+	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
 	_accent_button(continue_button if has_valid_save else start_button)
@@ -746,7 +747,7 @@ func _focus_title_primary() -> void:
 
 func _saved_run_info() -> Dictionary:
 	if not FileAccess.file_exists(SAVE_PATH):
-		return {"exists": false, "valid": false, "summary": "No save yet · New runs save only when you choose Save."}
+		return {"exists": false, "valid": false, "summary": _empty_save_summary()}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · The local file could not be opened. Start a new run to replace it."}
@@ -768,6 +769,9 @@ func _saved_run_info() -> Dictionary:
 	var location := String(parsed.get("current_location", "unknown road")).replace("_", " ").capitalize()
 	var phase := String(parsed.get("phase", "unknown")).replace("_", " ").capitalize()
 	return {"exists": true, "valid": true, "summary": "Saved · Day %d · %s · %s · %d/5" % [int(parsed.get("day", 1)), location, phase, int(parsed.get("campaign_encounters_completed", 0))]}
+
+func _empty_save_summary() -> String:
+	return "No saved march · Progress checkpoints after committed decisions." if autosave_enabled else "No saved march · Use Save March from the pause menu."
 
 func _start_new_game() -> void:
 	_request_new_game(true)

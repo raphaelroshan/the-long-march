@@ -57,7 +57,7 @@ Open the project in Godot 4.x or use:
 bash scripts/verify.sh
 ```
 
-Running the project opens on the title menu. Choose **Start Game · Guided First Run** for the Marchmaster briefing, **Quick Start · Skip Briefing** for repeated flow tests, or **Continue Saved March** when a local save exists. **View Test Flow** summarizes the five decisions a complete playtest should exercise. Press Escape during the stage to pause, inspect run progress, save, or safely return to the title.
+Running the project opens on the title menu. Choose **Start Game · Guided First Run** for the Marchmaster briefing, **Quick Start · Skip Briefing** for repeated flow tests, or **Continue Saved March** when a local save exists. **Field Guide** summarizes the five decisions in a complete run. Press Escape during the stage to pause, inspect run progress, reopen the briefing, save, or safely return to the title.
 
 With Godot export templates installed, create desktop playtest builds with:
 
