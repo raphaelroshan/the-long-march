@@ -22,6 +22,8 @@ The repository contains an agent-first Godot project with:
 - Deterministic headless tests in `tests/test_fortress_state.gd`.
 - An implemented Ashgate Depot → Rill Crossing → Morrowline Camp journey slice with safe-road, exposed-shortcut, and salvage-detour encounter variants.
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
+- A Morrowline recovery phase with limited paid repairs/refueling, continued refitting, and a final Meridian Pass battle with decisive, scarred, or failed run results.
+- Versioned JSON save/load and an automated UI-level complete-run test.
 - An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.
 
 ## Run locally
@@ -49,7 +51,9 @@ The recommended sequence is:
 
 ## Initial journey test release
 
-The current focused test flow begins at Ashgate Depot and attempts to reach Morrowline Camp. The release contract, tester checklist, and known boundaries are in [`docs/internal_test_release.md`](docs/internal_test_release.md), while the authored encounter contract is in [`design/ashgate_city_to_city_battle.md`](design/ashgate_city_to_city_battle.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
+The current focused test flow begins at Ashgate Depot, recovers at Morrowline Camp, and ends at Meridian Pass. The release contract, tester checklist, and known boundaries are in [`docs/internal_test_release.md`](docs/internal_test_release.md), while the authored first encounter contract is in [`design/ashgate_city_to_city_battle.md`](design/ashgate_city_to_city_battle.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
+
+The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
 
 ## Related follow-up concept
 

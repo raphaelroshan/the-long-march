@@ -140,19 +140,20 @@
     "required_player_explanations": ["why a module failed", "why the route was risky", "what intervention changed", "how to recover"]
   },
   "implemented_journey_slice": {
-    "id": "ashgate_to_morrowline",
+    "id": "ashgate_to_meridian_pass",
     "status": "vertical_slice",
-    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp"],
-    "routes": ["safe_road", "exposed_shortcut", "salvage_detour"],
+    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp", "meridian_pass"],
+    "routes": ["safe_road", "exposed_shortcut", "salvage_detour", "meridian_pass"],
     "encounter_steps": 6,
     "primary_units": ["steam_lance_engine", "shell_cannon", "field_workshop", "signal_coil"],
     "enemy_families": ["road_raiders", "climbers", "burrowers", "siege_beast"],
     "route_encounters": {
       "safe_road": ["road_raiders", "road_raiders"],
       "exposed_shortcut": ["road_raiders", "climbers"],
-      "salvage_detour": ["burrowers"]
+      "salvage_detour": ["burrowers"],
+      "meridian_pass": ["siege_beast", "climbers"]
     },
-    "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat"],
+    "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat", "decisive_march", "scarred_march", "march_failed"],
     "behavior_contract": "modules attack by authored role while enemies choose the weakest matching operational target",
     "determinism_contract": "seed, route, module layout, and commands reproduce the same forecast, report, and outcome"
   },

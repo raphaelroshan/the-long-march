@@ -15,6 +15,10 @@ func _init() -> void:
 	_test_save_round_trip()
 	_test_city_journey_and_battle()
 	_test_exposed_route_and_enemy_behavior()
+	_test_route_doctrine_and_heat_tradeoffs()
+	_test_spatial_targeting_and_causality()
+	_test_settlement_and_final_march()
+	_test_salvage_counter_build()
 	_test_encounter_save_round_trip()
 	if failures.is_empty():
 		print("PASS: The Long March fortress-state tests")
@@ -46,14 +50,18 @@ func _test_rotation_reposition_and_removal() -> void:
 	_expect(rotated.ok, "installed modules should rotate and move atomically")
 	_expect(Vector2i(2, 0) in state.occupied_cells(state.modules[0]), "rotated lift should occupy two horizontal cells")
 	var restored := LongMarchState.new(0)
-	restored.load_serialized(state.serialize())
+	var load_result := restored.load_serialized(state.serialize())
+	_expect(bool(load_result.get("ok", false)), "current save schema should load")
 	_expect(bool(restored.modules[0].get("rotated", false)), "save data should preserve module orientation")
 	_expect(Vector2i(2, 0) in restored.occupied_cells(restored.modules[0]), "restored rotation should preserve occupied cells")
 	var invalid := state.reposition_module_at(Vector2i(1, 0), Vector2i(5, 3), true)
 	_expect(not invalid.ok, "invalid reposition should be rejected")
 	_expect(Vector2i(2, 0) in state.occupied_cells(state.modules[0]), "failed reposition should preserve the old footprint")
+	state.modules[0]["durability"] = 1
 	var removed := state.remove_module_at(Vector2i(2, 0))
-	_expect(removed.ok and state.modules.is_empty(), "clicking any occupied cell should remove the whole module")
+	_expect(removed.ok and state.modules.is_empty() and state.stored_module_count("ammunition_lift") == 1, "removal should return the whole module to storage")
+	var redeployed := state.deploy_stored_module("ammunition_lift", Vector2i(0, 0), false)
+	_expect(redeployed.ok and int(state.modules[0].durability) == 1, "redeploying a stored module should preserve its condition")
 
 func _test_exterior_mount_rules() -> void:
 	var state := LongMarchState.new(1107)
@@ -160,7 +168,7 @@ func _test_city_journey_and_battle() -> void:
 	_expect(not bool(state.use_encounter_intervention("vent_heat").get("ok", false)), "the journey encounter should allow only one intervention")
 	var result := state.advance_encounter(5.0)
 	_expect(bool(result.get("resolved", false)), "the safe road encounter should resolve within six steps")
-	_expect(state.journey_complete, "a survived encounter should complete the first journey")
+	_expect(not state.journey_complete and state.phase == "settlement", "a survived first encounter should open Morrowline recovery rather than end the run")
 	_expect(state.current_location == "morrowline_camp", "a survived encounter should arrive at Morrowline Camp")
 	_expect(String(state.encounter_outcome) in ["protected_arrival", "damaged_arrival"], "a living fortress should have an explicit arrival outcome")
 	_expect(state.encounter_report.filter(func(line: String) -> bool: return line.contains("Shell Cannon")).size() > 0, "the encounter report should name the Shell Cannon behavior")
@@ -176,6 +184,99 @@ func _test_exposed_route_and_enemy_behavior() -> void:
 	state.advance_encounter(6.0)
 	_expect(state.encounter_report.filter(func(line: String) -> bool: return line.contains("Climber")).size() > 0, "the mixed encounter report should describe Climber behavior")
 	_expect(not state.encounter_active, "the exposed shortcut encounter should resolve")
+
+func _test_route_doctrine_and_heat_tradeoffs() -> void:
+	var preview_state := LongMarchState.new(1107)
+	_install_encounter_loadout(preview_state, true)
+	var safe_preview := preview_state.route_preview("safe_road", "protect_cargo")
+	var exposed_preview := preview_state.route_preview("exposed_shortcut", "protect_cargo")
+	var hot_preview := preview_state.route_preview("exposed_shortcut", "run_hot")
+	_expect(int(safe_preview.fuel) == 3, "a near-capacity fortress should pay one additional fuel")
+	_expect(float(exposed_preview.risk) > float(safe_preview.risk), "the exposed route should visibly carry more risk")
+	_expect(int(hot_preview.predicted_heat) == int(exposed_preview.predicted_heat) + 2, "Run Hot should add two predicted heat")
+	_expect(int(hot_preview.pressure) > int(exposed_preview.pressure), "overheated travel should increase encounter pressure")
+
+	var cargo_state := LongMarchState.new(1107)
+	var hot_state := LongMarchState.new(1107)
+	_install_encounter_loadout(cargo_state)
+	_install_encounter_loadout(hot_state)
+	cargo_state.begin_journey("exposed_shortcut", "protect_cargo")
+	hot_state.begin_journey("exposed_shortcut", "run_hot")
+	cargo_state.advance_encounter(1.0)
+	hot_state.advance_encounter(1.0)
+	_expect(int(hot_state.encounter_enemies[1].damage_taken) > int(cargo_state.encounter_enemies[1].damage_taken), "Run Hot should increase damage against a Climber")
+	var heat_before := hot_state.heat
+	var vent := hot_state.use_encounter_intervention("vent_heat")
+	_expect(bool(vent.get("ok", false)) and hot_state.heat < heat_before, "Vent Heat should reduce current heat during an encounter")
+	_expect(hot_state.vent_exposure, "Vent Heat should create a temporary exterior exposure tradeoff")
+	hot_state.advance_encounter(6.0)
+	_expect(not hot_state.vent_exposure, "Vent Heat exposure should clear when the encounter ends")
+
+func _test_spatial_targeting_and_causality() -> void:
+	var targeting := LongMarchState.new(1107)
+	targeting.place_module("generator_core", Vector2i(0, 0))
+	targeting.place_module("parts_crate", Vector2i(0, 2))
+	targeting.place_module("shell_cannon", Vector2i(2, 2), true)
+	targeting.encounter_target_doctrine = "run_hot"
+	_expect(targeting._encounter_choose_target("road_raiders") == "parts_crate", "raiders should prioritize exposed cargo value")
+	targeting.encounter_target_doctrine = "protect_cargo"
+	_expect(targeting._encounter_choose_target("road_raiders") == "shell_cannon", "Protect Cargo should redirect raiders toward an exterior weapon")
+
+	var armored := LongMarchState.new(1107)
+	armored.place_module("generator_core", Vector2i(0, 0))
+	armored.place_module("crew_quarters", Vector2i(2, 1))
+	armored.place_module("front_armor_plate", Vector2i(2, 2))
+	var crew_before := int(armored.module_at(Vector2i(2, 1)).durability)
+	var armor_before := int(armored.module_at(Vector2i(2, 2)).durability)
+	armored._encounter_apply_enemy_damage("siege_beast", "crew_quarters")
+	_expect(int(armored.module_at(Vector2i(2, 1)).durability) == crew_before - 2, "adjacent armor should reduce Siege Beast damage by one")
+	_expect(int(armored.module_at(Vector2i(2, 2)).durability) == armor_before - 1, "protecting armor should absorb one durability")
+
+	var causal := LongMarchState.new(1107)
+	causal.place_module("steam_lance_engine", Vector2i(0, 0))
+	causal.place_module("coal_cell", Vector2i(0, 1))
+	causal.encounter_target_doctrine = "run_hot"
+	causal._encounter_apply_enemy_damage("road_raiders", "coal_cell", 1)
+	_expect(causal.dependency_status_at(Vector2i(0, 0)).state == "offline", "destroyed fuel should disable its adjacent engine")
+	_expect(causal.encounter_report.filter(func(line: String) -> bool: return line.contains("Dependency change") and line.contains("Steam Lance Engine")).size() > 0, "combat report should explain downstream dependency failure")
+
+func _test_settlement_and_final_march() -> void:
+	var state := LongMarchState.new(1107)
+	_install_encounter_loadout(state)
+	state.begin_journey("safe_road", "protect_cargo")
+	state.advance_encounter(6.0)
+	_expect(state.phase == "settlement" and state.current_location == "morrowline_camp", "first arrival should enter the Morrowline settlement phase")
+	_expect(state.settlement_actions_remaining == 2 and state.can_refit(), "Morrowline should provide two recovery actions and allow refitting")
+	for index in range(state.modules.size()):
+		if String(state.modules[index].get("id", "")) == "shell_cannon":
+			state.modules[index]["durability"] = 1
+	var repaired := state.settlement_repair("shell_cannon")
+	_expect(bool(repaired.get("ok", false)) and int(state.module_at(Vector2i(3, 2)).durability) == 3, "Morrowline should repair a selected damaged module")
+	var fuel_before := state.fuel
+	var refueled := state.settlement_refuel()
+	_expect(bool(refueled.get("ok", false)) and state.fuel == fuel_before + 2, "Morrowline should sell two fuel")
+	_expect(not bool(state.settlement_refuel().get("ok", false)), "a third settlement service should be blocked after two actions")
+	var final_departure := state.begin_final_journey("protect_crew")
+	_expect(bool(final_departure.get("ok", false)) and state.phase == "final_battle", "recovered fortress should depart for Meridian Pass")
+	state.advance_encounter(6.0)
+	_expect(state.phase == "results" and state.run_complete and state.journey_complete, "final battle should end in a run result")
+	_expect(state.final_result in ["decisive_march", "scarred_march"], "a surviving fortress should complete the March")
+
+func _test_salvage_counter_build() -> void:
+	var state := LongMarchState.new(1107)
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(1, 1))
+	state.place_module("side_armor_skirt", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("ammunition_lift", Vector2i(2, 1))
+	state.place_module("shell_cannon", Vector2i(3, 2), true)
+	var started := state.begin_journey("salvage_detour", "protect_crew")
+	_expect(bool(started.get("ok", false)), "an anti-Burrower layout should enter the salvage detour")
+	state.advance_encounter(1.0)
+	state.use_encounter_intervention("shift_power")
+	state.advance_encounter(6.0)
+	_expect(state.phase == "settlement", "lower-hull armor, connected cannon, and Shift Power should provide a viable salvage-detour counter")
+	_expect(int(state.module_at(Vector2i(0, 0)).durability) > 0, "the protected engine should survive the Burrower")
 
 func _test_encounter_save_round_trip() -> void:
 	var state := LongMarchState.new(77)
@@ -194,10 +295,20 @@ func _test_save_round_trip() -> void:
 	var state := LongMarchState.new(42)
 	state.money = 55
 	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.seed_starter_inventory()
+	state.stored_modules[0]["durability"] = 1
+	var damaged_stored_id := String(state.stored_modules[0].get("id", ""))
 	state.day = 4
+	state.pending_route_reward = 23
 	var restored := LongMarchState.new(0)
 	restored.load_serialized(state.serialize())
 	_expect(restored.seed == 42, "save should preserve the seed")
 	_expect(restored.money == 55, "save should preserve money")
 	_expect(restored.day == 4, "save should preserve the day")
 	_expect(restored.modules.size() == 1, "save should preserve module instances")
+	_expect(restored.pending_route_reward == 23, "save should preserve rewards that are pending successful arrival")
+	_expect(restored.stored_modules.size() == state.stored_modules.size(), "save should preserve the starter inventory")
+	_expect(String(restored.stored_modules[0].get("id", "")) == damaged_stored_id and int(restored.stored_modules[0].get("durability", 0)) == 1, "save should preserve stored module identity and damage")
+	var future_save := state.serialize()
+	future_save["save_version"] = LongMarchState.SAVE_VERSION + 1
+	_expect(not bool(LongMarchState.new(0).load_serialized(future_save).get("ok", false)), "future save versions should be rejected safely")

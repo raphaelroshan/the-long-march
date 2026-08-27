@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is an internal, testable vertical slice for The Long March. It proves one authored journey from **Ashgate Depot** to **Morrowline Camp**, with a route choice, a deterministic road encounter, distinct mobile-fortress module behaviors, an intervention window, and explicit arrival or forced-retreat outcomes.
+This is an internal, testable vertical slice for The Long March. It proves a short run from **Ashgate Depot** through **Morrowline Camp** to **Meridian Pass**, with dependency-driven refitting, route and doctrine choices, deterministic encounters, settlement recovery, a final Siege Beast test, and explicit run results.
 
 ## Test flow
 
@@ -16,6 +16,9 @@ This is an internal, testable vertical slice for The Long March. It proves one a
 8. Advance the journey battle one step at a time. Use **Encounter: Shift Power** once if the weapon system needs priority.
 9. Read the report to see which module behaved, which enemy was targeted, and which module or hull section was damaged.
 10. Verify that the fortress reaches Morrowline Camp, arrives damaged, or returns to Ashgate Depot after a forced retreat.
+11. At Morrowline, spend up to two service actions on module repair, hull repair, or fuel; refit the layout and choose the doctrine for the final march.
+12. Depart for Meridian Pass, resolve the Siege Beast and Climber encounter, and verify a **Decisive March**, **Scarred March**, or **March Failed** result.
+13. Save and load during Morrowline recovery and confirm the phase, resources, module positions, orientation, damage, and reports are preserved.
 
 The refit interaction is the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are now evaluated explicitly and displayed as ready, strained, or offline. More complex facility bonuses and chain-damage rules remain later slices.
 
@@ -35,4 +38,4 @@ The integrated kit includes a Long March visual reference, Ashgate journey backg
 
 ## Scope boundaries
 
-This release does not include the full FTL-like node map, multiple settlement service screens, recruitment, a complete cargo economy, procedural map generation, final sound, sprite animation, controller navigation, Steam/Epic adapters, or commercial storefront packaging. The battle is intentionally deterministic and inspectable so agents and testers can tune the core loop before adding campaign breadth.
+This release does not include the full FTL-like node map, recruitment, a complete cargo economy, procedural map generation, final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. The two-leg run is intentionally deterministic and inspectable so agents and testers can tune the core loop before adding campaign breadth.

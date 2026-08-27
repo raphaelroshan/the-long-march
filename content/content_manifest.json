@@ -1126,14 +1126,14 @@
     }
   ],
   "implemented_journey_slice": {
-    "id": "ashgate_to_morrowline",
-    "title": "The Road to Morrowline",
+    "id": "ashgate_to_meridian_pass",
+    "title": "Ashgate to Meridian Pass",
     "status": "vertical_slice",
-    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp"],
+    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp", "meridian_pass"],
     "route_choices": ["safe_road", "exposed_shortcut", "salvage_detour"],
     "encounter_id": "first_road_battle",
-    "player_question": "Can the fortress protect a convoy without becoming too heavy to move?",
-    "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat"]
+    "player_question": "Can the fortress adapt its layout, recover at Morrowline, and survive Meridian Pass?",
+    "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat", "decisive_march", "scarred_march", "march_failed"]
   },
   "map_rules": [
     {

@@ -6,6 +6,7 @@ const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
 const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
 const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
+const SAVE_PATH := "user://the_long_march_prototype.save"
 
 var state: LongMarchState
 var status_label: Label
@@ -14,15 +15,28 @@ var encounter_label: Label
 var event_label: Label
 var log_label: Label
 var route_option: OptionButton
-var threat_option: OptionButton
 var doctrine_option: OptionButton
 var module_option: OptionButton
 var rotate_button: Button
 var remove_button: Button
 var travel_button: Button
 var advance_encounter_button: Button
-var encounter_intervention_button: Button
+var intervention_buttons: Array[Button] = []
+var settlement_repair_button: Button
+var settlement_refuel_button: Button
+var settlement_hull_button: Button
+var final_journey_button: Button
 var refit_label: Label
+var route_preview_label: Label
+var refit_title: Label
+var module_group: Control
+var refit_actions: Control
+var route_group: Control
+var doctrine_group: Control
+var intervention_title: Label
+var settlement_title: Label
+var save_button: Button
+var load_button: Button
 var fortress_panel: Control
 var selected_module_id: String = ""
 var selected_module_cell := Vector2i(-1, -1)
@@ -42,6 +56,7 @@ func _reset_state() -> void:
 	state.place_module("ammunition_lift", Vector2i(2, 1))
 	state.place_module("field_workshop", Vector2i(3, 1))
 	state.place_module("repeater_gun", Vector2i(3, 2), true)
+	state.seed_starter_inventory()
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
 
@@ -157,7 +172,7 @@ func _build_ui() -> void:
 		asset_row.add_child(icon)
 	controls.add_child(asset_row)
 
-	var refit_title := Label.new()
+	refit_title = Label.new()
 	refit_title.text = "REFIT CHASSIS"
 	refit_title.add_theme_font_size_override("font_size", 17)
 	refit_title.add_theme_color_override("font_color", Color("#e8c58e"))
@@ -176,9 +191,10 @@ func _build_ui() -> void:
 	selected_module_id = "steam_lance_engine"
 	selected_module_cell = Vector2i(0, 0)
 	_select_module_option(selected_module_id)
-	controls.add_child(_labeled_control("Module", module_option))
+	module_group = _labeled_control("Module", module_option)
+	controls.add_child(module_group)
 
-	var refit_actions := HBoxContainer.new()
+	refit_actions = HBoxContainer.new()
 	refit_actions.add_theme_constant_override("separation", 8)
 	rotate_button = Button.new()
 	rotate_button.text = "Rotate"
@@ -204,19 +220,22 @@ func _build_ui() -> void:
 	for route_id in LongMarchState.ROUTES.keys():
 		route_option.add_item(LongMarchState.ROUTES[route_id].name)
 		route_option.set_item_metadata(route_option.item_count - 1, route_id)
-	controls.add_child(_labeled_control("Route", route_option))
+	route_option.item_selected.connect(_on_departure_option_changed)
+	route_group = _labeled_control("Route", route_option)
+	controls.add_child(route_group)
 
 	doctrine_option = OptionButton.new()
 	for doctrine_id in ["protect_cargo", "protect_crew", "run_hot"]:
 		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
-	controls.add_child(_labeled_control("Journey doctrine", doctrine_option))
-
-	threat_option = OptionButton.new()
-	for threat_id in LongMarchState.THREATS.keys():
-		threat_option.add_item(LongMarchState.THREATS[threat_id].name)
-		threat_option.set_item_metadata(threat_option.item_count - 1, threat_id)
-	controls.add_child(_labeled_control("Threat", threat_option))
+	doctrine_option.item_selected.connect(_on_departure_option_changed)
+	doctrine_group = _labeled_control("Journey doctrine", doctrine_option)
+	controls.add_child(doctrine_group)
+	route_preview_label = Label.new()
+	route_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	route_preview_label.custom_minimum_size = Vector2(320, 64)
+	route_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
+	controls.add_child(route_preview_label)
 
 	travel_button = Button.new()
 	travel_button.text = "Depart: Ashgate → Morrowline"
@@ -230,42 +249,54 @@ func _build_ui() -> void:
 	advance_encounter_button.pressed.connect(_on_advance_encounter_pressed)
 	controls.add_child(advance_encounter_button)
 
-	encounter_intervention_button = Button.new()
-	encounter_intervention_button.text = "Encounter: Shift Power"
-	encounter_intervention_button.tooltip_text = "Use the one allowed encounter intervention to prioritize weapons."
-	encounter_intervention_button.pressed.connect(_on_encounter_intervention_pressed)
-	controls.add_child(encounter_intervention_button)
+	intervention_title = Label.new()
+	intervention_title.text = "ENCOUNTER ORDER"
+	intervention_title.add_theme_font_size_override("font_size", 17)
+	intervention_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	controls.add_child(intervention_title)
+	for action in [
+		{"id": "shift_power", "label": "Shift power to weapons"},
+		{"id": "seal_compartment", "label": "Seal selected module"},
+		{"id": "vent_heat", "label": "Vent heat"},
+		{"id": "cut_loose_cargo", "label": "Cut loose cargo"}
+	]:
+		var intervention := Button.new()
+		intervention.text = String(action.label)
+		intervention.pressed.connect(_use_intervention.bind(String(action.id)))
+		intervention_buttons.append(intervention)
+		controls.add_child(intervention)
 
-	var resolve_button := Button.new()
-	resolve_button.text = "Resolve forecasted threat"
-	resolve_button.tooltip_text = "Run the automatic encounter against the selected threat."
-	resolve_button.pressed.connect(_on_resolve_pressed)
-	controls.add_child(resolve_button)
+	settlement_title = Label.new()
+	settlement_title.text = "MORROWLINE SERVICES"
+	settlement_title.add_theme_font_size_override("font_size", 17)
+	settlement_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	controls.add_child(settlement_title)
+	settlement_repair_button = Button.new()
+	settlement_repair_button.text = "Repair selected module"
+	settlement_repair_button.pressed.connect(_on_settlement_repair_pressed)
+	controls.add_child(settlement_repair_button)
+	settlement_refuel_button = Button.new()
+	settlement_refuel_button.text = "Buy 2 fuel · 8 Ashmarks"
+	settlement_refuel_button.pressed.connect(_on_settlement_refuel_pressed)
+	controls.add_child(settlement_refuel_button)
+	settlement_hull_button = Button.new()
+	settlement_hull_button.text = "Repair 2 hull · 10 Ashmarks"
+	settlement_hull_button.pressed.connect(_on_settlement_hull_pressed)
+	controls.add_child(settlement_hull_button)
+	final_journey_button = Button.new()
+	final_journey_button.text = "Depart for Meridian Pass"
+	final_journey_button.tooltip_text = "Begin the final Siege Beast encounter using the selected doctrine."
+	final_journey_button.pressed.connect(_on_final_journey_pressed)
+	controls.add_child(final_journey_button)
 
-	var shift_button := Button.new()
-	shift_button.text = "Shift power"
-	shift_button.pressed.connect(func() -> void: _use_intervention("shift_power"))
-	controls.add_child(shift_button)
-
-	var seal_button := Button.new()
-	seal_button.text = "Seal workshop"
-	seal_button.pressed.connect(func() -> void: _use_intervention("seal_compartment", "field_workshop"))
-	controls.add_child(seal_button)
-
-	var vent_button := Button.new()
-	vent_button.text = "Vent heat"
-	vent_button.pressed.connect(func() -> void: _use_intervention("vent_heat"))
-	controls.add_child(vent_button)
-
-	var cut_button := Button.new()
-	cut_button.text = "Cut loose cargo"
-	cut_button.pressed.connect(func() -> void: _use_intervention("cut_loose_cargo"))
-	controls.add_child(cut_button)
-
-	var save_button := Button.new()
+	save_button = Button.new()
 	save_button.text = "Save prototype state"
 	save_button.pressed.connect(_on_save_pressed)
 	controls.add_child(save_button)
+	load_button = Button.new()
+	load_button.text = "Load prototype state"
+	load_button.pressed.connect(_on_load_pressed)
+	controls.add_child(load_button)
 
 	var reset_button := Button.new()
 	reset_button.text = "Reset run"
@@ -285,6 +316,9 @@ func _selected_id(option: OptionButton) -> String:
 	if option.selected < 0:
 		return ""
 	return String(option.get_item_metadata(option.selected))
+
+func _on_departure_option_changed(_index: int) -> void:
+	_refresh_ui()
 
 func _on_module_selected(index: int) -> void:
 	selected_module_id = String(module_option.get_item_metadata(index))
@@ -308,17 +342,17 @@ func _selected_installed_module() -> Dictionary:
 	return state.module_at(selected_module_cell)
 
 func _on_grid_cell_pressed(cell: Vector2i) -> void:
-	if not state.can_refit():
-		_set_event("Refit is locked while the fortress is on the road. Reset or recover at Ashgate before changing the chassis.")
-		return
 	var clicked := state.module_at(cell)
 	if not clicked.is_empty():
 		selected_module_id = String(clicked.get("id", ""))
 		selected_module_cell = Vector2i(clicked.get("position", cell))
 		placement_rotated = bool(clicked.get("rotated", false))
 		_select_module_option(selected_module_id)
-		_set_event("Selected installed %s. Click an empty cell to move it, Rotate it, or remove it." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), " and refitting" if state.can_refit() else " or an encounter order"])
 		_refresh_ui()
+		return
+	if not state.can_refit():
+		_set_event("Refit is locked while the fortress is on the road. Select an installed module to inspect or seal it.")
 		return
 	var selected_installed := _selected_installed_module()
 	var result: Dictionary
@@ -333,7 +367,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		if state.module_count(selected_module_id) > 0:
 			_set_event("That module is already installed. Select it on the chassis to move or remove it.")
 			return
-		result = state.place_module(selected_module_id, cell, _module_requires_exterior(selected_module_id), placement_rotated)
+		result = state.deploy_stored_module(selected_module_id, cell, placement_rotated)
 		if bool(result.get("ok", false)):
 			selected_module_cell = cell
 			_set_event("Installed %s at cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
@@ -343,7 +377,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 
 func _on_rotate_pressed() -> void:
 	if not state.can_refit():
-		_set_event("Rotation is only available while refitting at Ashgate Depot.")
+		_set_event("Rotation is only available while refitting at a settlement.")
 		return
 	var base_shape := state.module_shape(selected_module_id, false)
 	if base_shape.x == base_shape.y:
@@ -367,7 +401,7 @@ func _on_rotate_pressed() -> void:
 
 func _on_remove_pressed() -> void:
 	if not state.can_refit():
-		_set_event("Removal is only available while refitting at Ashgate Depot.")
+		_set_event("Removal is only available while refitting at a settlement.")
 		return
 	var selected_installed := _selected_installed_module()
 	if selected_installed.is_empty():
@@ -403,25 +437,41 @@ func _on_advance_encounter_pressed() -> void:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
 	_refresh_ui()
 
-func _on_encounter_intervention_pressed() -> void:
-	var result := state.use_encounter_intervention("shift_power")
-	if not bool(result.get("ok", false)):
-		_set_event("Encounter intervention blocked: %s." % String(result.get("reason", "unknown")))
-	else:
-		_set_event("Encounter intervention used: Shift Power. Weapons now receive priority.")
+func _on_settlement_repair_pressed() -> void:
+	var selected := _selected_installed_module()
+	if selected.is_empty():
+		_set_event("Select a damaged module on the chassis before requesting a Morrowline repair.")
+		return
+	var result := state.settlement_repair(String(selected.get("id", "")))
+	_set_event("Settlement repair complete." if bool(result.get("ok", false)) else "Settlement repair blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 
-func _on_resolve_pressed() -> void:
-	var threat_id := _selected_id(threat_option)
-	var result := state.resolve_threat(threat_id)
-	if not result.ok:
-		_set_event("Encounter blocked: %s." % result.reason)
+func _on_settlement_refuel_pressed() -> void:
+	var result := state.settlement_refuel()
+	_set_event("Morrowline loaded 2 fuel." if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown")))
+	_refresh_ui()
+
+func _on_settlement_hull_pressed() -> void:
+	var result := state.settlement_repair_hull()
+	_set_event("Morrowline repaired the hull." if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown")))
+	_refresh_ui()
+
+func _on_final_journey_pressed() -> void:
+	var result := state.begin_final_journey(_selected_id(doctrine_option))
+	if bool(result.get("ok", false)):
+		_set_event("Final march begun. The Siege Beast is blocking Meridian Pass.")
 	else:
-		_set_event("The automatic encounter resolved against %s. Target: %s. Damage: %d." % [threat_id, result.target, int(result.damage)])
+		_set_event("Final march blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 
 func _use_intervention(intervention_id: String, target_module: String = "") -> void:
-	var result := state.intervene(intervention_id, target_module)
+	if intervention_id == "seal_compartment":
+		var selected := _selected_installed_module()
+		if selected.is_empty():
+			_set_event("Select a module on the chassis before issuing Seal Compartment.")
+			return
+		target_module = String(selected.get("id", ""))
+	var result := state.use_encounter_intervention(intervention_id, target_module)
 	if not result.ok:
 		_set_event("Intervention blocked: %s." % result.reason)
 	else:
@@ -429,9 +479,41 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 	_refresh_ui()
 
 func _on_save_pressed() -> void:
-	var file := FileAccess.open("user://the_long_march_prototype.save", FileAccess.WRITE)
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
+		return
 	file.store_string(JSON.stringify(state.serialize()))
-	_set_event("Prototype state saved. Production will add versioned migrations and storefront adapters.")
+	_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
+	_refresh_ui()
+
+func _on_load_pressed() -> void:
+	if not FileAccess.file_exists(SAVE_PATH):
+		_set_event("No prototype save exists yet.")
+		return
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		_set_event("Load failed: %s." % error_string(FileAccess.get_open_error()))
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		_set_event("Load failed: save data is not valid JSON state.")
+		return
+	var restored := LongMarchState.new(0)
+	var result := restored.load_serialized(parsed)
+	if not bool(result.get("ok", false)):
+		_set_event("Load failed: %s." % String(result.get("reason", "unknown")))
+		return
+	state = restored
+	selected_module_cell = Vector2i(-1, -1)
+	if not state.modules.is_empty():
+		selected_module_id = String(state.modules[0].get("id", selected_module_id))
+		selected_module_cell = Vector2i(state.modules[0].get("position", Vector2i.ZERO))
+		placement_rotated = bool(state.modules[0].get("rotated", false))
+		_select_module_option(selected_module_id)
+	fortress_panel.state = state
+	_set_event("Prototype state loaded.")
+	_refresh_ui()
 
 func _on_reset_pressed() -> void:
 	_reset_state()
@@ -467,12 +549,48 @@ func _refresh_ui() -> void:
 	module_option.disabled = not state.can_refit()
 	rotate_button.disabled = not state.can_refit()
 	remove_button.disabled = not state.can_refit() or selected_installed.is_empty()
-	travel_button.disabled = state.encounter_active or state.journey_complete
+	var is_refit_phase := state.phase in ["refit", "settlement"]
+	var is_battle_phase := state.phase in ["battle", "final_battle"]
+	refit_title.visible = is_refit_phase
+	module_group.visible = is_refit_phase
+	refit_actions.visible = is_refit_phase
+	refit_label.visible = is_refit_phase
+	route_group.visible = state.phase == "refit"
+	doctrine_group.visible = is_refit_phase
+	route_option.disabled = state.phase != "refit"
+	doctrine_option.disabled = state.phase in ["battle", "final_battle", "results"]
+	travel_button.visible = state.phase == "refit"
+	travel_button.disabled = state.phase != "refit"
+	advance_encounter_button.visible = is_battle_phase
 	advance_encounter_button.disabled = not state.encounter_active
-	encounter_intervention_button.disabled = not state.encounter_active or state.encounter_intervention_used
+	intervention_title.visible = is_battle_phase
+	for index in range(intervention_buttons.size()):
+		intervention_buttons[index].visible = is_battle_phase
+		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty())
+	settlement_title.visible = state.phase == "settlement"
+	settlement_repair_button.visible = state.phase == "settlement"
+	settlement_refuel_button.visible = state.phase == "settlement"
+	settlement_hull_button.visible = state.phase == "settlement"
+	final_journey_button.visible = state.phase == "settlement"
+	settlement_repair_button.disabled = state.phase != "settlement" or selected_installed.is_empty() or state.settlement_actions_remaining <= 0
+	settlement_refuel_button.disabled = state.phase != "settlement" or state.settlement_actions_remaining <= 0
+	settlement_hull_button.disabled = state.phase != "settlement" or state.settlement_actions_remaining <= 0
+	final_journey_button.disabled = state.phase != "settlement"
+	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
+	if state.phase == "refit":
+		var departure := state.route_preview(_selected_id(route_option), _selected_id(doctrine_option))
+		if bool(departure.get("ok", false)):
+			route_preview_label.text = "Departure forecast — %d day(s), %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [int(departure.days), int(departure.fuel), float(departure.risk) * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT]
+	elif state.phase == "settlement":
+		route_preview_label.text = "Morrowline recovery — %d service action(s) remain. Refit freely, then choose a doctrine for Meridian Pass." % state.settlement_actions_remaining
+	elif state.phase == "results":
+		route_preview_label.text = "Run complete — %s." % state.final_result.replace("_", " ").capitalize()
+	else:
+		route_preview_label.text = "On the road — risk %.0f%%, pressure %d, doctrine %s." % [state.current_route_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()]
 	var dependencies: Dictionary = snapshot.dependencies
 	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d\nSystems — %d ready · %d strained · %d offline" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit, int(dependencies.ready), int(dependencies.strained), int(dependencies.offline)]
-	journey_label.text = "JOURNEY — Ashgate Depot → Rill Crossing → Morrowline Camp\nCurrent node: %s | Route: %s | Destination: %s" % [String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "not chosen")), String(LongMarchState.JOURNEY_NODES.get(state.journey_destination, {}).get("name", state.journey_destination))]
+	var route_name := String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "Meridian Pass" if state.journey_route == "meridian_pass" else "not chosen"))
+	journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
 	var encounter_lines: Array[String] = []
 	for enemy in state.encounter_enemies:
 		var enemy_id: String = String(enemy.get("id", ""))
@@ -480,7 +598,10 @@ func _refresh_ui() -> void:
 		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
 		var target: String = String(enemy.get("target", "approaching"))
 		encounter_lines.append("%s — %s — target %s" % [enemy_name, enemy_state, target])
-	encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Depart from Ashgate Depot to begin the test battle."]
+	if state.phase == "results":
+		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, int(dependencies.offline)]
+	else:
+		encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Depart from Ashgate Depot to begin the test battle."]
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
 	for index in range(start, state.log.size()):
@@ -602,7 +723,7 @@ class FortressPanel extends Control:
 
 	func _draw_refit_details() -> void:
 		var x := 410.0
-		draw_string(ThemeDB.fallback_font, Vector2(x, 40), "REFIT STATUS", HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
+		draw_string(ThemeDB.fallback_font, Vector2(x, 40), "REFIT STATUS" if state != null and state.can_refit() else "SYSTEM STATUS", HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
 		if state == null or placement_module_id.is_empty():
 			return
 		var definition := state.module_definition(placement_module_id)
@@ -623,8 +744,11 @@ class FortressPanel extends Control:
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: click empty cell to place", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 236), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 258), "Arrows + confirm · R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+		if state.can_refit():
+			draw_string(ThemeDB.fallback_font, Vector2(x, 236), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 258), "Arrows + confirm · R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+		else:
+			draw_string(ThemeDB.fallback_font, Vector2(x, 236), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)
