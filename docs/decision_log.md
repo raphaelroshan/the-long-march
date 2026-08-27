@@ -106,6 +106,8 @@ Timestamped feedback exports also probe for an existing filename and add an incr
 
 Windows remains the primary product target. The repository also provides an unsigned macOS playtest preset so development sessions can run on the current platform. Tagged GitHub Actions runs build both artifacts; signing, notarization, Steam, and Epic publishing remain human-controlled release steps.
 
+The project version, Windows file/product versions, macOS bundle version, and CI release manifest are checked by one deterministic validator before Godot tests run. A version bump must update all packaged surfaces together so screenshots, saves, feedback reports, and release artifacts identify the same build.
+
 ## 2026-08-27 — The alpha chapter is an authored five-encounter graph
 
 The two-leg prototype is superseded by the Ashgate Lowlands alpha chapter. Every completed path now contains five encounters across an authored branching graph, with Morrowline as the guaranteed recovery settlement and Meridian Pass as the declared final commitment. Authored structure was chosen over procedural generation so pacing, route guarantees, content consequences, and deterministic tests remain legible while the core map loop is being proven.
