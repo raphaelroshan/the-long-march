@@ -166,6 +166,8 @@ The Advance button previews immediate contact. When an approaching threat reache
 
 The matching timeline cell changes from `Next` to `Contact` and uses the danger treatment when that step contains an arrival. This creates one consistent warning across the enemy countdown, timeline, and Advance action instead of making the player reconcile three differently phrased clocks.
 
+Enemy contact cards translate simulation target IDs into the installed system's authored display name. The warning now says `TARGET COAL CELL` rather than leaking `coal_cell`, matching the Advance action and chassis labels while leaving deterministic combat state unchanged.
+
 Campaign progress distinguishes an active encounter from completed progress. During the first fight the header says `Encounter 1/5 underway`; between roads it says `1/5 encounters secured`. The progress bar continues to represent secured encounters, avoiding the previous `Encounter 0/5` label while the player was visibly already in combat.
 
 ## 2026-08-27 — The application shell starts outside the simulation

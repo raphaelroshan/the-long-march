@@ -1915,6 +1915,11 @@ func _refresh_ui() -> void:
 	var combat_view := state.encounter_summary()
 	combat_view["location_name"] = String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node))
 	combat_view["doctrine"] = state.encounter_target_doctrine
+	var combat_target_names := {"hull": "Hull"}
+	for instance in state.modules:
+		var combat_module_id := String(instance.get("id", ""))
+		combat_target_names[combat_module_id] = String(state.module_definition(combat_module_id).get("name", combat_module_id.replace("_", " ").capitalize()))
+	combat_view["target_names"] = combat_target_names
 	combat_panel.configure(combat_view, LongMarchState.ENCOUNTER_ENEMIES)
 	var route_name := String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "Meridian Pass" if state.journey_route == "meridian_pass" else "not chosen"))
 	if state.campaign_active:

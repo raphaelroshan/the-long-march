@@ -107,6 +107,7 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 	var doctrine := String(view.get("doctrine", "protect_cargo")).replace("_", " ").capitalize()
 	var intervention_used := bool(view.get("intervention_used", false))
 	var enemies: Array = view.get("enemies", [])
+	var target_names: Dictionary = view.get("target_names", {})
 	title_label.text = "ACTIVE CONTACT · %s" % String(view.get("location_name", "Unknown road")).to_upper()
 	var timeline_status := "Complete" if not active else "Next step %d/%d" % [mini(step + 1, MAX_STEPS), MAX_STEPS]
 	order_label.text = "Doctrine: %s   ·   Emergency order: %s   ·   %s" % [doctrine, "spent" if intervention_used else "1 available", timeline_status]
@@ -164,7 +165,8 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 		var health_word := "pressure" if enemy_id == "storm_front" else "HP"
 		var steps_out := maxi(1, int(definition.get("arrival_step", 0)) - step)
 		var contact_state := "CLEARED" if defeated and enemy_id == "storm_front" else ("DEFEATED" if defeated else ("CONTACT" if arrived else "APPROACHING · %d STEP%s OUT" % [steps_out, "" if steps_out == 1 else "S"]))
-		var target_text := " · target %s" % target.replace("_", " ") if arrived and not target.is_empty() and not defeated else ""
+		var target_name := String(target_names.get(target, target.replace("_", " ").capitalize()))
+		var target_text := " · TARGET %s" % target_name.to_upper() if arrived and not target.is_empty() and not defeated else ""
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
 		enemy_counters[index].text = "Counter: %s" % String(definition.get("counter", "unknown"))
