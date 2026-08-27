@@ -326,6 +326,8 @@ Module power uses signed player-facing notation in both refit summaries: produce
 
 Occupied cells are described as selection targets rather than invalid destinations, matching the actual click and confirm behavior. The colored placement ghost appears only over empty cells, so selecting another installed system and moving the current one are visually distinct actions.
 
+The chassis heading reports exterior mounts used against the two-mount limit in both refit and inspection modes. The bright module edge still identifies which systems consume those mounts, while the numeric count lets a player assess remaining capacity before selecting another exterior weapon or signal unit.
+
 Every interactive control in the Marchmaster's Desk requests contextual scrolling when it receives focus, including focus reached through ordinary keyboard or controller navigation. Programmatic phase handoffs and manual navigation now share the same visibility rule, and deferred scroll requests are ignored if focus has already moved elsewhere.
 
 Chassis cancel is scoped to the refit mode. During preparation or recovery it returns from the grid to `Edit Chassis`; while refitting is locked, the grid does not consume B or Escape, leaving the application shell free to open the pause menu as its persistent control hint promises.

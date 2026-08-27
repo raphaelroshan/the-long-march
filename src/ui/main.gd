@@ -2368,12 +2368,22 @@ class FortressPanel extends Control:
 			return "PLACEMENT READY · A / ENTER TO APPLY"
 		return "BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
 
+	func exterior_mount_count() -> int:
+		if state == null:
+			return 0
+		var count := 0
+		for instance in state.modules:
+			if bool(instance.get("exterior", false)):
+				count += 1
+		return count
+
 	func interaction_heading() -> String:
+		var mount_status := "MOUNTS %d/%d" % [exterior_mount_count(), LongMarchState.MAX_EXTERIOR_MOUNTS]
 		if not has_focus():
-			return "CHASSIS GRID — exterior mounts use a bright edge"
+			return "CHASSIS GRID · %s — exterior mounts use a bright edge" % mount_status
 		if state != null and state.can_refit():
-			return "CHASSIS EDIT MODE — arrows move · A acts · B returns"
-		return "CHASSIS INSPECTION — arrows move · A selects · B returns"
+			return "CHASSIS EDIT MODE · %s — arrows move · A acts · B returns" % mount_status
+		return "CHASSIS INSPECTION · %s — arrows move · A selects · B returns" % mount_status
 
 	func locked_mode_help_text() -> String:
 		if state == null:
