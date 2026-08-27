@@ -1579,7 +1579,11 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 	if not result.ok:
 		_set_event("Intervention blocked: %s." % result.reason)
 	else:
-		_set_event("Intervention used: %s." % intervention_id.replace("_", " ").capitalize())
+		var intervention_result := intervention_id.replace("_", " ").capitalize()
+		if intervention_id == "cut_loose_cargo":
+			var removed_module := String(result.get("removed_module", "cargo"))
+			intervention_result += " — %s discarded" % String(state.module_definition(removed_module).get("name", removed_module)).capitalize()
+		_set_event("Intervention used: %s." % intervention_result)
 		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
 		_checkpoint("intervention_used")
 	_refresh_ui()
@@ -1817,9 +1821,19 @@ func _refresh_ui() -> void:
 	intervention_help_label.text = "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
-		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty())
+		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty()) or (index == 3 and state.sacrificable_cargo_id().is_empty())
 	if intervention_buttons.size() >= 4:
 		intervention_buttons[1].text = "Seal %s · protected / offline" % (String(selected_definition.get("name", "selected")) if not selected_installed.is_empty() else "selected module")
+		var cargo_id := state.sacrificable_cargo_id()
+		if cargo_id.is_empty():
+			intervention_buttons[3].text = "Cut loose cargo · none available"
+			intervention_buttons[3].tooltip_text = "No installed cargo module can be sacrificed."
+		else:
+			var cargo_definition := state.module_definition(cargo_id)
+			var cargo_tags: Array = cargo_definition.get("tags", [])
+			var cargo_cost := "lose shelter" if "refuge" in cargo_tags else ("lose repair supply" if "parts" in cargo_tags else ("lose fuel feed" if "fuel" in cargo_tags else "lose module"))
+			intervention_buttons[3].text = "Cut loose %s · %s" % [String(cargo_definition.get("name", cargo_id)), cargo_cost]
+			intervention_buttons[3].tooltip_text = "Permanently remove this installed module for the rest of the run to reduce mass and enemy cargo incentive."
 	if is_battle_phase:
 		var combat_actions: Array = [advance_encounter_button]
 		for intervention_button in intervention_buttons:

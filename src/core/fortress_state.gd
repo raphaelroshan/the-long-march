@@ -809,13 +809,13 @@ func intervene(intervention_id: String, target_module: String = "") -> Dictionar
 		log.append("Vented heat; exterior exposure increased temporarily.")
 		return {"ok": true, "intervention": intervention_id, "summary": summary()}
 	if intervention_id == "cut_loose_cargo":
-		var removed := _remove_first_sacrificable_cargo()
-		if not removed:
+		var removed_module := _remove_first_sacrificable_cargo()
+		if removed_module.is_empty():
 			return {"ok": false, "reason": "no cargo to cut loose"}
 		command_points -= 1
-		log.append("Cut loose cargo to protect the fortress.")
+		log.append("Cut loose %s to protect the fortress." % String(module_definition(removed_module).get("name", removed_module)))
 		_recalculate()
-		return {"ok": true, "intervention": intervention_id, "summary": summary()}
+		return {"ok": true, "intervention": intervention_id, "removed_module": removed_module, "summary": summary()}
 	return {"ok": false, "reason": "unknown intervention"}
 
 func repair_module(module_id: String, amount: int = 1) -> Dictionary:
@@ -1747,21 +1747,25 @@ func _set_sealed(module_id: String, value: bool) -> bool:
 			return true
 	return false
 
-func _remove_first_tagged(tag: String) -> bool:
-	for index in range(modules.size()):
-		var definition := module_definition(String(modules[index].get("id", "")))
-		if tag in definition.get("tags", []):
-			modules.remove_at(index)
-			return true
-	return false
-
-func _remove_first_sacrificable_cargo() -> bool:
+func sacrificable_cargo_id() -> String:
 	for preferred_id in ["refugee_bunk", "parts_crate", "coal_cell"]:
-		for index in range(modules.size()):
-			if String(modules[index].get("id", "")) == preferred_id:
-				modules.remove_at(index)
-				return true
-	return _remove_first_tagged("cargo")
+		if module_count(preferred_id) > 0:
+			return preferred_id
+	for instance in modules:
+		var module_id := String(instance.get("id", ""))
+		if "cargo" in module_definition(module_id).get("tags", []):
+			return module_id
+	return ""
+
+func _remove_first_sacrificable_cargo() -> String:
+	var module_id := sacrificable_cargo_id()
+	if module_id.is_empty():
+		return ""
+	for index in range(modules.size()):
+		if String(modules[index].get("id", "")) == module_id:
+			modules.remove_at(index)
+			return module_id
+	return ""
 
 func _choose_target(threat: Dictionary) -> int:
 	var target_tags: Array = threat.get("target_tags", [])

@@ -145,7 +145,7 @@ func _test_intervention_and_recovery() -> void:
 	var repaired := state.repair_module("steam_lance_engine", 1)
 	_expect(repaired.ok, "a workshop should repair an installed module")
 	var cut := state.intervene("cut_loose_cargo")
-	_expect(cut.ok, "cut loose cargo should preserve a recovery option")
+	_expect(cut.ok and cut.removed_module == "parts_crate" and state.module_count("parts_crate") == 0, "cut loose cargo should name and remove the deterministic sacrifice")
 
 func _install_encounter_loadout(state: LongMarchState, include_signal: bool = false) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "journey loadout engine should install")
