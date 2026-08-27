@@ -431,20 +431,20 @@ func campaign_event_details() -> Dictionary:
 		"salvage_choice":
 			var can_rescue_workers := _has_operational_tag("refuge")
 			return {"id": "salvage_choice", "title": "The Orchard Burns", "body": "Fuel lies under the burning orchard, but workers are still trapped beyond the firebreak.", "choices": [
-				{"id": "take_fuel", "label": "Recover 2 fuel first", "enabled": true, "reason": ""},
-				{"id": "rescue_workers", "label": "Carry the stranded workers", "enabled": can_rescue_workers, "reason": "Requires an operational Refugee Bunk" if not can_rescue_workers else ""}
+				{"id": "take_fuel", "label": "Recover the fuel", "effect": "Fuel +2 · Trust -1", "enabled": true, "reason": ""},
+				{"id": "rescue_workers", "label": "Carry the stranded workers", "effect": "Trust +2 · Day +1 · Pressure +1", "enabled": can_rescue_workers, "reason": "Requires an operational Refugee Bunk" if not can_rescue_workers else ""}
 			]}
 		"lost_signal":
 			var can_restore_relay := _has_operational_tag("signal")
 			return {"id": "lost_signal", "title": "The Silence Between Lamps", "body": "The relay can be restored and broadcast, or the fortress can leave quietly before more Climbers arrive.", "choices": [
-				{"id": "restore_relay", "label": "Restore and broadcast the relay", "enabled": can_restore_relay, "reason": "Requires an operational signal system" if not can_restore_relay else ""},
-				{"id": "move_silent", "label": "Mark the route and move in silence", "enabled": true, "reason": ""}
+				{"id": "restore_relay", "label": "Restore and broadcast", "effect": "Exact forecasts · Trust +1 · Pressure +1", "enabled": can_restore_relay, "reason": "Requires an operational signal system" if not can_restore_relay else ""},
+				{"id": "move_silent", "label": "Mark the route and move in silence", "effect": "Pressure -1 · Future risk -3%", "enabled": true, "reason": ""}
 			]}
 		"toll_decision":
 			var can_pay_toll := money >= 10
 			return {"id": "toll_decision", "title": "The Red Wheel Ledger", "body": "The toll captain offers a quiet crossing for coin. Breaking the post helps later convoys but brings the blockade closer.", "choices": [
-				{"id": "pay_toll", "label": "Pay 10 Ashmarks", "enabled": can_pay_toll, "reason": "Requires 10 Ashmarks" if not can_pay_toll else ""},
-				{"id": "break_blockade", "label": "Break the toll post", "enabled": true, "reason": ""}
+				{"id": "pay_toll", "label": "Pay the toll", "effect": "Ashmarks -10 · Pressure -1", "enabled": can_pay_toll, "reason": "Requires 10 Ashmarks" if not can_pay_toll else ""},
+				{"id": "break_blockade", "label": "Break the toll post", "effect": "Ashmarks +8 · Trust +1 · Pressure +1", "enabled": true, "reason": ""}
 			]}
 	return {}
 

@@ -310,6 +310,8 @@ func _run() -> void:
 	_expect(game.fortress_panel.locked_mode_help_text().contains("between road stops") and not game.fortress_panel.locked_mode_help_text().contains("battle damage"), "map-event chassis guidance should not describe the current phase as a battle")
 	_expect(game.campaign_map.status_for("morrowline_camp") == "blocked", "the map should show that a local decision blocks the next road")
 	_expect(game.campaign_event_buttons[0].disabled and game.campaign_event_buttons[0].text.contains("REQUIRES AN OPERATIONAL SIGNAL SYSTEM"), "locked event choices should state their missing capability without requiring hover")
+	_expect(game.campaign_event_buttons[0].text.contains("Exact forecasts") and game.campaign_event_buttons[0].text.contains("Pressure +1"), "a locked event choice should still teach its complete payoff and cost")
+	_expect(game.campaign_event_buttons[1].text.contains("Pressure -1") and game.campaign_event_buttons[1].text.contains("Future risk -3%"), "an available event choice should disclose its exact consequence before commitment")
 	await _press_campaign_event("move_silent")
 	_expect(game.event_label.text.contains("pressure falls by 1") and game.event_label.text.contains("risk falls by 3%"), "event resolution should immediately explain its mechanical consequences")
 	_expect(game.encounter_label.text.begins_with("DECISION CONSEQUENCE") and game.encounter_label.text.contains("risk falls by 3%"), "the event consequence should appear above the fold immediately after selection")

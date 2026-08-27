@@ -1792,9 +1792,11 @@ func _refresh_campaign_controls() -> void:
 		button.visible = true
 		var choice_enabled := bool(choice.get("enabled", false))
 		var locked_reason := String(choice.get("reason", ""))
-		button.text = String(choice.label) if choice_enabled else "%s\nLOCKED · %s" % [String(choice.label), locked_reason.to_upper()]
+		var effect := String(choice.get("effect", ""))
+		var choice_text := "%s\n%s" % [String(choice.label), effect]
+		button.text = choice_text if choice_enabled else "%s\nLOCKED · %s" % [choice_text, locked_reason.to_upper()]
 		button.tooltip_text = "" if choice_enabled else locked_reason
-		button.custom_minimum_size = Vector2(0, 42 if choice_enabled else 56)
+		button.custom_minimum_size = Vector2(0, 56 if choice_enabled else 72)
 		button.disabled = not choice_enabled
 		button.set_meta("choice_id", String(choice.id))
 

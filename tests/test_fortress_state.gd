@@ -380,6 +380,7 @@ func _test_campaign_events_and_closure() -> void:
 	_expect(bool(orchard_result.get("resolved", false)) and state.campaign_event_pending == "salvage_choice", "the Soot Orchard branch should be viable and open its local decision")
 	var orchard := state.campaign_event_details()
 	_expect(not bool(orchard.choices[1].enabled), "rescuing orchard workers should require an operational refuge module")
+	_expect(String(orchard.choices[0].effect) == "Fuel +2 · Trust -1" and String(orchard.choices[1].effect).contains("Pressure +1"), "orchard choices should expose their complete resource trade-offs before selection")
 	var fuel_before := state.fuel
 	_expect(bool(state.resolve_campaign_event("take_fuel").get("ok", false)) and state.fuel == fuel_before + 2, "the orchard fuel choice should grant two fuel")
 
@@ -387,6 +388,8 @@ func _test_campaign_events_and_closure() -> void:
 	_expect(bool(toll_result.get("resolved", false)) and state.campaign_event_pending == "toll_decision", "the Red Wheel branch should be viable and open its toll decision")
 	var pressure_before := state.campaign_pressure
 	var money_before := state.money
+	var toll := state.campaign_event_details()
+	_expect(String(toll.choices[0].effect).contains("Ashmarks -10") and String(toll.choices[1].effect).contains("Ashmarks +8"), "toll choices should expose both economic outcomes before selection")
 	_expect(bool(state.resolve_campaign_event("break_blockade").get("ok", false)), "the fortress should be able to break the Red Wheel toll post")
 	_expect(state.money == money_before + 8 and state.campaign_pressure == pressure_before + 1, "breaking the toll should recover coin and increase closure pressure")
 	var morrowline_result := _campaign_battle(state, "morrowline_camp")
