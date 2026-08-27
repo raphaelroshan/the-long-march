@@ -814,9 +814,15 @@ func intervene(intervention_id: String, target_module: String = "") -> Dictionar
 		log.append("Shifted power priority to %s." % power_priority)
 		return {"ok": true, "intervention": intervention_id, "priority": power_priority, "heat_change": heat_change, "summary": summary()}
 	if intervention_id == "seal_compartment":
-		var sealed := _set_sealed(target_module, true)
-		if not sealed:
+		var target_index := _module_index_by_id(target_module)
+		if target_index < 0:
 			return {"ok": false, "reason": "target module not found"}
+		if int(modules[target_index].get("durability", 0)) <= 0:
+			return {"ok": false, "reason": "destroyed modules cannot be sealed"}
+		if bool(modules[target_index].get("sealed", false)):
+			return {"ok": false, "reason": "module is already sealed"}
+		var sealed := _set_sealed(target_module, true)
+		assert(sealed)
 		command_points -= 1
 		log.append("Sealed %s to contain damage." % target_module)
 		_recalculate()
@@ -1303,13 +1309,15 @@ func _encounter_module_damage(enemy_id: String) -> Dictionary:
 		behavior_lines.append("Iven Pell reads the relay drift and calls a path through the storm.")
 	return {"damage": total_damage, "attackers": attackers, "lines": behavior_lines}
 
-func _encounter_choose_target(enemy_id: String) -> String:
+func _encounter_choose_target(enemy_id: String, excluded_module_id: String = "") -> String:
 	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
 	var target_tags: Array = definition.get("target_tags", [])
 	var best_index: int = -1
 	var best_score: int = -999
 	for index in range(modules.size()):
 		var instance: Dictionary = modules[index]
+		if String(instance.get("id", "")) == excluded_module_id:
+			continue
 		if int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
 			continue
 		var module_def: Dictionary = module_definition(String(instance.get("id", "")))
@@ -1351,6 +1359,26 @@ func _encounter_choose_target(enemy_id: String) -> String:
 	if best_index >= 0:
 		return String(modules[best_index].get("id", ""))
 	return "hull"
+
+func encounter_seal_preview(target_module: String) -> Dictionary:
+	var target_index := _module_index_by_id(target_module)
+	if target_index < 0:
+		return {"valid": false, "reason": "target module not found", "retargets": []}
+	if int(modules[target_index].get("durability", 0)) <= 0:
+		return {"valid": false, "reason": "destroyed modules cannot be sealed", "retargets": []}
+	if bool(modules[target_index].get("sealed", false)):
+		return {"valid": false, "reason": "module is already sealed", "retargets": []}
+	var retargets: Array[Dictionary] = []
+	for index in range(encounter_enemies.size()):
+		var enemy: Dictionary = encounter_enemies[index]
+		if bool(enemy.get("defeated", false)) or not bool(enemy.get("arrived", false)) or String(enemy.get("target", "")) != target_module:
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var replacement_target := _encounter_choose_target(enemy_id, target_module)
+		var enemy_name := String(ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id.replace("_", " ").capitalize()))
+		var replacement_name := "Hull" if replacement_target == "hull" else String(module_definition(replacement_target).get("name", replacement_target.replace("_", " ").capitalize()))
+		retargets.append({"enemy_index": index, "enemy_id": enemy_id, "enemy_name": enemy_name, "previous_target": target_module, "target": replacement_target, "target_name": replacement_name})
+	return {"valid": true, "target_module": target_module, "retargets": retargets}
 
 func _encounter_retarget_sealed_module(target_module: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []

@@ -399,3 +399,7 @@ Checkpoint reasons are translated from internal event identifiers into player-fa
 ## 2026-08-28 — Sealing a target redirects threats immediately
 
 Seal Compartment resolves its targeting consequence in the same committed action. Any arrived threat aimed at the sealed system immediately chooses a valid replacement, and the emergency-order receipt names each redirection. Enemy cards, chassis highlighting, current guidance, and impact forecasts therefore agree before the player advances; the next combat step no longer silently corrects stale information that was presented as a prediction.
+
+## 2026-08-28 — The Seal order previews its redirected threat
+
+The selected module's Seal Compartment control previews every active threat that would be redirected and its replacement target before the order is spent. The forecast is calculated without mutating the encounter and uses the same deterministic targeting rules as resolution. Sealing a system that is not currently targeted remains available and is explicitly described as preventative rather than implying an immediate benefit.

@@ -239,14 +239,25 @@ func _test_spatial_targeting_and_causality() -> void:
 	sealed_target.begin_journey("safe_road", "run_hot")
 	sealed_target.encounter_enemies[0]["arrived"] = true
 	sealed_target.encounter_enemies[0]["target"] = "coal_cell"
+	var seal_preview := sealed_target.encounter_seal_preview("coal_cell")
+	var previewed_retargets: Array = seal_preview.get("retargets", [])
+	_expect(bool(seal_preview.get("valid", false)) and previewed_retargets.size() == 1 and String(previewed_retargets[0].get("target", "")) != "coal_cell", "Seal preview should disclose the active threat's replacement target")
+	_expect(not bool(sealed_target.modules[sealed_target._module_index_by_id("coal_cell")].get("sealed", false)) and String(sealed_target.encounter_enemies[0].get("target", "")) == "coal_cell", "Seal preview must not mutate the module or live enemy target")
 	var sealed := sealed_target.use_encounter_intervention("seal_compartment", "coal_cell")
 	var redirected_target := String(sealed_target.encounter_enemies[0].get("target", ""))
 	var retargets: Array = sealed.get("retargets", [])
 	_expect(bool(sealed.get("ok", false)) and redirected_target != "coal_cell" and not redirected_target.is_empty(), "sealing an active target should redirect the threat immediately")
 	_expect(retargets.size() == 1 and String(retargets[0].get("target", "")) == redirected_target and String(sealed.get("effect", "")).contains("redirected"), "the emergency-order receipt should name the immediate retarget")
+	_expect(String(previewed_retargets[0].get("target", "")) == redirected_target, "the committed Seal result should match its pre-commit redirect forecast")
 	var redirected_preview := sealed_target.encounter_enemy_impact_preview(sealed_target.encounter_enemies[0])
 	_expect(String(redirected_preview.get("target", "")) == redirected_target, "the impact forecast should update to the replacement target without requiring another combat step")
 	_expect(sealed_target.encounter_report.filter(func(line: String) -> bool: return line.contains("redirects to")).size() == 1, "the lasting combat report should preserve why the enemy target changed")
+
+	var destroyed_target := LongMarchState.new(1107)
+	destroyed_target.place_module("coal_cell", Vector2i(0, 0))
+	destroyed_target.modules[0]["durability"] = 0
+	var command_points_before := destroyed_target.command_points
+	_expect(not bool(destroyed_target.intervene("seal_compartment", "coal_cell").get("ok", false)) and destroyed_target.command_points == command_points_before, "destroyed systems should reject Seal without spending a command point")
 
 	var armored := LongMarchState.new(1107)
 	armored.place_module("generator_core", Vector2i(0, 0))

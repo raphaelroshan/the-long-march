@@ -1972,15 +1972,30 @@ func _refresh_ui() -> void:
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
+	var seal_preview: Dictionary = state.encounter_seal_preview(selected_module_id) if not selected_installed.is_empty() else {"valid": false, "retargets": []}
+	var seal_redirects: Array[String] = []
+	for retarget in seal_preview.get("retargets", []):
+		seal_redirects.append("%s → %s" % [String(retarget.get("enemy_name", "Threat")), String(retarget.get("target_name", "Hull"))])
 	if state.encounter_intervention_used:
 		intervention_help_label.text = "Emergency order spent. Hull is exposed; review the predicted hit, then advance." if hull_under_threat else "Emergency order spent. Inspect the predicted damage, then advance; one order returns next encounter."
 	else:
-		intervention_help_label.text = "Hull is under threat. Sealing a module will not prevent this hit; choose another order or preserve a system for later." if hull_under_threat else "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
+		if hull_under_threat:
+			intervention_help_label.text = "Hull is under threat. Sealing a module will not prevent this hit; choose another order or preserve a system for later."
+		elif selected_installed.is_empty():
+			intervention_help_label.text = "Choose once per encounter. Select a chassis module to preview Seal Compartment."
+		elif not bool(seal_preview.get("valid", false)):
+			intervention_help_label.text = "Seal unavailable: %s." % String(seal_preview.get("reason", "select another module"))
+		elif not seal_redirects.is_empty():
+			intervention_help_label.text = "Seal preview · %s goes offline; redirects %s." % [String(selected_definition.get("name", selected_module_id)), ", ".join(seal_redirects)]
+		else:
+			intervention_help_label.text = "Seal preview · %s goes offline; no active threat currently targets it." % String(selected_definition.get("name", selected_module_id))
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
-		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty()) or (index == 3 and state.sacrificable_cargo_id().is_empty())
+		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and (selected_installed.is_empty() or not bool(seal_preview.get("valid", false)))) or (index == 3 and state.sacrificable_cargo_id().is_empty())
 	if intervention_buttons.size() >= 4:
-		intervention_buttons[1].text = "Seal %s · protected / offline" % (String(selected_definition.get("name", "selected")) if not selected_installed.is_empty() else "selected module")
+		var seal_target_name := String(selected_definition.get("name", "selected")) if not selected_installed.is_empty() else "selected module"
+		intervention_buttons[1].text = "Seal %s · %s" % [seal_target_name, seal_redirects[0] if seal_redirects.size() == 1 else ("redirects %d threats" % seal_redirects.size() if seal_redirects.size() > 1 else "protected / offline")]
+		intervention_buttons[1].tooltip_text = "Spend the encounter order. %s goes offline until the encounter ends.%s" % [seal_target_name, " Redirects %s." % ", ".join(seal_redirects) if not seal_redirects.is_empty() else " No active threat currently targets it."]
 		var cargo_id := state.sacrificable_cargo_id()
 		if cargo_id.is_empty():
 			intervention_buttons[3].text = "Cut loose cargo · none available"

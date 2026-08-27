@@ -286,6 +286,10 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["damage_bonus"] = 1
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
+	var displayed_seal_preview: Dictionary = game.state.encounter_seal_preview("coal_cell")
+	var displayed_redirects: Array = displayed_seal_preview.get("retargets", [])
+	var displayed_redirect_text: String = "%s → %s" % [String(displayed_redirects[0].get("enemy_name", "")), String(displayed_redirects[0].get("target_name", ""))] if not displayed_redirects.is_empty() else ""
+	_expect(displayed_redirects.size() == 1 and game.intervention_help_label.text.contains("Seal preview") and game.intervention_help_label.text.contains(displayed_redirect_text) and game.intervention_buttons[1].text.contains(displayed_redirect_text), "the only Seal order should preview its replacement target before commitment")
 	_expect(game.guidance_label.text.contains("Coal Cell will be disabled") and game.guidance_label.text.contains("Steam Lance Engine → Offline") and game.guidance_label.text.contains("Review the emergency orders"), "the current order should promote a predicted dependency cascade before the player advances")
 	var pre_seal_state: Dictionary = game.state.serialize()
 	game.intervention_buttons[1].pressed.emit()
