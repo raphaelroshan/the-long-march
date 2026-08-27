@@ -72,6 +72,8 @@ var campaign_pressure_label: Label
 var campaign_path_label: Label
 var campaign_map: CampaignMapView
 var campaign_node_buttons: Array[Button] = []
+var campaign_commit_button: Button
+var selected_campaign_node_id: String = ""
 var contract_title: Label
 var contract_label: Label
 var contract_accept_button: Button
@@ -198,6 +200,7 @@ func _reset_state() -> void:
 	state.place_module("repeater_gun", Vector2i(3, 2), true)
 	state.seed_starter_inventory()
 	state.start_campaign()
+	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
 	result_recorded = false
@@ -460,7 +463,12 @@ func _build_ui() -> void:
 	controls.add_child(campaign_path_label)
 	campaign_map = CampaignMapView.new()
 	campaign_map.node_selected.connect(_on_campaign_node_selected)
+	campaign_map.route_committed.connect(_on_campaign_route_committed)
 	campaign_node_buttons = campaign_map.node_buttons
+	campaign_commit_button = campaign_map.commit_button
+	campaign_map.remove_child(campaign_commit_button)
+	controls.add_child(campaign_commit_button)
+	controls.move_child(campaign_commit_button, doctrine_group.get_index() + 1)
 
 	campaign_event_title = Label.new()
 	campaign_event_title.add_theme_font_size_override("font_size", 17)
@@ -762,6 +770,15 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif onboarding_overlay.visible:
 		_finish_onboarding(true)
 		get_viewport().set_input_as_handled()
+	elif not selected_campaign_node_id.is_empty():
+		var previous_selection := selected_campaign_node_id
+		selected_campaign_node_id = ""
+		_set_event("Route selection cleared. Choose another road when ready.")
+		_refresh_ui()
+		var previous_button := campaign_map.button_for(previous_selection) as Button
+		if previous_button != null and not previous_button.disabled:
+			previous_button.grab_focus()
+		get_viewport().set_input_as_handled()
 
 func _journal_event(event_id: String, properties: Dictionary = {}) -> void:
 	if journal != null:
@@ -823,9 +840,23 @@ func _on_campaign_node_pressed(index: int) -> void:
 func _on_campaign_node_selected(node_id: String) -> void:
 	if node_id.is_empty():
 		return
+	if node_id not in state.campaign_available_nodes():
+		_set_event("That route is not currently available.")
+		return
+	selected_campaign_node_id = node_id
+	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready." % String(preview.get("name", node_id)))
+	_refresh_ui()
+	campaign_commit_button.grab_focus()
+
+func _on_campaign_route_committed(node_id: String) -> void:
+	if node_id.is_empty() or node_id != selected_campaign_node_id:
+		_set_event("Select a route before committing the fortress.")
+		return
 	var doctrine := _selected_id(doctrine_option)
 	var result := state.begin_campaign_route(node_id, doctrine)
 	if bool(result.get("ok", false)):
+		selected_campaign_node_id = ""
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
 	else:
@@ -1056,6 +1087,7 @@ func _on_load_pressed() -> void:
 		_set_event("Load failed: %s." % String(result.get("reason", "unknown")))
 		return
 	state = restored
+	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
 		selected_module_id = String(state.modules[0].get("id", selected_module_id))
@@ -1095,6 +1127,8 @@ func _refresh_campaign_controls() -> void:
 	contract_label.text = "Morrowline needs its parts wagon guarded. Accepting adds pressure to the camp approach, then pays 30 Ashmarks and 2 trust if the convoy arrives."
 
 	var options := state.campaign_available_nodes()
+	if selected_campaign_node_id not in options or contract_offered or not state.campaign_event_pending.is_empty():
+		selected_campaign_node_id = ""
 	var state_summary := state.summary()
 	var movement_ready := state.operational("steam_lance_engine") or state.operational("ash_runner_engine")
 	var phase_can_depart := movement_ready
@@ -1119,8 +1153,10 @@ func _refresh_campaign_controls() -> void:
 		"available_nodes": options,
 		"closed_nodes": closed_nodes,
 		"outgoing_nodes": outgoing_nodes,
+		"selected_node": selected_campaign_node_id,
 		"previews": previews,
 		"can_depart": phase_can_depart,
+		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})
 
@@ -1182,9 +1218,9 @@ func _refresh_ui() -> void:
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	match state.phase:
 		"refit":
-			guidance_label.text = "NEXT — Configure dependencies, answer the contract, then choose a highlighted map node."
+			guidance_label.text = "NEXT — Configure dependencies, answer the contract, then select and commit to a highlighted map node."
 		"map":
-			guidance_label.text = "NEXT — Resolve any local decision, then compare and choose a cyan map node."
+			guidance_label.text = "NEXT — Resolve any local decision, select a cyan map node, review it, then commit."
 		"battle", "final_battle":
 			guidance_label.text = "NEXT — Advance one step, read each target and causal line, then spend at most one emergency order."
 		"settlement":
@@ -1231,8 +1267,11 @@ func _refresh_ui() -> void:
 			route_preview_label.text = "A local decision blocks departure. Resolve it before choosing the next road."
 		elif state.guard_contract_status == "offered":
 			route_preview_label.text = "The first map branches are visible after the Ashgate contract is answered."
+		elif not selected_campaign_node_id.is_empty():
+			var selected_preview := state.campaign_node_preview(selected_campaign_node_id, _selected_id(doctrine_option))
+			route_preview_label.text = "Selected %s — %d day(s), %d fuel, %.0f%% risk, pressure +%d. Commit on the map when ready." % [String(selected_preview.get("name", selected_campaign_node_id)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0))]
 		else:
-			route_preview_label.text = "Choose a forward node. Signal readiness and Iven Pell improve how much of each route is revealed."
+			route_preview_label.text = "Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals."
 	elif state.phase == "refit":
 		var departure := state.route_preview(_selected_id(route_option), _selected_id(doctrine_option))
 		if bool(departure.get("ok", false)):

@@ -13,7 +13,7 @@ The repository contains an agent-first Godot project with:
 - Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
 - Explicit dependency states for fuel-fed engines, ammunition-fed weapons, crew/parts-supported workshops, shared power, and signal visibility.
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
-- An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information.
+- An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information, with explicit route review and confirmation.
 - A test-focused command interface with resource cards, chapter and encounter progress, contextual next-action guidance, and distinct mouse/keyboard/controller focus states.
 - Combat cards showing enemy arrival, health or storm pressure, current targets, counters, a six-step timeline, and recent cause-and-effect.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.

@@ -2,8 +2,9 @@ class_name CampaignMapView
 extends Control
 
 signal node_selected(node_id: String)
+signal route_committed(node_id: String)
 
-const MAP_SIZE := Vector2(320, 396)
+const MAP_SIZE := Vector2(320, 356)
 const NODE_SIZE := Vector2(132, 40)
 const NODE_ORDER := [
 	"ashgate_depot",
@@ -50,7 +51,9 @@ var closed_nodes: Array[String] = []
 var outgoing_nodes: Array[String] = []
 var current_previews: Dictionary = {}
 var interaction_is_blocked: bool = false
+var selected_node: String = ""
 var detail_label: Label
+var commit_button: Button
 
 func _init() -> void:
 	custom_minimum_size = MAP_SIZE
@@ -66,6 +69,18 @@ func _init() -> void:
 	detail_label.add_theme_font_size_override("font_size", 11)
 	detail_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	add_child(detail_label)
+	commit_button = Button.new()
+	commit_button.custom_minimum_size = Vector2(0, 48)
+	commit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	commit_button.text = "Select a route to continue"
+	commit_button.disabled = true
+	commit_button.focus_mode = Control.FOCUS_ALL
+	commit_button.pressed.connect(_on_commit_pressed)
+	commit_button.add_theme_stylebox_override("normal", _style(Color("#285348"), Color("#73c99b"), 2))
+	commit_button.add_theme_stylebox_override("hover", _style(Color("#32665a"), Color("#8fe2bd"), 2))
+	commit_button.add_theme_stylebox_override("pressed", _style(Color("#1d3c34"), Color("#ffffff"), 2))
+	commit_button.add_theme_stylebox_override("focus", _style(Color("#285348"), Color("#ffffff"), 3))
+	add_child(commit_button)
 
 func _build_node_buttons() -> void:
 	for node_id in NODE_ORDER:
@@ -89,6 +104,11 @@ func _on_node_pressed(node_id: String) -> void:
 	if button == null or button.disabled:
 		return
 	node_selected.emit(node_id)
+
+func _on_commit_pressed() -> void:
+	if selected_node.is_empty() or commit_button.disabled:
+		return
+	route_committed.emit(selected_node)
 
 func _style(fill: Color, border: Color, border_width: int = 2) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -119,6 +139,10 @@ func _apply_button_style(button: Button, status: String) -> void:
 			fill = Color("#214752")
 			border = Color("#69d8cf")
 			text_color = Color("#e3fffb")
+		"selected":
+			fill = Color("#4b405d")
+			border = Color("#eee2ff")
+			text_color = Color("#ffffff")
 		"closed":
 			fill = Color("#482929")
 			border = Color("#e06f61")
@@ -147,8 +171,8 @@ func _preview_tooltip(preview: Dictionary) -> String:
 
 func _show_node_detail(node_id: String) -> void:
 	var status := status_for(node_id)
-	if status == "available":
-		detail_label.text = _preview_tooltip(current_previews.get(node_id, {}))
+	if status in ["available", "selected"]:
+		detail_label.text = ("SELECTED — " if status == "selected" else "") + _preview_tooltip(current_previews.get(node_id, {}))
 	elif status == "closed":
 		detail_label.text = "%s is closed at Break pressure. Reliable forecasting can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
 	elif status == "blocked":
@@ -167,8 +191,10 @@ func configure(view: Dictionary) -> void:
 	available_nodes = _to_string_array(view.get("available_nodes", []))
 	closed_nodes = _to_string_array(view.get("closed_nodes", []))
 	outgoing_nodes = _to_string_array(view.get("outgoing_nodes", []))
+	selected_node = String(view.get("selected_node", ""))
 	current_previews = view.get("previews", {}).duplicate(true)
 	var can_depart := bool(view.get("can_depart", false))
+	var show_commit := bool(view.get("show_commit", true))
 	interaction_is_blocked = bool(view.get("interaction_blocked", false))
 	node_statuses.clear()
 	for node_id in NODE_ORDER:
@@ -182,17 +208,21 @@ func configure(view: Dictionary) -> void:
 			status = "closed"
 		elif interaction_is_blocked and node_id in outgoing_nodes:
 			status = "blocked"
+		elif node_id == selected_node and node_id in available_nodes:
+			status = "selected"
 		elif node_id in available_nodes:
 			status = "available"
 		node_statuses[node_id] = status
 		var state_text := status.capitalize()
 		if status == "available":
 			state_text = String(current_previews.get(node_id, {}).get("visibility", "forecast")).capitalize()
+		elif status == "selected":
+			state_text = "Selected"
 		elif status == "blocked":
 			state_text = "Decision required"
 		button.text = "%s\n%s" % [String(SHORT_NAMES.get(node_id, node_id)), state_text]
-		button.disabled = status != "available" or not can_depart or interaction_is_blocked
-		if status == "available":
+		button.disabled = status not in ["available", "selected"] or not can_depart or interaction_is_blocked
+		if status in ["available", "selected"]:
 			button.tooltip_text = _preview_tooltip(current_previews.get(node_id, {}))
 		elif status == "closed":
 			button.tooltip_text = "Closed by Break pressure. Reliable forecasting can reopen this road."
@@ -205,9 +235,19 @@ func configure(view: Dictionary) -> void:
 		else:
 			button.tooltip_text = "This node is visible on the regional chart but is not yet reachable."
 		_apply_button_style(button, status)
-	if not available_nodes.is_empty():
+	commit_button.visible = show_commit and not interaction_is_blocked
+	commit_button.disabled = selected_node.is_empty() or selected_node not in available_nodes or not can_depart or interaction_is_blocked
+	if not selected_node.is_empty() and selected_node in available_nodes:
+		var selected_preview: Dictionary = current_previews.get(selected_node, {})
+		commit_button.text = "COMMIT · %s\n%d day(s) · %d fuel · %.0f%% risk · pressure +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0))]
+		commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
+		_show_node_detail(selected_node)
+	elif not available_nodes.is_empty():
+		commit_button.text = "Select a route to continue"
+		commit_button.tooltip_text = "Choose one of the cyan route nodes before committing."
 		_show_node_detail(available_nodes[0])
 	elif not current_node.is_empty():
+		commit_button.text = "No route selected"
 		_show_node_detail(current_node)
 	queue_redraw()
 
@@ -249,10 +289,13 @@ func _draw() -> void:
 				color = Color("#e06f61")
 				width = 3.0
 			elif source == current_node and target in available_nodes:
-				color = Color("#69d8cf")
-				width = 3.0
+				if target == selected_node:
+					color = Color("#eee2ff")
+					width = 4.0
+				else:
+					color = Color("#69d8cf")
+					width = 3.0
 			elif source == current_node and target in outgoing_nodes:
 				color = Color("#d8a650")
 				width = 3.0
 			draw_line(_node_center(source), _node_center(target), color, width, true)
-	draw_string(ThemeDB.fallback_font, Vector2(10, 378), "GOLD current · GREEN secured · CYAN available · RED closed", HORIZONTAL_ALIGNMENT_CENTER, 300, 9, Color("#8f9da1"))
