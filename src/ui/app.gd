@@ -21,6 +21,7 @@ var quick_start_button: Button
 var continue_button: Button
 var guide_button: Button
 var settings_button: Button
+var quit_button: Button
 var guide_close_button: Button
 var guide_quick_start_button: Button
 var settings_context_label: Label
@@ -208,7 +209,7 @@ func _build_title_menu() -> void:
 	settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings_button.pressed.connect(_show_settings)
 	utility_actions.add_child(settings_button)
-	var quit_button := Button.new()
+	quit_button = Button.new()
 	quit_button.name = "QuitButton"
 	quit_button.text = "QUIT"
 	quit_button.custom_minimum_size = Vector2(0, 44)
@@ -268,6 +269,25 @@ func _build_title_menu() -> void:
 	controls.add_theme_font_size_override("font_size", 12)
 	controls.add_theme_color_override("font_color", Color("#aab6ba"))
 	right.add_child(controls)
+	_configure_title_focus()
+
+func _configure_title_focus() -> void:
+	start_button.focus_neighbor_top = start_button.get_path_to(quit_button)
+	start_button.focus_neighbor_bottom = start_button.get_path_to(quick_start_button)
+	quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
+	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(continue_button)
+	continue_button.focus_neighbor_top = continue_button.get_path_to(quick_start_button)
+	continue_button.focus_neighbor_bottom = continue_button.get_path_to(settings_button)
+	guide_button.focus_neighbor_top = guide_button.get_path_to(continue_button)
+	guide_button.focus_neighbor_right = guide_button.get_path_to(settings_button)
+	guide_button.focus_neighbor_bottom = guide_button.get_path_to(start_button)
+	settings_button.focus_neighbor_top = settings_button.get_path_to(continue_button)
+	settings_button.focus_neighbor_left = settings_button.get_path_to(guide_button)
+	settings_button.focus_neighbor_right = settings_button.get_path_to(quit_button)
+	settings_button.focus_neighbor_bottom = settings_button.get_path_to(start_button)
+	quit_button.focus_neighbor_top = quit_button.get_path_to(continue_button)
+	quit_button.focus_neighbor_left = quit_button.get_path_to(settings_button)
+	quit_button.focus_neighbor_bottom = quit_button.get_path_to(start_button)
 
 func _accent_button(button: Button) -> void:
 	button.add_theme_stylebox_override("normal", _flat_style(Color("#285348f2"), Color("#89d9b1"), 2, 6, 12))

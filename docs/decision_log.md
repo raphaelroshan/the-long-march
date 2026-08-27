@@ -178,6 +178,8 @@ Mandatory local decisions appear immediately below the current objective. In par
 
 Menu and stage transitions explicitly hand keyboard/controller focus to the next meaningful action: the opening contract, the first available route, route confirmation, encounter advancement, or final feedback. Pause records the previously focused stage control and restores it on resume. A fallback focus resolver activates whenever a refresh hides or disables the current owner, preventing focus from remaining trapped on an invisible control.
 
+The title screen additionally defines explicit directional neighbors across its vertical start actions and horizontal utility row. Controller movement therefore follows the reading order and loops back to the primary action instead of depending on engine heuristics that can change with label width or save-state text.
+
 Focus handoff also scrolls the Marchmaster's Desk until the target control is fully visible. Logical focus alone was insufficient because the route map and later encounter actions can sit below the 720p fold. Automated flow coverage now checks both focus ownership and viewport containment after the contract and first route commitment.
 
 When the focused action and current-order text fit in the viewport together, scrolling preserves both rather than aligning only the control. This matters for taller commitment cards and doctrine warnings: the player should never have to choose between seeing what to press and why they are pressing it.
