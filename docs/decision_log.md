@@ -244,6 +244,8 @@ The chassis preview states its verdict before placement. A valid cursor position
 
 Occupied cells are described as selection targets rather than invalid destinations, matching the actual click and confirm behavior. The colored placement ghost appears only over empty cells, so selecting another installed system and moving the current one are visually distinct actions.
 
+Every interactive control in the Marchmaster's Desk requests contextual scrolling when it receives focus, including focus reached through ordinary keyboard or controller navigation. Programmatic phase handoffs and manual navigation now share the same visibility rule, and deferred scroll requests are ignored if focus has already moved elsewhere.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.

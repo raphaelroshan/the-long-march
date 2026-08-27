@@ -99,6 +99,14 @@ func _run() -> void:
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
 	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
+	game.how_to_play_button.grab_focus()
+	await process_frame
+	await process_frame
+	_expect(game.right_scroll.get_global_rect().encloses(game.how_to_play_button.get_global_rect()), "manual focus navigation should scroll the field briefing action fully into view")
+	game.contract_accept_button.grab_focus()
+	await process_frame
+	await process_frame
+	_expect(game.right_scroll.get_global_rect().encloses(game.contract_accept_button.get_global_rect()), "manual focus navigation should scroll back to the current contract action")
 	_expect(game.doctrine_detail_label.text.contains("Raiders") and game.doctrine_detail_label.text.contains("−1 damage"), "the default doctrine should explain its real targeting and mitigation effects")
 	game.doctrine_option.select(2)
 	game.doctrine_option.item_selected.emit(2)

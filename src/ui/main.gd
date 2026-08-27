@@ -767,6 +767,39 @@ func _build_ui() -> void:
 
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
+	_connect_desk_focus_scrolling()
+
+func _connect_desk_focus_scrolling() -> void:
+	var controls: Array[Control] = [
+		contract_accept_button,
+		contract_decline_button,
+		doctrine_option,
+		campaign_commit_button,
+		module_option,
+		focus_chassis_button,
+		rotate_button,
+		remove_button,
+		settlement_repair_button,
+		settlement_refuel_button,
+		settlement_hull_button,
+		final_journey_button,
+		recruit_iven_button,
+		route_option,
+		travel_button,
+		advance_encounter_button,
+		feedback_button,
+		play_again_button,
+		results_title_button,
+		how_to_play_button
+	]
+	controls.append_array(campaign_event_buttons)
+	controls.append_array(campaign_node_buttons)
+	controls.append_array(intervention_buttons)
+	for control in controls:
+		control.focus_entered.connect(_on_desk_control_focused.bind(control))
+
+func _on_desk_control_focused(control: Control) -> void:
+	_scroll_action_context_into_view.call_deferred(control)
 
 func _build_onboarding_overlay() -> void:
 	onboarding_overlay = Control.new()
@@ -1119,13 +1152,11 @@ func _focus_control(control: Control) -> bool:
 	if not _control_can_receive_focus(control):
 		return false
 	control.grab_focus()
-	if right_scroll != null and right_scroll.is_ancestor_of(control):
-		_scroll_action_context_into_view.call_deferred(control)
 	return true
 
 func _scroll_action_context_into_view(control: Control) -> void:
 	await get_tree().process_frame
-	if not _control_can_receive_focus(control) or right_scroll == null or not right_scroll.is_ancestor_of(control):
+	if not _control_can_receive_focus(control) or not control.has_focus() or right_scroll == null or not right_scroll.is_ancestor_of(control):
 		return
 	var viewport_rect := right_scroll.get_global_rect()
 	var previous_scroll := right_scroll.scroll_vertical
