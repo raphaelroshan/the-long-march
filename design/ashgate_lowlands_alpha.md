@@ -86,3 +86,4 @@ Failure at Meridian Pass ends the run because it is the chapter's declared final
 - Pressure never removes the only forward route.
 - A default prepared build has a viable path, while poor layouts can produce understandable recoverable failure.
 - The battle report explains target selection, module damage, dependency loss, and final outcome.
+- Combat presentation exposes enemy arrival timing, current targets, counters, step progression, and module durability without requiring the raw log.

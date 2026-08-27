@@ -3,6 +3,7 @@ extends Control
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
+const CombatPanel = preload("res://src/ui/combat_panel.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -35,9 +36,12 @@ const ONBOARDING_STEPS := [
 
 var state: LongMarchState
 var metric_labels: Dictionary = {}
+var subtitle_label: Label
+var journey_banner: TextureRect
 var status_label: Label
 var journey_label: Label
 var encounter_label: Label
+var combat_panel: CombatPanel
 var event_label: Label
 var log_label: Label
 var route_option: OptionButton
@@ -60,6 +64,7 @@ var refit_actions: Control
 var route_group: Control
 var doctrine_group: Control
 var intervention_title: Label
+var intervention_help_label: Label
 var settlement_title: Label
 var settlement_group: Control
 var campaign_title: Label
@@ -81,7 +86,6 @@ var guidance_label: Label
 var asset_row: HBoxContainer
 var phase_badge: Label
 var campaign_progress_bar: ProgressBar
-var encounter_progress_bar: ProgressBar
 var how_to_play_button: Button
 var feedback_button: Button
 var onboarding_overlay: Control
@@ -236,11 +240,11 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", Color("#e8c58e"))
 	left.add_child(title)
 
-	var subtitle := Label.new()
-	subtitle.text = "A fortress is only strong if it can keep moving."
-	subtitle.add_theme_color_override("font_color", Color("#aab6ba"))
-	left.add_child(subtitle)
-	var journey_banner := TextureRect.new()
+	subtitle_label = Label.new()
+	subtitle_label.text = "A fortress is only strong if it can keep moving."
+	subtitle_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	left.add_child(subtitle_label)
+	journey_banner = TextureRect.new()
 	journey_banner.texture = JOURNEY_BACKGROUND
 	journey_banner.custom_minimum_size = Vector2(0, 82)
 	journey_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -277,17 +281,14 @@ func _build_ui() -> void:
 	campaign_progress_bar.custom_minimum_size = Vector2(0, 8)
 	campaign_progress_bar.tooltip_text = "Secured encounters in the five-encounter Ashgate Lowlands chapter."
 	left.add_child(campaign_progress_bar)
+	combat_panel = CombatPanel.new()
+	combat_panel.visible = false
+	left.add_child(combat_panel)
 	encounter_label = Label.new()
 	encounter_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	encounter_label.custom_minimum_size = Vector2(740, 54)
 	encounter_label.add_theme_color_override("font_color", Color("#e89270"))
 	left.add_child(encounter_label)
-	encounter_progress_bar = ProgressBar.new()
-	encounter_progress_bar.max_value = 100
-	encounter_progress_bar.show_percentage = false
-	encounter_progress_bar.custom_minimum_size = Vector2(0, 7)
-	encounter_progress_bar.tooltip_text = "Progress through the current six-step encounter."
-	left.add_child(encounter_progress_bar)
 
 	fortress_panel = FortressPanel.new()
 	fortress_panel.custom_minimum_size = Vector2(760, 260)
@@ -515,14 +516,20 @@ func _build_ui() -> void:
 	intervention_title.add_theme_font_size_override("font_size", 17)
 	intervention_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	controls.add_child(intervention_title)
+	intervention_help_label = Label.new()
+	intervention_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intervention_help_label.add_theme_font_size_override("font_size", 11)
+	intervention_help_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	controls.add_child(intervention_help_label)
 	for action in [
-		{"id": "shift_power", "label": "Shift power to weapons"},
-		{"id": "seal_compartment", "label": "Seal selected module"},
-		{"id": "vent_heat", "label": "Vent heat"},
-		{"id": "cut_loose_cargo", "label": "Cut loose cargo"}
+		{"id": "shift_power", "label": "Shift power · +weapon output / +heat", "tip": "Increase operational weapon damage by one, but add one heat."},
+		{"id": "seal_compartment", "label": "Seal selected · protected / offline", "tip": "Prevent enemies from targeting the selected module, but disable it for this encounter."},
+		{"id": "vent_heat", "label": "Vent heat · −3 heat / exposed exterior", "tip": "Remove three heat. The next hit against an exterior system deals one additional damage."},
+		{"id": "cut_loose_cargo", "label": "Cut loose cargo · preserve mobility", "tip": "Discard a refuge, parts, or fuel cargo module to keep the fortress moving."}
 	]:
 		var intervention := Button.new()
 		intervention.text = String(action.label)
+		intervention.tooltip_text = String(action.tip)
 		intervention.pressed.connect(_use_intervention.bind(String(action.id)))
 		intervention_buttons.append(intervention)
 		controls.add_child(intervention)
@@ -1170,6 +1177,8 @@ func _refresh_ui() -> void:
 	remove_button.disabled = not state.can_refit() or selected_installed.is_empty()
 	var is_refit_phase := state.phase in ["refit", "settlement"]
 	var is_battle_phase := state.phase in ["battle", "final_battle"]
+	subtitle_label.visible = not is_battle_phase
+	journey_banner.visible = not is_battle_phase
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	match state.phase:
 		"refit":
@@ -1193,12 +1202,19 @@ func _refresh_ui() -> void:
 	doctrine_option.disabled = state.phase in ["battle", "final_battle", "results"]
 	travel_button.visible = state.phase == "refit" and not state.campaign_active
 	travel_button.disabled = state.phase != "refit"
+	combat_panel.visible = is_battle_phase
+	encounter_label.visible = not is_battle_phase
 	advance_encounter_button.visible = is_battle_phase
 	advance_encounter_button.disabled = not state.encounter_active
 	intervention_title.visible = is_battle_phase
+	intervention_help_label.visible = is_battle_phase
+	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
+	intervention_help_label.text = "Choose once per encounter. Seal target: %s." % (String(selected_definition.get("name", selected_module_id)) if not selected_installed.is_empty() else "select a chassis module first")
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty())
+	if intervention_buttons.size() >= 4:
+		intervention_buttons[1].text = "Seal %s · protected / offline" % (String(selected_definition.get("name", "selected")) if not selected_installed.is_empty() else "selected module")
 	settlement_group.visible = state.phase == "settlement"
 	settlement_title.visible = state.phase == "settlement"
 	settlement_repair_button.visible = state.phase == "settlement"
@@ -1241,8 +1257,11 @@ func _refresh_ui() -> void:
 	status_label.text = "SYSTEMS · %d ready   %d strained   %d offline%s" % [int(dependencies.ready), int(dependencies.strained), int(dependencies.offline), "   ·   BLOCKADE %s %d" % [state.campaign_pressure_band().to_upper(), state.campaign_pressure] if state.campaign_active else ""]
 	campaign_progress_bar.visible = state.campaign_active
 	campaign_progress_bar.value = state.campaign_encounters_completed
-	encounter_progress_bar.visible = is_battle_phase
-	encounter_progress_bar.value = state.encounter_progress * 100.0
+	var combat_view := state.encounter_summary()
+	combat_view["location_name"] = String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node))
+	combat_view["doctrine"] = state.encounter_target_doctrine
+	combat_view["command_points"] = state.command_points
+	combat_panel.configure(combat_view, LongMarchState.ENCOUNTER_ENEMIES)
 	var route_name := String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "Meridian Pass" if state.journey_route == "meridian_pass" else "not chosen"))
 	if state.campaign_active:
 		var path_names: Array[String] = []
@@ -1251,23 +1270,13 @@ func _refresh_ui() -> void:
 		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | Encounter %d/5" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), state.campaign_encounters_completed]
 	else:
 		journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
-	var encounter_lines: Array[String] = []
-	for enemy in state.encounter_enemies:
-		var enemy_id: String = String(enemy.get("id", ""))
-		var enemy_name: String = String(LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id))
-		var enemy_state: String
-		if bool(enemy.get("defeated", false)):
-			enemy_state = "cleared" if enemy_id == "storm_front" else "defeated"
-		elif enemy_id == "storm_front":
-			enemy_state = "pressure %d/%d" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
-		else:
-			enemy_state = "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
-		var target: String = String(enemy.get("target", "approaching"))
-		encounter_lines.append("%s — %s — target %s" % [enemy_name, enemy_state, target])
 	if state.phase == "results":
 		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
+	elif not state.encounter_outcome.is_empty():
+		var last_consequence := state.encounter_report[-1] if not state.encounter_report.is_empty() else "The road is clear."
+		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step(s)\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, String(last_consequence)]
 	else:
-		encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Choose a highlighted route when the fortress is ready."]
+		encounter_label.text = "NO ACTIVE CONTACT\nChoose a highlighted route when the fortress is ready."
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
 	for index in range(start, state.log.size()):
@@ -1279,6 +1288,12 @@ func _refresh_ui() -> void:
 	fortress_panel.placement_module_id = selected_module_id
 	fortress_panel.placement_rotated = placement_rotated
 	fortress_panel.selected_cell = selected_module_cell
+	fortress_panel.combat_target_ids.clear()
+	if is_battle_phase:
+		for enemy in state.encounter_enemies:
+			var target_id := String(enemy.get("target", ""))
+			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull" and target_id not in fortress_panel.combat_target_ids:
+				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
 
 class FortressPanel extends Control:
@@ -1293,6 +1308,7 @@ class FortressPanel extends Control:
 	var placement_rotated: bool = false
 	var selected_cell := Vector2i(-1, -1)
 	var cursor_cell := Vector2i(0, 0)
+	var combat_target_ids: Array[String] = []
 	var family_colors := {
 		"engine": Color("#b86f4b"),
 		"weapon": Color("#b44949"),
@@ -1442,6 +1458,14 @@ class FortressPanel extends Control:
 			if state_name != "ready":
 				draw_rect(rect.grow(-3), Color("#e3ad55") if state_name == "strained" else Color("#e06f61"), false, 2.0)
 			_draw_module_name(rect, String(definition.get("name", instance.get("id", ""))))
+			var maximum := maxi(1, int(definition.get("durability", 1)))
+			var durability := maxi(0, int(instance.get("durability", 0)))
+			var durability_ratio := clampf(float(durability) / float(maximum), 0.0, 1.0)
+			var bar_rect := Rect2(rect.position + Vector2(4, rect.size.y - 7), Vector2(rect.size.x - 8, 4))
+			draw_rect(bar_rect, Color("#172026"), true)
+			draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x * durability_ratio, bar_rect.size.y)), Color("#73c99b") if durability_ratio > 0.5 else (Color("#e8c58e") if durability_ratio > 0.25 else Color("#ef8375")), true)
+			if String(instance.get("id", "")) in combat_target_ids:
+				draw_rect(rect.grow(3), Color("#ff806f"), false, 4.0)
 			if selected_cell in state.occupied_cells(instance):
 				draw_rect(rect.grow(2), Color("#69d8cf"), false, 3.0)
 		var cursor_rect := Rect2(ORIGIN + Vector2(cursor_cell.x * CELL, cursor_cell.y * CELL), Vector2(CELL - 3, CELL - 3))
