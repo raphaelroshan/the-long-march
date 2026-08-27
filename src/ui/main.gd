@@ -1460,6 +1460,8 @@ func _refresh_ui() -> void:
 	encounter_label.visible = not is_battle_phase
 	advance_encounter_button.visible = is_battle_phase
 	advance_encounter_button.disabled = not state.encounter_active
+	if is_battle_phase:
+		advance_encounter_button.text = "ADVANCE · RESOLVE STEP %d OF 6" % mini(state.encounter_step + 1, 6)
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
@@ -1559,9 +1561,30 @@ func _current_guidance() -> String:
 	if state.phase == "results":
 		return "RUN COMPLETE · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
 	if state.phase in ["battle", "final_battle"]:
-		if state.encounter_intervention_used:
-			return "CURRENT ORDER · The emergency order is spent. Read the highlighted target and advance one encounter step."
-		return "CURRENT ORDER · Read the highlighted target, then advance one encounter step. One emergency order remains."
+		var active_targets: Array[String] = []
+		var nearest_enemy := ""
+		var nearest_steps := 99
+		for enemy in state.encounter_enemies:
+			if bool(enemy.get("defeated", false)):
+				continue
+			var enemy_id := String(enemy.get("id", ""))
+			var definition: Dictionary = LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {})
+			if bool(enemy.get("arrived", false)):
+				var target_id := String(enemy.get("target", "hull"))
+				var target_name := "Hull" if target_id == "hull" else String(state.module_definition(target_id).get("name", target_id.replace("_", " ").capitalize()))
+				if target_name not in active_targets:
+					active_targets.append(target_name)
+			else:
+				var steps_out := maxi(1, int(definition.get("arrival_step", 0)) - state.encounter_step)
+				if steps_out < nearest_steps:
+					nearest_steps = steps_out
+					nearest_enemy = String(definition.get("name", enemy_id))
+		var order_status := "The emergency order is spent." if state.encounter_intervention_used else "One emergency order remains."
+		if not active_targets.is_empty():
+			return "CURRENT ORDER · %s under threat. Read cause and effect, then advance. %s" % [" and ".join(active_targets), order_status]
+		if not nearest_enemy.is_empty():
+			return "CURRENT ORDER · %s is %d step%s out. Advance to step %d. %s" % [nearest_enemy, nearest_steps, "" if nearest_steps == 1 else "s", mini(state.encounter_step + 1, 6), order_status]
+		return "CURRENT ORDER · Advance the encounter and watch for a new target. %s" % order_status
 	if not state.campaign_event_pending.is_empty():
 		return "DECISION REQUIRED · Resolve the local event below before the fortress can depart."
 	if state.guard_contract_status == "offered":

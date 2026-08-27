@@ -117,10 +117,14 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 			fill = Color("#25493e")
 			border = Color("#73c99b")
 			text_color = Color("#d4f1e4")
+			step_labels[index].text = "DONE · %d" % (index + 1)
 		elif index == step and active:
 			fill = Color("#5a4029")
 			border = Color("#e8c58e")
 			text_color = Color("#fff1ce")
+			step_labels[index].text = "NEXT · %d" % (index + 1)
+		else:
+			step_labels[index].text = str(index + 1)
 		step_panels[index].add_theme_stylebox_override("panel", _panel_style(fill, border, 2 if index == step and active else 1))
 		step_labels[index].add_theme_color_override("font_color", text_color)
 
@@ -151,7 +155,8 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 		card.add_theme_stylebox_override("panel", _panel_style(fill, border, 2))
 		enemy_names[index].text = String(definition.get("name", enemy_id)).to_upper()
 		var health_word := "pressure" if enemy_id == "storm_front" else "HP"
-		var contact_state := "CLEARED" if defeated and enemy_id == "storm_front" else ("DEFEATED" if defeated else ("CONTACT" if arrived else "APPROACHING · ETA %d" % int(definition.get("arrival_step", 0))))
+		var steps_out := maxi(1, int(definition.get("arrival_step", 0)) - step)
+		var contact_state := "CLEARED" if defeated and enemy_id == "storm_front" else ("DEFEATED" if defeated else ("CONTACT" if arrived else "APPROACHING · %d STEP%s OUT" % [steps_out, "" if steps_out == 1 else "S"]))
 		var target_text := " · target %s" % target.replace("_", " ") if arrived and not target.is_empty() and not defeated else ""
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
