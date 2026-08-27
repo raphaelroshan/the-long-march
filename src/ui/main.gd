@@ -1504,8 +1504,12 @@ func _refresh_campaign_controls() -> void:
 
 	var recruit_status := state.iven_recruitment_status()
 	recruit_iven_button.visible = state.campaign_active and state.current_location == "broken_relay" and state.phase == "map" and state.specialist_id.is_empty() and state.campaign_event_pending.is_empty()
-	recruit_iven_button.disabled = not bool(recruit_status.get("available", false))
-	recruit_iven_button.tooltip_text = String(recruit_status.get("reason", ""))
+	var can_recruit_iven := bool(recruit_status.get("available", false))
+	var recruit_reason := String(recruit_status.get("reason", ""))
+	recruit_iven_button.disabled = not can_recruit_iven
+	recruit_iven_button.text = "RECRUIT IVEN PELL · 12 ASHMARKS" if can_recruit_iven else "IVEN PELL UNAVAILABLE\n%s" % recruit_reason.to_upper()
+	recruit_iven_button.custom_minimum_size = Vector2(0, 44 if can_recruit_iven else 56)
+	recruit_iven_button.tooltip_text = "Adds exact immediate threat forecasts and storm navigation." if can_recruit_iven else recruit_reason
 
 func _refresh_ui() -> void:
 	var snapshot := state.summary()

@@ -34,6 +34,7 @@ The repository contains an agent-first Godot project with:
 - Combat cards showing live enemy arrival countdowns, health or storm pressure, current targets, counters, an explicit six-step timeline, and recent cause-and-effect.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
 - Authored event choices that show unmet chassis or resource prerequisites directly on locked options.
+- Specialist recruitment that names its unmet relay, crew-space, or supply requirement directly in the action.
 - Immediate decision-consequence reports that state exact changes to fuel, trust, time, pressure, and route risk above the fold.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.

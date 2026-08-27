@@ -106,6 +106,8 @@ Watch, Closing, and Break are visible regional pressure bands. At Break, the opt
 
 The first guard contract deliberately increases Morrowline encounter endurance in exchange for money and trust. Iven Pell requires a repaired relay, operational crew space, and supplies; in return he improves forecasts, storm mitigation, and late-route access. Both systems change loadout, route, and economy decisions rather than existing as dialogue-only rewards.
 
+Iven's recruitment control follows the same visible-prerequisite rule as authored events. When recruitment is unavailable, the action names the exact missing relay, crew-space, location, staffing, or supply condition in its disabled state rather than relying on hover-only help.
+
 Journey doctrine is explained as mechanics at selection time. Protect Cargo and Protect Crew name their targeting, mitigation, and matchup effects; Run Hot names its damage gain and thermal liabilities. When Run Hot crosses the heat limit, both the doctrine text and route Commit control show the predicted overheat before the player departs.
 
 Locked authored choices state their prerequisite directly in the control instead of relying on a hover tooltip. Refuge capacity, signal capability, and Ashmark requirements are therefore visible to mouse, keyboard, controller, and touch players alike, and unavailable choices become useful build information for a later run.
