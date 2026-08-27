@@ -2099,7 +2099,8 @@ func _refresh_ui() -> void:
 		settlement_refuel_button.text += "\nLOCKED · NO SERVICE ACTIONS LEFT"
 	elif state.money < 8:
 		settlement_refuel_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
-	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +2 HULL · 10 ASHMARKS"
+	var hull_repair_amount := mini(2, 10 - state.hull_condition)
+	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +%d HULL · 10 ASHMARKS" % hull_repair_amount
 	settlement_hull_button.disabled = not services_open or state.hull_condition >= 10 or state.money < 10
 	if state.hull_condition < 10:
 		if not services_open:

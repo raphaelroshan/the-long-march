@@ -1168,13 +1168,15 @@ func settlement_repair_hull() -> Dictionary:
 		return {"ok": false, "reason": "hull is already fully repaired"}
 	if money < 10:
 		return {"ok": false, "reason": "not enough Ashmarks"}
+	var hull_before := hull_condition
 	money -= 10
 	hull_condition = mini(10, hull_condition + 2)
 	settlement_actions_remaining -= 1
-	var message := "Morrowline restored 2 hull for 10 Ashmarks."
+	var hull_added := hull_condition - hull_before
+	var message := "Morrowline restored %d hull for 10 Ashmarks." % hull_added
 	settlement_report.append(message)
 	log.append(message)
-	return {"ok": true, "hull_added": 2, "cost": 10, "summary": summary()}
+	return {"ok": true, "hull_added": hull_added, "cost": 10, "summary": summary()}
 
 func begin_final_journey(doctrine: String = "protect_crew") -> Dictionary:
 	if phase != "settlement" or current_location != "morrowline_camp":

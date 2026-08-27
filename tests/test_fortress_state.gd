@@ -319,6 +319,16 @@ func _test_spatial_targeting_and_causality() -> void:
 	_expect(causal.encounter_report.filter(func(line: String) -> bool: return line.contains("Dependency change") and line.contains("Steam Lance Engine")).size() > 0, "combat report should explain downstream dependency failure")
 
 func _test_settlement_and_final_march() -> void:
+	var hull_service := LongMarchState.new(1107)
+	hull_service.phase = "settlement"
+	hull_service.current_location = "morrowline_camp"
+	hull_service.settlement_actions_remaining = 1
+	hull_service.hull_condition = 9
+	hull_service.money = 10
+	var hull_result := hull_service.settlement_repair_hull()
+	_expect(bool(hull_result.get("ok", false)) and int(hull_result.get("hull_added", 0)) == 1 and hull_service.hull_condition == 10, "hull service should report the actual one-point repair when the fortress is nearly full")
+	_expect(String(hull_service.settlement_report[-1]).contains("restored 1 hull"), "the settlement record should preserve the exact hull repair delivered")
+
 	var state := LongMarchState.new(1107)
 	_install_encounter_loadout(state)
 	state.begin_journey("safe_road", "protect_cargo")

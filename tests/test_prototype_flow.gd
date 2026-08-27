@@ -460,10 +460,10 @@ func _run() -> void:
 	var recovery_hull: int = game.state.hull_condition
 	var recovery_actions: int = game.state.settlement_actions_remaining
 	game.state.money = 3
-	game.state.hull_condition = 8
+	game.state.hull_condition = 9
 	game._refresh_ui()
 	_expect(game.settlement_refuel_button.disabled and game.settlement_refuel_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable fuel service should name the player's current funds")
-	_expect(game.settlement_hull_button.disabled and game.settlement_hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable hull service should name the player's current funds")
+	_expect(game.settlement_hull_button.disabled and game.settlement_hull_button.text.contains("REPAIR +1 HULL") and game.settlement_hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable near-full hull service should name both its exact benefit and the player's current funds")
 	game.state.money = recovery_money
 	game.state.settlement_actions_remaining = 0
 	game._refresh_ui()

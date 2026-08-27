@@ -423,3 +423,7 @@ Shift Power compares each surviving contact's current incoming fortress damage w
 ## 2026-08-28 — Emergency-order detail follows focus and hover
 
 The command desk no longer displays four dense forecasts simultaneously. Its resting copy explains how to inspect an order and names the current Seal target; focusing or hovering Shift Power, Seal Compartment, Vent Heat, or Cut Loose Cargo replaces that copy with only the selected action's exact benefit and cost. Keyboard, controller, and pointer interactions use the same preview data, and leaving the order controls restores the concise overview.
+
+## 2026-08-28 — Recovery services report delivered value
+
+Morrowline's hull service calculates the actual durability restored before presenting or recording the action. A fortress at 9/10 hull therefore sees and receives `+1 hull` for the fixed service cost rather than being told that two points were delivered. This keeps the scarce two-action recovery budget numerically trustworthy at the health cap.
