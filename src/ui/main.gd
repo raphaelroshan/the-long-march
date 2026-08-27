@@ -1779,7 +1779,8 @@ func _refresh_ui() -> void:
 		encounter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
 		var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
-		var selected_instruction := "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review the selected route, then commit when ready."
+		var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
+		var selected_instruction := "%s selected · %s" % [selected_node_name, "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review its costs and doctrine, then commit when ready."]
 		if state.guard_contract_status == "offered":
 			encounter_label.text = "ASHGATE PREPARATION\nAnswer the convoy contract to open the first roads."
 		elif not state.campaign_event_pending.is_empty():

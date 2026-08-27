@@ -136,6 +136,8 @@ The alpha presents the entire regional route graph instead of reducing each choi
 
 Route selection and departure are separate actions. Selecting a node highlights the road and preserves the current state while the player reviews time, fuel, risk, pressure, visibility, and doctrine. A dedicated commit control begins travel, preventing accidental departures and making controller navigation predictable.
 
+The stage status names the selected road during that review, and controller B or Escape cancels the preview without changing campaign state. Focus returns to the same route node so comparing another path requires one deliberate movement rather than restarting navigation from elsewhere.
+
 Route inspection remains available when the fortress cannot move. The selected route, desk order, detail copy, and disabled Commit control all state the exact fuel shortfall or fuel-connected-engine requirement. This keeps “learn about the road” separate from “pay its cost and leave,” making recovery failures diagnosable instead of turning the map inert.
 
 ## 2026-08-27 — Combat presents causes before spectacle

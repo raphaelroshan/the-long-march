@@ -141,9 +141,15 @@ func _run() -> void:
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
+	_expect(game.encounter_label.text.contains("Rill Crossing selected"), "the route-review status should name the road being considered")
+	var route_cancel := InputEventJoypadButton.new()
+	route_cancel.button_index = JOY_BUTTON_B
+	route_cancel.pressed = true
+	game._unhandled_input(route_cancel)
+	await process_frame
+	_expect(game.selected_campaign_node_id.is_empty() and game.campaign_map.button_for("rill_crossing").has_focus() and game.encounter_label.text.begins_with("ROUTE PLANNING"), "controller cancel should leave route preview without departing and restore route focus")
 	game.doctrine_option.select(0)
 	game.doctrine_option.item_selected.emit(0)
-	game.selected_campaign_node_id = ""
 	game._refresh_ui()
 	var available_fuel: int = game.state.fuel
 	game.state.fuel = 0
