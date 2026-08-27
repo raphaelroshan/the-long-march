@@ -671,6 +671,7 @@ func _build_ui() -> void:
 
 	advance_encounter_button = Button.new()
 	advance_encounter_button.text = "Advance journey battle"
+	advance_encounter_button.custom_minimum_size = Vector2(0, 54)
 	advance_encounter_button.tooltip_text = "Resolve one readable encounter step."
 	advance_encounter_button.pressed.connect(_on_advance_encounter_pressed)
 	_accent_button(advance_encounter_button, Color("#593e28"), Color("#e8c58e"))
@@ -1810,7 +1811,7 @@ func _refresh_ui() -> void:
 	advance_encounter_button.visible = is_battle_phase
 	advance_encounter_button.disabled = not state.encounter_active
 	if is_battle_phase:
-		advance_encounter_button.text = "ADVANCE · RESOLVE STEP %d OF 6" % mini(state.encounter_step + 1, 6)
+		advance_encounter_button.text = _advance_encounter_action_text()
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
@@ -2004,6 +2005,29 @@ func _current_guidance() -> String:
 	if state.campaign_active and state.phase in ["refit", "map"]:
 		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
 	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
+
+func _advance_encounter_action_text() -> String:
+	var next_step := mini(state.encounter_step + 1, 6)
+	var arriving_names: Array[String] = []
+	var active_targets: Array[String] = []
+	for enemy in state.encounter_enemies:
+		if bool(enemy.get("defeated", false)):
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var definition: Dictionary = LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {})
+		if bool(enemy.get("arrived", false)):
+			var target_id := String(enemy.get("target", "hull"))
+			var target_name := "Hull" if target_id == "hull" else String(state.module_definition(target_id).get("name", target_id.replace("_", " ").capitalize()))
+			if target_name not in active_targets:
+				active_targets.append(target_name)
+		elif int(definition.get("arrival_step", 0)) == next_step:
+			arriving_names.append(String(definition.get("name", enemy_id)).to_upper())
+	var consequence := ""
+	if not arriving_names.is_empty():
+		consequence = "\nCONTACT NEXT · %s" % " + ".join(arriving_names)
+	elif not active_targets.is_empty():
+		consequence = "\nACTIVE TARGET · %s" % " + ".join(active_targets).to_upper()
+	return "ADVANCE · RESOLVE STEP %d OF 6%s" % [next_step, consequence]
 
 func _result_summary_text() -> String:
 	match state.final_result:

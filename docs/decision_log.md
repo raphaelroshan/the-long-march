@@ -158,6 +158,8 @@ That exact outcome is authored once by the simulation and reused by both the imm
 
 The combat header names the next action as `Next step 1/6` rather than presenting the internal zero-based count as `Step 0/6`. Header, timeline, and Advance button now agree before and after every resolution.
 
+The Advance button previews immediate contact. When an approaching threat reaches the fortress on the next step, the action names it before confirmation; once contact is active, it names the threatened system. Ordinary travel steps remain concise. This puts the irreversible consequence on the control itself without replacing the fuller enemy cards and current-order guidance.
+
 ## 2026-08-27 — The application shell starts outside the simulation
 
 The packaged build opens on a title menu instead of constructing a run immediately. Start Game creates a fresh Ashgate stage, Continue restores the explicit local save, and Escape opens a pause layer with resume, restart, and return-to-title actions. The shell owns these lifecycle transitions while `Main.tscn` remains the playable stage and `LongMarchState` remains presentation-independent. This keeps menu state from leaking into deterministic campaign state and leaves the stage independently testable.
