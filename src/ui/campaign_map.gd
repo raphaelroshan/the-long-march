@@ -190,6 +190,16 @@ func intel_tone_for(node_id: String) -> String:
 		_:
 			return "danger"
 
+func _node_state_text(node_id: String, status: String) -> String:
+	if status in ["available", "selected"]:
+		var preview: Dictionary = current_previews.get(node_id, {})
+		var visibility := String(preview.get("visibility", "forecast")).to_upper()
+		var risk_text := "UNKNOWN" if visibility == "UNSCOUTED" else _risk_band(float(preview.get("risk", 0.0)))
+		return "%s · %s" % ["SELECTED" if status == "selected" else visibility, risk_text]
+	if status == "blocked":
+		return "DECISION REQUIRED"
+	return status.to_upper()
+
 func _show_node_detail(node_id: String) -> void:
 	node_inspected.emit(node_id, detail_for(node_id))
 
@@ -238,13 +248,7 @@ func configure(view: Dictionary) -> void:
 		elif node_id in available_nodes:
 			status = "available"
 		node_statuses[node_id] = status
-		var state_text := status.capitalize()
-		if status == "available":
-			state_text = String(current_previews.get(node_id, {}).get("visibility", "forecast")).capitalize()
-		elif status == "selected":
-			state_text = "Selected"
-		elif status == "blocked":
-			state_text = "Decision required"
+		var state_text := _node_state_text(node_id, status)
 		button.text = "%s\n%s" % [String(SHORT_NAMES.get(node_id, node_id)), state_text]
 		button.disabled = status not in ["available", "selected"] or interaction_is_blocked
 		if status in ["available", "selected"]:
