@@ -242,7 +242,12 @@ func _run() -> void:
 	game.feedback_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_status_label.text.begins_with("LAST SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN", "reopening feedback should preserve the previous local-save receipt")
-	game._hide_feedback()
+	var controller_cancel := InputEventJoypadButton.new()
+	controller_cancel.button_index = JOY_BUTTON_B
+	controller_cancel.pressed = true
+	game._unhandled_input(controller_cancel)
+	await process_frame
+	_expect(not game.feedback_overlay.visible and game.feedback_button.has_focus(), "controller cancel should close the feedback modal and restore result focus")
 	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
 	game.results_title_button.pressed.emit()
 	await process_frame

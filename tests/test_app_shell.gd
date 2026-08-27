@@ -179,10 +179,10 @@ func _run() -> void:
 	await process_frame
 	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.clear_save_button and app.clear_save_button.get_node_or_null(app.clear_save_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should reroute immediately after a one-shot action becomes unavailable")
-	var cancel_input := InputEventAction.new()
-	cancel_input.action = "ui_cancel"
+	var cancel_input := InputEventJoypadButton.new()
+	cancel_input.button_index = JOY_BUTTON_B
 	cancel_input.pressed = true
-	app._unhandled_key_input(cancel_input)
+	app._unhandled_input(cancel_input)
 	await process_frame
 	_expect(not app.settings_view.visible and app.pause_view.visible and app.pause_settings_button.has_focus(), "cancelling in-run Settings should close it and return to the pause menu")
 	app.restart_button.pressed.emit()

@@ -1245,7 +1245,7 @@ func _return_to_title() -> void:
 func _quit_game() -> void:
 	get_tree().quit()
 
-func _unhandled_key_input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	if confirmation_view.visible:

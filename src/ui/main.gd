@@ -1000,7 +1000,7 @@ func _save_feedback() -> void:
 		feedback_status_label.tooltip_text = ""
 		feedback_status_label.text = "Could not save feedback: %s" % String(result.get("reason", "unknown error"))
 
-func _unhandled_key_input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	if feedback_overlay.visible:

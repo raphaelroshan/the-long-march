@@ -4,7 +4,7 @@ config_version=5
 
 [application]
 config/name="The Long March"
-config/version="0.3.0-alpha.68"
+config/version="0.3.0-alpha.69"
 run/main_scene="res://scenes/App.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 
@@ -22,6 +22,16 @@ textures/default_filters/use_nearest_mipmap_filter=false
 textures/vram_compression/import_etc2_astc=true
 
 [input]
+
+ui_accept={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":4194309,"unicode":13), Object(InputEventKey,"physical_keycode":4194310), Object(InputEventKey,"physical_keycode":32,"unicode":32), Object(InputEventJoypadButton,"button_index":0)]
+}
+ui_cancel={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":4194305), Object(InputEventJoypadButton,"button_index":1)]
+}
+
 confirm={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":4194309,"unicode":13)]

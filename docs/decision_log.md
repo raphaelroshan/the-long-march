@@ -160,6 +160,8 @@ Settings also maintains explicit vertical focus neighbors as those one-shot acti
 
 Settings consequences are visible beside their controls rather than existing only in hover tooltips. Title and briefing legends name controller and keyboard equivalents together, so a controller-first tester does not need to infer that keyboard-only copy also applies to the gamepad.
 
+Controller A and B are explicitly mapped to the same accept and cancel actions as Enter and Escape. Cancel handling uses the general unhandled-input path rather than the keyboard-only callback, so gamepad B can close overlays, clear a route preview, pause, and resume exactly where the interface promises.
+
 The first-run briefing and the in-run Field Briefing reuse one layout but have distinct semantics. First-run controls say `Skip Briefing` and `Enter Ashgate` and persist completion; reference mode says `Close Briefing` and `Return to March` and records only that the reference was closed. Re-reading help therefore cannot masquerade as onboarding progress.
 
 The pause menu compares the live campaign snapshot with the local save whenever it opens or saves. A current checkpoint gets a direct `Return to Title` action; changed state is labeled `Exit Unsaved` and retains the explicit discard confirmation. This makes warnings meaningful instead of showing the same destructive language after a successful save.
