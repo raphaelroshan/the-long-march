@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "game_id": "the-long-march",
+  "content_version": "0.1.0",
+  "campaign": {
+    "title": "The Long March",
+    "premise": "A mobile fortress crosses a ruined continent carrying people, tools, and the last working promises between settlements.",
+    "player_role": "The newly appointed marchmaster responsible for keeping the fortress moving and useful.",
+    "regional_objective": "Reach the Meridian Refuge before the ash season closes the eastern passes.",
+    "content_extensions": ["content/gameplay_framework.json"],
+    "chapters": [
+      {
+        "id": "chapter_1_the_road_out",
+        "title": "The Road Out",
+        "summary": "Learn the chassis, complete a first contract, and discover that every useful module creates a dependency.",
+        "entry_condition": "campaign_start",
+        "exit_condition": "complete_first_contract and fortress_operational",
+        "player_question": "Can this fortress move without becoming helpless?",
+        "beats": ["wake_the_engine", "first_refit", "road_raider_probe", "settlement_contract"]
+      },
+      {
+        "id": "chapter_2_the_broken_relay",
+        "title": "The Broken Relay",
+        "summary": "A communications line fails, forcing a choice between signal range, armor, and movement speed.",
+        "entry_condition": "chapter_1_complete",
+        "exit_condition": "relay_decision_resolved",
+        "player_question": "What is a fortress worth if it cannot hear the road?",
+        "beats": ["lost_signal", "climber_warning", "relay_repair", "first_major_refit"]
+      },
+      {
+        "id": "chapter_3_the_ash_meridian",
+        "title": "The Ash Meridian",
+        "summary": "Storms and Burrowers attack the lower hull, making recovery and redundant systems essential.",
+        "entry_condition": "chapter_2_complete",
+        "exit_condition": "cross_meridian_pass",
+        "player_question": "How much redundancy can the fortress afford?",
+        "beats": ["weather_front", "lower_hull_breach", "crew_argument", "controlled_sacrifice"]
+      },
+      {
+        "id": "chapter_4_weight_of_shelter",
+        "title": "The Weight of Shelter",
+        "summary": "The fortress takes on refugees and must decide whether cargo, armor, or mobility matters most.",
+        "entry_condition": "chapter_3_complete",
+        "exit_condition": "refugee_contract_complete",
+        "player_question": "What does the machine owe the people inside it?",
+        "beats": ["shelter_request", "cargo_reduction", "rival_fortress", "safe_harbor"]
+      },
+      {
+        "id": "chapter_5_the_last_march",
+        "title": "The Last March",
+        "summary": "The fortress faces the final road, where its accumulated dependencies and relationships are tested together.",
+        "entry_condition": "chapter_4_complete",
+        "exit_condition": "campaign_ending_selected",
+        "player_question": "Did we build a machine that can survive without one perfect part?",
+        "beats": ["final_route", "siege_beast", "crew_stand", "march_verdict"]
+      }
+    ]
+  },
+  "locations": [
+    {
+      "id": "ashgate_depot",
+      "name": "Ashgate Depot",
+      "role": "starting settlement",
+      "story_function": "Introduces the fortress, contracts, refits, and the cost of being stationary.",
+      "visual_motif": "Canvas roofs, black rails, amber signal lamps, and chalked repair diagrams.",
+      "problems": ["fuel shortage", "overcrowded depot", "missing spare parts"],
+      "available_events": ["wake_the_engine", "first_refit"]
+    },
+    {
+      "id": "meridian_refuge",
+      "name": "Meridian Refuge",
+      "role": "campaign destination",
+      "story_function": "Represents the future network the fortress is trying to preserve.",
+      "visual_motif": "White stone terraces, windbreak cloth, and old fortress plates reused as roofs.",
+      "problems": ["limited shelter", "storm exposure", "rival claims over supplies"],
+      "available_events": ["safe_harbor", "march_verdict"]
+    },
+    {
+      "id": "broken_relay",
+      "name": "Broken Relay",
+      "role": "route landmark",
+      "story_function": "Makes information and signal dependencies physically visible.",
+      "visual_motif": "A leaning mast, snapped cable, and faded blue route markers.",
+      "problems": ["climber nests", "damaged signal coil", "uncertain route reports"],
+      "available_events": ["lost_signal", "relay_repair"]
+    },
+    {
+      "id": "meridian_pass",
+      "name": "Meridian Pass",
+      "role": "hazardous crossing",
+      "story_function": "Tests movement, storm preparation, and lower-hull redundancy.",
+      "visual_motif": "Pale ash dunes, half-buried road ribs, and red warning pennants.",
+      "problems": ["storm front", "burrower tunnels", "narrow turning radius"],
+      "available_events": ["weather_front", "lower_hull_breach"]
+    }
+  ],
+  "factions": [
+    {
+      "id": "march_settlements",
+      "name": "The March Settlements",
+      "public_position": "A moving network is worth more than any one fortified place.",
+      "private_pressure": "Each settlement wants the fortress to carry its burden first.",
+      "mechanical_hooks": ["contracts", "refit_access", "refugee_capacity"],
+      "content_rule": "Settlement support should improve options while creating obligations, never become a passive bonus."
+    },
+    {
+      "id": "road_raider_companies",
+      "name": "Road Raider Companies",
+      "public_position": "The road belongs to whoever can keep it.",
+      "private_pressure": "Some companies are predators; others are displaced convoy crews.",
+      "mechanical_hooks": ["cargo_pressure", "route_threats", "salvage_offers"],
+      "content_rule": "Raider choices should trade cargo safety against speed, visibility, and political cost."
+    },
+    {
+      "id": "relay_keepers",
+      "name": "The Relay Keepers",
+      "public_position": "Information is infrastructure and should not be owned by one fortress.",
+      "private_pressure": "They are willing to let a route fail to preserve a larger warning network.",
+      "mechanical_hooks": ["forecast_confidence", "signal_access", "weather_warnings"],
+      "content_rule": "Relay choices should improve knowledge while asking the player to protect or share it."
+    }
+  ],
+  "characters": [
+    {
+      "id": "mara_flint",
+      "name": "Mara Flint",
+      "type": "crew",
+      "role": "forge master",
+      "motivation": "Keep every repairable machine alive long enough to matter.",
+      "strength": "Improves workshop recovery and temporary repairs.",
+      "fear": "A fortress that discards people and parts before trying to repair them.",
+      "relationship_hook": "Mara respects controlled sacrifice but hates waste disguised as efficiency.",
+      "arc": ["offers_a_field_repair", "argues_against_overloaded_armor", "chooses_what_to_save_at_meridian_pass"],
+      "mechanical_hooks": ["repair_efficiency", "temporary_patch", "workshop_event_option"],
+      "recruit_location": "ashgate_depot"
+    },
+    {
+      "id": "iven_pell",
+      "name": "Iven Pell",
+      "type": "crew",
+      "role": "signal officer",
+      "motivation": "Make the road legible enough that people can choose danger knowingly.",
+      "strength": "Improves threat forecasts and signal-linked interventions.",
+      "fear": "A warning that arrives after the decision is already made.",
+      "relationship_hook": "Iven wants reports shared even when secrecy would make the fortress safer.",
+      "arc": ["deciphers_the_first_warning", "asks_to_repair_the_broken_relay", "broadcasts_the_final_route"],
+      "mechanical_hooks": ["forecast_confidence", "signal_relay", "climber_warning"],
+      "recruit_location": "broken_relay"
+    },
+    {
+      "id": "sela_vonn",
+      "name": "Sela Vonn",
+      "type": "crew",
+      "role": "route master",
+      "motivation": "Reach settlements before the road closes, even if the fortress arrives damaged.",
+      "strength": "Reduces travel time and improves route-posture choices.",
+      "fear": "Losing a day while people wait at the next shelter.",
+      "relationship_hook": "Sela pushes for speed until the crew shows her the true repair cost.",
+      "arc": ["offers_the_shortcut", "defends_a_risky_contract", "accepts_a_slow_route_for_refugees"],
+      "mechanical_hooks": ["travel_efficiency", "shortcut_event_option", "route_posture"],
+      "recruit_location": "ashgate_depot"
+    }
+  ],
+  "events": [
+    {
+      "id": "wake_the_engine",
+      "title": "A Machine That Still Answers",
+      "type": "settlement",
+      "chapter": "chapter_1_the_road_out",
+      "locations": ["ashgate_depot"],
+      "trigger": "campaign_start",
+      "setup": "The fortress has fuel for one departure and enough parts for one serious repair. The depot offers three ways to make it roadworthy.",
+      "choices": [
+        {"id": "repair_engine", "label": "Spend parts on the engine.", "requirements": ["parts >= 2"], "effects": ["engine_condition:+2", "cargo_capacity:-1"], "visible_result": "The fortress moves reliably, but one cargo rack is removed for the repair rig."},
+        {"id": "reinforce_hull", "label": "Plate the forward hull.", "requirements": ["parts >= 2"], "effects": ["front_armor:+2", "movement_speed:-1"], "visible_result": "The fortress can take a hit, but the first route will be slower."},
+        {"id": "take_the_risk", "label": "Leave with the parts in the hold.", "requirements": ["fuel >= 1"], "effects": ["cargo:repair_parts", "route_risk:+0.15"], "visible_result": "You preserve future flexibility and accept that the first road will expose the unfinished machine."}
+      ],
+      "follow_up": "road_raider_probe"
+    },
+    {
+      "id": "road_raider_probe",
+      "title": "The Toll of Being Large",
+      "type": "travel",
+      "chapter": "chapter_1_the_road_out",
+      "locations": ["ashgate_depot", "broken_relay"],
+      "trigger": "first_departure and cargo_value > 0",
+      "setup": "A displaced convoy crew approaches under a stolen banner. They know exactly which exterior mount looks unprotected.",
+      "choices": [
+        {"id": "show_the_gun", "label": "Power the exterior gun and warn them off.", "requirements": ["weapon_operational", "power_available"], "effects": ["heat:+1", "raider_respect:+1", "ammo:-1"], "visible_result": "The raiders withdraw, but the fortress broadcasts its firing range."},
+        {"id": "offer_cargo", "label": "Give up a low-value cargo crate.", "requirements": ["cargo_value >= 1"], "effects": ["cargo:-1", "route_risk:-0.05", "settlement_trust:+1"], "visible_result": "The convoy passes without violence, and word spreads that the fortress can be negotiated with."},
+        {"id": "break_through", "label": "Rush the exposed shortcut.", "requirements": ["engine_condition >= 1"], "effects": ["movement_speed:+1", "engine_condition:-1", "cargo_risk:+1"], "visible_result": "You escape the encounter quickly, but the engine now needs attention."}
+      ],
+      "follow_up": "settlement_contract"
+    },
+    {
+      "id": "lost_signal",
+      "title": "The Silence Between Lamps",
+      "type": "route",
+      "chapter": "chapter_2_the_broken_relay",
+      "locations": ["broken_relay"],
+      "trigger": "signal_confidence < 2",
+      "setup": "The relay mast has gone dark. Iven can restore a weak signal, or the fortress can travel blind and keep its power for the engine.",
+      "choices": [
+        {"id": "restore_signal", "label": "Power the relay coil.", "requirements": ["signal_coil >= 1", "power_available"], "effects": ["forecast_confidence:+1", "power_reserve:-1", "relay_repaired:true"], "visible_result": "The next route forecast becomes clearer, but the fortress begins the crossing with less reserve."},
+        {"id": "share_the_lamp", "label": "Broadcast the relay location to nearby settlements.", "requirements": ["signal_operational"], "effects": ["settlement_trust:+1", "climber_risk:+0.10", "contract:relay_guard"], "visible_result": "Help arrives later, but the signal becomes a target."},
+        {"id": "move_in_silence", "label": "Keep the fortress dark and leave.", "requirements": ["engine_operational"], "effects": ["forecast_confidence:-1", "route_risk:+0.15", "heat:-1"], "visible_result": "The fortress is harder to find and harder to prepare."
+        }
+      ],
+      "follow_up": "climber_warning"
+    },
+    {
+      "id": "weather_front",
+      "title": "The Sky Comes Down",
+      "type": "hazard",
+      "chapter": "chapter_3_the_ash_meridian",
+      "locations": ["meridian_pass"],
+      "trigger": "storm_forecast and route == meridian_pass",
+      "setup": "A wall of ash is crossing the pass. The fortress can slow, seal, or keep its exposed equipment active to maintain a route signal.",
+      "choices": [
+        {"id": "seal_and_wait", "label": "Seal the exterior mounts and wait.", "requirements": ["seal_command_ready"], "effects": ["days:+1", "exposure:-1", "fuel:-1"], "visible_result": "The fortress loses time but reaches the pass with its exposed systems intact."},
+        {"id": "push_through", "label": "Keep moving through the ash.", "requirements": ["engine_operational"], "effects": ["heat:+2", "signal_condition:-1", "engine_condition:-1"], "visible_result": "The fortress keeps its schedule and emerges with multiple systems strained."},
+        {"id": "cut_the_signal", "label": "Drop the relay mast and protect the engine.", "requirements": ["signal_mast_operational"], "effects": ["signal_mast:-1", "engine_condition:+1", "settlement_trust:-1"], "visible_result": "The fortress preserves movement but abandons the warning network behind it."}
+      ],
+      "follow_up": "lower_hull_breach"
+    }
+  ],
+  "progression": {
+    "tracks": [
+      {
+        "id": "engineering",
+        "name": "Engineering",
+        "purpose": "Unlocks alternate layouts and recovery tools.",
+        "nodes": [
+          {"id": "modular_joints", "cost": 1, "effect": "rotate_more_modules", "choice_created": "fit a different chassis shape"},
+          {"id": "repair_crane", "cost": 2, "effect": "repair_exterior_mounts", "choice_created": "recover from a damaged outside build"},
+          {"id": "redundant_generator", "cost": 3, "effect": "split_power_dependency", "choice_created": "accept mass for safer operation"}
+        ]
+      },
+      {
+        "id": "cartography",
+        "name": "Cartography",
+        "purpose": "Improves route choices and weather knowledge without removing uncertainty.",
+        "nodes": [
+          {"id": "weather_log", "cost": 1, "effect": "storm_forecast", "choice_created": "prepare for exposure before departure"},
+          {"id": "salvage_marks", "cost": 2, "effect": "reveal_salvage_sites", "choice_created": "trade time for parts"},
+          {"id": "shared_routes", "cost": 3, "effect": "settlement_route_contracts", "choice_created": "protect a network rather than one destination"}
+        ]
+      },
+      {
+        "id": "crew_trust",
+        "name": "Crew Trust",
+        "purpose": "Unlocks emergency commands and character-specific recovery options.",
+        "nodes": [
+          {"id": "emergency_shift", "cost": 1, "effect": "shift_crew_command", "choice_created": "move capability before a dependency fails"},
+          {"id": "controlled_sacrifice", "cost": 2, "effect": "cut_loose_module", "choice_created": "lose one part to protect the machine"},
+          {"id": "last_stand_protocol", "cost": 3, "effect": "crew_stand_outcome", "choice_created": "protect people when the fortress cannot protect everything"}
+        ]
+      }
+    ],
+    "milestones": [
+      {"id": "first_contract", "condition": "complete_first_contract", "reward": "engineering:modular_joints"},
+      {"id": "first_recovery", "condition": "repair_after_module_loss", "reward": "crew_trust:emergency_shift"},
+      {"id": "relay_restored", "condition": "relay_repaired and forecast_confidence >= 2", "reward": "cartography:weather_log"},
+      {"id": "refuge_carried", "condition": "complete_refugee_contract", "reward": "crew_trust:controlled_sacrifice"}
+    ]
+  },
+  "endings": [
+    {
+      "id": "ending_moving_network",
+      "title": "The Road Keeps Moving",
+      "requirements": ["settlement_trust >= 4", "fortress_operational", "shared_routes_unlocked"],
+      "summary": "The fortress arrives not as a lone survivor but as the first moving link in a repaired network.",
+      "regional_changes": ["contracts_shared", "routes_reopened", "fortress_becomes_relay"],
+      "crew_note": "Iven broadcasts the route. Mara starts a workshop under the refuge terraces."
+    },
+    {
+      "id": "ending_fortified_refuge",
+      "title": "The Fortress Stays",
+      "requirements": ["front_armor >= 4", "refugee_capacity >= 3", "fortress_speed <= 1"],
+      "summary": "The fortress reaches the refuge slowly and becomes a permanent shelter, workshop, and defensive anchor.",
+      "regional_changes": ["refuge_strengthened", "travel_slows", "shelter_capacity_grows"],
+      "crew_note": "Sela gives up the road. Mara says a machine can have a second life."
+    },
+    {
+      "id": "ending_last_convoy",
+      "title": "The Last Convoy Through",
+      "requirements": ["settlement_trust >= 2", "route_speed >= 3", "cargo_delivered >= 3"],
+      "summary": "The fortress remains scarred but fast, carrying the final tools and people through before the pass closes.",
+      "regional_changes": ["meridian_pass_closes", "supplies_arrive", "outer_routes_remain_risky"],
+      "crew_note": "Sela marks the route in red. Iven refuses to call it safe."
+    },
+    {
+      "id": "ending_scarred_survival",
+      "title": "Still Answering",
+      "requirements": ["fortress_operational", "module_losses >= 2"],
+      "summary": "The fortress reaches the refuge missing pieces but carrying enough people and knowledge to begin again.",
+      "regional_changes": ["repair_school_begins", "old_modules_reused", "future_routes_uncertain"],
+      "crew_note": "Mara hangs the broken parts above the workshop door so nobody calls survival effortless."
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "game_id": "the-long-march",
+  "framework_version": "0.1.0",
+  "design_promise": "Every module provides a useful capability and creates a visible dependency, while the fortress must remain mobile enough to keep its promises.",
+  "spaces": [
+    {"id": "chassis_grid", "name": "Chassis Grid", "dimensions": [6, 4], "purpose": "Interior engines, rooms, workshops, armor, and cargo."},
+    {"id": "exterior_mounts", "name": "Exterior Mounts", "capacity": 2, "purpose": "Exposed guns, lamps, signals, cranes, and shield plates."},
+    {"id": "crew_stations", "name": "Crew Stations", "capacity": 4, "purpose": "Assign specialists to modules without creating a second full inventory."}
+  ],
+  "module_families": [
+    {"id": "engine", "name": "Engines", "purpose": "Movement, route access, fuel efficiency", "primary_dependency": "fuel"},
+    {"id": "weapon", "name": "Weapons", "purpose": "Pressure, suppression, and target control", "primary_dependency": "ammunition"},
+    {"id": "workshop", "name": "Workshops", "purpose": "Repair, fabrication, and recovery", "primary_dependency": "crew"},
+    {"id": "crew_room", "name": "Crew Rooms", "purpose": "Staffing, command points, and emergency actions", "primary_dependency": "life_support"},
+    {"id": "armor", "name": "Armor", "purpose": "Delay and damage absorption", "primary_dependency": "mass_budget"},
+    {"id": "cargo", "name": "Cargo", "purpose": "Contracts, salvage, and settlement value", "primary_dependency": "space_and_access"},
+    {"id": "signal", "name": "Signals", "purpose": "Forecasts, route information, and settlement contact", "primary_dependency": "visibility"}
+  ],
+  "modules": [
+    {"id": "steam_lance_engine", "family": "engine", "shape": [2, 1], "mass": 3, "power_draw": -2, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"], "connections": ["fuel", "shaft"]},
+    {"id": "ash_runner_engine", "family": "engine", "shape": [1, 2], "mass": 2, "power_draw": -1, "heat": 2, "durability": 3, "tags": ["engine", "fast", "hot"], "connections": ["fuel", "shaft"]},
+    {"id": "coal_cell", "family": "cargo", "shape": [1, 1], "mass": 1, "power_draw": 0, "heat": 0, "durability": 2, "tags": ["fuel", "cargo"], "connections": ["cargo"]},
+    {"id": "generator_core", "family": "crew_room", "shape": [2, 1], "mass": 3, "power_draw": -4, "heat": 2, "durability": 4, "tags": ["generator", "critical"], "connections": ["power", "crew"]},
+    {"id": "shell_cannon", "family": "weapon", "shape": [2, 1], "mass": 3, "power_draw": 2, "heat": 2, "durability": 3, "tags": ["weapon", "exterior", "burst"], "connections": ["ammunition", "mount"]},
+    {"id": "repeater_gun", "family": "weapon", "shape": [1, 1], "mass": 1, "power_draw": 1, "heat": 1, "durability": 2, "tags": ["weapon", "exterior", "suppress"], "connections": ["ammunition", "mount"]},
+    {"id": "ammunition_lift", "family": "workshop", "shape": [1, 2], "mass": 2, "power_draw": 1, "heat": 0, "durability": 3, "tags": ["ammunition", "dependency"], "connections": ["power", "crew"]},
+    {"id": "field_workshop", "family": "workshop", "shape": [2, 1], "mass": 2, "power_draw": 1, "heat": 1, "durability": 3, "tags": ["repair", "crew"], "connections": ["power", "crew", "parts"]},
+    {"id": "signal_coil", "family": "signal", "shape": [1, 1], "mass": 1, "power_draw": 1, "heat": 0, "durability": 2, "tags": ["signal", "forecast"], "connections": ["power", "visibility"]},
+    {"id": "wall_lamp", "family": "signal", "shape": [1, 1], "mass": 1, "power_draw": 1, "heat": 1, "durability": 2, "tags": ["signal", "climber_counter", "exterior"], "connections": ["power", "mount"]},
+    {"id": "front_armor_plate", "family": "armor", "shape": [2, 1], "mass": 3, "power_draw": 0, "heat": 0, "durability": 6, "tags": ["armor", "front"], "connections": ["hull"]},
+    {"id": "side_armor_skirt", "family": "armor", "shape": [1, 2], "mass": 2, "power_draw": 0, "heat": 0, "durability": 4, "tags": ["armor", "side", "burrower_counter"], "connections": ["hull"]},
+    {"id": "crew_quarters", "family": "crew_room", "shape": [2, 1], "mass": 2, "power_draw": 1, "heat": 0, "durability": 4, "tags": ["crew", "life_support"], "connections": ["power", "life_support"]},
+    {"id": "parts_crate", "family": "cargo", "shape": [1, 1], "mass": 1, "power_draw": 0, "heat": 0, "durability": 2, "tags": ["parts", "cargo"], "connections": ["cargo"]},
+    {"id": "refugee_bunk", "family": "cargo", "shape": [2, 1], "mass": 2, "power_draw": 1, "heat": 0, "durability": 3, "tags": ["refuge", "cargo", "life_support"], "connections": ["crew", "cargo"]},
+    {"id": "signal_mast", "family": "signal", "shape": [1, 2], "mass": 2, "power_draw": 1, "heat": 0, "durability": 3, "tags": ["signal", "long_range", "exterior"], "connections": ["power", "visibility", "mount"]}
+  ],
+  "connection_rules": [
+    {"id": "fuel_to_engine", "source_tag": "fuel", "target_tag": "engine", "benefit": "movement_operational", "failure": "engine_stalls"},
+    {"id": "power_to_module", "source_tag": "generator", "target_tag": "power", "benefit": "module_operational", "failure": "module_offline"},
+    {"id": "ammunition_to_weapon", "source_tag": "ammunition", "target_tag": "weapon", "benefit": "reload_rate", "failure": "weapon_uses_emergency_ammo"},
+    {"id": "crew_to_workshop", "source_tag": "crew", "target_tag": "repair", "benefit": "repair_available", "failure": "repair_unavailable"},
+    {"id": "visibility_to_signal", "source_tag": "visibility", "target_tag": "signal", "benefit": "forecast_confidence", "failure": "route_uncertain"},
+    {"id": "parts_to_workshop", "source_tag": "parts", "target_tag": "repair", "benefit": "repair_amount", "failure": "temporary_patch_only"}
+  ],
+  "interventions": [
+    {"id": "shift_power", "name": "Shift Power", "timing": "approach_or_contact", "cost": "command_point", "benefit": "temporarily prioritize one system", "risk": "another system receives less power"},
+    {"id": "seal_compartment", "name": "Seal Compartment", "timing": "contact", "cost": "crew_action", "benefit": "contain damage and protect adjacent rooms", "risk": "sealed modules stop contributing"},
+    {"id": "vent_heat", "name": "Vent Heat", "timing": "contact_or_recovery", "cost": "heat_capacity", "benefit": "prevent overload", "risk": "exterior visibility and exposure increase"},
+    {"id": "cut_loose_cargo", "name": "Cut Loose Cargo", "timing": "emergency", "cost": "cargo_value", "benefit": "reduce mass, fire, or raider incentive", "risk": "lose contract value and settlement trust"}
+  ],
+  "threats": [
+    {"id": "road_raiders", "name": "Road Raiders", "doctrine": "attack cargo and access hatches", "targets": ["cargo", "access", "exterior_mount"], "counters": ["repeater_gun", "crew_quarters", "cut_loose_cargo"]},
+    {"id": "climbers", "name": "Climbers", "doctrine": "bypass the front and attack exposed mounts", "targets": ["signal", "exterior_mount", "crew"], "counters": ["wall_lamp", "signal_coil", "crew_quarters"]},
+    {"id": "burrowers", "name": "Burrowers", "doctrine": "surface near engines and workshops", "targets": ["engine", "workshop", "lower_hull"], "counters": ["side_armor_skirt", "field_workshop", "redundant_generator"]},
+    {"id": "storm_front", "name": "Storm Front", "doctrine": "reduce visibility, raise heat, and damage exposed systems", "targets": ["signal", "exterior_mount", "heat"], "counters": ["signal_coil", "vent_heat", "front_armor_plate"]},
+    {"id": "siege_beast", "name": "Siege Beast", "doctrine": "deal area damage to armor and adjacent modules", "targets": ["front_armor", "adjacent_modules", "crew"], "counters": ["front_armor_plate", "seal_compartment", "controlled_sacrifice"]}
+  ],
+  "progression_tracks": [
+    {"id": "engineering", "nodes": ["modular_joints", "repair_crane", "redundant_generator"], "principle": "new layouts and recovery, not flat power"},
+    {"id": "cartography", "nodes": ["weather_log", "salvage_marks", "shared_routes"], "principle": "better route decisions without certainty"},
+    {"id": "crew_trust", "nodes": ["emergency_shift", "controlled_sacrifice", "last_stand_protocol"], "principle": "new interventions and character choices"}
+  ],
+  "vertical_slice": {
+    "chassis_dimensions": [6, 4],
+    "exterior_mounts": 2,
+    "module_count": 16,
+    "enemy_count": 5,
+    "intervention_count": 4,
+    "settlement_count": 2,
+    "route_count": 3,
+    "encounter_count": 5,
+    "recoverable_failure": true,
+    "required_player_explanations": ["why a module failed", "why the route was risky", "what intervention changed", "how to recover"]
+  },
+  "guardrails": [
+    "A heavier build must never be universally better than a lighter build.",
+    "Exterior systems are powerful but exposed; interior systems are protected but space-constrained.",
+    "Every major threat has at least two reasonable counters.",
+    "A failed encounter must preserve a route to repair, refit, salvage, or a lower-value contract.",
+    "The first slice uses one chassis grid and does not add a second full crew inventory.",
+    "The player can inspect a module’s benefit and dependency before placing it."
+  ]
+}
