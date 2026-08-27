@@ -70,7 +70,7 @@ func _init() -> void:
 	detail_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	add_child(detail_label)
 	commit_button = Button.new()
-	commit_button.custom_minimum_size = Vector2(0, 48)
+	commit_button.custom_minimum_size = Vector2(0, 64)
 	commit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	commit_button.text = "Select a route to continue"
 	commit_button.disabled = true
@@ -195,6 +195,7 @@ func configure(view: Dictionary) -> void:
 	current_previews = view.get("previews", {}).duplicate(true)
 	var can_depart := bool(view.get("can_depart", false))
 	var departure_block_reason := String(view.get("departure_block_reason", ""))
+	var heat_limit := int(view.get("heat_limit", 6))
 	var show_commit := bool(view.get("show_commit", true))
 	interaction_is_blocked = bool(view.get("interaction_blocked", false))
 	node_statuses.clear()
@@ -240,11 +241,20 @@ func configure(view: Dictionary) -> void:
 	commit_button.disabled = selected_node.is_empty() or selected_node not in available_nodes or not can_depart or not departure_block_reason.is_empty() or interaction_is_blocked
 	if not selected_node.is_empty() and selected_node in available_nodes:
 		var selected_preview: Dictionary = current_previews.get(selected_node, {})
+		var predicted_heat := int(selected_preview.get("predicted_heat", 0))
+		var overheated := predicted_heat > heat_limit
+		var commit_fill := Color("#55312d") if overheated else Color("#285348")
+		var commit_border := Color("#ef8375") if overheated else Color("#73c99b")
+		commit_button.add_theme_stylebox_override("normal", _style(commit_fill, commit_border, 2))
+		commit_button.add_theme_stylebox_override("hover", _style(commit_fill.lightened(0.08), commit_border.lightened(0.1), 2))
+		commit_button.add_theme_stylebox_override("pressed", _style(commit_fill.darkened(0.08), Color("#ffffff"), 2))
+		commit_button.add_theme_stylebox_override("focus", _style(commit_fill, Color("#ffffff"), 3))
 		if not departure_block_reason.is_empty() or not can_depart:
 			commit_button.text = "DEPARTURE BLOCKED\n%s" % (departure_block_reason.to_upper() if not departure_block_reason.is_empty() else "FORTRESS NOT READY")
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
 		else:
-			commit_button.text = "COMMIT · %s\n%d day(s) · %d fuel · %.0f%% risk · pressure +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0))]
+			var days := int(selected_preview.get("days", 0))
+			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %.0f%% RISK\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]
 			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
 		_show_node_detail(selected_node)
 	elif not available_nodes.is_empty():

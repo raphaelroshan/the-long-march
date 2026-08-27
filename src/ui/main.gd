@@ -15,6 +15,11 @@ const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
+const DOCTRINE_DESCRIPTIONS := {
+	"protect_cargo": "Cargo guard · Raiders take +1 weapon damage, cargo is targeted less often, and cargo hits deal −1 damage.",
+	"protect_crew": "Crew guard · Climbers and the Siege Beast take +1 weapon damage, while crew rooms are targeted less and take −1 damage.",
+	"run_hot": "Overdrive · All attacks gain +1 damage, but the fortress gains +2 heat; overheating raises route risk and incoming damage."
+}
 const ONBOARDING_LABELS := ["COMMAND", "CHASSIS", "ROUTE", "SURVIVE"]
 const ONBOARDING_STEPS := [
 	{
@@ -69,6 +74,7 @@ var module_group: Control
 var refit_actions: Control
 var route_group: Control
 var doctrine_group: Control
+var doctrine_detail_label: Label
 var intervention_title: Label
 var intervention_help_label: Label
 var settlement_title: Label
@@ -427,6 +433,12 @@ func _build_ui() -> void:
 	doctrine_option.item_selected.connect(_on_departure_option_changed)
 	doctrine_group = _labeled_control("Journey doctrine", doctrine_option)
 	controls.add_child(doctrine_group)
+	doctrine_detail_label = Label.new()
+	doctrine_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	doctrine_detail_label.custom_minimum_size = Vector2(320, 48)
+	doctrine_detail_label.add_theme_font_size_override("font_size", 12)
+	doctrine_detail_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	controls.add_child(doctrine_detail_label)
 
 	refit_title = Label.new()
 	refit_title.text = "REFIT CHASSIS"
@@ -544,7 +556,7 @@ func _build_ui() -> void:
 	campaign_commit_button = campaign_map.commit_button
 	campaign_map.remove_child(campaign_commit_button)
 	controls.add_child(campaign_commit_button)
-	controls.move_child(campaign_commit_button, doctrine_group.get_index() + 1)
+	controls.move_child(campaign_commit_button, doctrine_detail_label.get_index() + 1)
 
 	campaign_event_title = Label.new()
 	campaign_event_title.add_theme_font_size_override("font_size", 17)
@@ -1439,6 +1451,7 @@ func _refresh_campaign_controls() -> void:
 		"previews": previews,
 		"can_depart": phase_can_depart,
 		"departure_block_reason": departure_block_reason,
+		"heat_limit": LongMarchState.BASE_HEAT_LIMIT,
 		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})
@@ -1517,6 +1530,15 @@ func _refresh_ui() -> void:
 	refit_label.visible = is_refit_phase
 	route_group.visible = state.phase == "refit" and not state.campaign_active
 	doctrine_group.visible = state.phase in ["refit", "map", "settlement"]
+	doctrine_detail_label.visible = doctrine_group.visible
+	var selected_doctrine := _selected_id(doctrine_option)
+	doctrine_detail_label.text = String(DOCTRINE_DESCRIPTIONS.get(selected_doctrine, "Choose how the fortress protects itself on the next road."))
+	doctrine_detail_label.add_theme_color_override("font_color", Color("#e8c58e") if selected_doctrine == "run_hot" else Color("#aab6ba"))
+	if selected_doctrine == "run_hot":
+		var predicted_doctrine_heat := state.total_heat() + 2
+		if predicted_doctrine_heat > LongMarchState.BASE_HEAT_LIMIT:
+			doctrine_detail_label.text = "OVERHEAT WARNING · Predicted heat %d/%d. %s" % [predicted_doctrine_heat, LongMarchState.BASE_HEAT_LIMIT, doctrine_detail_label.text]
+			doctrine_detail_label.add_theme_color_override("font_color", Color("#ef8375"))
 	route_option.disabled = state.phase != "refit"
 	doctrine_option.disabled = state.phase in ["battle", "final_battle", "results"]
 	travel_button.visible = state.phase == "refit" and not state.campaign_active
@@ -1572,7 +1594,7 @@ func _refresh_ui() -> void:
 		elif not selected_campaign_node_id.is_empty():
 			var selected_preview := state.campaign_node_preview(selected_campaign_node_id, _selected_id(doctrine_option))
 			var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
-			route_preview_label.text = "Selected %s — %d day(s), %d fuel, %.0f%% risk, pressure +%d.%s" % [String(selected_preview.get("name", selected_campaign_node_id)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0)), " Departure blocked: %s." % block_reason if not block_reason.is_empty() else " Commit on the map when ready."]
+			route_preview_label.text = "Selected %s — %d day(s), %d fuel, %.0f%% risk, pressure +%d, heat %d/%d.%s" % [String(selected_preview.get("name", selected_campaign_node_id)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0)), int(selected_preview.get("predicted_heat", 0)), LongMarchState.BASE_HEAT_LIMIT, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else " Commit on the map when ready."]
 		else:
 			route_preview_label.text = "Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals."
 	elif state.phase == "refit":

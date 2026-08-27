@@ -83,6 +83,14 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	_expect(game.doctrine_detail_label.text.contains("Raiders") and game.doctrine_detail_label.text.contains("−1 damage"), "the default doctrine should explain its real targeting and mitigation effects")
+	game.doctrine_option.select(2)
+	game.doctrine_option.item_selected.emit(2)
+	await process_frame
+	_expect(game.doctrine_detail_label.text.contains("+2 heat") and game.doctrine_detail_label.text.contains("incoming damage"), "Run Hot should disclose both its offensive benefit and thermal risk")
+	game.doctrine_option.select(0)
+	game.doctrine_option.item_selected.emit(0)
+	await process_frame
 	var generator_index := _module_picker_index("generator_core")
 	game.module_option.select(generator_index)
 	game.module_option.item_selected.emit(generator_index)
@@ -109,6 +117,15 @@ func _run() -> void:
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
 	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
+	game.doctrine_option.select(2)
+	game.doctrine_option.item_selected.emit(2)
+	game.campaign_map.button_for("rill_crossing").pressed.emit()
+	await process_frame
+	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
+	game.doctrine_option.select(0)
+	game.doctrine_option.item_selected.emit(0)
+	game.selected_campaign_node_id = ""
+	game._refresh_ui()
 	var available_fuel: int = game.state.fuel
 	game.state.fuel = 0
 	game._refresh_ui()

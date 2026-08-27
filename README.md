@@ -36,6 +36,7 @@ The repository contains an agent-first Godot project with:
 - Authored event choices that show unmet chassis or resource prerequisites directly on locked options.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.
+- Doctrine descriptions that disclose targeting, damage, heat, and risk tradeoffs before route commitment.
 - Repair and save/load behavior.
 - A lightweight UI prototype showing the fortress and state summary.
 - Structured campaign content in `content/content_manifest.json` and `content/gameplay_framework.json`.
