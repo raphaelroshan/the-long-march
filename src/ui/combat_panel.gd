@@ -132,7 +132,8 @@ func _latest_causal_lines(report: Array) -> String:
 func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 	var step := int(view.get("step", 0))
 	var active := bool(view.get("active", false))
-	var doctrine := String(view.get("doctrine", "protect_cargo")).replace("_", " ").capitalize()
+	var doctrine_id := String(view.get("doctrine", "protect_cargo"))
+	var doctrine := doctrine_id.replace("_", " ").capitalize()
 	var intervention_used := bool(view.get("intervention_used", false))
 	var enemies: Array = view.get("enemies", [])
 	var target_names: Dictionary = view.get("target_names", {})
@@ -220,6 +221,14 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 				target_text += "\nCASCADE · %s%s" % [", ".join(cascade_labels), " · +%d MORE" % hidden_count if hidden_count > 0 else ""]
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
-		enemy_counters[index].text = "Counter: %s" % String(definition.get("counter", "unknown"))
+		var priority_labels: Array[String] = []
+		for raw_tag in definition.get("target_tags", []):
+			priority_labels.append(String(raw_tag).replace("_", " "))
+		var doctrine_guard := ""
+		if doctrine_id == "protect_cargo" and enemy_id == "road_raiders":
+			doctrine_guard = " · Protect Cargo active"
+		elif doctrine_id == "protect_crew" and enemy_id in ["climbers", "siege_beast"]:
+			doctrine_guard = " · Protect Crew active"
+		enemy_counters[index].text = "Seeks: %s%s\nCounter: %s" % [" / ".join(priority_labels), doctrine_guard, String(definition.get("counter", "unknown"))]
 		card.tooltip_text = "%s approaches by %s and prioritizes %s." % [String(definition.get("name", enemy_id)), String(definition.get("route", "the road")), ", ".join(definition.get("target_tags", []))]
 	causal_label.text = "LATEST CAUSE & EFFECT\n%s" % _latest_causal_lines(view.get("report", []))
