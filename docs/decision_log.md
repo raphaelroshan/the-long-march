@@ -455,3 +455,7 @@ When no engine can move the fortress, selected-route guidance now reuses the exa
 ## 2026-08-28 — The title counts the finale inside the chapter
 
 The Ashgate overview states that the chapter contains five encounters total, with recovery after the third encounter and the finale at encounter five. This removes the earlier suggestion that five encounters were followed by a separate sixth final battle and gives first-time players an accurate picture of the playable run before they start.
+
+## 2026-08-28 — Completed title checkpoints become replay choices
+
+A completed checkpoint changes the title's fresh-run actions to Play Again and Quick Replay. Starting either path uses result-aware confirmation copy, names the saved outcome, and defaults to Keep Result. Active checkpoints retain New Game and Keep Save language, so the shell distinguishes replaying a finished run from abandoning an unfinished one.

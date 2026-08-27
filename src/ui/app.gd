@@ -892,15 +892,16 @@ func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
 	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
+	var has_completed_save := has_valid_save and bool(save_info.get("completed", false))
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
 	if briefing_complete:
-		start_button.text = "NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT"
+		start_button.text = "PLAY AGAIN · ASHGATE DEPOT" if has_completed_save else ("NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT")
 		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
 	else:
-		start_button.text = "NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN"
+		start_button.text = "PLAY AGAIN · GUIDED BRIEFING" if has_completed_save else ("NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN")
 		start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
 	quick_start_button.visible = not briefing_complete
-	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
+	quick_start_button.text = "QUICK REPLAY · SKIP BRIEFING" if has_completed_save else ("NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING")
 	continue_button.visible = has_valid_save
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save
@@ -987,6 +988,8 @@ func _saved_run_info() -> Dictionary:
 		"phase": phase,
 		"encounters": encounters,
 		"condition": condition,
+		"completed": completed,
+		"result": result_name,
 		"action": "VIEW RESULT · %s" % result_name.to_upper() if completed else "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Review the saved %s debrief from %s. Saved by %s." % [result_name, location, saved_build] if completed else "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
 		"summary": "Completed run · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
@@ -1229,11 +1232,17 @@ func _request_confirmation(action: String) -> void:
 		confirmation_confirm_button.text = "REMOVE SAVE" if action == "clear_invalid_save" else "CLEAR SAVE"
 	else:
 		var save_info := _saved_run_info()
-		var saved_context := "Day %d at %s" % [int(save_info.get("day", 1)), String(save_info.get("location", "the last checkpoint"))]
-		confirmation_title_label.text = "Begin a new march?"
-		confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
-		confirmation_confirm_button.text = "START NEW"
-	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else ("KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else ("KEEP RESULT" if action == "replay" else "KEEP PLAYING"))
+		if bool(save_info.get("completed", false)):
+			var result_name := String(save_info.get("result", "completed")).capitalize()
+			confirmation_title_label.text = "Begin another march?"
+			confirmation_body_label.text = ("Your %s result remains available under Continue until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s result remains available under Continue. It is replaced only if you save manually or enable autosave and reach a checkpoint.") % result_name
+			confirmation_confirm_button.text = "PLAY AGAIN"
+		else:
+			var saved_context := "Day %d at %s" % [int(save_info.get("day", 1)), String(save_info.get("location", "the last checkpoint"))]
+			confirmation_title_label.text = "Begin a new march?"
+			confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
+			confirmation_confirm_button.text = "START NEW"
+	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else (("KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE") if action in ["new_guided", "new_quick"] else ("KEEP SAVE" if action == "clear_save" else ("KEEP RESULT" if action == "replay" else "KEEP PLAYING")))
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
