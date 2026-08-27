@@ -696,7 +696,8 @@ func _build_ui() -> void:
 	controls.move_child(results_group, guidance_label.get_index() + 1)
 
 	how_to_play_button = Button.new()
-	how_to_play_button.text = "How to play"
+	how_to_play_button.text = "OPEN FIELD BRIEFING"
+	how_to_play_button.tooltip_text = "Review the four-part Marchmaster briefing without leaving this run."
 	how_to_play_button.pressed.connect(_show_onboarding.bind(true))
 	controls.add_child(how_to_play_button)
 

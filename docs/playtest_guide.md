@@ -4,7 +4,7 @@
 
 This playtest is about two connected questions: can a player understand how a fortress layout causes a battle outcome, and can they use incomplete map information to plan five encounters? It is not a content-volume test. A useful session is one complete attempt from Ashgate Depot to Meridian Pass, including contract, route decisions, Morrowline recovery, retreat, or failure.
 
-The build opens with a four-part Marchmaster briefing. **How to play** reopens it at any time. The green current-order line on the Marchmaster's Desk follows the active decision—contract, route preview, battle, recovery, or result—without prescribing a winning layout.
+The build opens with a four-part Marchmaster briefing. **Open Field Briefing** reopens it at any time. The green current-order line on the Marchmaster's Desk follows the active decision—contract, route preview, battle, recovery, or result—without prescribing a winning layout.
 
 ## Suggested session
 
@@ -14,7 +14,7 @@ The build opens with a four-part Marchmaster briefing. **How to play** reopens i
 4. Resolve the local event and ask whether its cost and consequence were clear before clicking.
 5. At Morrowline, decide whether repairing, refueling, changing the layout, or preserving money is more valuable.
 6. Complete the last two encounters. On a second attempt, change at least one dependency and take the other branch or deliberately test a recoverable retreat.
-7. At the result screen, inspect the secured path, pressure, contract, specialist, and surviving systems, then open **Playtest feedback**.
+7. At the result screen, inspect the secured path, pressure, contract, specialist, and surviving systems, then choose **Record Playtest Notes**.
 
 Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision.
 
@@ -22,7 +22,7 @@ Do not coach testers toward the intended answer. Record where they hesitate, wha
 
 The prototype keeps a small playtest journal on the local machine. It records game events such as route choice, encounter steps, interventions, settlement services, and the final result. It does not record names, typed text outside the feedback form, machine identifiers, or network information.
 
-Nothing is uploaded automatically. **Save feedback bundle** creates a JSON file containing the tester's two written answers, replay score, final state, and local event journal. The confirmation message shows the exact path. The tester chooses whether to share that file.
+Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the tester's two written answers, replay score, final state, and local event journal. The receipt shows the filename; hovering it reveals the full local path. The tester chooses whether to share that file.
 
 ## Building locally
 
