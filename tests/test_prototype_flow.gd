@@ -135,13 +135,20 @@ func _run() -> void:
 	game.focus_chassis_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell, "Edit Chassis should focus the selected module cell")
-	_expect(game.fortress_panel.placement_status_text().begins_with("PLACEMENT READY"), "the chassis should confirm a valid move before input is committed")
+	_expect(game.fortress_panel.placement_status_text().begins_with("SELECTED") and game.fortress_panel.placement_status_text().contains("STEAM LANCE ENGINE"), "the chassis should identify the selected module under its cursor")
 	var chassis_right := InputEventAction.new()
 	chassis_right.action = "ui_right"
 	chassis_right.pressed = true
 	game.fortress_panel._gui_input(chassis_right)
-	_expect(game.fortress_panel.cursor_cell == Vector2i(1, 0), "focused chassis controls should move the gold cursor with directional input")
+	var chassis_down := InputEventAction.new()
+	chassis_down.action = "ui_down"
+	chassis_down.pressed = true
+	game.fortress_panel._gui_input(chassis_down)
+	_expect(game.fortress_panel.cursor_cell == Vector2i(1, 1), "focused chassis controls should move the gold cursor with directional input")
 	_expect(game.fortress_panel.placement_status_text().contains("BLOCKED") and game.fortress_panel.placement_status_text().contains("OVERLAPS"), "the chassis should explain an invalid preview before the player commits it")
+	game.fortress_panel._gui_input(chassis_down)
+	game.fortress_panel._gui_input(chassis_down)
+	_expect(game.fortress_panel.cursor_cell == Vector2i(1, 3) and game.fortress_panel.placement_status_text().begins_with("PLACEMENT READY"), "the chassis should confirm a valid move before the player commits it")
 	var chassis_cancel := InputEventAction.new()
 	chassis_cancel.action = "ui_cancel"
 	chassis_cancel.pressed = true

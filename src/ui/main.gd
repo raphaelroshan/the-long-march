@@ -2006,6 +2006,13 @@ class FortressPanel extends Control:
 		return state.validate_module_reposition(selected_cell, cursor_cell, placement_rotated)
 
 	func placement_status_text() -> String:
+		if state != null:
+			var hovered := state.module_at(cursor_cell)
+			if not hovered.is_empty():
+				var hovered_name := String(state.module_definition(String(hovered.get("id", ""))).get("name", "module")).to_upper()
+				if selected_cell in state.occupied_cells(hovered):
+					return "SELECTED · %s · MOVE TO AN EMPTY CELL" % hovered_name
+				return "SELECT %s · A / ENTER TO INSPECT" % hovered_name
 		var validation := _placement_validation()
 		if bool(validation.get("ok", false)):
 			return "PLACEMENT READY · A / ENTER TO APPLY"
@@ -2070,6 +2077,8 @@ class FortressPanel extends Control:
 	func _draw_preview() -> void:
 		if state == null or not state.can_refit() or placement_module_id.is_empty():
 			return
+		if not state.module_at(cursor_cell).is_empty():
+			return
 		var exterior: bool = "exterior" in state.module_definition(placement_module_id).get("tags", [])
 		var validation := _placement_validation()
 		var preview := state.module_instance(placement_module_id, cursor_cell, exterior, placement_rotated)
@@ -2102,8 +2111,10 @@ class FortressPanel extends Control:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: choose an empty cell", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		if state.can_refit():
+			var hovered := state.module_at(cursor_cell)
 			var placement_validation := _placement_validation()
-			draw_string(ThemeDB.fallback_font, Vector2(x, 228), placement_status_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#73c99b") if bool(placement_validation.get("ok", false)) else Color("#ef8375"))
+			var status_color := Color("#f0cf96") if not hovered.is_empty() else (Color("#73c99b") if bool(placement_validation.get("ok", false)) else Color("#ef8375"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 228), placement_status_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, status_color)
 			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · A confirms · B returns", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), "Select another module to inspect battle damage.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))

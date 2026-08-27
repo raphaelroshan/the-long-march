@@ -242,6 +242,8 @@ Every planning phase builds one navigation loop from controls that are both visi
 
 The chassis preview states its verdict before placement. A valid cursor position reports that confirm will apply the move, while an invalid position names the actual overlap, bounds, mount, or mass constraint next to the grid. Green and red remain supporting cues; the player no longer has to submit an invalid move merely to learn why it cannot work.
 
+Occupied cells are described as selection targets rather than invalid destinations, matching the actual click and confirm behavior. The colored placement ghost appears only over empty cells, so selecting another installed system and moving the current one are visually distinct actions.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.
