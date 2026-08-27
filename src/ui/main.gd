@@ -1126,6 +1126,17 @@ func _on_recruit_iven_pressed() -> void:
 
 func _on_module_selected(index: int) -> void:
 	selected_module_id = String(module_option.get_item_metadata(index))
+	_sync_selected_module_context()
+	var module_name := String(state.module_definition(selected_module_id).get("name", selected_module_id))
+	if selected_module_cell.x >= 0:
+		_set_event("Selected %s on the chassis for inspection or refitting." % module_name)
+	elif state.stored_module_count(selected_module_id) > 0:
+		_set_event("Selected stored %s. Choose an empty chassis cell to install it." % module_name)
+	else:
+		_set_event("%s is no longer available in this run." % module_name)
+	_refresh_ui()
+
+func _sync_selected_module_context() -> void:
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
 	for instance in state.modules:
@@ -1133,9 +1144,6 @@ func _on_module_selected(index: int) -> void:
 			selected_module_cell = Vector2i(instance.get("position", Vector2i(-1, -1)))
 			placement_rotated = bool(instance.get("rotated", false))
 			break
-	var module_name := String(state.module_definition(selected_module_id).get("name", selected_module_id))
-	_set_event("Selected %s on the chassis for inspection or refitting." % module_name if selected_module_cell.x >= 0 else "Selected stored %s. Choose an empty chassis cell to install it." % module_name)
-	_refresh_ui()
 
 func _select_module_option(module_id: String) -> void:
 	for index in range(module_option.item_count):
@@ -1144,23 +1152,40 @@ func _select_module_option(module_id: String) -> void:
 			return
 
 func _refresh_module_options() -> void:
+	var selected_is_available := false
+	var fallback_index := -1
 	for index in range(module_option.item_count):
 		var module_id := String(module_option.get_item_metadata(index))
 		var definition := state.module_definition(module_id)
 		var instance: Dictionary = {}
+		var location := "LOST"
 		for installed in state.modules:
 			if String(installed.get("id", "")) == module_id:
 				instance = installed
+				location = "ON CHASSIS"
 				break
 		if instance.is_empty():
 			for stored in state.stored_modules:
 				if String(stored.get("id", "")) == module_id:
 					instance = stored
+					location = "STORED"
 					break
-		var maximum := int(definition.get("durability", 1))
-		var durability := int(instance.get("durability", maximum))
-		var location := "ON CHASSIS" if state.module_count(module_id) > 0 else ("STORED" if state.stored_module_count(module_id) > 0 else "UNAVAILABLE")
-		module_option.set_item_text(index, "%s · %s · %d/%d" % [String(definition.get("name", module_id)), location, durability, maximum])
+		var available := not instance.is_empty()
+		module_option.set_item_disabled(index, not available)
+		if available and fallback_index < 0:
+			fallback_index = index
+		if module_id == selected_module_id:
+			selected_is_available = available
+		if available:
+			var maximum := int(definition.get("durability", 1))
+			var durability := int(instance.get("durability", maximum))
+			module_option.set_item_text(index, "%s · %s · %d/%d" % [String(definition.get("name", module_id)), location, durability, maximum])
+		else:
+			module_option.set_item_text(index, "%s · LOST" % String(definition.get("name", module_id)))
+	if not selected_is_available and fallback_index >= 0:
+		module_option.select(fallback_index)
+		selected_module_id = String(module_option.get_item_metadata(fallback_index))
+		_sync_selected_module_context()
 
 func _module_requires_exterior(module_id: String) -> bool:
 	return "exterior" in state.module_definition(module_id).get("tags", [])
@@ -1512,11 +1537,11 @@ func _refresh_campaign_controls() -> void:
 	recruit_iven_button.tooltip_text = "Adds exact immediate threat forecasts and storm navigation." if can_recruit_iven else recruit_reason
 
 func _refresh_ui() -> void:
+	_refresh_module_options()
 	var snapshot := state.summary()
 	var selected_definition := state.module_definition(selected_module_id)
 	var selected_shape := state.module_shape(selected_module_id, placement_rotated)
 	var selected_installed := _selected_installed_module()
-	_refresh_module_options()
 	_refresh_campaign_controls()
 	var mount_text := "Exterior mount" if _module_requires_exterior(selected_module_id) else "Interior chassis"
 	if state.can_refit():

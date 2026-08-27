@@ -102,6 +102,15 @@ func _run() -> void:
 	game.module_option.item_selected.emit(cannon_index)
 	await process_frame
 	_expect(game.selected_module_cell.x < 0 and game.module_option.get_item_text(cannon_index).contains("STORED"), "the module picker should distinguish stored modules ready for placement")
+	var stored_cannon: Dictionary = {}
+	for index in range(game.state.stored_modules.size()):
+		if String(game.state.stored_modules[index].get("id", "")) == "shell_cannon":
+			stored_cannon = game.state.stored_modules[index]
+			game.state.stored_modules.remove_at(index)
+			break
+	game._refresh_ui()
+	_expect(game.module_option.is_item_disabled(cannon_index) and game.module_option.get_item_text(cannon_index).contains("LOST"), "a permanently unavailable module should be disabled and marked lost")
+	game.state.stored_modules.append(stored_cannon)
 	var engine_index := _module_picker_index("steam_lance_engine")
 	game.module_option.select(engine_index)
 	game.module_option.item_selected.emit(engine_index)
