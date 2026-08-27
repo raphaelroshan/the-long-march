@@ -1226,8 +1226,15 @@ func _request_confirmation(action: String) -> void:
 			confirmation_body_label.text = "Current stage progress will reset to Ashgate. There is no usable checkpoint to return to."
 		confirmation_confirm_button.text = "RESTART"
 	elif action == "replay":
+		var replay_save := _saved_run_info()
 		confirmation_title_label.text = "Begin another march?"
-		confirmation_body_label.text = "The completed result remains in your local playtest notes. Continue will switch to the fresh Ashgate run immediately." if autosave_enabled else "The completed Continue checkpoint remains until you save manually or enable autosave during the fresh run."
+		if _current_run_matches_save():
+			confirmation_body_label.text = "Your completed result is saved under Continue. Play Again will replace it with a fresh Ashgate checkpoint immediately." if autosave_enabled else "Your completed result remains under Continue until you save the fresh run."
+		elif bool(replay_save.get("valid", false)):
+			var saved_context := "%s result" % String(replay_save.get("result", "completed")) if bool(replay_save.get("completed", false)) else "Day %d at %s" % [int(replay_save.get("day", 1)), String(replay_save.get("location", "the previous checkpoint"))]
+			confirmation_body_label.text = ("This result is not saved under Continue; it still points to %s. Play Again will replace that checkpoint with a fresh Ashgate run immediately." if autosave_enabled else "This result is not saved under Continue; it still points to %s. That checkpoint remains until you save the fresh run.") % saved_context
+		else:
+			confirmation_body_label.text = "This result is not saved under Continue. Play Again will create a fresh Ashgate checkpoint immediately." if autosave_enabled else "This result is not saved under Continue. Play Again starts fresh without creating a checkpoint until you save manually."
 		confirmation_confirm_button.text = "PLAY AGAIN"
 	elif action == "title":
 		confirmation_title_label.text = "Return without saving?"

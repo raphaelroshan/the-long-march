@@ -349,10 +349,22 @@ func _run() -> void:
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN" and app.confirmation_cancel_button.text == "KEEP RESULT", "Play Again should require an explicit result-preserving confirmation")
+	_expect(app.confirmation_body_label.text.contains("This result is not saved under Continue") and app.confirmation_body_label.text.contains("fresh Ashgate checkpoint immediately"), "replay confirmation should not claim an unsaved result already exists under Continue")
 	_expect(app.game_view.state.phase == "results", "opening replay confirmation should preserve the completed run")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
 	_expect(not app.confirmation_view.visible and app.game_view.state.phase == "results" and app.game_view.play_again_button.has_focus(), "cancelling replay should return to the intact result action")
+	_expect(app.game_view.save_run(true), "the replay confirmation test should be able to persist the completed result")
+	app.game_view.play_again_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_body_label.text.contains("completed result is saved under Continue") and app.confirmation_body_label.text.contains("replace it with a fresh Ashgate checkpoint"), "autosave replay should identify the saved result it will immediately replace")
+	app.confirmation_cancel_button.pressed.emit()
+	app.autosave_enabled = false
+	app.game_view.play_again_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_body_label.text.contains("completed result remains under Continue until you save the fresh run"), "manual-save replay should explain that the saved result remains until another explicit save")
+	app.confirmation_cancel_button.pressed.emit()
+	app.autosave_enabled = true
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
 	app.confirmation_confirm_button.pressed.emit()

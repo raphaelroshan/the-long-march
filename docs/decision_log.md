@@ -491,3 +491,7 @@ An untouched playtest form now says to save a local copy when ready. The previou
 ## 2026-08-28 — Results save before returning to title
 
 The completed-run action is explicitly labelled Save Result & Return and writes the result to the local Continue slot before emitting the title transition. This protects a finished run when automatic checkpoints are disabled. If the write fails, the result remains open with a visible error instead of silently leaving; the pause menu remains the deliberate route for exiting without saving.
+
+## 2026-08-28 — Replay warnings inspect the actual Continue slot
+
+Play Again confirmation distinguishes a result already saved under Continue, an older checkpoint that does not contain the result, and no usable checkpoint. It also states whether automatic checkpoints will replace the slot immediately or manual saving will leave it intact. The dialog no longer assumes that finishing a run automatically persisted it when autosave was disabled or a write failed.
