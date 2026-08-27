@@ -314,6 +314,13 @@ func _configure_title_focus() -> void:
 
 func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false) -> void:
 	var upper_action := continue_button if has_valid_save else (save_recovery_button if has_invalid_save else quick_start_button)
+	var active_controls: Array = [start_button, quick_start_button]
+	if has_valid_save:
+		active_controls.append(continue_button)
+	elif has_invalid_save:
+		active_controls.append(save_recovery_button)
+	active_controls.append_array([guide_button, settings_button, quit_button])
+	_configure_focus_cycle(active_controls)
 	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(upper_action if upper_action != quick_start_button else settings_button)
 	guide_button.focus_neighbor_top = guide_button.get_path_to(upper_action)
 	settings_button.focus_neighbor_top = settings_button.get_path_to(upper_action)

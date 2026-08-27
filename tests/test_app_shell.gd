@@ -36,6 +36,7 @@ func _run() -> void:
 	_expect(app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_left) == app.guide_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_right) != null, "title navigation should traverse the utility row explicitly")
 	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.settings_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.quick_start_button, "no-save navigation should route around disabled Continue")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should skip Continue and wrap through visible title actions")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("checkpoints"), "the title should use player-facing guide and autosave language")
 	var invalid_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	invalid_save.store_string("{not valid save data")
@@ -44,6 +45,7 @@ func _run() -> void:
 	_expect(app.continue_button.disabled and app.continue_button.text.contains("UNAVAILABLE"), "invalid save data should never enable Continue")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
 	_expect(app.save_recovery_button.visible and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose a direct recovery action in the title flow")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save Tab navigation should include the recovery action")
 	app._continue_game()
 	await process_frame
 	_expect(app.save_recovery_button.has_focus(), "a failed Continue attempt should focus the newly available recovery action")
@@ -216,6 +218,7 @@ func _run() -> void:
 	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.continue_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.continue_button, "save-aware navigation should restore Continue to the title loop")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.continue_button and app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.guide_button, "save-aware Tab navigation should include Continue in the title loop")
 	_expect(app.start_button.text.begins_with("NEW GAME") and app.quick_start_button.text.begins_with("NEW QUICK RUN"), "existing progress should make both fresh-start actions explicit")
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")

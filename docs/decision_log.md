@@ -202,6 +202,8 @@ The title screen additionally defines explicit directional neighbors across its 
 
 That navigation graph updates with save availability. With no valid checkpoint, movement bypasses disabled Continue and links Quick Start directly to the utility row; once a save exists, Continue is restored to the same route. Disabled state never creates a controller dead end.
 
+The title applies the same state-aware graph to Tab traversal. A valid Continue or invalid-save recovery action is inserted in visual order, while absent actions are removed and the remaining controls wrap cleanly from Quit back to Guided Start.
+
 An unreadable or incompatible local save exposes a dedicated `Remove Unreadable Save` action directly beneath disabled Continue. Removal requires a confirmation that distinguishes the broken file from settings and briefing data; success returns focus to Guided Start and removes the temporary action from the navigation graph.
 
 If validation changes between drawing the title and attempting Continue—for example because the file was externally replaced—the failed load refreshes the title and focuses `Remove Unreadable Save`. The recovery path remains immediate even under that race instead of sending focus to an unrelated new-run action.
