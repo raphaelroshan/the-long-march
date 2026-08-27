@@ -5,6 +5,7 @@ const LongMarchState = preload("res://src/core/fortress_state.gd")
 var failures: Array[String] = []
 
 func _init() -> void:
+	_test_module_capability_metadata()
 	_test_placement_and_shape()
 	_test_rotation_reposition_and_removal()
 	_test_exterior_mount_rules()
@@ -36,6 +37,11 @@ func _init() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+func _test_module_capability_metadata() -> void:
+	for module_id in LongMarchState.MODULE_DEFS:
+		var definition: Dictionary = LongMarchState.MODULE_DEFS[module_id]
+		_expect(not String(definition.get("capability", "")).is_empty(), "every playable module should explain its implemented capability: " + String(module_id))
 
 func _test_placement_and_shape() -> void:
 	var state := LongMarchState.new(1107)

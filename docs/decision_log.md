@@ -322,6 +322,8 @@ The chassis preview states its verdict before placement. A valid cursor position
 
 Every module definition also carries a concise capability statement grounded in implemented rules. The selected-module summary names actual damage values, forecasting, repair, armor, movement, power, rescue, and adjacency behavior beside size and operating state, so refitting does not require memorizing the field guide or inferring purpose from tags.
 
+Module power uses signed player-facing notation in both refit summaries: producers show `+N`, consumers show `−N`, and passive systems show `0`. A Generator Core no longer appears to have zero power value merely because the previous line read only its consumption field.
+
 Occupied cells are described as selection targets rather than invalid destinations, matching the actual click and confirm behavior. The colored placement ghost appears only over empty cells, so selecting another installed system and moving the current one are visually distinct actions.
 
 Every interactive control in the Marchmaster's Desk requests contextual scrolling when it receives focus, including focus reached through ordinary keyboard or controller navigation. Programmatic phase handoffs and manual navigation now share the same visibility rule, and deferred scroll requests are ignored if focus has already moved elsewhere.

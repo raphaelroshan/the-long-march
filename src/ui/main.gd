@@ -1465,6 +1465,15 @@ func _refresh_module_options() -> void:
 func _module_requires_exterior(module_id: String) -> bool:
 	return "exterior" in state.module_definition(module_id).get("tags", [])
 
+func _module_power_text(definition: Dictionary) -> String:
+	var output := int(definition.get("power_output", 0))
+	var draw := int(definition.get("power_draw", 0))
+	if output > 0:
+		return "+%d" % output
+	if draw > 0:
+		return "−%d" % draw
+	return "0"
+
 func _selected_installed_module() -> Dictionary:
 	if selected_module_cell.x < 0 or selected_module_cell.y < 0:
 		return {}
@@ -1849,10 +1858,13 @@ func _refresh_ui() -> void:
 			var dependency := state.dependency_status(selected_installed)
 			var reasons: Array = dependency.get("reasons", [])
 			dependency_text = "%s%s" % [String(dependency.get("state", "offline")).capitalize(), ": " + String(reasons[0]) if not reasons.is_empty() else "."]
-		refit_label.text = "%s · %dx%d · %s. %s %s\nROLE · %s" % [
+		refit_label.text = "%s · %dx%d · mass %d · power %s · heat %d · %s. %s %s\nROLE · %s" % [
 			String(selected_definition.get("name", "Select a module")),
 			selected_shape.x,
 			selected_shape.y,
+			int(selected_definition.get("mass", 0)),
+			_module_power_text(selected_definition),
+			int(selected_definition.get("heat", 0)),
 			mount_text,
 			"Selected on chassis; choose an empty cell to move it." if not selected_installed.is_empty() else "Choose an empty cell to place it.",
 			dependency_text,
@@ -2377,6 +2389,18 @@ class FortressPanel extends Control:
 			return "No field capability recorded."
 		return String(state.module_definition(placement_module_id).get("capability", "No field capability recorded."))
 
+	func selected_power_text() -> String:
+		if state == null or placement_module_id.is_empty():
+			return "0"
+		var definition := state.module_definition(placement_module_id)
+		var output := int(definition.get("power_output", 0))
+		var draw := int(definition.get("power_draw", 0))
+		if output > 0:
+			return "+%d" % output
+		if draw > 0:
+			return "−%d" % draw
+		return "0"
+
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			var next_cell := _cell_from_point(event.position)
@@ -2455,7 +2479,7 @@ class FortressPanel extends Control:
 		var shape := state.module_shape(placement_module_id, placement_rotated)
 		var selected := state.module_at(selected_cell) if selected_cell.x >= 0 else {}
 		draw_string(ThemeDB.fallback_font, Vector2(x, 70), String(definition.get("name", placement_module_id)), HORIZONTAL_ALIGNMENT_LEFT, 300, 15, Color("#f1e6cf"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 94), "%dx%d footprint · mass %d · power %d · heat %d" % [shape.x, shape.y, int(definition.get("mass", 0)), int(definition.get("power_draw", 0)), int(definition.get("heat", 0))], HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#aab6ba"))
+		draw_string(ThemeDB.fallback_font, Vector2(x, 94), "%dx%d footprint · mass %d · power %s · heat %d" % [shape.x, shape.y, int(definition.get("mass", 0)), selected_power_text(), int(definition.get("heat", 0))], HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#aab6ba"))
 		draw_string(ThemeDB.fallback_font, Vector2(x, 118), "Exterior mount" if "exterior" in definition.get("tags", []) else "Interior chassis", HORIZONTAL_ALIGNMENT_LEFT, 300, 12, Color("#d8c389"))
 		if not selected.is_empty():
 			var dependency := state.dependency_status(selected)
