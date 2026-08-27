@@ -138,6 +138,10 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")
 	_expect(app.settings_context_label.text.begins_with("PAUSED MARCH") and app.settings_close_button.text == "BACK TO PAUSE", "in-run Settings should identify and return to the paused march")
+	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
+	app.reset_briefing_button.pressed.emit()
+	await process_frame
+	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
 	app.settings_close_button.pressed.emit()
 	await process_frame
 	_expect(app.pause_view.visible and app.pause_settings_button.has_focus(), "closing in-run Settings should return to the pause menu")
@@ -195,6 +199,7 @@ func _run() -> void:
 		app.confirmation_confirm_button.pressed.emit()
 		await process_frame
 		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and app.continue_button.disabled, "confirmed save clearing should remove Continue progress")
+		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
 
 	_remove_local_test_files()
 	if failures.is_empty():

@@ -144,6 +144,8 @@ Save, load, and reset controls remain callable by the test harness but are hidde
 
 The settings overlay is shared by the title and pause menus, but it names the context it was opened from and changes its return action accordingly. This avoids telling a player that an in-run action will return to the title when it actually restores the paused march.
 
+One-shot settings actions such as resetting the completed briefing or clearing the only save disable themselves after success. Focus moves to the enabled return action instead of remaining attached to a control that can no longer be activated, preserving a complete keyboard and controller path.
+
 The pause menu compares the live campaign snapshot with the local save whenever it opens or saves. A current checkpoint gets a direct `Return to Title` action; changed state is labeled `Exit Unsaved` and retains the explicit discard confirmation. This makes warnings meaningful instead of showing the same destructive language after a successful save.
 
 Pausing also dismisses transient checkpoint toasts and presents fuel, hull, and heat beside the route position. The modal therefore becomes a stable decision snapshot rather than allowing short-lived notifications to overlap it or forcing the player to resume just to check whether the fortress is in immediate danger.

@@ -730,7 +730,7 @@ func _reset_briefing() -> void:
 	if FileAccess.file_exists(absolute_path):
 		DirAccess.remove_absolute(absolute_path)
 	_refresh_settings("The guided briefing will open on the next Guided First Run.")
-	reset_briefing_button.grab_focus()
+	settings_close_button.grab_focus()
 
 func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
@@ -1029,7 +1029,7 @@ func _confirm_pending_action() -> void:
 			DirAccess.remove_absolute(absolute_path)
 		_refresh_title_state()
 		_refresh_settings("Local save cleared. Start Game begins a fresh march.")
-		clear_save_button.grab_focus()
+		settings_close_button.grab_focus()
 	elif action == "new_guided":
 		_open_stage(false, true)
 	elif action == "new_quick":
