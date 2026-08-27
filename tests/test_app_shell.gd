@@ -200,6 +200,7 @@ func _run() -> void:
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify the saved phase and encounter progress")
+	_expect(app.save_status_label.text.contains("Fuel 6") and app.save_status_label.text.contains("Hull 10/10") and app.save_status_label.text.contains("Heat 5/6"), "the title should summarize the saved fortress condition")
 	app.settings_button.pressed.emit()
 	await process_frame
 	app.autosave_button.pressed.emit()

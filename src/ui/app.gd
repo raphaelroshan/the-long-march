@@ -833,6 +833,9 @@ func _saved_run_info() -> Dictionary:
 	var phase := String(parsed.get("phase", "unknown")).replace("_", " ").capitalize()
 	var day := int(parsed.get("day", 1))
 	var encounters := int(parsed.get("campaign_encounters_completed", 0))
+	var fuel := int(parsed.get("fuel", 0))
+	var hull := int(parsed.get("hull_condition", 0))
+	var heat := int(parsed.get("heat", 0))
 	return {
 		"exists": true,
 		"valid": true,
@@ -842,7 +845,7 @@ func _saved_run_info() -> Dictionary:
 		"encounters": encounters,
 		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Resume at %s during %s with %d of 5 encounters secured." % [location, phase, encounters],
-		"summary": "Checkpoint · %s · %d/5 encounters secured" % [phase, encounters]
+		"summary": "Checkpoint · %s · %d/5 · Fuel %d · Hull %d/10 · Heat %d/%d" % [phase, encounters, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
 	}
 
 func _empty_save_summary() -> String:
