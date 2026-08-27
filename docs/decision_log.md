@@ -128,6 +128,8 @@ Watch, Closing, and Break are visible regional pressure bands. At Break, the opt
 
 The first guard contract deliberately increases Morrowline encounter endurance in exchange for money and trust. Iven Pell requires a repaired relay, operational crew space, and supplies; in return he improves forecasts, storm mitigation, and late-route access. Both systems change loadout, route, and economy decisions rather than existing as dialogue-only rewards.
 
+The two Ashgate contract actions are stacked full-width and carry their complete tradeoff. Guard explicitly previews one extra HP for every Morrowline enemy and the conditional 30-Ashmark/two-trust payout; Travel Unbound states that it avoids the extra endurance and forfeits that reward. The introductory prose now frames the decision instead of carrying mechanics that disappear once focus reaches a button.
+
 Iven's recruitment control follows the same visible-prerequisite rule as authored events. When recruitment is unavailable, the action names the exact missing relay, crew-space, location, staffing, or supply condition in its disabled state rather than relying on hover-only help.
 
 The recruitment control also carries Iven's mechanical offer in full: exact contact reveals, up to eight points of route-risk reduction, one less encounter pressure, and two anti-Storm damage. The benefits remain visible beside a lock reason, allowing a player who cannot recruit him to understand what that alternate build path would have changed.

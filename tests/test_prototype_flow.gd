@@ -115,6 +115,7 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	_expect(game.contract_accept_button.text.contains("EACH ENEMY +1 HP") and game.contract_accept_button.text.contains("+30 ASHMARKS · +2 TRUST") and game.contract_decline_button.text.contains("NO EXTRA ENEMY HP") and game.contract_decline_button.text.contains("NO CONTRACT PAYOUT OR TRUST"), "the opening contract actions should disclose both sides of the combat and reward tradeoff before commitment")
 	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
 	game.how_to_play_button.grab_focus()

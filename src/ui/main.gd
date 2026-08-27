@@ -592,17 +592,21 @@ func _build_ui() -> void:
 	contract_label.custom_minimum_size = Vector2(320, 54)
 	contract_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	contract_group.add_child(contract_label)
-	var contract_actions := HBoxContainer.new()
+	var contract_actions := VBoxContainer.new()
 	contract_actions.add_theme_constant_override("separation", 8)
 	contract_accept_button = Button.new()
-	contract_accept_button.text = "Guard the convoy"
+	contract_accept_button.text = "GUARD THE CONVOY\nMORROWLINE · EACH ENEMY +1 HP\nON ARRIVAL · +30 ASHMARKS · +2 TRUST"
+	contract_accept_button.custom_minimum_size = Vector2(0, 74)
 	contract_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contract_accept_button.tooltip_text = "Accept a harder Morrowline approach in exchange for payment and settlement trust if the convoy arrives."
 	contract_accept_button.pressed.connect(_on_guard_contract_pressed.bind(true))
 	_accent_button(contract_accept_button, Color("#285348"), Color("#73c99b"))
 	contract_actions.add_child(contract_accept_button)
 	contract_decline_button = Button.new()
-	contract_decline_button.text = "Travel unbound"
+	contract_decline_button.text = "TRAVEL UNBOUND\nNO EXTRA ENEMY HP\nNO CONTRACT PAYOUT OR TRUST"
+	contract_decline_button.custom_minimum_size = Vector2(0, 68)
 	contract_decline_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contract_decline_button.tooltip_text = "Decline the escort, avoid its extra enemy endurance, and forgo the contract reward."
 	contract_decline_button.pressed.connect(_on_guard_contract_pressed.bind(false))
 	contract_actions.add_child(contract_decline_button)
 	contract_group.add_child(contract_actions)
@@ -1804,7 +1808,7 @@ func _refresh_campaign_controls() -> void:
 	contract_label.visible = contract_offered
 	contract_accept_button.visible = contract_offered
 	contract_decline_button.visible = contract_offered
-	contract_label.text = "Morrowline needs its parts wagon guarded. Accepting adds pressure to the camp approach, then pays 30 Ashmarks and 2 trust if the convoy arrives."
+	contract_label.text = "Morrowline's parts wagon is exposed. Decide whether its payment and trust are worth a harder camp approach."
 
 	var options := state.campaign_available_nodes()
 	if selected_campaign_node_id not in options or contract_offered or not state.campaign_event_pending.is_empty():
