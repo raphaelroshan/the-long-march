@@ -1111,7 +1111,7 @@ func _show_feedback() -> void:
 		feedback_save_button.text = "SAVE AGAIN"
 	else:
 		last_feedback_path = ""
-		feedback_status_label.text = "Nothing is sent automatically. You can save again after editing."
+		feedback_status_label.text = "Nothing is sent automatically. Save a local copy when you are ready."
 		feedback_status_label.tooltip_text = ""
 		feedback_save_button.text = "SAVE NOTES LOCALLY"
 	feedback_overlay.visible = true

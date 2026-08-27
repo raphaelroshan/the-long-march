@@ -592,6 +592,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
 	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY", "the feedback form should expose clear local-only actions")
+	_expect(game.feedback_status_label.text == "Nothing is sent automatically. Save a local copy when you are ready.", "the untouched feedback form should use a first-save prompt rather than implying that notes were already saved")
 	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_close_button, "the feedback actions should have explicit horizontal controller navigation")
 	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_next) == game.feedback_clear_text and game.feedback_clear_text.get_node_or_null(game.feedback_clear_text.focus_previous) == game.feedback_save_button, "the feedback form should trap Tab navigation across fields and actions")
 	game.feedback_clear_text.text = "The route consequences were clear."

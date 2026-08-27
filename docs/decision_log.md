@@ -483,3 +483,7 @@ The Field Guide now states that Quick Start changes only whether the introductor
 ## 2026-08-28 — Field Guide launch language follows save state
 
 The Field Guide's Ashgate action mirrors the title state: Quick Start when no checkpoint exists, Start New Ashgate Run while an active march is saved, and Quick Replay after a completed result. Confirmation behavior is unchanged, but the button now communicates whether it resumes nothing, branches away from active progress, or begins another attempt.
+
+## 2026-08-28 — Feedback starts with a first-save receipt
+
+An untouched playtest form now says to save a local copy when ready. The previous empty state incorrectly said the tester could “save again” before any feedback file existed. Saved and reopened forms still retain their filename and explicit Save Again action.
