@@ -1266,7 +1266,7 @@ func _cancel_confirmation() -> void:
 	elif previous_action == "clear_invalid_save":
 		save_recovery_button.grab_focus()
 	elif previous_action == "new_quick":
-		quick_start_button.grab_focus()
+		(guide_quick_start_button if guide_view.visible else quick_start_button).grab_focus()
 	elif previous_action == "new_guided":
 		start_button.grab_focus()
 	else:

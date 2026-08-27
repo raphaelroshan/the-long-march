@@ -256,6 +256,15 @@ func _run() -> void:
 	_expect(app.save_status_label.text.contains("Saved just now"), "the title should show how recently the local checkpoint was written")
 	_expect(app.save_status_label.text.contains("Fuel 6") and app.save_status_label.text.contains("Hull 10/10") and app.save_status_label.text.contains("Heat 5/6"), "the title should summarize the saved fortress condition")
 	_expect(app.continue_button.tooltip_text.contains(String(ProjectSettings.get_setting("application/config/version"))), "Continue should expose the build that created the checkpoint")
+	app.guide_button.pressed.emit()
+	app.guide_quick_start_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.guide_view.visible, "Quick Start from the Field Guide should protect the existing checkpoint")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.guide_view.visible and app.guide_quick_start_button.has_focus(), "cancelling a guide-launched Quick Start should restore focus inside the visible guide")
+	app.guide_close_button.pressed.emit()
+	await process_frame
 	var saved_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(saved_payload is Dictionary and String(saved_payload.get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version")), "campaign saves should record their exact application build")
 	_expect(saved_payload is Dictionary and int(saved_payload.get("saved_at_unix", 0)) > 0, "campaign saves should record when the checkpoint was created")

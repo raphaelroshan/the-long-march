@@ -471,3 +471,7 @@ The first-run briefing distinguishes temporary dismissal from completion. Skip a
 ## 2026-08-28 — Control hints describe the current screen
 
 The title footer describes directional navigation, confirmation, and closing title panels. It no longer borrows the in-stage claim that B/Esc pauses the game, which was inaccurate while no march was running. Pause and briefing overlays retain their own contextual cancel hints.
+
+## 2026-08-28 — Guide-launched confirmations return to the guide
+
+Quick Start can be launched from either the title action stack or the Field Guide. When an existing checkpoint requires confirmation, cancelling now restores focus to the visible guide action if that panel is still open; title-launched cancellations still return to the title's Quick Start action. This prevents keyboard and controller focus from landing behind the active overlay.
