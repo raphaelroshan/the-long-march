@@ -21,6 +21,22 @@ const THREATS := {
 	"storm_front": {"name": "Storm Front", "target_tags": ["signal", "exterior"], "damage": 1},
 	"siege_beast": {"name": "Siege Beast", "target_tags": ["armor", "crew"], "damage": 2}
 }
+const JOURNEY_NODES := {
+	"ashgate_depot": {"name": "Ashgate Depot", "kind": "city", "description": "The departure yard: fuel, parts, and one last decision."},
+	"rill_crossing": {"name": "Rill Crossing", "kind": "crossing", "description": "A broken bridge where the road narrows between ash channels."},
+	"morrowline_camp": {"name": "Morrowline Camp", "kind": "city", "description": "A moving convoy shelter waiting for engines, tools, and protection."}
+}
+const JOURNEY_ENCOUNTERS := {
+	"safe_road": ["road_raiders", "road_raiders"],
+	"exposed_shortcut": ["road_raiders", "climbers"],
+	"salvage_detour": ["burrowers"]
+}
+const ENCOUNTER_ENEMIES := {
+	"road_raiders": {"name": "Road Raider", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["cargo", "exterior"], "route": "road flank", "counter": "shell cannon or repeater gun"},
+	"climbers": {"name": "Climber", "health": 4, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "exterior", "crew"], "route": "fortress flank", "counter": "wall lamp or repeater gun"},
+	"burrowers": {"name": "Burrower", "health": 7, "damage": 2, "arrival_step": 2, "target_tags": ["engine", "workshop", "lower_hull"], "route": "under-road", "counter": "shell cannon and spare engine"},
+	"siege_beast": {"name": "Siege Beast", "health": 10, "damage": 3, "arrival_step": 4, "target_tags": ["armor", "crew"], "route": "direct road", "counter": "shell cannon and front armor"}
+}
 const MODULE_DEFS := {
 	"steam_lance_engine": {"name": "Steam Lance Engine", "family": "engine", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 0, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"]},
 	"ash_runner_engine": {"name": "Ash Runner Engine", "family": "engine", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 0, "power_output": 0, "heat": 2, "durability": 3, "tags": ["engine", "fast", "hot"]},
@@ -51,6 +67,18 @@ var target_doctrine: String = "protect_cargo"
 var power_priority: String = "balanced"
 var modules: Array = []
 var log: Array[String] = []
+var journey_node: String = "ashgate_depot"
+var journey_destination: String = "morrowline_camp"
+var journey_route: String = ""
+var journey_complete: bool = false
+var encounter_active: bool = false
+var encounter_step: int = 0
+var encounter_progress: float = 0.0
+var encounter_enemies: Array = []
+var encounter_report: Array[String] = []
+var encounter_outcome: String = ""
+var encounter_intervention_used: bool = false
+var encounter_target_doctrine: String = "protect_cargo"
 
 func _init(world_seed: int = 1107) -> void:
 	seed = world_seed
@@ -242,8 +270,16 @@ func summary() -> Dictionary:
 		"power_draw": total_power_draw(),
 		"hull_condition": hull_condition,
 		"current_location": current_location,
+		"journey_node": journey_node,
+		"journey_destination": journey_destination,
+		"journey_route": journey_route,
+		"journey_complete": journey_complete,
+		"encounter_active": encounter_active,
+		"encounter_step": encounter_step,
+		"encounter_progress": encounter_progress,
+		"encounter_outcome": encounter_outcome,
 		"module_count": modules.size(),
-		"can_travel": _has_engine() and fuel > 0,
+		"can_travel": _has_engine() and fuel > 0 and not encounter_active,
 		"power_stable": total_power_draw() <= total_power_output()
 	}
 
@@ -260,6 +296,18 @@ func serialize() -> Dictionary:
 		"route_risk_modifier": route_risk_modifier,
 		"target_doctrine": target_doctrine,
 		"power_priority": power_priority,
+		"journey_node": journey_node,
+		"journey_destination": journey_destination,
+		"journey_route": journey_route,
+		"journey_complete": journey_complete,
+		"encounter_active": encounter_active,
+		"encounter_step": encounter_step,
+		"encounter_progress": encounter_progress,
+		"encounter_enemies": encounter_enemies.duplicate(true),
+		"encounter_report": encounter_report.duplicate(),
+		"encounter_outcome": encounter_outcome,
+		"encounter_intervention_used": encounter_intervention_used,
+		"encounter_target_doctrine": encounter_target_doctrine,
 		"modules": modules.duplicate(true),
 		"log": log.duplicate()
 	}
@@ -276,9 +324,264 @@ func load_serialized(data: Dictionary) -> void:
 	route_risk_modifier = float(data.get("route_risk_modifier", route_risk_modifier))
 	target_doctrine = String(data.get("target_doctrine", target_doctrine))
 	power_priority = String(data.get("power_priority", power_priority))
+	journey_node = String(data.get("journey_node", journey_node))
+	journey_destination = String(data.get("journey_destination", journey_destination))
+	journey_route = String(data.get("journey_route", journey_route))
+	journey_complete = bool(data.get("journey_complete", journey_complete))
+	encounter_active = bool(data.get("encounter_active", encounter_active))
+	encounter_step = int(data.get("encounter_step", encounter_step))
+	encounter_progress = float(data.get("encounter_progress", encounter_progress))
+	encounter_enemies = data.get("encounter_enemies", []).duplicate(true)
+	encounter_report = data.get("encounter_report", []).duplicate()
+	encounter_outcome = String(data.get("encounter_outcome", encounter_outcome))
+	encounter_intervention_used = bool(data.get("encounter_intervention_used", encounter_intervention_used))
+	encounter_target_doctrine = String(data.get("encounter_target_doctrine", encounter_target_doctrine))
 	modules = data.get("modules", []).duplicate(true)
 	log = data.get("log", []).duplicate()
 	_recalculate()
+
+func begin_journey(route_id: String, doctrine: String = "protect_cargo") -> Dictionary:
+	if encounter_active:
+		return {"ok": false, "reason": "an encounter is already active"}
+	if journey_complete:
+		return {"ok": false, "reason": "this journey is already complete; reset the run to depart again"}
+	var travel_result: Dictionary = travel(route_id)
+	if not bool(travel_result.get("ok", false)):
+		return travel_result
+	journey_route = route_id
+	journey_node = "rill_crossing" if route_id == "safe_road" else "morrowline_camp"
+	current_location = journey_node
+	encounter_target_doctrine = doctrine
+	encounter_active = true
+	encounter_step = 0
+	encounter_progress = 0.0
+	encounter_outcome = ""
+	encounter_intervention_used = false
+	encounter_enemies.clear()
+	encounter_report.clear()
+	var composition: Array = JOURNEY_ENCOUNTERS.get(route_id, ["road_raiders"])
+	for index in range(composition.size()):
+		var enemy_id: String = String(composition[index])
+		var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
+		encounter_enemies.append({"id": enemy_id, "hp": int(definition.health), "max_hp": int(definition.health), "target": "", "arrived": false, "defeated": false, "damage_taken": 0, "attacks": 0, "slot": index})
+	_encounter_log("Forecast: %s from %s. Protect doctrine: %s." % [_encounter_names(), String(ROUTES[route_id].name), doctrine.replace("_", " ")])
+	_encounter_log("Route: %s. The fortress is between Ashgate Depot and Morrowline Camp." % String(JOURNEY_NODES[journey_node].name))
+	return {"ok": true, "route": route_id, "forecast": encounter_forecast(), "encounter": encounter_summary(), "summary": summary()}
+
+func _encounter_names() -> String:
+	var names: Array[String] = []
+	for enemy in encounter_enemies:
+		names.append(String(ENCOUNTER_ENEMIES[String(enemy.id)].name))
+	return ", ".join(names)
+
+func _encounter_log(message: String) -> void:
+	encounter_report.append(message)
+	log.append(message)
+
+func encounter_forecast() -> Dictionary:
+	var threat_ids: Array[String] = []
+	var threat_names: Array[String] = []
+	for enemy in encounter_enemies:
+		var enemy_id: String = String(enemy.get("id", ""))
+		threat_ids.append(enemy_id)
+		threat_names.append(String(ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id)))
+	var exact_target: String = "cargo or exterior modules"
+	if "climbers" in threat_ids:
+		exact_target = "signal or exterior modules"
+	elif "burrowers" in threat_ids:
+		exact_target = "engine or workshop modules"
+	elif "siege_beast" in threat_ids:
+		exact_target = "front armor or crew modules"
+	var signal_ready: bool = _has_operational_tag("forecast")
+	return {"node": journey_node, "destination": journey_destination, "route": journey_route, "threat_ids": threat_ids, "threats": threat_names, "target_class": exact_target, "exact_target_revealed": signal_ready, "signal_ready": signal_ready}
+
+func _has_operational_tag(tag: String) -> bool:
+	for instance in modules:
+		var definition: Dictionary = module_definition(String(instance.get("id", "")))
+		if tag in definition.get("tags", []) and int(instance.get("durability", 0)) > 0 and not bool(instance.get("sealed", false)):
+			return true
+	return false
+
+func _encounter_module_damage(enemy_id: String) -> Dictionary:
+	var total_damage: int = 0
+	var attackers: Array[String] = []
+	var behavior_lines: Array[String] = []
+	if total_power_draw() > total_power_output():
+		return {"damage": 0, "attackers": attackers, "lines": ["Power is unstable; weapon modules cannot complete their firing cycle."]}
+	for instance in modules:
+		if int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
+			continue
+		var module_id: String = String(instance.get("id", ""))
+		var definition: Dictionary = module_definition(module_id)
+		var damage: int = 0
+		if module_id == "shell_cannon":
+			damage = 3 if enemy_id in ["road_raiders", "siege_beast"] else 1
+			if power_priority == "weapons":
+				damage += 1
+			behavior_lines.append("Shell Cannon fires a burst into the %s." % ENCOUNTER_ENEMIES[enemy_id].name)
+		elif module_id == "repeater_gun":
+			damage = 2 if enemy_id in ["road_raiders", "climbers"] else 1
+			behavior_lines.append("Repeater Gun suppresses the %s advance." % ENCOUNTER_ENEMIES[enemy_id].name)
+		elif module_id == "wall_lamp" and enemy_id == "climbers":
+			damage = 2
+			behavior_lines.append("Wall Lamp exposes the climber’s route.")
+		if damage > 0:
+			attackers.append(module_id)
+			total_damage += damage
+	return {"damage": total_damage, "attackers": attackers, "lines": behavior_lines}
+
+func _encounter_choose_target(enemy_id: String) -> String:
+	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
+	var target_tags: Array = definition.get("target_tags", [])
+	var best_index: int = -1
+	var best_durability: int = 999
+	for index in range(modules.size()):
+		var instance: Dictionary = modules[index]
+		if int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
+			continue
+		var module_def: Dictionary = module_definition(String(instance.get("id", "")))
+		var matched: bool = false
+		for tag in target_tags:
+			if tag in module_def.get("tags", []):
+				matched = true
+		if matched and int(instance.get("durability", 0)) < best_durability:
+			best_index = index
+			best_durability = int(instance.get("durability", 0))
+	if best_index >= 0:
+		return String(modules[best_index].get("id", ""))
+	return "hull"
+
+func _encounter_apply_enemy_damage(enemy_id: String, target_id: String) -> int:
+	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
+	var damage: int = int(definition.damage)
+	if target_id == "hull":
+		hull_condition = maxi(0, hull_condition - damage)
+		_encounter_log("%s reaches the hull for %d damage; no matching module remains." % [definition.name, damage])
+		return damage
+	for index in range(modules.size()):
+		var instance: Dictionary = modules[index]
+		if String(instance.get("id", "")) != target_id:
+			continue
+		var module_def: Dictionary = module_definition(target_id)
+		if target_id == "front_armor_plate" and enemy_id == "siege_beast":
+			damage = maxi(1, damage - 1)
+		instance["durability"] = maxi(0, int(instance.get("durability", 0)) - damage)
+		modules[index] = instance
+		_encounter_log("%s hits %s for %d; durability is %d." % [definition.name, module_def.name, damage, int(instance.durability)])
+		_recalculate()
+		return damage
+	return 0
+
+func _encounter_repair() -> void:
+	if not _has_operational_tag("repair"):
+		return
+	var weakest_id: String = ""
+	var weakest_durability: int = 999
+	for instance in modules:
+		if int(instance.get("durability", 0)) <= 0:
+			continue
+		var module_id: String = String(instance.get("id", ""))
+		var maximum: int = int(module_definition(module_id).get("durability", 1))
+		var current: int = int(instance.get("durability", 0))
+		if current < maximum and current < weakest_durability:
+			weakest_id = module_id
+			weakest_durability = current
+	if not weakest_id.is_empty():
+		var result: Dictionary = repair_module(weakest_id, 1)
+		if bool(result.get("ok", false)):
+			_encounter_log("Field Workshop restores %s by one durability." % module_definition(weakest_id).name)
+
+func _finish_encounter() -> Dictionary:
+	encounter_active = false
+	encounter_progress = 1.0
+	var engine_alive: bool = _has_engine()
+	if hull_condition <= 0 or not engine_alive:
+		encounter_outcome = "forced_retreat"
+		journey_node = "ashgate_depot"
+		current_location = journey_node
+		_encounter_log("Outcome: forced retreat. Ashgate Depot is still behind the fortress; recover before attempting the road again.")
+	else:
+		journey_node = journey_destination
+		current_location = journey_node
+		journey_complete = true
+		if hull_condition >= 7:
+			encounter_outcome = "protected_arrival"
+			money += 24
+			_encounter_log("Outcome: protected arrival. Morrowline Camp receives the fortress and awards 24 Ashmarks.")
+		else:
+			encounter_outcome = "damaged_arrival"
+			money += 12
+			_encounter_log("Outcome: damaged arrival. Morrowline Camp is reached, but only 12 Ashmarks remain available.")
+	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+
+func _encounter_step() -> Dictionary:
+	encounter_step += 1
+	_encounter_log("Step %d: the road pressure advances." % encounter_step)
+	for index in range(encounter_enemies.size()):
+		var enemy: Dictionary = encounter_enemies[index]
+		if bool(enemy.get("defeated", false)):
+			continue
+		var enemy_id: String = String(enemy.get("id", ""))
+		var attack_result: Dictionary = _encounter_module_damage(enemy_id)
+		var damage: int = int(attack_result.get("damage", 0))
+		if damage > 0:
+			enemy["hp"] = maxi(0, int(enemy.get("hp", 0)) - damage)
+			enemy["damage_taken"] = int(enemy.get("damage_taken", 0)) + damage
+			_encounter_log("%s takes %d damage from %s." % [ENCOUNTER_ENEMIES[enemy_id].name, damage, ", ".join(attack_result.get("attackers", []))])
+			for line in attack_result.get("lines", []):
+				_encounter_log(String(line))
+		if int(enemy.get("hp", 0)) <= 0:
+			enemy["defeated"] = true
+			_encounter_log("%s is stopped before contact." % ENCOUNTER_ENEMIES[enemy_id].name)
+			encounter_enemies[index] = enemy
+			continue
+		if encounter_step >= int(ENCOUNTER_ENEMIES[enemy_id].arrival_step):
+			enemy["arrived"] = true
+			if String(enemy.get("target", "")).is_empty():
+				enemy["target"] = _encounter_choose_target(enemy_id)
+				_encounter_log("%s reaches the fortress; target is %s." % [ENCOUNTER_ENEMIES[enemy_id].name, String(enemy.target)])
+			if not String(enemy.get("target", "")).is_empty():
+				enemy["attacks"] = int(enemy.get("attacks", 0)) + 1
+				_encounter_apply_enemy_damage(enemy_id, String(enemy.target))
+		encounter_enemies[index] = enemy
+	_encounter_repair()
+	encounter_progress = clampf(float(encounter_step) / 6.0, 0.0, 1.0)
+	if encounter_step >= 6 or _all_encounter_enemies_defeated():
+		return _finish_encounter()
+	return {"ok": true, "resolved": false, "step": encounter_step, "report": encounter_report.duplicate(), "summary": summary()}
+
+func advance_encounter(delta: float = 1.0) -> Dictionary:
+	if not encounter_active:
+		return {"ok": false, "reason": "no active journey encounter"}
+	var steps: int = maxi(1, int(floor(maxf(0.0, delta))))
+	var latest: Dictionary = {"ok": true, "resolved": false, "step": encounter_step, "report": encounter_report.duplicate(), "summary": summary()}
+	for _step in range(steps):
+		if not encounter_active:
+			break
+		latest = _encounter_step()
+	return latest
+
+func use_encounter_intervention(intervention_id: String, target_module: String = "") -> Dictionary:
+	if not encounter_active:
+		return {"ok": false, "reason": "interventions are only available during an active encounter"}
+	if encounter_intervention_used:
+		return {"ok": false, "reason": "one intervention has already been used in this encounter"}
+	var result: Dictionary = intervene(intervention_id, target_module)
+	if bool(result.get("ok", false)):
+		encounter_intervention_used = true
+		_encounter_log("Intervention: %s." % intervention_id.replace("_", " ").capitalize())
+	return result
+
+func _all_encounter_enemies_defeated() -> bool:
+	if encounter_enemies.is_empty():
+		return false
+	for enemy in encounter_enemies:
+		if not bool(enemy.get("defeated", false)):
+			return false
+	return true
+
+func encounter_summary() -> Dictionary:
+	return {"active": encounter_active, "step": encounter_step, "progress": encounter_progress, "outcome": encounter_outcome, "intervention_used": encounter_intervention_used, "forecast": encounter_forecast(), "enemies": encounter_enemies.duplicate(true), "report": encounter_report.duplicate()}
 
 func _cell_occupied(cell: Vector2i) -> bool:
 	for instance in modules:

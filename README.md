@@ -18,6 +18,9 @@ The repository contains an agent-first Godot project with:
 - A lightweight UI prototype showing the fortress and state summary.
 - Structured campaign content in `content/content_manifest.json` and `content/gameplay_framework.json`.
 - Deterministic headless tests in `tests/test_fortress_state.gd`.
+- An implemented Ashgate Depot → Rill Crossing → Morrowline Camp journey slice with safe-road, exposed-shortcut, and salvage-detour encounter variants.
+- Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
+- An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.
 
 ## Run locally
 
@@ -27,7 +30,7 @@ Open the project in Godot 4.x or use:
 bash scripts/verify.sh
 ```
 
-The sandbox used to prepare this scaffold may not include Godot. In that environment the script exits with status `2` and explains the missing dependency. GitHub Actions installs the pinned Godot version and runs the actual tests on Ubuntu and Windows.
+The internal journey slice has been verified locally with Godot 4.4.1. On a development machine, install the pinned Godot version and run the same verification command before editing.
 
 ## Agent workflow
 
@@ -41,6 +44,10 @@ The recommended sequence is:
 4. Add one emergency intervention and recovery path.
 5. Add settlement contracts, refit, salvage, and campaign transitions.
 6. Expand modules, crew stories, and routes only after the core loop is reliable.
+
+## Initial journey test release
+
+The current focused test flow begins at Ashgate Depot and attempts to reach Morrowline Camp. The release contract, tester checklist, and known boundaries are in [`docs/internal_test_release.md`](docs/internal_test_release.md), while the authored encounter contract is in [`design/ashgate_city_to_city_battle.md`](design/ashgate_city_to_city_battle.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
 
 ## Related follow-up concept
 

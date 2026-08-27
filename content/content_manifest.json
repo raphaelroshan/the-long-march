@@ -1125,6 +1125,16 @@
       "conflict": "decide what the fortress becomes"
     }
   ],
+  "implemented_journey_slice": {
+    "id": "ashgate_to_morrowline",
+    "title": "The Road to Morrowline",
+    "status": "vertical_slice",
+    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp"],
+    "route_choices": ["safe_road", "exposed_shortcut", "salvage_detour"],
+    "encounter_id": "first_road_battle",
+    "player_question": "Can the fortress protect a convoy without becoming too heavy to move?",
+    "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat"]
+  },
   "map_rules": [
     {
       "id": "authored_branching",

@@ -1,13 +1,21 @@
 extends Control
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
+const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
+const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
+const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
+const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
+const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 
 var state: LongMarchState
 var status_label: Label
+var journey_label: Label
+var encounter_label: Label
 var event_label: Label
 var log_label: Label
 var route_option: OptionButton
 var threat_option: OptionButton
+var doctrine_option: OptionButton
 var fortress_panel: Control
 
 func _ready() -> void:
@@ -57,11 +65,28 @@ func _build_ui() -> void:
 	subtitle.text = "A fortress is only strong if it can keep moving."
 	subtitle.add_theme_color_override("font_color", Color("#aab6ba"))
 	left.add_child(subtitle)
+	var journey_banner := TextureRect.new()
+	journey_banner.texture = JOURNEY_BACKGROUND
+	journey_banner.custom_minimum_size = Vector2(0, 126)
+	journey_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	journey_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	journey_banner.modulate = Color(1.0, 1.0, 1.0, 0.78)
+	left.add_child(journey_banner)
 
 	status_label = Label.new()
 	status_label.add_theme_font_size_override("font_size", 18)
 	status_label.add_theme_color_override("font_color", Color("#f1e6cf"))
 	left.add_child(status_label)
+	journey_label = Label.new()
+	journey_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	journey_label.custom_minimum_size = Vector2(740, 42)
+	journey_label.add_theme_color_override("font_color", Color("#d8c389"))
+	left.add_child(journey_label)
+	encounter_label = Label.new()
+	encounter_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	encounter_label.custom_minimum_size = Vector2(740, 72)
+	encounter_label.add_theme_color_override("font_color", Color("#e89270"))
+	left.add_child(encounter_label)
 
 	fortress_panel = FortressPanel.new()
 	fortress_panel.custom_minimum_size = Vector2(760, 390)
@@ -91,12 +116,28 @@ func _build_ui() -> void:
 	control_title.add_theme_font_size_override("font_size", 20)
 	control_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	controls.add_child(control_title)
+	var asset_row := HBoxContainer.new()
+	asset_row.add_theme_constant_override("separation", 5)
+	for asset in [ENGINE_ICON, CANNON_ICON, WORKSHOP_ICON, SIGNAL_ICON]:
+		var icon := TextureRect.new()
+		icon.texture = asset
+		icon.custom_minimum_size = Vector2(48, 48)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		asset_row.add_child(icon)
+	controls.add_child(asset_row)
 
 	route_option = OptionButton.new()
 	for route_id in LongMarchState.ROUTES.keys():
 		route_option.add_item(LongMarchState.ROUTES[route_id].name)
 		route_option.set_item_metadata(route_option.item_count - 1, route_id)
 	controls.add_child(_labeled_control("Route", route_option))
+
+	doctrine_option = OptionButton.new()
+	for doctrine_id in ["protect_cargo", "protect_crew", "run_hot"]:
+		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
+		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
+	controls.add_child(_labeled_control("Journey doctrine", doctrine_option))
 
 	threat_option = OptionButton.new()
 	for threat_id in LongMarchState.THREATS.keys():
@@ -105,10 +146,22 @@ func _build_ui() -> void:
 	controls.add_child(_labeled_control("Threat", threat_option))
 
 	var travel_button := Button.new()
-	travel_button.text = "Travel selected route"
-	travel_button.tooltip_text = "Consume fuel and time, then receive a deterministic threat forecast."
+	travel_button.text = "Depart: Ashgate → Morrowline"
+	travel_button.tooltip_text = "Pay the route cost and begin the deterministic City 1 → City 2 encounter."
 	travel_button.pressed.connect(_on_travel_pressed)
 	controls.add_child(travel_button)
+
+	var advance_encounter_button := Button.new()
+	advance_encounter_button.text = "Advance journey battle"
+	advance_encounter_button.tooltip_text = "Resolve one readable encounter step."
+	advance_encounter_button.pressed.connect(_on_advance_encounter_pressed)
+	controls.add_child(advance_encounter_button)
+
+	var intervention_button := Button.new()
+	intervention_button.text = "Encounter: Shift Power"
+	intervention_button.tooltip_text = "Use the one allowed encounter intervention to prioritize weapons."
+	intervention_button.pressed.connect(_on_encounter_intervention_pressed)
+	controls.add_child(intervention_button)
 
 	var resolve_button := Button.new()
 	resolve_button.text = "Resolve forecasted threat"
@@ -162,11 +215,29 @@ func _selected_id(option: OptionButton) -> String:
 
 func _on_travel_pressed() -> void:
 	var route_id := _selected_id(route_option)
-	var result := state.travel(route_id)
-	if not result.ok:
-		_set_event("Travel blocked: %s." % result.reason)
+	var result := state.begin_journey(route_id, _selected_id(doctrine_option))
+	if not bool(result.get("ok", false)):
+		_set_event("Departure blocked: %s." % String(result.get("reason", "unknown")))
 	else:
-		_set_event("%s. Forecast: %s. Inspect the fortress before resolving the encounter." % [result.summary.current_location if result.summary.has("current_location") else "The fortress advances", result.threat])
+		_set_event("Journey begun. Forecast: %s. Advance one battle step at a time." % ", ".join(result.get("forecast", {}).get("threats", [])))
+	_refresh_ui()
+
+func _on_advance_encounter_pressed() -> void:
+	var result := state.advance_encounter(1.0)
+	if not bool(result.get("ok", false)):
+		_set_event("Journey battle blocked: %s." % String(result.get("reason", "unknown")))
+	elif bool(result.get("resolved", false)):
+		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
+	else:
+		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
+	_refresh_ui()
+
+func _on_encounter_intervention_pressed() -> void:
+	var result := state.use_encounter_intervention("shift_power")
+	if not bool(result.get("ok", false)):
+		_set_event("Encounter intervention blocked: %s." % String(result.get("reason", "unknown")))
+	else:
+		_set_event("Encounter intervention used: Shift Power. Weapons now receive priority.")
 	_refresh_ui()
 
 func _on_resolve_pressed() -> void:
@@ -203,6 +274,15 @@ func _set_event(text: String) -> void:
 func _refresh_ui() -> void:
 	var snapshot := state.summary()
 	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit]
+	journey_label.text = "JOURNEY — Ashgate Depot → Rill Crossing → Morrowline Camp\nCurrent node: %s | Route: %s | Destination: %s" % [String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "not chosen")), String(LongMarchState.JOURNEY_NODES.get(state.journey_destination, {}).get("name", state.journey_destination))]
+	var encounter_lines: Array[String] = []
+	for enemy in state.encounter_enemies:
+		var enemy_id: String = String(enemy.get("id", ""))
+		var enemy_name: String = String(LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id))
+		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
+		var target: String = String(enemy.get("target", "approaching"))
+		encounter_lines.append("%s — %s — target %s" % [enemy_name, enemy_state, target])
+	encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Depart from Ashgate Depot to begin the test battle."]
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
 	for index in range(start, state.log.size()):

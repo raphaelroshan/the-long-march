@@ -10,6 +10,9 @@ func _init() -> void:
 	_test_travel_and_deterministic_threat()
 	_test_intervention_and_recovery()
 	_test_save_round_trip()
+	_test_city_journey_and_battle()
+	_test_exposed_route_and_enemy_behavior()
+	_test_encounter_save_round_trip()
 	if failures.is_empty():
 		print("PASS: The Long March fortress-state tests")
 		quit(0)
@@ -66,6 +69,59 @@ func _test_intervention_and_recovery() -> void:
 	_expect(repaired.ok, "a workshop should repair an installed module")
 	var cut := state.intervene("cut_loose_cargo")
 	_expect(cut.ok, "cut loose cargo should preserve a recovery option")
+
+func _install_encounter_loadout(state: LongMarchState, include_signal: bool = false) -> void:
+	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "journey loadout engine should install")
+	_expect(bool(state.place_module("generator_core", Vector2i(2, 0)).get("ok", false)), "journey loadout generator should install")
+	_expect(bool(state.place_module("shell_cannon", Vector2i(4, 0), true).get("ok", false)), "journey loadout cannon should install")
+	_expect(bool(state.place_module("field_workshop", Vector2i(0, 1)).get("ok", false)), "journey loadout workshop should install")
+	if include_signal:
+		_expect(bool(state.place_module("signal_coil", Vector2i(2, 1)).get("ok", false)), "journey loadout signal should install")
+
+func _test_city_journey_and_battle() -> void:
+	var state := LongMarchState.new(1107)
+	_install_encounter_loadout(state)
+	var started := state.begin_journey("safe_road", "protect_cargo")
+	_expect(bool(started.get("ok", false)), "safe road should begin the Ashgate-to-Morrowline journey")
+	_expect(state.current_location == "rill_crossing", "safe road should place the fortress at Rill Crossing during the encounter")
+	_expect(state.encounter_enemies.size() == 2, "safe road should create two Road Raider contacts")
+	_expect(String(started.get("forecast", {}).get("target_class", "")).contains("cargo"), "safe road forecast should identify cargo pressure")
+	var first_step := state.advance_encounter(1.0)
+	_expect(not bool(first_step.get("resolved", false)), "the first encounter step should leave time to intervene")
+	var intervention := state.use_encounter_intervention("shift_power")
+	_expect(bool(intervention.get("ok", false)), "the Marchmaster should be able to shift power once during the encounter")
+	_expect(not bool(state.use_encounter_intervention("vent_heat").get("ok", false)), "the journey encounter should allow only one intervention")
+	var result := state.advance_encounter(5.0)
+	_expect(bool(result.get("resolved", false)), "the safe road encounter should resolve within six steps")
+	_expect(state.journey_complete, "a survived encounter should complete the first journey")
+	_expect(state.current_location == "morrowline_camp", "a survived encounter should arrive at Morrowline Camp")
+	_expect(String(state.encounter_outcome) in ["protected_arrival", "damaged_arrival"], "a living fortress should have an explicit arrival outcome")
+	_expect(state.encounter_report.filter(func(line: String) -> bool: return line.contains("Shell Cannon")).size() > 0, "the encounter report should name the Shell Cannon behavior")
+
+func _test_exposed_route_and_enemy_behavior() -> void:
+	var state := LongMarchState.new(1107)
+	_install_encounter_loadout(state, true)
+	var started := state.begin_journey("exposed_shortcut", "protect_cargo")
+	_expect(bool(started.get("ok", false)), "the exposed shortcut should begin a journey encounter")
+	_expect(state.journey_node == "morrowline_camp", "the shortcut should skip Rill Crossing")
+	var forecast := state.encounter_forecast()
+	_expect(forecast.get("threat_ids", []).has("climbers"), "the exposed shortcut should forecast a Climber")
+	state.advance_encounter(6.0)
+	_expect(state.encounter_report.filter(func(line: String) -> bool: return line.contains("Climber")).size() > 0, "the mixed encounter report should describe Climber behavior")
+	_expect(not state.encounter_active, "the exposed shortcut encounter should resolve")
+
+func _test_encounter_save_round_trip() -> void:
+	var state := LongMarchState.new(77)
+	_install_encounter_loadout(state, true)
+	state.begin_journey("safe_road", "protect_cargo")
+	state.advance_encounter(1.0)
+	var restored := LongMarchState.new(0)
+	restored.load_serialized(state.serialize())
+	_expect(restored.journey_node == state.journey_node, "save should preserve the current journey node")
+	_expect(restored.encounter_active == state.encounter_active, "save should preserve an active encounter")
+	_expect(restored.encounter_step == state.encounter_step, "save should preserve encounter step")
+	_expect(restored.encounter_enemies == state.encounter_enemies, "save should preserve encounter enemy state")
+	_expect(restored.encounter_report == state.encounter_report, "save should preserve the causal encounter report")
 
 func _test_save_round_trip() -> void:
 	var state := LongMarchState.new(42)
