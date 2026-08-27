@@ -33,6 +33,7 @@ The repository contains an agent-first Godot project with:
 - Player-facing persistence and restart actions live in the pause menu instead of being duplicated among the campaign controls.
 - Combat cards showing live enemy arrival countdowns, health or storm pressure, current targets, counters, an explicit six-step timeline, and recent cause-and-effect.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
+- Authored event choices that show unmet chassis or resource prerequisites directly on locked options.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.
 - Repair and save/load behavior.

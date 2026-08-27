@@ -1459,8 +1459,12 @@ func _refresh_campaign_controls() -> void:
 			continue
 		var choice: Dictionary = choices[index]
 		button.visible = true
-		button.text = String(choice.label)
-		button.disabled = not bool(choice.get("enabled", false))
+		var choice_enabled := bool(choice.get("enabled", false))
+		var locked_reason := String(choice.get("reason", ""))
+		button.text = String(choice.label) if choice_enabled else "%s\nLOCKED · %s" % [String(choice.label), locked_reason.to_upper()]
+		button.tooltip_text = "" if choice_enabled else locked_reason
+		button.custom_minimum_size = Vector2(0, 42 if choice_enabled else 56)
+		button.disabled = not choice_enabled
 		button.set_meta("choice_id", String(choice.id))
 
 	var recruit_status := state.iven_recruitment_status()
