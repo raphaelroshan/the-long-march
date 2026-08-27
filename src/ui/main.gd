@@ -1003,8 +1003,20 @@ func _focus_control(control: Control) -> bool:
 		return false
 	control.grab_focus()
 	if right_scroll != null and right_scroll.is_ancestor_of(control):
-		right_scroll.ensure_control_visible.call_deferred(control)
+		_scroll_action_context_into_view.call_deferred(control)
 	return true
+
+func _scroll_action_context_into_view(control: Control) -> void:
+	if not _control_can_receive_focus(control) or right_scroll == null or not right_scroll.is_ancestor_of(control):
+		return
+	right_scroll.ensure_control_visible(control)
+	var viewport_rect := right_scroll.get_global_rect()
+	var guidance_rect := guidance_label.get_global_rect()
+	var control_rect := control.get_global_rect()
+	var context_height := control_rect.end.y - guidance_rect.position.y
+	if guidance_rect.position.y < viewport_rect.position.y and context_height <= viewport_rect.size.y - 16.0:
+		var correction := ceili(viewport_rect.position.y - guidance_rect.position.y + 8.0)
+		right_scroll.scroll_vertical = maxi(0, right_scroll.scroll_vertical - correction)
 
 func focus_current_action() -> void:
 	if onboarding_overlay != null and onboarding_overlay.visible:

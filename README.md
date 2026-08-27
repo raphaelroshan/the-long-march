@@ -12,7 +12,7 @@ The repository contains an agent-first Godot project with:
 - A session-safe pause menu with live run status, Save, Save & Return, field briefing, settings, and confirmation before discarding progress.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.
-- Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible.
+- Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible together with their current-order context when space allows.
 - Prominent post-run actions for feedback, replaying from Ashgate, or returning to the title screen.
 - Exact build identifiers on title and pause screens for reproducible playtest reports.
 - Silent local checkpoints after confirmed contracts, route departures, event choices, encounter steps, interventions, and settlement services.
