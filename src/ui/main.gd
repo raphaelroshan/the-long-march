@@ -1297,29 +1297,36 @@ func _on_settlement_repair_pressed() -> void:
 	var selected := _selected_installed_module()
 	if selected.is_empty():
 		_set_event("Select a damaged module on the chassis before requesting a Morrowline repair.")
+		encounter_label.text = "SERVICE UNAVAILABLE\nSelect a damaged chassis module first."
 		return
 	var result := state.settlement_repair(String(selected.get("id", "")))
-	_set_event("Settlement repair complete." if bool(result.get("ok", false)) else "Settlement repair blocked: %s." % String(result.get("reason", "unknown")))
+	var service_message := "%s restored +%d durability for %d Ashmarks. %s remains." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
+	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
 		_checkpoint("settlement_service")
 	_refresh_ui()
+	encounter_label.text = "%s\n%s" % ["SERVICE COMPLETE" if bool(result.get("ok", false)) else "SERVICE UNAVAILABLE", service_message]
 
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
-	_set_event("Morrowline loaded 2 fuel." if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown")))
+	var service_message := "+2 fuel loaded for %d Ashmarks. %s remains." % [int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
+	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
 		_checkpoint("settlement_service")
 	_refresh_ui()
+	encounter_label.text = "%s\n%s" % ["SERVICE COMPLETE" if bool(result.get("ok", false)) else "SERVICE UNAVAILABLE", service_message]
 
 func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
-	_set_event("Morrowline repaired the hull." if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown")))
+	var service_message := "+%d hull restored for %d Ashmarks. %s remains." % [int(result.get("hull_added", 0)), int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown"))
+	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
 		_checkpoint("settlement_service")
 	_refresh_ui()
+	encounter_label.text = "%s\n%s" % ["SERVICE COMPLETE" if bool(result.get("ok", false)) else "SERVICE UNAVAILABLE", service_message]
 
 func _on_final_journey_pressed() -> void:
 	var result := state.begin_final_journey(_selected_id(doctrine_option))
@@ -1718,7 +1725,7 @@ func _current_guidance() -> String:
 			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again." % block_reason
 		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit." % node_name
 	if state.phase == "settlement":
-		return "RECOVERY · %d service action(s) remain. Repair or refuel, refit freely, then choose the next road." % state.settlement_actions_remaining
+		return "RECOVERY · %s remains. Repair or refuel, refit freely, then choose the next road." % _service_action_count_text()
 	if state.campaign_active and state.phase in ["refit", "map"]:
 		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
 	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
@@ -1752,6 +1759,9 @@ func _result_replay_text() -> String:
 	if state.final_result == "scarred_march":
 		return "NEXT RUN · Preserve hull before Meridian Pass and use the Morrowline service budget on the system that protects the final approach."
 	return "NEXT RUN · Protect movement first: keep one engine fuel-connected, then preserve hull for the final commitment."
+
+func _service_action_count_text() -> String:
+	return "%d service action%s" % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s"]
 
 class FortressPanel extends Control:
 	signal grid_cell_pressed(cell: Vector2i)

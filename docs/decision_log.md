@@ -118,6 +118,8 @@ A failed regional encounter returns the fortress to its last secured node with e
 
 Morrowline's service controls expose the remaining action budget in the heading and disable choices that cannot succeed because the selected module or hull is already whole, funds are insufficient, or no actions remain. Module repair names the selected system, restored durability, and exact cost. Focus skips unavailable services so arrival never lands on a dead-end action.
 
+Completed and blocked services write an immediate above-fold receipt. Successful receipts name the restored resource or module, Ashmark cost, and remaining action budget; failures name the blocking condition. Metric changes and prose confirmation therefore arrive together.
+
 ## 2026-08-27 — The campaign map is an interactive graph
 
 The alpha presents the entire regional route graph instead of reducing each choice to a list. Node labels and borders distinguish current, secured, available, decision-blocked, closed, and future states; color is supporting information rather than the only signal. Route details update on both pointer hover and keyboard/controller focus, and only immediately reachable nodes accept input.

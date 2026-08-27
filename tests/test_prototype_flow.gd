@@ -192,6 +192,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	_expect(game.settlement_title.text.contains("1 ACTION LEFT"), "the service budget should update immediately after use")
+	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action"), "settlement services should report cost, effect, and remaining budget above the fold")
 	await _press_campaign_node("lower_ash_road")
 	_expect(game.current_run_flow_step == 3 and game.run_flow_labels[3].text.contains("FINAL"), "leaving Morrowline should advance the tracker to the final approach")
 	await _advance_until_phase("map")
