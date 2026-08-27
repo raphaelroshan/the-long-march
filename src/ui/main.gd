@@ -1988,6 +1988,12 @@ func _refresh_ui() -> void:
 	var vent_exposures: Array[String] = []
 	for hit in vent_preview.get("affected_hits", []):
 		vent_exposures.append("%s → %s %d→%d damage" % [String(hit.get("enemy_name", "Threat")), String(hit.get("target_name", "system")), int(hit.get("damage_before", 0)), int(hit.get("damage_after", 0))])
+	var shift_preview := state.encounter_shift_power_preview()
+	var shift_attacks: Array[String] = []
+	for attack in shift_preview.get("affected_attacks", []):
+		var attack_text := "%s %d→%d damage" % [String(attack.get("enemy_name", "Threat")), int(attack.get("damage_before", 0)), int(attack.get("damage_after", 0))]
+		if attack_text not in shift_attacks:
+			shift_attacks.append(attack_text)
 	if state.encounter_intervention_used:
 		intervention_help_label.text = "Emergency order spent. Hull is exposed; review the predicted hit, then advance." if hull_under_threat else "Emergency order spent. Inspect the predicted damage, then advance; one order returns next encounter."
 	else:
@@ -2001,6 +2007,7 @@ func _refresh_ui() -> void:
 			intervention_help_label.text = "Seal preview · %s goes offline; redirects %s." % [String(selected_definition.get("name", selected_module_id)), ", ".join(seal_redirects)]
 		else:
 			intervention_help_label.text = "Seal preview · %s goes offline; no active threat currently targets it." % String(selected_definition.get("name", selected_module_id))
+		intervention_help_label.text = "Shift preview · heat %d→%d%s.\n%s" % [int(shift_preview.get("heat_before", state.heat)), int(shift_preview.get("heat_after", state.heat)), "; attacks %s" % ", ".join(shift_attacks) if not shift_attacks.is_empty() else "; no weapon attack changes", intervention_help_label.text]
 		if not cargo_id.is_empty():
 			intervention_help_label.text += "\nCut loose preview · %s permanently removed (%s)%s." % [String(cargo_definition.get("name", cargo_id)), cargo_cost, "; redirects %s" % ", ".join(cut_redirects) if not cut_redirects.is_empty() else "; no active threat currently targets it"]
 		intervention_help_label.text += "\nVent preview · %d heat removed%s." % [int(vent_preview.get("heat_removed", 0)), "; exposed %s" % ", ".join(vent_exposures) if not vent_exposures.is_empty() else "; no current exterior target"]
@@ -2008,6 +2015,8 @@ func _refresh_ui() -> void:
 		intervention_buttons[index].visible = is_battle_phase
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and (selected_installed.is_empty() or not bool(seal_preview.get("valid", false)))) or (index == 3 and state.sacrificable_cargo_id().is_empty())
 	if intervention_buttons.size() >= 4:
+		intervention_buttons[0].text = "Shift power · attacks %s / heat %d→%d" % ["; ".join(shift_attacks) if not shift_attacks.is_empty() else "unchanged", int(shift_preview.get("heat_before", state.heat)), int(shift_preview.get("heat_after", state.heat))]
+		intervention_buttons[0].tooltip_text = "Set weapon priority for the rest of this encounter. %s" % ["Attack changes: %s." % ", ".join(shift_attacks) if not shift_attacks.is_empty() else "No operational weapon attack currently gains damage."]
 		var seal_target_name := String(selected_definition.get("name", "selected")) if not selected_installed.is_empty() else "selected module"
 		intervention_buttons[1].text = "Seal %s · %s" % [seal_target_name, seal_redirects[0] if seal_redirects.size() == 1 else ("redirects %d threats" % seal_redirects.size() if seal_redirects.size() > 1 else "protected / offline")]
 		intervention_buttons[1].tooltip_text = "Spend the encounter order. %s goes offline until the encounter ends.%s" % [seal_target_name, " Redirects %s." % ", ".join(seal_redirects) if not seal_redirects.is_empty() else " No active threat currently targets it."]

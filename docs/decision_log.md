@@ -415,3 +415,7 @@ The emergency-order guidance now previews Cut Loose Cargo alongside Seal Compart
 ## 2026-08-28 — Vent Heat reports the actual exchange
 
 Vent Heat derives its displayed cooling from the live fortress state instead of promising a fixed three-point reduction when less heat is present. Before commitment, the order guidance also names every active exterior target whose next hit will gain one damage and shows the before-and-after damage. The completed-order receipt retains that exposure, keeping the immediate benefit and combat liability together.
+
+## 2026-08-28 — Shift Power previews total attack output
+
+Shift Power compares each surviving contact's current incoming fortress damage with the weapon-priority result and reports the exact heat change before commitment. Duplicate contacts with the same result are collapsed in the command-desk copy. The completed-order receipt preserves those totals, clarifying that the one-point bonus applies to each operational weapon rather than once to the fortress as a whole.

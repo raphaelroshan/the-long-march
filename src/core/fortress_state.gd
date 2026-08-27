@@ -1251,10 +1251,11 @@ func _has_ready_tag(tag: String) -> bool:
 			return true
 	return false
 
-func _encounter_module_damage(enemy_id: String) -> Dictionary:
+func _encounter_module_damage(enemy_id: String, priority_override: String = "") -> Dictionary:
 	var total_damage: int = 0
 	var attackers: Array[String] = []
 	var behavior_lines: Array[String] = []
+	var active_priority := power_priority if priority_override.is_empty() else priority_override
 	for instance in modules:
 		var status := dependency_status(instance)
 		if not bool(status.get("operational", false)):
@@ -1288,7 +1289,7 @@ func _encounter_module_damage(enemy_id: String) -> Dictionary:
 		elif module_id == "wall_lamp" and enemy_id == "climbers":
 			damage = 2
 			behavior_lines.append("Wall Lamp exposes the climber’s route.")
-		if damage > 0 and power_priority == "weapons" and "weapon" in definition.get("tags", []):
+		if damage > 0 and active_priority == "weapons" and "weapon" in definition.get("tags", []):
 			damage += 1
 			behavior_lines.append("Shift Power increases %s output." % definition.name)
 		if damage > 0 and encounter_target_doctrine == "protect_cargo" and enemy_id == "road_raiders":
@@ -1412,6 +1413,28 @@ func encounter_vent_heat_preview() -> Dictionary:
 			"damage_after": int(impact.get("damage", 0)) + (0 if vent_exposure else 1)
 		})
 	return {"heat_before": heat, "heat_after": heat_after, "heat_removed": maxi(0, heat - heat_after), "affected_hits": affected_hits}
+
+func encounter_shift_power_preview() -> Dictionary:
+	var next_priority := "weapons" if power_priority != "weapons" else "engines"
+	var heat_change := 1 if next_priority == "weapons" else -1
+	var heat_surge_after := maxi(0, heat_surge + heat_change)
+	var heat_after := maxi(0, total_heat() + heat_surge_after - heat_relief)
+	var affected_attacks: Array[Dictionary] = []
+	for enemy in encounter_enemies:
+		if bool(enemy.get("defeated", false)):
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var before := _encounter_module_damage(enemy_id)
+		var after := _encounter_module_damage(enemy_id, next_priority)
+		if int(before.get("damage", 0)) == int(after.get("damage", 0)):
+			continue
+		affected_attacks.append({
+			"enemy_id": enemy_id,
+			"enemy_name": String(ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id.replace("_", " ").capitalize())),
+			"damage_before": int(before.get("damage", 0)),
+			"damage_after": int(after.get("damage", 0))
+		})
+	return {"priority": next_priority, "heat_before": heat, "heat_after": heat_after, "heat_change": heat_after - heat, "affected_attacks": affected_attacks}
 
 func _encounter_retarget_unavailable_module(target_module: String, cause: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []
@@ -1926,11 +1949,14 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 		return {"ok": false, "reason": "interventions are only available during an active encounter"}
 	if encounter_intervention_used:
 		return {"ok": false, "reason": "one intervention has already been used in this encounter"}
+	var shift_preview: Dictionary = encounter_shift_power_preview() if intervention_id == "shift_power" else {}
 	var vent_preview: Dictionary = encounter_vent_heat_preview() if intervention_id == "vent_heat" else {}
 	var result: Dictionary = intervene(intervention_id, target_module)
 	if bool(result.get("ok", false)):
 		encounter_intervention_used = true
-		if intervention_id == "seal_compartment":
+		if intervention_id == "shift_power":
+			result["affected_attacks"] = shift_preview.get("affected_attacks", [])
+		elif intervention_id == "seal_compartment":
 			result["retargets"] = _encounter_retarget_unavailable_module(target_module, "its target compartment is sealed")
 		elif intervention_id == "cut_loose_cargo":
 			result["retargets"] = _encounter_retarget_unavailable_module(String(result.get("removed_module", "")), "its target module is cut loose")
@@ -1944,7 +1970,18 @@ func use_encounter_intervention(intervention_id: String, target_module: String =
 func _intervention_effect_text(intervention_id: String, result: Dictionary) -> String:
 	match intervention_id:
 		"shift_power":
-			return "Weapon priority set; weapon output +1, heat +%d" % int(result.get("heat_change", 1))
+			var heat_change := int(result.get("heat_change", 1))
+			var heat_text := "+%d" % heat_change if heat_change >= 0 else str(heat_change)
+			var effect := "Weapon priority set; weapon output +1 each, heat %s" % heat_text if String(result.get("priority", "weapons")) == "weapons" else "Engine priority set; weapon bonus removed, heat %s" % heat_text
+			var affected_attacks: Array = result.get("affected_attacks", [])
+			if not affected_attacks.is_empty():
+				var attack_changes: Array[String] = []
+				for attack in affected_attacks:
+					var change := "%s %d→%d" % [String(attack.get("enemy_name", "Threat")), int(attack.get("damage_before", 0)), int(attack.get("damage_after", 0))]
+					if change not in attack_changes:
+						attack_changes.append(change)
+				effect += "; attacks %s" % ", ".join(attack_changes)
+			return effect
 		"seal_compartment":
 			var target_module := String(result.get("target_module", "module"))
 			var effect := "%s sealed; protected from targeting, offline until the encounter ends" % String(module_definition(target_module).get("name", target_module))
