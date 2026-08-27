@@ -320,6 +320,8 @@ Every planning phase builds one navigation loop from controls that are both visi
 
 The chassis preview states its verdict before placement. A valid cursor position reports that confirm will apply the move, while an invalid position names the actual overlap, bounds, mount, or mass constraint next to the grid. Green and red remain supporting cues; the player no longer has to submit an invalid move merely to learn why it cannot work.
 
+Every module definition also carries a concise capability statement grounded in implemented rules. The selected-module summary names actual damage values, forecasting, repair, armor, movement, power, rescue, and adjacency behavior beside size and operating state, so refitting does not require memorizing the field guide or inferring purpose from tags.
+
 Occupied cells are described as selection targets rather than invalid destinations, matching the actual click and confirm behavior. The colored placement ghost appears only over empty cells, so selecting another installed system and moving the current one are visually distinct actions.
 
 Every interactive control in the Marchmaster's Desk requests contextual scrolling when it receives focus, including focus reached through ordinary keyboard or controller navigation. Programmatic phase handoffs and manual navigation now share the same visibility rule, and deferred scroll requests are ignored if focus has already moved elsewhere.

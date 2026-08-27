@@ -1849,13 +1849,14 @@ func _refresh_ui() -> void:
 			var dependency := state.dependency_status(selected_installed)
 			var reasons: Array = dependency.get("reasons", [])
 			dependency_text = "%s%s" % [String(dependency.get("state", "offline")).capitalize(), ": " + String(reasons[0]) if not reasons.is_empty() else "."]
-		refit_label.text = "%s · %dx%d · %s. %s %s" % [
+		refit_label.text = "%s · %dx%d · %s. %s %s\nROLE · %s" % [
 			String(selected_definition.get("name", "Select a module")),
 			selected_shape.x,
 			selected_shape.y,
 			mount_text,
 			"Selected on chassis; choose an empty cell to move it." if not selected_installed.is_empty() else "Choose an empty cell to place it.",
-			dependency_text
+			dependency_text,
+			String(selected_definition.get("capability", "No field capability recorded."))
 		]
 	else:
 		refit_label.text = "Refit locked during the journey. The current chassis remains visible for battle inspection."
@@ -2371,6 +2372,11 @@ class FortressPanel extends Control:
 			return "Select another module to review the fortress that reached the result."
 		return "Refit is unavailable between road stops; inspect system condition here."
 
+	func selected_capability_text() -> String:
+		if state == null or placement_module_id.is_empty():
+			return "No field capability recorded."
+		return String(state.module_definition(placement_module_id).get("capability", "No field capability recorded."))
+
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			var next_cell := _cell_from_point(event.position)
@@ -2456,13 +2462,12 @@ class FortressPanel extends Control:
 			var state_name := String(dependency.get("state", "offline"))
 			var state_color := Color("#73c99b") if state_name == "ready" else (Color("#e3ad55") if state_name == "strained" else Color("#e06f61"))
 			var reasons: Array = dependency.get("reasons", [])
-			var benefits: Array = dependency.get("benefits", [])
 			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "System state: " + state_name.capitalize(), HORIZONTAL_ALIGNMENT_LEFT, 320, 13, state_color)
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), String(reasons[0]) if not reasons.is_empty() else "All required connections are satisfied.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
-			draw_string(ThemeDB.fallback_font, Vector2(x, 200), String(benefits[0]) if not benefits.is_empty() else "Move it to change its dependency graph.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+			draw_multiline_string(ThemeDB.fallback_font, Vector2(x, 200), "ROLE · %s" % selected_capability_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, 2, Color("#8fa3a7"))
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: choose an empty cell", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
-			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+			draw_multiline_string(ThemeDB.fallback_font, Vector2(x, 178), "ROLE · %s" % selected_capability_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, 2, Color("#8fa3a7"))
 		if state.can_refit():
 			var hovered := state.module_at(cursor_cell)
 			var placement_validation := _placement_validation()

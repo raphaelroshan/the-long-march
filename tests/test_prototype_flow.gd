@@ -138,11 +138,13 @@ func _run() -> void:
 	game.module_option.item_selected.emit(generator_index)
 	await process_frame
 	_expect(game.selected_module_cell == Vector2i(2, 0) and game.module_option.get_item_text(generator_index).contains("ON CHASSIS"), "the module picker should navigate directly to installed systems")
+	_expect(game.refit_label.text.contains("ROLE · Adds 4 power") and game.refit_label.text.contains("disable every powered system") and game.fortress_panel.selected_capability_text().contains("Adds 4 power"), "the selected module summary and chassis status should explain the Generator Core's actual strategic capability")
 	var cannon_index := _module_picker_index("shell_cannon")
 	game.module_option.select(cannon_index)
 	game.module_option.item_selected.emit(cannon_index)
 	await process_frame
 	_expect(game.selected_module_cell.x < 0 and game.module_option.get_item_text(cannon_index).contains("STORED"), "the module picker should distinguish stored modules ready for placement")
+	_expect(game.refit_label.text.contains("Deals 3 damage to Raiders and Siege Beasts") and game.refit_label.text.contains("adjacent ammunition"), "stored module planning should explain the Shell Cannon's exact combat role and dependency")
 	var stored_cannon: Dictionary = {}
 	for index in range(game.state.stored_modules.size()):
 		if String(game.state.stored_modules[index].get("id", "")) == "shell_cannon":
