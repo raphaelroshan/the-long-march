@@ -487,3 +487,7 @@ The Field Guide's Ashgate action mirrors the title state: Quick Start when no ch
 ## 2026-08-28 — Feedback starts with a first-save receipt
 
 An untouched playtest form now says to save a local copy when ready. The previous empty state incorrectly said the tester could “save again” before any feedback file existed. Saved and reopened forms still retain their filename and explicit Save Again action.
+
+## 2026-08-28 — Results save before returning to title
+
+The completed-run action is explicitly labelled Save Result & Return and writes the result to the local Continue slot before emitting the title transition. This protects a finished run when automatic checkpoints are disabled. If the write fails, the result remains open with a visible error instead of silently leaving; the pause menu remains the deliberate route for exiting without saving.

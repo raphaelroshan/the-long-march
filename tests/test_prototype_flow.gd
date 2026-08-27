@@ -523,6 +523,7 @@ func _run() -> void:
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
 	_expect(game.results_group.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose replay and return-to-title actions")
+	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
 	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, doctrine, and named operating condition needed to interpret the run")
 	_expect(game.results_replay_label.text.begins_with("NEXT RUN"), "the result should offer a concrete replay goal")
@@ -616,6 +617,8 @@ func _run() -> void:
 	game.results_title_button.pressed.emit()
 	await process_frame
 	_expect(return_to_title_requested, "the completed stage should be able to request the application title")
+	var result_save = JSON.parse_string(FileAccess.get_file_as_string(save_path))
+	_expect(result_save is Dictionary and String(result_save.get("phase", "")) == "results" and String(result_save.get("final_result", "")) == completed_result, "returning from results should first persist the completed run even when shell autosave is unavailable")
 	game.play_again_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.contract_accept_button.has_focus(), "Play Again should create a fresh focused Ashgate stage")

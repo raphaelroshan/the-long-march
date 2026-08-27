@@ -782,8 +782,9 @@ func _build_ui() -> void:
 	play_again_button.pressed.connect(_on_play_again_pressed)
 	results_actions.add_child(play_again_button)
 	results_title_button = Button.new()
-	results_title_button.text = "RETURN TO TITLE"
+	results_title_button.text = "SAVE RESULT & RETURN"
 	results_title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	results_title_button.tooltip_text = "Save the completed run to the local Continue slot, then return to the title."
 	results_title_button.pressed.connect(_on_results_title_pressed)
 	results_actions.add_child(results_title_button)
 	feedback_button.focus_neighbor_top = feedback_button.get_path_to(play_again_button)
@@ -1840,6 +1841,11 @@ func start_replay_from_results() -> void:
 	focus_current_action.call_deferred()
 
 func _on_results_title_pressed() -> void:
+	if not save_run():
+		_set_event("Could not save the completed result. It remains open; use Pause to review save options.")
+		_refresh_ui()
+		_focus_control(results_title_button)
+		return
 	_journal_event("return_to_title", {"phase": state.phase, "result": state.final_result})
 	return_to_title_requested.emit()
 
