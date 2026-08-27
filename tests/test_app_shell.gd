@@ -80,6 +80,7 @@ func _run() -> void:
 	await process_frame
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "confirming the first campaign decision should create an automatic checkpoint")
 	_expect(app.last_checkpoint_reason == "contract_answered", "the application should report the latest automatic checkpoint reason")
+	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text.contains("CONTRACT ANSWERED"), "a successful automatic checkpoint should produce a brief non-blocking notice")
 	app._show_pause()
 	app.title_button.pressed.emit()
 	await process_frame

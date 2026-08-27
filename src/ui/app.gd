@@ -13,6 +13,8 @@ var guide_view: Control
 var settings_view: Control
 var pause_view: Control
 var confirmation_view: Control
+var checkpoint_toast: PanelContainer
+var checkpoint_toast_label: Label
 var game_view: Control
 var start_button: Button
 var quick_start_button: Button
@@ -49,6 +51,7 @@ var reduced_motion: bool = false
 var autosave_enabled: bool = true
 var settings_opened_from_pause: bool = false
 var last_checkpoint_reason: String = ""
+var checkpoint_toast_tween: Tween
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -87,6 +90,7 @@ func _ready() -> void:
 	_build_settings_overlay()
 	_build_pause_menu()
 	_build_confirmation_overlay()
+	_build_checkpoint_toast()
 	_refresh_title_state()
 	start_button.grab_focus()
 
@@ -624,6 +628,23 @@ func _build_confirmation_overlay() -> void:
 	confirmation_confirm_button.pressed.connect(_confirm_pending_action)
 	actions.add_child(confirmation_confirm_button)
 
+func _build_checkpoint_toast() -> void:
+	checkpoint_toast = PanelContainer.new()
+	checkpoint_toast.name = "CheckpointToast"
+	checkpoint_toast.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	checkpoint_toast.position = Vector2(510, 22)
+	checkpoint_toast.size = Vector2(318, 54)
+	checkpoint_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	checkpoint_toast.visible = false
+	checkpoint_toast.add_theme_stylebox_override("panel", _flat_style(Color("#173027f2"), Color("#76c99d"), 2, 6, 10))
+	add_child(checkpoint_toast)
+	checkpoint_toast_label = Label.new()
+	checkpoint_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	checkpoint_toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	checkpoint_toast_label.add_theme_font_size_override("font_size", 12)
+	checkpoint_toast_label.add_theme_color_override("font_color", Color("#dcf7e8"))
+	checkpoint_toast.add_child(checkpoint_toast_label)
+
 func _load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
@@ -810,6 +831,19 @@ func _on_checkpoint_reached(reason: String) -> void:
 		return
 	if bool(game_view.call("save_run", true)):
 		last_checkpoint_reason = reason
+		_show_checkpoint_toast(reason)
+
+func _show_checkpoint_toast(reason: String) -> void:
+	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
+		checkpoint_toast_tween.kill()
+	checkpoint_toast_label.text = "CHECKPOINT SAVED · %s" % reason.replace("_", " ").to_upper()
+	checkpoint_toast.modulate = Color.WHITE
+	checkpoint_toast.visible = true
+	checkpoint_toast_tween = create_tween()
+	checkpoint_toast_tween.tween_interval(1.6)
+	if not reduced_motion:
+		checkpoint_toast_tween.tween_property(checkpoint_toast, "modulate", Color(1.0, 1.0, 1.0, 0.0), 0.25)
+	checkpoint_toast_tween.tween_callback(func() -> void: checkpoint_toast.visible = false)
 
 func _save_and_return_to_title() -> void:
 	if _save_from_pause():
@@ -892,6 +926,7 @@ func _return_to_title() -> void:
 	paused_stage_focus = null
 	settings_opened_from_pause = false
 	last_checkpoint_reason = ""
+	checkpoint_toast.visible = false
 	if game_view != null:
 		var old_game := game_view
 		game_view = null
