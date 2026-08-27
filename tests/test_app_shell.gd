@@ -57,6 +57,8 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
 	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should skip unavailable one-shot actions")
+	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
 	app.display_mode_button.pressed.emit()
 	await process_frame
 	var display_config := ConfigFile.new()
@@ -167,9 +169,11 @@ func _run() -> void:
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")
 	_expect(app.settings_context_label.text.begins_with("PAUSED MARCH") and app.settings_close_button.text == "BACK TO PAUSE", "in-run Settings should identify and return to the paused march")
 	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include available one-shot actions in order")
 	app.reset_briefing_button.pressed.emit()
 	await process_frame
 	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.clear_save_button and app.clear_save_button.get_node_or_null(app.clear_save_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should reroute immediately after a one-shot action becomes unavailable")
 	var cancel_input := InputEventAction.new()
 	cancel_input.action = "ui_cancel"
 	cancel_input.pressed = true
@@ -251,6 +255,7 @@ func _run() -> void:
 		await process_frame
 		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and app.continue_button.disabled, "confirmed save clearing should remove Continue progress")
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
+		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should collapse cleanly after the last one-shot action is consumed")
 
 	_remove_local_test_files()
 	if failures.is_empty():

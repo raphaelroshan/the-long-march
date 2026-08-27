@@ -156,6 +156,8 @@ Cancel input is resolved by the foremost application overlay before the underlyi
 
 One-shot settings actions such as resetting the completed briefing or clearing the only save disable themselves after success. Focus moves to the enabled return action instead of remaining attached to a control that can no longer be activated, preserving a complete keyboard and controller path.
 
+Settings also maintains explicit vertical focus neighbors as those one-shot actions appear or disappear. Controller navigation skips unavailable actions, includes available ones in their visual order, and wraps from the return action to the first setting instead of depending on layout heuristics.
+
 The first-run briefing and the in-run Field Briefing reuse one layout but have distinct semantics. First-run controls say `Skip Briefing` and `Enter Ashgate` and persist completion; reference mode says `Close Briefing` and `Return to March` and records only that the reference was closed. Re-reading help therefore cannot masquerade as onboarding progress.
 
 The pause menu compares the live campaign snapshot with the local save whenever it opens or saves. A current checkpoint gets a direct `Return to Title` action; changed state is labeled `Exit Unsaved` and retains the explicit discard confirmation. This makes warnings meaningful instead of showing the same destructive language after a successful save.

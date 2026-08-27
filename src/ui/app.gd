@@ -322,6 +322,11 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false) 
 func _configure_overlay_focus() -> void:
 	guide_close_button.focus_neighbor_right = guide_close_button.get_path_to(guide_quick_start_button)
 	guide_quick_start_button.focus_neighbor_left = guide_quick_start_button.get_path_to(guide_close_button)
+	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
+	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(motion_button)
+	motion_button.focus_neighbor_top = motion_button.get_path_to(display_mode_button)
+	motion_button.focus_neighbor_bottom = motion_button.get_path_to(autosave_button)
+	autosave_button.focus_neighbor_top = autosave_button.get_path_to(motion_button)
 	resume_button.focus_neighbor_bottom = resume_button.get_path_to(pause_save_button)
 	pause_save_button.focus_neighbor_top = pause_save_button.get_path_to(resume_button)
 	pause_save_button.focus_neighbor_right = pause_save_button.get_path_to(save_return_button)
@@ -783,7 +788,19 @@ func _refresh_settings(message: String = "") -> void:
 	reset_briefing_button.disabled = not briefing_complete
 	clear_save_button.text = "CLEAR LOCAL SAVE · " + ("AVAILABLE" if FileAccess.file_exists(SAVE_PATH) else "NO SAVE")
 	clear_save_button.disabled = not FileAccess.file_exists(SAVE_PATH)
+	_refresh_settings_focus()
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
+
+func _refresh_settings_focus() -> void:
+	var first_optional: Button = reset_briefing_button if not reset_briefing_button.disabled else (clear_save_button if not clear_save_button.disabled else settings_close_button)
+	var last_optional: Button = clear_save_button if not clear_save_button.disabled else (reset_briefing_button if not reset_briefing_button.disabled else autosave_button)
+	autosave_button.focus_neighbor_bottom = autosave_button.get_path_to(first_optional)
+	reset_briefing_button.focus_neighbor_top = reset_briefing_button.get_path_to(autosave_button)
+	reset_briefing_button.focus_neighbor_bottom = reset_briefing_button.get_path_to(clear_save_button if not clear_save_button.disabled else settings_close_button)
+	clear_save_button.focus_neighbor_top = clear_save_button.get_path_to(reset_briefing_button if not reset_briefing_button.disabled else autosave_button)
+	clear_save_button.focus_neighbor_bottom = clear_save_button.get_path_to(settings_close_button)
+	settings_close_button.focus_neighbor_top = settings_close_button.get_path_to(last_optional)
+	settings_close_button.focus_neighbor_bottom = settings_close_button.get_path_to(display_mode_button)
 
 func _toggle_display_mode() -> void:
 	fullscreen_enabled = not fullscreen_enabled
