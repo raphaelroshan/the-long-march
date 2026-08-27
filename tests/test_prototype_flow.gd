@@ -221,6 +221,15 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	_expect(game.combat_panel.step_labels[0].text == "NEXT · 1" and game.advance_encounter_button.text.contains("STEP 1 OF 6"), "combat controls should identify the exact next timeline step")
 	_expect(game.combat_panel.enemy_states[0].text.contains("2 STEPS OUT") and game.guidance_label.text.contains("2 steps out"), "approaching enemies should use a live countdown before contact")
+	game.fortress_panel.grab_focus()
+	var battle_chassis_cancel := InputEventAction.new()
+	battle_chassis_cancel.action = "ui_cancel"
+	battle_chassis_cancel.pressed = true
+	game.fortress_panel._gui_input(battle_chassis_cancel)
+	await process_frame
+	_expect(game.fortress_panel.has_focus(), "chassis inspection should not consume the global pause action while refitting is locked")
+	game.advance_encounter_button.grab_focus()
+	await process_frame
 	_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.intervention_buttons[0] and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.advance_encounter_button, "combat actions should form a visible vertical controller loop")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_next) == game.advance_encounter_button, "combat Tab navigation should remain inside the active command set")
 	game.advance_encounter_button.pressed.emit()

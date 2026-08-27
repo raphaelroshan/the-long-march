@@ -2081,7 +2081,7 @@ class FortressPanel extends Control:
 		elif event.is_action_pressed("ui_accept"):
 			grid_cell_pressed.emit(cursor_cell)
 			accept_event()
-		elif event.is_action_pressed("ui_cancel"):
+		elif event.is_action_pressed("ui_cancel") and state != null and state.can_refit():
 			focus_exit_requested.emit()
 			accept_event()
 		elif event is InputEventKey and event.pressed and not event.echo:
