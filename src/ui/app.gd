@@ -46,6 +46,7 @@ var pending_confirmation: String = ""
 var paused_stage_focus: Control
 var reduced_motion: bool = false
 var settings_opened_from_pause: bool = false
+var last_checkpoint_reason: String = ""
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -726,6 +727,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	game_view = GAME_SCENE.instantiate()
 	game_view.set("show_onboarding_on_ready", show_briefing)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
+	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
 	add_child(game_view)
 	move_child(game_view, 0)
 	menu_view.visible = false
@@ -745,6 +747,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 		_refresh_title_state()
 		start_button.grab_focus()
 		return
+	last_checkpoint_reason = "loaded save" if load_saved else ""
 	game_view.call_deferred("focus_current_action")
 	if not reduced_motion:
 		var tween := create_tween()
@@ -769,6 +772,8 @@ func _refresh_pause_summary(message: String = "") -> void:
 	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed"))]
 	if not message.is_empty():
 		pause_save_status_label.text = message
+	elif not last_checkpoint_reason.is_empty():
+		pause_save_status_label.text = "Autosaved · %s" % last_checkpoint_reason.replace("_", " ").capitalize()
 	elif FileAccess.file_exists(SAVE_PATH):
 		pause_save_status_label.text = "A local save is available. Save again to capture current progress."
 	else:
@@ -782,8 +787,15 @@ func _save_from_pause() -> bool:
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
 	_refresh_pause_summary("Saved. Continue will resume from this decision." if saved else "Save failed. Return to the stage and review the error message.")
 	if saved:
+		last_checkpoint_reason = "manual save"
 		pause_save_button.grab_focus()
 	return saved
+
+func _on_checkpoint_reached(reason: String) -> void:
+	if game_view == null:
+		return
+	if bool(game_view.call("save_run", true)):
+		last_checkpoint_reason = reason
 
 func _save_and_return_to_title() -> void:
 	if _save_from_pause():
@@ -865,6 +877,7 @@ func _return_to_title() -> void:
 	pending_confirmation = ""
 	paused_stage_focus = null
 	settings_opened_from_pause = false
+	last_checkpoint_reason = ""
 	if game_view != null:
 		var old_game := game_view
 		game_view = null

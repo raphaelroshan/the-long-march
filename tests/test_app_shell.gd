@@ -70,6 +70,10 @@ func _run() -> void:
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.contract_decline_button.has_focus(), "resuming should restore the stage control that had focus")
+	app.game_view.contract_decline_button.pressed.emit()
+	await process_frame
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "confirming the first campaign decision should create an automatic checkpoint")
+	_expect(app.last_checkpoint_reason == "contract_answered", "the application should report the latest automatic checkpoint reason")
 	app._show_pause()
 	app.title_button.pressed.emit()
 	await process_frame

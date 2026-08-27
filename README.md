@@ -15,6 +15,7 @@ The repository contains an agent-first Godot project with:
 - Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible.
 - Prominent post-run actions for feedback, replaying from Ashgate, or returning to the title screen.
 - Exact build identifiers on title and pause screens for reproducible playtest reports.
+- Silent local checkpoints after confirmed contracts, route departures, event choices, encounter steps, interventions, and settlement services.
 - Save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.
 - Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, briefing reset, and confirmed save clearing.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.

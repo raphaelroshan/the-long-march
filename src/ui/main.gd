@@ -1,6 +1,7 @@
 extends Control
 
 signal return_to_title_requested
+signal checkpoint_reached(reason: String)
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
@@ -874,6 +875,9 @@ func _journal_event(event_id: String, properties: Dictionary = {}) -> void:
 	if journal != null:
 		journal.record(event_id, properties)
 
+func _checkpoint(reason: String) -> void:
+	checkpoint_reached.emit(reason)
+
 func _state_journal_summary() -> Dictionary:
 	var dependencies := state.dependency_summary()
 	return {
@@ -964,6 +968,7 @@ func _on_guard_contract_pressed(accept: bool) -> void:
 	if bool(result.get("ok", false)):
 		_set_event("Accepted the Morrowline Parts Guard contract." if accept else "Declined the guard contract. The fortress will travel without the convoy obligation.")
 		_journal_event("guard_contract_answered", {"accepted": accept})
+		_checkpoint("contract_answered")
 	else:
 		_set_event("Contract choice blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -996,6 +1001,7 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		selected_campaign_node_id = ""
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
+		_checkpoint("route_started")
 	else:
 		_set_event("Route blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -1010,6 +1016,7 @@ func _on_campaign_event_pressed(index: int) -> void:
 	if bool(result.get("ok", false)):
 		_set_event("Decision recorded: %s." % choice_id.replace("_", " ").capitalize())
 		_journal_event("campaign_event_resolved", {"event": String(result.get("event", "")), "choice": choice_id})
+		_checkpoint("event_resolved")
 	else:
 		_set_event("Decision blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -1019,6 +1026,7 @@ func _on_recruit_iven_pressed() -> void:
 	if bool(result.get("ok", false)):
 		_set_event("Iven Pell joins the fortress as signal officer.")
 		_journal_event("specialist_recruited", {"specialist": "iven_pell"})
+		_checkpoint("specialist_recruited")
 	else:
 		_set_event("Recruitment blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -1148,6 +1156,8 @@ func _on_advance_encounter_pressed() -> void:
 	else:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
 		_journal_event("encounter_step", {"leg": state.journey_leg, "step": state.encounter_step, "hull": state.hull_condition})
+	if bool(result.get("ok", false)):
+		_checkpoint("encounter_advanced")
 	_refresh_ui()
 
 func _on_settlement_repair_pressed() -> void:
@@ -1158,18 +1168,24 @@ func _on_settlement_repair_pressed() -> void:
 	var result := state.settlement_repair(String(selected.get("id", "")))
 	_set_event("Settlement repair complete." if bool(result.get("ok", false)) else "Settlement repair blocked: %s." % String(result.get("reason", "unknown")))
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
+	if bool(result.get("ok", false)):
+		_checkpoint("settlement_service")
 	_refresh_ui()
 
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
 	_set_event("Morrowline loaded 2 fuel." if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown")))
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
+	if bool(result.get("ok", false)):
+		_checkpoint("settlement_service")
 	_refresh_ui()
 
 func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
 	_set_event("Morrowline repaired the hull." if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown")))
 	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
+	if bool(result.get("ok", false)):
+		_checkpoint("settlement_service")
 	_refresh_ui()
 
 func _on_final_journey_pressed() -> void:
@@ -1194,17 +1210,19 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 	else:
 		_set_event("Intervention used: %s." % intervention_id.replace("_", " ").capitalize())
 		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
+		_checkpoint("intervention_used")
 	_refresh_ui()
 
-func save_run() -> bool:
+func save_run(silent: bool = false) -> bool:
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
 		return false
 	file.store_string(JSON.stringify(state.serialize()))
-	_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
-	_journal_event("run_saved", {"phase": state.phase, "day": state.day})
-	_refresh_ui()
+	if not silent:
+		_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
+		_journal_event("run_saved", {"phase": state.phase, "day": state.day})
+		_refresh_ui()
 	return true
 
 func _on_save_pressed() -> void:
