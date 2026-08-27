@@ -788,6 +788,11 @@ func _build_onboarding_overlay() -> void:
 	onboarding_next_button.pressed.connect(_on_onboarding_next)
 	actions.add_child(onboarding_next_button)
 	content.add_child(actions)
+	onboarding_skip_button.focus_neighbor_left = onboarding_skip_button.get_path_to(onboarding_next_button)
+	onboarding_skip_button.focus_neighbor_right = onboarding_skip_button.get_path_to(onboarding_next_button)
+	onboarding_back_button.focus_neighbor_left = onboarding_back_button.get_path_to(onboarding_skip_button)
+	onboarding_back_button.focus_neighbor_right = onboarding_back_button.get_path_to(onboarding_next_button)
+	onboarding_next_button.focus_neighbor_right = onboarding_next_button.get_path_to(onboarding_skip_button)
 
 func _build_feedback_overlay() -> void:
 	feedback_overlay = Control.new()
@@ -859,6 +864,10 @@ func _build_feedback_overlay() -> void:
 	feedback_save_button.pressed.connect(_save_feedback)
 	actions.add_child(feedback_save_button)
 	content.add_child(actions)
+	feedback_close_button.focus_neighbor_left = feedback_close_button.get_path_to(feedback_save_button)
+	feedback_close_button.focus_neighbor_right = feedback_close_button.get_path_to(feedback_save_button)
+	feedback_save_button.focus_neighbor_left = feedback_save_button.get_path_to(feedback_close_button)
+	feedback_save_button.focus_neighbor_right = feedback_save_button.get_path_to(feedback_close_button)
 
 func _show_onboarding(reopened: bool = false) -> void:
 	onboarding_reopened = reopened
@@ -891,6 +900,7 @@ func _refresh_onboarding() -> void:
 			label.text = "— %s" % ONBOARDING_LABELS[index]
 			label.add_theme_color_override("font_color", Color("#738286"))
 	onboarding_back_button.disabled = onboarding_step == 0
+	onboarding_next_button.focus_neighbor_left = onboarding_next_button.get_path_to(onboarding_skip_button if onboarding_back_button.disabled else onboarding_back_button)
 	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER ASHGATE") if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
 	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP BRIEFING"
 
