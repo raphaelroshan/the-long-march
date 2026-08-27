@@ -2133,7 +2133,7 @@ func _result_summary_text() -> String:
 		"march_failed":
 			if state.hull_condition <= 0:
 				return "MARCH FAILED · The fortress hull reached zero at Meridian Pass."
-			return "MARCH FAILED · No operational, fuel-connected engine remained to carry the fortress through Meridian Pass."
+			return "MARCH FAILED · %s at Meridian Pass." % String(_movement_failure_diagnosis().get("cause", "No operational, fuel-connected engine remained"))
 	return "RUN COMPLETE · The chapter ended with an unclassified result."
 
 func _result_replay_text() -> String:
@@ -2141,7 +2141,36 @@ func _result_replay_text() -> String:
 		return "NEXT RUN · Test a different doctrine or road and see whether the fortress can remain decisive."
 	if state.final_result == "scarred_march":
 		return "NEXT RUN · Preserve hull before Meridian Pass and use the Morrowline service budget on the system that protects the final approach."
-	return "NEXT RUN · Protect movement first: keep one engine fuel-connected, then preserve hull for the final commitment."
+	if state.hull_condition <= 0:
+		return "NEXT RUN · HULL FIRST · Reserve one Morrowline service for the hull, then inspect active targets before spending the final Seal order."
+	return "NEXT RUN · MOVEMENT FIRST · %s Preserve one Seal order for threats targeting that system." % String(_movement_failure_diagnosis().get("action", "Keep one engine fuel-connected."))
+
+func _movement_failure_diagnosis() -> Dictionary:
+	for module in state.modules:
+		var module_id := String(module.get("id", ""))
+		var definition := state.module_definition(module_id)
+		if "engine" not in definition.get("tags", []):
+			continue
+		var module_name := String(definition.get("name", module_id.replace("_", " ").capitalize()))
+		var durability := int(module.get("durability", 0))
+		var maximum := int(definition.get("durability", 0))
+		if durability <= 0:
+			return {
+				"cause": "%s reached 0/%d durability" % [module_name, maximum],
+				"action": "Repair %s above 0 durability before the final road." % module_name
+			}
+		var dependency := state.dependency_status(module)
+		if String(dependency.get("state", "offline")) != "ready":
+			var reasons: Array = dependency.get("reasons", [])
+			var reason := String(reasons[0]) if not reasons.is_empty() else "its required connection was missing"
+			return {
+				"cause": "%s was offline: %s" % [module_name, reason],
+				"action": "Keep %s ready: %s." % [module_name, reason]
+			}
+	return {
+		"cause": "No engine remained installed",
+		"action": "Carry and connect an engine before committing to Meridian Pass."
+	}
 
 func _result_record_text() -> String:
 	var path_names: Array[String] = []
@@ -2153,8 +2182,12 @@ func _result_record_text() -> String:
 		specialist_name = "Iven Pell"
 	elif not state.specialist_id.is_empty():
 		specialist_name = state.specialist_id.replace("_", " ").capitalize()
-	return "RUN RECORD · %s\nPressure: %s %d · Contract: %s · Specialist: %s\nSystems: %d ready · %d strained · %d offline" % [
+	var stopping_line := ""
+	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
+		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
+	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nSystems: %d ready · %d strained · %d offline" % [
 		" → ".join(path_names),
+		stopping_line,
 		state.campaign_pressure_band().capitalize(),
 		state.campaign_pressure,
 		state.guard_contract_status.replace("_", " ").capitalize(),

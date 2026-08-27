@@ -88,6 +88,8 @@ The result screen explains its classification before asking for feedback. A Scar
 
 The debrief card retains a compact run record beside that explanation: the complete secured path, final closure pressure, contract state, specialist, and ready/strained/offline system counts. These facts remain readable next to the replay prompt instead of requiring the tester to reconstruct the run from separate status regions or the raw log.
 
+A failed final road distinguishes secured progress from the place where the fortress stopped. Its summary identifies hull collapse, a destroyed engine, or the engine dependency that went offline; its replay prompt then recommends a matching hull or movement experiment. Failure guidance must follow the recorded cause rather than repeat a generic build tip.
+
 The results feedback form uses explicit local-only actions, returns to the debrief rather than generically closing, and replaces a successful save action with `Save Again`. Its receipt shows the generated filename while retaining the full path as a tooltip, giving playtesters useful proof without filling the modal with machine-specific directory text.
 
 The feedback form uses an opaque bordered modal surface rather than relying on the full-screen shade alone. Long prompts, text-entry fields, privacy copy, and save controls remain visually isolated from the dense result screen beneath them at the target 1280×720 resolution.

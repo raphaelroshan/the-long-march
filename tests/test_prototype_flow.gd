@@ -375,6 +375,37 @@ func _run() -> void:
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
 	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Systems:"), "the debrief card should retain the path and operating state needed to interpret the run")
 	_expect(game.results_replay_label.text.begins_with("NEXT RUN"), "the result should offer a concrete replay goal")
+	var completed_path: Array[String] = game.state.campaign_path.duplicate()
+	var completed_encounters: int = game.state.campaign_encounters_completed
+	var completed_hull: int = game.state.hull_condition
+	var completed_result: String = game.state.final_result
+	var completed_outcome: String = game.state.encounter_outcome
+	game.state.campaign_path.pop_back()
+	game.state.campaign_encounters_completed = 4
+	game.state.final_result = "march_failed"
+	game.state.encounter_outcome = "march_failed"
+	game.state.hull_condition = 0
+	game.state._recalculate()
+	game._refresh_ui()
+	_expect(game.results_summary_label.text.contains("hull reached zero"), "a hull failure should name the exact terminal cause")
+	_expect(game.results_replay_label.text.contains("HULL FIRST") and game.results_replay_label.text.contains("Morrowline service"), "a hull failure should recommend a matching next-run adjustment")
+	_expect(game.results_record_label.text.contains("Stopped at: Meridian Pass") and game.results_record_label.text.contains("4/5 encounters secured"), "a failed final road should remain visible beside the secured path")
+	var failed_engine_index: int = game.state._module_index_by_id("steam_lance_engine")
+	var failed_engine_before: int = int(game.state.modules[failed_engine_index].get("durability", 0))
+	game.state.hull_condition = 6
+	game.state.modules[failed_engine_index]["durability"] = 0
+	game.state._recalculate()
+	game._refresh_ui()
+	_expect(game.results_summary_label.text.contains("Steam Lance Engine reached 0/4 durability"), "a movement failure should identify the disabled engine and its condition")
+	_expect(game.results_replay_label.text.contains("MOVEMENT FIRST") and game.results_replay_label.text.contains("Repair Steam Lance Engine"), "an engine failure should recommend repairing the system that ended the run")
+	game.state.campaign_path = completed_path
+	game.state.campaign_encounters_completed = completed_encounters
+	game.state.hull_condition = completed_hull
+	game.state.modules[failed_engine_index]["durability"] = failed_engine_before
+	game.state.final_result = completed_result
+	game.state.encounter_outcome = completed_outcome
+	game.state._recalculate()
+	game._refresh_ui()
 	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")
 	_expect(game.feedback_button.get_node_or_null(game.feedback_button.focus_neighbor_bottom) == game.play_again_button and game.play_again_button.get_node_or_null(game.play_again_button.focus_neighbor_right) == game.results_title_button, "the result actions should follow their visible controller layout")
 	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.results_title_button, "the result actions should form a closed Tab cycle")
