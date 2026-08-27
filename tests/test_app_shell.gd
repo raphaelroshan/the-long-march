@@ -95,7 +95,7 @@ func _run() -> void:
 	await process_frame
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "confirming the first campaign decision should create an automatic checkpoint")
 	_expect(app.last_checkpoint_reason == "contract_answered", "the application should report the latest automatic checkpoint reason")
-	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text.contains("CONTRACT ANSWERED"), "a successful automatic checkpoint should produce a brief non-blocking notice")
+	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text.contains("CONTRACT DECISION"), "a successful automatic checkpoint should produce a brief player-facing notice")
 	app._show_pause()
 	_expect(not app.checkpoint_toast.visible, "opening the pause menu should dismiss transient checkpoint notices")
 	_expect(app.title_button.text == "RETURN TO TITLE" and app.pause_save_status_label.text.begins_with("Current decision saved"), "the pause menu should recognize a current automatic checkpoint")

@@ -7,6 +7,21 @@ const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png"
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
+const CHECKPOINT_LABELS := {
+	"contract_answered": "Contract decision",
+	"route_started": "Route committed",
+	"event_resolved": "Event resolved",
+	"specialist_recruited": "Specialist recruited",
+	"module_moved": "Chassis updated",
+	"module_installed": "Module installed",
+	"module_rotated": "Module rotated",
+	"module_stored": "Module stored",
+	"encounter_advanced": "Battle step",
+	"settlement_service": "Recovery action",
+	"intervention_used": "Emergency order",
+	"manual save": "Manual save",
+	"loaded save": "Loaded save"
+}
 
 var menu_view: Control
 var guide_view: Control
@@ -941,7 +956,7 @@ func _refresh_pause_summary(message: String = "") -> void:
 	elif not autosave_enabled:
 		pause_save_status_label.text = "Autosave is off · use Save March to preserve progress."
 	elif not last_checkpoint_reason.is_empty():
-		pause_save_status_label.text = "Current decision saved · %s" % last_checkpoint_reason.replace("_", " ").capitalize() if current_run_saved else "Unsaved changes since · %s" % last_checkpoint_reason.replace("_", " ").capitalize()
+		pause_save_status_label.text = "Current decision saved · %s" % _checkpoint_label(last_checkpoint_reason) if current_run_saved else "Unsaved changes since · %s" % _checkpoint_label(last_checkpoint_reason)
 	elif FileAccess.file_exists(SAVE_PATH):
 		pause_save_status_label.text = "Current decision is saved." if current_run_saved else "A previous local save is available. Save to capture this decision."
 	else:
@@ -1004,7 +1019,7 @@ func _on_checkpoint_reached(reason: String) -> void:
 func _show_checkpoint_toast(reason: String) -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
 		checkpoint_toast_tween.kill()
-	checkpoint_toast_label.text = "CHECKPOINT SAVED · %s" % reason.replace("_", " ").to_upper()
+	checkpoint_toast_label.text = "CHECKPOINT SAVED · %s" % _checkpoint_label(reason).to_upper()
 	checkpoint_toast.modulate = Color.WHITE
 	checkpoint_toast.visible = true
 	checkpoint_toast_tween = create_tween()
@@ -1017,6 +1032,9 @@ func _dismiss_checkpoint_toast() -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
 		checkpoint_toast_tween.kill()
 	checkpoint_toast.visible = false
+
+func _checkpoint_label(reason: String) -> String:
+	return String(CHECKPOINT_LABELS.get(reason, reason.replace("_", " ").capitalize()))
 
 func _save_and_return_to_title() -> void:
 	if _save_from_pause():

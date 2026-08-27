@@ -231,3 +231,5 @@ The application writes a silent local checkpoint after meaningful committed acti
 Automatic checkpoints default to enabled but can be disabled as a persisted local preference. When disabled, checkpoint signals are ignored and the pause screen explicitly directs the tester to Save March. Manual save behavior remains available regardless of the autosave preference.
 
 Successful automatic checkpoints display a short corner notice naming the committed action. The notice does not take focus, pause play, or replace the event log, and respects reduced-motion settings by omitting its fade animation.
+
+Checkpoint reasons are translated from internal event identifiers into player-facing action names such as `Route Committed`, `Battle Step`, and `Emergency Order`. The same vocabulary appears in the transient toast and pause summary, keeping implementation identifiers out of the playtest experience.
