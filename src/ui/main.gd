@@ -883,6 +883,53 @@ func _selected_id(option: OptionButton) -> String:
 		return ""
 	return String(option.get_item_metadata(option.selected))
 
+func _control_can_receive_focus(control: Control) -> bool:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or control.focus_mode == Control.FOCUS_NONE:
+		return false
+	if control is BaseButton and control.disabled:
+		return false
+	return true
+
+func focus_current_action() -> void:
+	if onboarding_overlay != null and onboarding_overlay.visible:
+		onboarding_next_button.grab_focus()
+		return
+	if feedback_overlay != null and feedback_overlay.visible:
+		feedback_clear_text.grab_focus()
+		return
+	if contract_accept_button != null and _control_can_receive_focus(contract_accept_button):
+		contract_accept_button.grab_focus()
+		return
+	for button in campaign_event_buttons:
+		if _control_can_receive_focus(button):
+			button.grab_focus()
+			return
+	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(advance_encounter_button):
+		advance_encounter_button.grab_focus()
+		return
+	if campaign_commit_button != null and _control_can_receive_focus(campaign_commit_button):
+		campaign_commit_button.grab_focus()
+		return
+	if state.phase == "settlement":
+		for button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
+			if _control_can_receive_focus(button):
+				button.grab_focus()
+				return
+	for button in campaign_node_buttons:
+		if _control_can_receive_focus(button):
+			button.grab_focus()
+			return
+	if state.phase == "results" and _control_can_receive_focus(feedback_button):
+		feedback_button.grab_focus()
+		return
+	if _control_can_receive_focus(travel_button):
+		travel_button.grab_focus()
+
+func _ensure_current_focus() -> void:
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if not _control_can_receive_focus(focus_owner):
+		focus_current_action.call_deferred()
+
 func _on_departure_option_changed(_index: int) -> void:
 	_refresh_ui()
 
@@ -1403,6 +1450,7 @@ func _refresh_ui() -> void:
 			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull" and target_id not in fortress_panel.combat_target_ids:
 				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
+	_ensure_current_focus()
 
 class FortressPanel extends Control:
 	signal grid_cell_pressed(cell: Vector2i)

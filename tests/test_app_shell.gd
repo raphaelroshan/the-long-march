@@ -45,6 +45,12 @@ func _run() -> void:
 	_expect(not app.menu_view.visible and app.game_view != null, "Quick Start should open the playable Ashgate stage")
 	_expect(not app.game_view.onboarding_overlay.visible, "Quick Start should skip the briefing for repeated flow tests")
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "Quick Start should not permanently mark the briefing complete")
+	_expect(app.game_view.contract_accept_button.has_focus(), "Quick Start should focus the first required Ashgate decision")
+	app.game_view.contract_decline_button.grab_focus()
+	app._show_pause()
+	app.resume_button.pressed.emit()
+	await process_frame
+	_expect(app.game_view.contract_decline_button.has_focus(), "resuming should restore the stage control that had focus")
 	app._show_pause()
 	app.title_button.pressed.emit()
 	await process_frame
@@ -65,6 +71,7 @@ func _run() -> void:
 	_expect(app.game_view.state.phase == "refit", "a new stage should begin at the Ashgate refit")
 	_expect(app.game_view.campaign_map.visible, "the opening stage should expose the playable campaign map")
 	_expect(app.game_view.onboarding_overlay.visible, "the guided Start Game path should open the Marchmaster briefing")
+	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
 
 	app._show_pause()
 	await process_frame

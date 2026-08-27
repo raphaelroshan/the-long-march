@@ -29,6 +29,7 @@ var confirmation_confirm_button: Button
 var confirmation_cancel_button: Button
 var save_status_label: Label
 var pending_confirmation: String = ""
+var paused_stage_focus: Control
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -556,12 +557,15 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	game_view.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	if load_saved:
 		game_view.call("_on_load_pressed")
+	game_view.call_deferred("focus_current_action")
 	var tween := create_tween()
 	tween.tween_property(game_view, "modulate", Color.WHITE, 0.22)
 
 func _show_pause() -> void:
 	if game_view == null or pause_view.visible:
 		return
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	paused_stage_focus = focus_owner if focus_owner != null and game_view.is_ancestor_of(focus_owner) else null
 	_refresh_pause_summary()
 	pause_view.visible = true
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
@@ -601,6 +605,11 @@ func _resume_game() -> void:
 		return
 	pause_view.visible = false
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
+	if paused_stage_focus != null and is_instance_valid(paused_stage_focus) and paused_stage_focus.is_visible_in_tree() and paused_stage_focus.focus_mode != Control.FOCUS_NONE and not (paused_stage_focus is BaseButton and paused_stage_focus.disabled):
+		paused_stage_focus.grab_focus()
+	else:
+		game_view.call_deferred("focus_current_action")
+	paused_stage_focus = null
 
 func _restart_game() -> void:
 	_open_stage(false, false)
@@ -646,6 +655,7 @@ func _return_to_title() -> void:
 	guide_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
+	paused_stage_focus = null
 	if game_view != null:
 		var old_game := game_view
 		game_view = null

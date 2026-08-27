@@ -125,3 +125,7 @@ The pause menu is a session boundary rather than a decorative overlay. It report
 The Marchmaster's Desk carries a persistent five-milestone tracker: Prep, Roads, Recover, Final, and Result. Completed, current, and upcoming milestones use both symbols and color. The tracker is explanatory rather than a second simulation state; its current position derives from the deterministic campaign state and is verified across a complete run.
 
 Mandatory local decisions appear immediately below the current objective. In particular, the opening Ashgate contract sits above doctrine and refit controls so a new tester can act without scrolling. Optional configuration remains available after the blocking choice rather than visually competing with it.
+
+## 2026-08-27 — Focus follows the decision flow
+
+Menu and stage transitions explicitly hand keyboard/controller focus to the next meaningful action: the opening contract, the first available route, route confirmation, encounter advancement, or final feedback. Pause records the previously focused stage control and restores it on resume. A fallback focus resolver activates whenever a refresh hides or disables the current owner, preventing focus from remaining trapped on an invisible control.
