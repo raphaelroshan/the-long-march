@@ -8,6 +8,7 @@ const SAVE_PATH := "user://the_long_march_prototype.save"
 var menu_view: Control
 var guide_view: Control
 var pause_view: Control
+var confirmation_view: Control
 var game_view: Control
 var start_button: Button
 var quick_start_button: Button
@@ -16,9 +17,18 @@ var guide_button: Button
 var guide_close_button: Button
 var guide_quick_start_button: Button
 var resume_button: Button
+var pause_summary_label: Label
+var pause_save_status_label: Label
+var pause_save_button: Button
+var save_return_button: Button
 var restart_button: Button
 var title_button: Button
+var confirmation_title_label: Label
+var confirmation_body_label: Label
+var confirmation_confirm_button: Button
+var confirmation_cancel_button: Button
 var save_status_label: Label
+var pending_confirmation: String = ""
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -54,6 +64,7 @@ func _ready() -> void:
 	_build_title_menu()
 	_build_guide_overlay()
 	_build_pause_menu()
+	_build_confirmation_overlay()
 	_refresh_title_state()
 	start_button.grab_focus()
 
@@ -362,7 +373,7 @@ func _build_pause_menu() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_view.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(460, 430)
+	panel.custom_minimum_size = Vector2(500, 520)
 	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#9a805c"), 2, 8, 28))
 	center.add_child(panel)
 	var content := VBoxContainer.new()
@@ -381,35 +392,124 @@ func _build_pause_menu() -> void:
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var detail := Label.new()
-	detail.text = "Your fortress state is unchanged. Resume when you are ready to make the next decision."
+	detail.text = "The road is turn-based. Nothing changes while this menu is open."
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	detail.custom_minimum_size = Vector2(390, 58)
+	detail.custom_minimum_size = Vector2(430, 38)
 	detail.add_theme_color_override("font_color", Color("#b7c1bf"))
 	content.add_child(detail)
+	var summary_panel := PanelContainer.new()
+	summary_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#405459"), 1, 5, 12))
+	content.add_child(summary_panel)
+	var summary := VBoxContainer.new()
+	summary.add_theme_constant_override("separation", 4)
+	summary_panel.add_child(summary)
+	pause_summary_label = Label.new()
+	pause_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_summary_label.add_theme_color_override("font_color", Color("#e7d6b2"))
+	summary.add_child(pause_summary_label)
+	pause_save_status_label = Label.new()
+	pause_save_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_save_status_label.add_theme_font_size_override("font_size", 12)
+	pause_save_status_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	summary.add_child(pause_save_status_label)
 	resume_button = Button.new()
 	resume_button.text = "RESUME MARCH"
-	resume_button.custom_minimum_size = Vector2(0, 56)
+	resume_button.custom_minimum_size = Vector2(0, 54)
 	resume_button.pressed.connect(_resume_game)
 	_accent_button(resume_button)
 	content.add_child(resume_button)
+	var save_actions := HBoxContainer.new()
+	save_actions.add_theme_constant_override("separation", 8)
+	content.add_child(save_actions)
+	pause_save_button = Button.new()
+	pause_save_button.text = "SAVE MARCH"
+	pause_save_button.custom_minimum_size = Vector2(0, 48)
+	pause_save_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pause_save_button.pressed.connect(_save_from_pause)
+	save_actions.add_child(pause_save_button)
+	save_return_button = Button.new()
+	save_return_button.text = "SAVE & RETURN"
+	save_return_button.custom_minimum_size = Vector2(0, 48)
+	save_return_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	save_return_button.pressed.connect(_save_and_return_to_title)
+	save_actions.add_child(save_return_button)
+	var session_actions := HBoxContainer.new()
+	session_actions.add_theme_constant_override("separation", 8)
+	content.add_child(session_actions)
 	restart_button = Button.new()
-	restart_button.text = "RESTART FROM ASHGATE"
-	restart_button.custom_minimum_size = Vector2(0, 50)
+	restart_button.text = "RESTART"
+	restart_button.custom_minimum_size = Vector2(0, 46)
+	restart_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	restart_button.tooltip_text = "Discard the current unsaved stage state and begin again."
-	restart_button.pressed.connect(_restart_game)
-	content.add_child(restart_button)
+	restart_button.pressed.connect(_request_confirmation.bind("restart"))
+	session_actions.add_child(restart_button)
 	title_button = Button.new()
-	title_button.text = "RETURN TO TITLE"
-	title_button.custom_minimum_size = Vector2(0, 50)
-	title_button.pressed.connect(_return_to_title)
-	content.add_child(title_button)
+	title_button.text = "TITLE WITHOUT SAVING"
+	title_button.custom_minimum_size = Vector2(0, 46)
+	title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_button.pressed.connect(_request_confirmation.bind("title"))
+	session_actions.add_child(title_button)
 	var hint := Label.new()
 	hint.text = "Esc resumes"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", Color("#829092"))
 	content.add_child(hint)
+
+func _build_confirmation_overlay() -> void:
+	confirmation_view = Control.new()
+	confirmation_view.name = "ConfirmationDialog"
+	confirmation_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	confirmation_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	confirmation_view.visible = false
+	add_child(confirmation_view)
+	var shade := ColorRect.new()
+	shade.color = Color(0.01, 0.015, 0.018, 0.88)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	confirmation_view.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	confirmation_view.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(500, 320)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#111b20fa"), Color("#c78b63"), 2, 8, 28))
+	center.add_child(panel)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 16)
+	panel.add_child(content)
+	var eyebrow := Label.new()
+	eyebrow.text = "CONFIRM SESSION CHANGE"
+	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	eyebrow.add_theme_font_size_override("font_size", 12)
+	eyebrow.add_theme_color_override("font_color", Color("#e8a97b"))
+	content.add_child(eyebrow)
+	confirmation_title_label = Label.new()
+	confirmation_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	confirmation_title_label.add_theme_font_size_override("font_size", 28)
+	confirmation_title_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	content.add_child(confirmation_title_label)
+	confirmation_body_label = Label.new()
+	confirmation_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	confirmation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	confirmation_body_label.custom_minimum_size = Vector2(430, 70)
+	confirmation_body_label.add_theme_color_override("font_color", Color("#c7d0ce"))
+	content.add_child(confirmation_body_label)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	content.add_child(actions)
+	confirmation_cancel_button = Button.new()
+	confirmation_cancel_button.text = "KEEP PLAYING"
+	confirmation_cancel_button.custom_minimum_size = Vector2(0, 52)
+	confirmation_cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	confirmation_cancel_button.pressed.connect(_cancel_confirmation)
+	_accent_button(confirmation_cancel_button)
+	actions.add_child(confirmation_cancel_button)
+	confirmation_confirm_button = Button.new()
+	confirmation_confirm_button.custom_minimum_size = Vector2(0, 52)
+	confirmation_confirm_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	confirmation_confirm_button.pressed.connect(_confirm_pending_action)
+	actions.add_child(confirmation_confirm_button)
 
 func _refresh_title_state() -> void:
 	var has_save := FileAccess.file_exists(SAVE_PATH)
@@ -450,6 +550,8 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	menu_view.visible = false
 	guide_view.visible = false
 	pause_view.visible = false
+	confirmation_view.visible = false
+	pending_confirmation = ""
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	game_view.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	if load_saved:
@@ -460,9 +562,39 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 func _show_pause() -> void:
 	if game_view == null or pause_view.visible:
 		return
+	_refresh_pause_summary()
 	pause_view.visible = true
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
 	resume_button.grab_focus()
+
+func _refresh_pause_summary(message: String = "") -> void:
+	if game_view == null:
+		return
+	var run_state = game_view.get("state")
+	var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
+	var phase := String(run_state.get("phase")).replace("_", " ").capitalize()
+	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed"))]
+	if not message.is_empty():
+		pause_save_status_label.text = message
+	elif FileAccess.file_exists(SAVE_PATH):
+		pause_save_status_label.text = "A local save is available. Save again to capture current progress."
+	else:
+		pause_save_status_label.text = "This run has not been saved yet."
+
+func _save_from_pause() -> bool:
+	if game_view == null:
+		return false
+	game_view.process_mode = Node.PROCESS_MODE_INHERIT
+	var saved := bool(game_view.call("save_run"))
+	game_view.process_mode = Node.PROCESS_MODE_DISABLED
+	_refresh_pause_summary("Saved. Continue will resume from this decision." if saved else "Save failed. Return to the stage and review the error message.")
+	if saved:
+		pause_save_button.grab_focus()
+	return saved
+
+func _save_and_return_to_title() -> void:
+	if _save_from_pause():
+		_return_to_title()
 
 func _resume_game() -> void:
 	if game_view == null:
@@ -472,6 +604,34 @@ func _resume_game() -> void:
 
 func _restart_game() -> void:
 	_open_stage(false, false)
+
+func _request_confirmation(action: String) -> void:
+	if action not in ["restart", "title"]:
+		return
+	pending_confirmation = action
+	confirmation_title_label.text = "Restart from Ashgate?" if action == "restart" else "Return without saving?"
+	confirmation_body_label.text = "Current stage progress will be discarded. Your existing local save remains available." if action == "restart" else "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
+	confirmation_confirm_button.text = "RESTART" if action == "restart" else "RETURN"
+	confirmation_view.visible = true
+	confirmation_cancel_button.grab_focus()
+
+func _cancel_confirmation() -> void:
+	var previous_action := pending_confirmation
+	pending_confirmation = ""
+	confirmation_view.visible = false
+	if previous_action == "restart":
+		restart_button.grab_focus()
+	else:
+		title_button.grab_focus()
+
+func _confirm_pending_action() -> void:
+	var action := pending_confirmation
+	pending_confirmation = ""
+	confirmation_view.visible = false
+	if action == "restart":
+		_restart_game()
+	elif action == "title":
+		_return_to_title()
 
 func _show_guide() -> void:
 	guide_view.visible = true
@@ -484,6 +644,8 @@ func _hide_guide() -> void:
 func _return_to_title() -> void:
 	pause_view.visible = false
 	guide_view.visible = false
+	confirmation_view.visible = false
+	pending_confirmation = ""
 	if game_view != null:
 		var old_game := game_view
 		game_view = null
@@ -502,6 +664,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if guide_view.visible:
 			_hide_guide()
 			get_viewport().set_input_as_handled()
+		return
+	if confirmation_view.visible:
+		_cancel_confirmation()
+		get_viewport().set_input_as_handled()
 		return
 	if pause_view.visible:
 		_resume_game()

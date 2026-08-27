@@ -48,6 +48,14 @@ func _run() -> void:
 	app._show_pause()
 	app.title_button.pressed.emit()
 	await process_frame
+	_expect(app.confirmation_view.visible, "returning without saving should require confirmation")
+	_expect(app.confirmation_cancel_button.has_focus(), "the safe confirmation choice should receive focus")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(not app.confirmation_view.visible and app.pause_view.visible, "cancelling should return to the pause menu")
+	app.title_button.pressed.emit()
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
 	await process_frame
 
 	app.start_button.pressed.emit()
@@ -63,19 +71,27 @@ func _run() -> void:
 	_expect(app.pause_view.visible, "the in-stage menu should pause the march")
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
+	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
+	app.restart_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible, "restart should require confirmation before discarding progress")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	app.pause_save_button.pressed.emit()
+	await process_frame
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "Save March should create the local save from the pause menu")
+	_expect(app.pause_save_status_label.text.begins_with("Saved."), "the pause menu should confirm a successful save")
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT, "Resume should restore the stage")
 
 	app.game_view.state.money = 42
-	app.game_view.save_button.pressed.emit()
-	await process_frame
 	app._show_pause()
-	app.title_button.pressed.emit()
+	app.save_return_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(app.menu_view.visible and app.game_view == null, "Return to Title should close the stage and restore the menu")
-	_expect(not app.continue_button.disabled, "saving a stage should enable Continue on the title menu")
+	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
+	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
 
 	app.continue_button.pressed.emit()
 	await process_frame

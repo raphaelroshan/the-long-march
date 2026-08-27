@@ -1060,15 +1060,19 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
 	_refresh_ui()
 
-func _on_save_pressed() -> void:
+func save_run() -> bool:
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
-		return
+		return false
 	file.store_string(JSON.stringify(state.serialize()))
 	_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
 	_journal_event("run_saved", {"phase": state.phase, "day": state.day})
 	_refresh_ui()
+	return true
+
+func _on_save_pressed() -> void:
+	save_run()
 
 func _on_load_pressed() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
