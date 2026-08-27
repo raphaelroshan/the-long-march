@@ -309,7 +309,8 @@ func configure(view: Dictionary) -> void:
 		commit_button.add_theme_stylebox_override("focus", _style(commit_fill, Color("#ffffff"), 3))
 		commit_button.add_theme_stylebox_override("disabled", _style(commit_fill.darkened(0.16), commit_border.darkened(0.18), 2))
 		if not departure_block_reason.is_empty() or not can_depart:
-			commit_button.text = "DEPARTURE BLOCKED\n%s" % (departure_block_reason.to_upper() if not departure_block_reason.is_empty() else "FORTRESS NOT READY")
+			var blocked_copy := departure_block_reason.to_upper().replace(": ", "\n") if not departure_block_reason.is_empty() else "FORTRESS NOT READY"
+			commit_button.text = "DEPARTURE BLOCKED\n%s" % blocked_copy
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
 		elif visibility == "unscouted":
 			var days := int(selected_preview.get("days", 0))
