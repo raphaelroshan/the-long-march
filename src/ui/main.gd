@@ -128,6 +128,8 @@ var feedback_confusing_text: TextEdit
 var feedback_score_option: OptionButton
 var feedback_status_label: Label
 var feedback_save_button: Button
+var feedback_close_button: Button
+var last_feedback_path: String = ""
 var journal: PlaytestJournal
 var result_recorded: bool = false
 var fortress_panel: Control
@@ -844,15 +846,15 @@ func _build_feedback_overlay() -> void:
 	content.add_child(feedback_status_label)
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 10)
-	var close_button := Button.new()
-	close_button.text = "Close"
-	close_button.pressed.connect(_hide_feedback)
-	actions.add_child(close_button)
+	feedback_close_button = Button.new()
+	feedback_close_button.text = "BACK TO RESULTS"
+	feedback_close_button.pressed.connect(_hide_feedback)
+	actions.add_child(feedback_close_button)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(spacer)
 	feedback_save_button = Button.new()
-	feedback_save_button.text = "Save feedback bundle"
+	feedback_save_button.text = "SAVE NOTES LOCALLY"
 	feedback_save_button.pressed.connect(_save_feedback)
 	actions.add_child(feedback_save_button)
 	content.add_child(actions)
@@ -914,7 +916,8 @@ func _finish_onboarding(skipped: bool) -> void:
 	focus_current_action.call_deferred()
 
 func _show_feedback() -> void:
-	feedback_status_label.text = ""
+	feedback_status_label.text = "Nothing is sent automatically. You can save again after editing."
+	feedback_save_button.text = "SAVE NOTES LOCALLY"
 	feedback_overlay.visible = true
 	feedback_clear_text.grab_focus()
 	_journal_event("feedback_opened", {"phase": state.phase})
@@ -932,8 +935,13 @@ func _save_feedback() -> void:
 		_state_journal_summary()
 	)
 	if bool(result.get("ok", false)):
-		feedback_status_label.text = "Saved locally: %s" % String(result.get("path", ""))
+		last_feedback_path = String(result.get("path", ""))
+		feedback_status_label.text = "SAVED LOCALLY · %s\nShare this file with the build number when reporting the playtest." % last_feedback_path.get_file()
+		feedback_status_label.tooltip_text = last_feedback_path
+		feedback_save_button.text = "SAVE AGAIN"
+		feedback_save_button.grab_focus()
 	else:
+		last_feedback_path = ""
 		feedback_status_label.text = "Could not save feedback: %s" % String(result.get("reason", "unknown error"))
 
 func _unhandled_key_input(event: InputEvent) -> void:

@@ -219,6 +219,14 @@ func _run() -> void:
 	game.feedback_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
+	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY", "the feedback form should expose clear local-only actions")
+	game.feedback_clear_text.text = "The route consequences were clear."
+	game.feedback_confusing_text.text = "The final repair tradeoff needs another run."
+	game.feedback_score_option.select(3)
+	game.feedback_save_button.pressed.emit()
+	await process_frame
+	_expect(not game.last_feedback_path.is_empty() and FileAccess.file_exists(game.last_feedback_path), "saving feedback should create a local bundle")
+	_expect(game.feedback_status_label.text.begins_with("SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_save_button.has_focus(), "saved feedback should provide a clear receipt and repeat action")
 	game._hide_feedback()
 	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
 	game.results_title_button.pressed.emit()
@@ -230,6 +238,8 @@ func _run() -> void:
 	for path in [save_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
+	if not game.last_feedback_path.is_empty() and FileAccess.file_exists(game.last_feedback_path):
+		DirAccess.remove_absolute(game.last_feedback_path)
 	if failures.is_empty():
 		print("PASS: The Long March complete prototype flow")
 		quit(0)

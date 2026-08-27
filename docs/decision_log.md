@@ -86,6 +86,8 @@ The prototype records a small local journal of gameplay decisions and outcomes. 
 
 The result screen explains its classification before asking for feedback. A Scarred March names each missed decisive threshold—hull, surviving final contacts, or contract failure—while failure identifies hull loss or loss of operational movement. A short next-run prompt turns the result into a testable strategy without claiming there is one correct build.
 
+The results feedback form uses explicit local-only actions, returns to the debrief rather than generically closing, and replaces a successful save action with `Save Again`. Its receipt shows the generated filename while retaining the full path as a tooltip, giving playtesters useful proof without filling the modal with machine-specific directory text.
+
 ## 2026-08-27 — Tagged playtests produce desktop artifacts
 
 Windows remains the primary product target. The repository also provides an unsigned macOS playtest preset so development sessions can run on the current platform. Tagged GitHub Actions runs build both artifacts; signing, notarization, Steam, and Epic publishing remain human-controlled release steps.
