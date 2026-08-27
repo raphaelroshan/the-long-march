@@ -259,6 +259,8 @@ func _run() -> void:
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should not reveal its hidden risk in the commit action")
+	var unknown_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat
+	_expect(unknown_commit_style != null and unknown_commit_style.border_color == Color("#cbb8e8"), "an unscouted commitment should use the same unknown-information tone as its intel")
 	game._unhandled_input(route_cancel)
 	await process_frame
 	await _press_campaign_node("broken_relay")
@@ -303,7 +305,12 @@ func _run() -> void:
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	_expect(game.settlement_title.text.contains("1 ACTION LEFT"), "the service budget should update immediately after use")
 	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action"), "settlement services should report cost, effect, and remaining budget above the fold")
-	await _press_campaign_node("lower_ash_road")
+	game.campaign_map.button_for("lower_ash_road").pressed.emit()
+	await process_frame
+	var high_risk_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat
+	_expect(game.campaign_commit_button.text.contains("HIGH RISK") and high_risk_commit_style != null and high_risk_commit_style.border_color == Color("#ef8375"), "a known high-risk commitment should carry the danger treatment before departure")
+	game.campaign_commit_button.pressed.emit()
+	await process_frame
 	_expect(game.current_run_flow_step == 3 and game.run_flow_labels[3].text.contains("FINAL"), "leaving Morrowline should advance the tracker to the final approach")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_encounters_completed == 4, "the lower-hull route should become the fourth encounter")

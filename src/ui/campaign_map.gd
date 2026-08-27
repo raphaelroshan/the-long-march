@@ -270,13 +270,25 @@ func configure(view: Dictionary) -> void:
 		var selected_preview: Dictionary = current_previews.get(selected_node, {})
 		var predicted_heat := int(selected_preview.get("predicted_heat", 0))
 		var visibility := String(selected_preview.get("visibility", "forecast"))
+		var risk := float(selected_preview.get("risk", 0.0))
 		var overheated := predicted_heat > heat_limit
-		var commit_fill := Color("#55312d") if overheated else Color("#285348")
-		var commit_border := Color("#ef8375") if overheated else Color("#73c99b")
+		var departure_blocked := not departure_block_reason.is_empty() or not can_depart
+		var commit_fill := Color("#285348")
+		var commit_border := Color("#73c99b")
+		if departure_blocked or overheated or (visibility != "unscouted" and _risk_band(risk) == "HIGH"):
+			commit_fill = Color("#55312d")
+			commit_border = Color("#ef8375")
+		elif visibility == "unscouted":
+			commit_fill = Color("#3d354b")
+			commit_border = Color("#cbb8e8")
+		elif _risk_band(risk) == "GUARDED":
+			commit_fill = Color("#4d4029")
+			commit_border = Color("#e8c58e")
 		commit_button.add_theme_stylebox_override("normal", _style(commit_fill, commit_border, 2))
 		commit_button.add_theme_stylebox_override("hover", _style(commit_fill.lightened(0.08), commit_border.lightened(0.1), 2))
 		commit_button.add_theme_stylebox_override("pressed", _style(commit_fill.darkened(0.08), Color("#ffffff"), 2))
 		commit_button.add_theme_stylebox_override("focus", _style(commit_fill, Color("#ffffff"), 3))
+		commit_button.add_theme_stylebox_override("disabled", _style(commit_fill.darkened(0.16), commit_border.darkened(0.18), 2))
 		if not departure_block_reason.is_empty() or not can_depart:
 			commit_button.text = "DEPARTURE BLOCKED\n%s" % (departure_block_reason.to_upper() if not departure_block_reason.is_empty() else "FORTRESS NOT READY")
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
@@ -286,7 +298,6 @@ func configure(view: Dictionary) -> void:
 			commit_button.tooltip_text = "Pay the known travel costs and enter an unscouted encounter."
 		else:
 			var days := int(selected_preview.get("days", 0))
-			var risk := float(selected_preview.get("risk", 0.0))
 			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %s RISK (%.0f%%)\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]
 			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
 	elif not available_nodes.is_empty():

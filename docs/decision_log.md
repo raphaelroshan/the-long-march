@@ -272,6 +272,8 @@ Route-intel text also carries a consistent scan color: green for Low, amber for 
 
 Reachable map nodes include a compact scouting-and-risk line before the player focuses either road. Known and forecast routes show their Low, Guarded, or High band; unscouted roads say Unknown. The full intel panel remains the source for exact costs and consequences, but the graph itself now supports a first-pass comparison instead of forcing players to memorize one hover state at a time.
 
+The route Commit action carries the same semantics as the intel it confirms: green for Low, amber for Guarded, red for High or a blocked/overheated departure, and violet for Unknown. Its text still names the state, so the color reinforces the consequence without becoming a hidden code.
+
 Once the player completes the Marchmaster briefing, the title collapses Guided Start and Quick Start into one direct Ashgate action. The two buttons otherwise launch the same unbriefed stage because the completion marker suppresses onboarding; hiding the duplicate keeps the first menu honest and shorter. Reset Briefing in Settings immediately restores both first-run choices and their controller navigation.
 
 ## 2026-08-27 — Continue is offered only for a readable compatible save
