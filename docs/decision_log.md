@@ -124,6 +124,8 @@ The first guard contract deliberately increases Morrowline encounter endurance i
 
 Iven's recruitment control follows the same visible-prerequisite rule as authored events. When recruitment is unavailable, the action names the exact missing relay, crew-space, location, staffing, or supply condition in its disabled state rather than relying on hover-only help.
 
+The recruitment control also carries Iven's mechanical offer in full: exact contact reveals, up to eight points of route-risk reduction, one less encounter pressure, and two anti-Storm damage. The benefits remain visible beside a lock reason, allowing a player who cannot recruit him to understand what that alternate build path would have changed.
+
 Journey doctrine is explained as mechanics at selection time. Protect Cargo and Protect Crew name their targeting, mitigation, and matchup effects; Run Hot names its damage gain and thermal liabilities. When Run Hot crosses the heat limit, both the doctrine text and route Commit control show the predicted overheat before the player departs.
 
 Locked authored choices state their prerequisite directly in the control instead of relying on a hover tooltip. Refuge capacity, signal capability, and Ashmark requirements are therefore visible to mouse, keyboard, controller, and touch players alike, and unavailable choices become useful build information for a later run.

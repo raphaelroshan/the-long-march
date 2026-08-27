@@ -1805,8 +1805,9 @@ func _refresh_campaign_controls() -> void:
 	var can_recruit_iven := bool(recruit_status.get("available", false))
 	var recruit_reason := String(recruit_status.get("reason", ""))
 	recruit_iven_button.disabled = not can_recruit_iven
-	recruit_iven_button.text = "RECRUIT IVEN PELL · 12 ASHMARKS" if can_recruit_iven else "IVEN PELL UNAVAILABLE\n%s" % recruit_reason.to_upper()
-	recruit_iven_button.custom_minimum_size = Vector2(0, 44 if can_recruit_iven else 56)
+	var recruit_offer := "RECRUIT IVEN PELL · 12 ASHMARKS\nREVEAL CONTACTS · RISK UP TO -8pt\nENCOUNTER PRESSURE -1 · ANTI-STORM DAMAGE +2"
+	recruit_iven_button.text = recruit_offer if can_recruit_iven else "%s\nLOCKED · %s" % [recruit_offer, recruit_reason.to_upper()]
+	recruit_iven_button.custom_minimum_size = Vector2(0, 72 if can_recruit_iven else 90)
 	recruit_iven_button.tooltip_text = "Adds exact immediate threat forecasts and storm navigation." if can_recruit_iven else recruit_reason
 
 func _refresh_ui() -> void:
