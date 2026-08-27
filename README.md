@@ -17,7 +17,7 @@ The repository contains an agent-first Godot project with:
 - Exact build identifiers on title and pause screens for reproducible playtest reports.
 - Silent local checkpoints after confirmed contracts, route departures, event choices, encounter steps, interventions, and settlement services.
 - Brief non-blocking checkpoint notices that confirm autosave without replacing gameplay explanations.
-- Save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.
+- Full simulation-level save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.
 - Contextual title-menu priority: Start is primary for a new player, while a valid Continue save becomes the highlighted default.
 - Confirmation before a new autosaved run can supersede an existing saved march.
 - Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, autosave, briefing reset, and confirmed save clearing.

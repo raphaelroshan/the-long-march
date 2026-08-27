@@ -751,8 +751,13 @@ func _saved_run_info() -> Dictionary:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · Expected schema %d, found %d." % [LongMarchState.SAVE_VERSION, schema_version]}
 	if not parsed.has("phase") or not parsed.has("current_location") or not parsed.has("modules"):
 		return {"exists": true, "valid": false, "summary": "Save unavailable · Required campaign state is missing."}
+	var validation_state := LongMarchState.new(0)
+	var validation := validation_state.load_serialized(parsed)
+	if not bool(validation.get("ok", false)):
+		return {"exists": true, "valid": false, "summary": "Save unavailable · %s." % String(validation.get("reason", "Campaign state could not be restored"))}
 	var location := String(parsed.get("current_location", "unknown road")).replace("_", " ").capitalize()
-	return {"exists": true, "valid": true, "summary": "Saved · Day %d · %s · %d/5 encounters" % [int(parsed.get("day", 1)), location, int(parsed.get("campaign_encounters_completed", 0))]}
+	var phase := String(parsed.get("phase", "unknown")).replace("_", " ").capitalize()
+	return {"exists": true, "valid": true, "summary": "Saved · Day %d · %s · %s · %d/5" % [int(parsed.get("day", 1)), location, phase, int(parsed.get("campaign_encounters_completed", 0))]}
 
 func _start_new_game() -> void:
 	_request_new_game(true)
