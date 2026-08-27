@@ -210,7 +210,7 @@ func _run() -> void:
 	game._refresh_ui()
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
-	_expect(game.campaign_map.detail_label.text.contains("Known route"), "keyboard or controller focus should expose the same route detail as mouse hover")
+	_expect(game.route_preview_label.text.contains("ROUTE INTEL · RILL CROSSING") and game.route_preview_label.text.contains("Known route"), "keyboard or controller focus should expose route intel above the map")
 	await _press_campaign_node("rill_crossing")
 	await process_frame
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")

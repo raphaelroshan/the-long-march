@@ -250,6 +250,8 @@ Chassis cancel is scoped to the refit mode. During preparation or recovery it re
 
 Entering chassis edit mode scrolls the left-hand workspace until the complete grid is visible. This is independent from the right-hand command-desk scrolling, so a player can move between route or recovery controls and spatial refitting without inheriting an obscured chassis from earlier report browsing.
 
+Route hover and focus publish their full scouting report into a dedicated summary immediately above the regional chart. The map no longer reserves a hidden footer for that information, making the chart shorter and keeping route cost, risk, pressure, visibility, and threat detail close to the node being inspected.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.

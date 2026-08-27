@@ -612,6 +612,7 @@ func _build_ui() -> void:
 	campaign_map = CampaignMapView.new()
 	campaign_map.node_selected.connect(_on_campaign_node_selected)
 	campaign_map.route_committed.connect(_on_campaign_route_committed)
+	campaign_map.node_inspected.connect(_on_campaign_node_inspected)
 	campaign_node_buttons = campaign_map.node_buttons
 	campaign_commit_button = campaign_map.commit_button
 	campaign_map.remove_child(campaign_commit_button)
@@ -653,6 +654,7 @@ func _build_ui() -> void:
 	route_preview_label.custom_minimum_size = Vector2(320, 64)
 	route_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
 	controls.add_child(route_preview_label)
+	controls.move_child(route_preview_label, campaign_map.get_index())
 
 	travel_button = Button.new()
 	travel_button.text = "Depart: Ashgate → Morrowline"
@@ -1239,6 +1241,12 @@ func _on_campaign_node_selected(node_id: String) -> void:
 	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready." % String(preview.get("name", node_id)))
 	_refresh_ui()
 	_focus_control(campaign_commit_button)
+
+func _on_campaign_node_inspected(node_id: String, detail: String) -> void:
+	if not campaign_map.visible:
+		return
+	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id))
+	route_preview_label.text = "ROUTE INTEL · %s\n%s" % [node_name.to_upper(), detail]
 
 func _on_campaign_route_committed(node_id: String) -> void:
 	if node_id.is_empty() or node_id != selected_campaign_node_id:
@@ -1858,6 +1866,10 @@ func _refresh_ui() -> void:
 		route_preview_label.text = "Run complete — %s." % state.final_result.replace("_", " ").capitalize()
 	else:
 		route_preview_label.text = "On the road — risk %.0f%%, pressure %d, doctrine %s." % [state.current_route_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()]
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if campaign_map.visible and focus_owner in campaign_node_buttons:
+		var focused_node_id := String(focus_owner.get_meta("node_id", ""))
+		_on_campaign_node_inspected(focused_node_id, campaign_map.detail_for(focused_node_id))
 	var dependencies: Dictionary = snapshot.dependencies
 	var safe_color := Color("#8bd6ad")
 	var warning_color := Color("#e8c58e")

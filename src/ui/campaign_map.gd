@@ -3,8 +3,9 @@ extends Control
 
 signal node_selected(node_id: String)
 signal route_committed(node_id: String)
+signal node_inspected(node_id: String, detail: String)
 
-const MAP_SIZE := Vector2(320, 356)
+const MAP_SIZE := Vector2(320, 292)
 const NODE_SIZE := Vector2(132, 40)
 const NODE_ORDER := [
 	"ashgate_depot",
@@ -52,7 +53,6 @@ var outgoing_nodes: Array[String] = []
 var current_previews: Dictionary = {}
 var interaction_is_blocked: bool = false
 var selected_node: String = ""
-var detail_label: Label
 var commit_button: Button
 
 func _init() -> void:
@@ -60,15 +60,6 @@ func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_build_node_buttons()
-	detail_label = Label.new()
-	detail_label.position = Vector2(8, 296)
-	detail_label.size = Vector2(304, 55)
-	detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail_label.add_theme_font_size_override("font_size", 11)
-	detail_label.add_theme_color_override("font_color", Color("#c8d1d1"))
-	add_child(detail_label)
 	commit_button = Button.new()
 	commit_button.custom_minimum_size = Vector2(0, 64)
 	commit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -170,19 +161,21 @@ func _preview_tooltip(preview: Dictionary) -> String:
 	return "Unscouted route · %d day(s) · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown." % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure"))]
 
 func _show_node_detail(node_id: String) -> void:
+	node_inspected.emit(node_id, detail_for(node_id))
+
+func detail_for(node_id: String) -> String:
 	var status := status_for(node_id)
 	if status in ["available", "selected"]:
-		detail_label.text = ("SELECTED — " if status == "selected" else "") + _preview_tooltip(current_previews.get(node_id, {}))
-	elif status == "closed":
-		detail_label.text = "%s is closed at Break pressure. Reliable forecasting can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
-	elif status == "blocked":
-		detail_label.text = "Resolve the current contract or local decision before taking this road."
-	elif status == "current":
-		detail_label.text = "%s is the fortress's current position." % String(SHORT_NAMES.get(node_id, node_id))
-	elif status == "secured":
-		detail_label.text = "%s is secured behind the fortress." % String(SHORT_NAMES.get(node_id, node_id))
-	else:
-		detail_label.text = "%s is charted but not yet reachable." % String(SHORT_NAMES.get(node_id, node_id))
+		return ("SELECTED — " if status == "selected" else "") + _preview_tooltip(current_previews.get(node_id, {}))
+	if status == "closed":
+		return "%s is closed at Break pressure. Reliable forecasting can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
+	if status == "blocked":
+		return "Resolve the current contract or local decision before taking this road."
+	if status == "current":
+		return "%s is the fortress's current position." % String(SHORT_NAMES.get(node_id, node_id))
+	if status == "secured":
+		return "%s is secured behind the fortress." % String(SHORT_NAMES.get(node_id, node_id))
+	return "%s is charted but not yet reachable." % String(SHORT_NAMES.get(node_id, node_id))
 
 func configure(view: Dictionary) -> void:
 	campaign_edges = view.get("edges", {}).duplicate(true)
@@ -256,14 +249,11 @@ func configure(view: Dictionary) -> void:
 			var days := int(selected_preview.get("days", 0))
 			commit_button.text = "COMMIT · %s\n%d DAY%s · %d FUEL · %.0f%% RISK\nHEAT %d/%d · PRESSURE +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), days, "" if days == 1 else "S", int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, predicted_heat, heat_limit, int(selected_preview.get("pressure_gain", 0))]
 			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
-		_show_node_detail(selected_node)
 	elif not available_nodes.is_empty():
 		commit_button.text = "Select a route to continue"
 		commit_button.tooltip_text = "Choose one of the cyan route nodes before committing."
-		_show_node_detail(available_nodes[0])
 	elif not current_node.is_empty():
 		commit_button.text = "No route selected"
-		_show_node_detail(current_node)
 	queue_redraw()
 
 func _to_string_array(value: Variant) -> Array[String]:
