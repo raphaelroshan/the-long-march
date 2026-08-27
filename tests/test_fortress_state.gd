@@ -234,6 +234,8 @@ func _test_spatial_targeting_and_causality() -> void:
 	armored.place_module("front_armor_plate", Vector2i(2, 2))
 	var crew_before := int(armored.module_at(Vector2i(2, 1)).durability)
 	var armor_before := int(armored.module_at(Vector2i(2, 2)).durability)
+	var impact_preview := armored.encounter_enemy_impact_preview({"id": "siege_beast", "arrived": true, "defeated": false, "target": "crew_quarters", "damage_bonus": 0})
+	_expect(int(impact_preview.get("damage", -1)) == 2 and int(impact_preview.get("armor_absorbed", -1)) == 1 and int(impact_preview.get("remaining_durability", -1)) == crew_before - 2, "the impact preview should include armor mitigation and match the target durability consequence")
 	armored._encounter_apply_enemy_damage("siege_beast", "crew_quarters")
 	_expect(int(armored.module_at(Vector2i(2, 1)).durability) == crew_before - 2, "adjacent armor should reduce Siege Beast damage by one")
 	_expect(int(armored.module_at(Vector2i(2, 2)).durability) == armor_before - 1, "protecting armor should absorb one durability")

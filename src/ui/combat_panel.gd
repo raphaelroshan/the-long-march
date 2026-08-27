@@ -166,7 +166,8 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 		var steps_out := maxi(1, int(definition.get("arrival_step", 0)) - step)
 		var contact_state := "CLEARED" if defeated and enemy_id == "storm_front" else ("DEFEATED" if defeated else ("CONTACT" if arrived else "APPROACHING · %d STEP%s OUT" % [steps_out, "" if steps_out == 1 else "S"]))
 		var target_name := String(target_names.get(target, target.replace("_", " ").capitalize()))
-		var target_text := " · TARGET %s" % target_name.to_upper() if arrived and not target.is_empty() and not defeated else ""
+		var impact: Dictionary = enemy.get("impact", {})
+		var target_text := "\nTARGET · %s · NEXT HIT · %d DAMAGE" % [target_name.to_upper(), int(impact.get("damage", 0))] if arrived and not target.is_empty() and not defeated and not impact.is_empty() else ""
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
 		enemy_counters[index].text = "Counter: %s" % String(definition.get("counter", "unknown"))

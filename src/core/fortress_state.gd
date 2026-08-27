@@ -1371,50 +1371,108 @@ func _log_dependency_changes(before: Dictionary) -> void:
 		var reasons: Array = status.get("reasons", [])
 		_encounter_log("Dependency change: %s is now %s%s." % [module_definition(module_id).name, new_state, " — " + String(reasons[0]) if not reasons.is_empty() else ""])
 
-func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure_bonus: int = 0) -> int:
+func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bonus: int = 0) -> Dictionary:
 	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
 	var damage: int = int(definition.damage) + pressure_bonus
+	var profile := {
+		"damage": damage,
+		"target_index": -1,
+		"armor_index": -1,
+		"armor_absorbed": 0,
+		"doctrine_effect": "",
+		"vent_exposed": false
+	}
 	if target_id == "hull":
 		if encounter_target_doctrine == "run_hot" and heat > BASE_HEAT_LIMIT:
 			damage += 1
+			profile["doctrine_effect"] = "run_hot"
+		profile["damage"] = damage
+		return profile
+	var target_index := _module_index_by_id(target_id)
+	profile["target_index"] = target_index
+	if target_index < 0:
+		profile["damage"] = 0
+		return profile
+	var armor_index := _protecting_armor_index(target_index, enemy_id)
+	if armor_index >= 0 and armor_index != target_index:
+		var armor_tags: Array = module_definition(String(modules[armor_index].get("id", ""))).get("tags", [])
+		var absorbed := 2 if enemy_id == "burrowers" and "lower_hull" in armor_tags else 1
+		absorbed = mini(absorbed, damage)
+		damage = maxi(0, damage - absorbed)
+		profile["armor_index"] = armor_index
+		profile["armor_absorbed"] = absorbed
+	var instance: Dictionary = modules[target_index]
+	var module_def: Dictionary = module_definition(target_id)
+	var target_tags: Array = module_def.get("tags", [])
+	if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
+		damage = maxi(0, damage - 1)
+		profile["doctrine_effect"] = "protect_cargo"
+	elif encounter_target_doctrine == "protect_crew" and "crew" in target_tags:
+		damage = maxi(0, damage - 1)
+		profile["doctrine_effect"] = "protect_crew"
+	elif encounter_target_doctrine == "run_hot" and heat > BASE_HEAT_LIMIT:
+		damage += 1
+		profile["doctrine_effect"] = "run_hot"
+	if vent_exposure and bool(instance.get("exterior", false)):
+		damage += 1
+		profile["vent_exposed"] = true
+	if target_id == "front_armor_plate" and enemy_id == "siege_beast":
+		damage = maxi(1, damage - 1)
+	profile["damage"] = damage
+	return profile
+
+func encounter_enemy_impact_preview(enemy: Dictionary) -> Dictionary:
+	if bool(enemy.get("defeated", false)) or not bool(enemy.get("arrived", false)):
+		return {}
+	var target_id := String(enemy.get("target", ""))
+	if target_id.is_empty():
+		return {}
+	var profile := _encounter_damage_profile(String(enemy.get("id", "")), target_id, int(enemy.get("damage_bonus", 0)))
+	var current_durability := hull_condition
+	if target_id != "hull":
+		var target_index := int(profile.get("target_index", -1))
+		if target_index < 0:
+			return {}
+		current_durability = int(modules[target_index].get("durability", 0))
+	profile["target"] = target_id
+	profile["current_durability"] = current_durability
+	profile["remaining_durability"] = maxi(0, current_durability - int(profile.get("damage", 0)))
+	return profile
+
+func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure_bonus: int = 0) -> int:
+	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
+	var profile := _encounter_damage_profile(enemy_id, target_id, pressure_bonus)
+	var damage: int = int(profile.get("damage", 0))
+	if target_id == "hull":
 		hull_condition = maxi(0, hull_condition - damage)
 		_encounter_log("%s reaches the hull for %d damage; no matching module remains." % [definition.name, damage])
 		return damage
-	var target_index := _module_index_by_id(target_id)
+	var target_index := int(profile.get("target_index", -1))
 	if target_index < 0:
 		return 0
 	var dependency_before := _dependency_states()
-	var armor_index := _protecting_armor_index(target_index, enemy_id)
+	var armor_index := int(profile.get("armor_index", -1))
 	if armor_index >= 0 and armor_index != target_index:
 		var armor: Dictionary = modules[armor_index]
-		var armor_tags: Array = module_definition(String(armor.get("id", ""))).get("tags", [])
-		var absorbed := 2 if enemy_id == "burrowers" and "lower_hull" in armor_tags else 1
-		absorbed = mini(absorbed, damage)
+		var absorbed := int(profile.get("armor_absorbed", 0))
 		armor["durability"] = maxi(0, int(armor.get("durability", 0)) - absorbed)
 		modules[armor_index] = armor
-		damage = maxi(0, damage - absorbed)
 		_encounter_log("%s absorbs %d damage intended for %s." % [module_definition(String(armor.get("id", ""))).name, absorbed, module_definition(target_id).name])
 	for index in range(modules.size()):
 		var instance: Dictionary = modules[index]
 		if String(instance.get("id", "")) != target_id:
 			continue
 		var module_def: Dictionary = module_definition(target_id)
-		var target_tags: Array = module_def.get("tags", [])
-		if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
-			damage = maxi(0, damage - 1)
+		var doctrine_effect := String(profile.get("doctrine_effect", ""))
+		if doctrine_effect == "protect_cargo":
 			_encounter_log("Protect Cargo doctrine reduces the impact on %s." % module_def.name)
-		elif encounter_target_doctrine == "protect_crew" and "crew" in target_tags:
-			damage = maxi(0, damage - 1)
+		elif doctrine_effect == "protect_crew":
 			_encounter_log("Protect Crew doctrine reduces the impact on %s." % module_def.name)
-		elif encounter_target_doctrine == "run_hot" and heat > BASE_HEAT_LIMIT:
-			damage += 1
+		elif doctrine_effect == "run_hot":
 			_encounter_log("Run Hot instability increases the impact on %s." % module_def.name)
-		if vent_exposure and bool(instance.get("exterior", false)):
-			damage += 1
+		if bool(profile.get("vent_exposed", false)):
 			vent_exposure = false
 			_encounter_log("Open heat vents expose %s to one additional damage." % module_def.name)
-		if target_id == "front_armor_plate" and enemy_id == "siege_beast":
-			damage = maxi(1, damage - 1)
 		instance["durability"] = maxi(0, int(instance.get("durability", 0)) - damage)
 		modules[index] = instance
 		_encounter_log("%s hits %s for %d; durability is %d." % [definition.name, module_def.name, damage, int(instance.durability)])
@@ -1723,7 +1781,10 @@ func _all_encounter_enemies_defeated() -> bool:
 	return true
 
 func encounter_summary() -> Dictionary:
-	return {"active": encounter_active, "step": encounter_step, "progress": encounter_progress, "outcome": encounter_outcome, "intervention_used": encounter_intervention_used, "forecast": encounter_forecast(), "enemies": encounter_enemies.duplicate(true), "report": encounter_report.duplicate()}
+	var enemy_views: Array = encounter_enemies.duplicate(true)
+	for index in range(enemy_views.size()):
+		enemy_views[index]["impact"] = encounter_enemy_impact_preview(enemy_views[index])
+	return {"active": encounter_active, "step": encounter_step, "progress": encounter_progress, "outcome": encounter_outcome, "intervention_used": encounter_intervention_used, "forecast": encounter_forecast(), "enemies": enemy_views, "report": encounter_report.duplicate()}
 
 func _cell_occupied(cell: Vector2i, ignore_index: int = -1) -> bool:
 	for index in range(modules.size()):

@@ -168,6 +168,8 @@ The matching timeline cell changes from `Next` to `Contact` and uses the danger 
 
 Enemy contact cards translate simulation target IDs into the installed system's authored display name. The warning now says `TARGET COAL CELL` rather than leaking `coal_cell`, matching the Advance action and chassis labels while leaving deterministic combat state unchanged.
 
+Once contact is active, each enemy card also shows the exact next-hit damage after pressure, adjacent armor, doctrine mitigation, overheating, vent exposure, and Siege Beast armor rules. The preview and damage application share one simulation calculation, preventing a reassuring estimate from drifting away from the result that the next Advance will apply.
+
 Campaign progress distinguishes an active encounter from completed progress. During the first fight the header says `Encounter 1/5 underway`; between roads it says `1/5 encounters secured`. The progress bar continues to represent secured encounters, avoiding the previous `Encounter 0/5` label while the player was visibly already in combat.
 
 The blockade summary uses the same vocabulary and reports `secured 0/5` during that first fight. Its count tracks the progress bar rather than the active encounter number, so the two simultaneous values describe different states explicitly instead of appearing to disagree.
