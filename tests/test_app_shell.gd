@@ -109,6 +109,7 @@ func _run() -> void:
 	_expect(app.game_view.campaign_map.visible, "the opening stage should expose the playable campaign map")
 	_expect(app.game_view.onboarding_overlay.visible, "the guided Start Game path should open the Marchmaster briefing")
 	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
+	_expect(not app.game_view.save_button.visible and not app.game_view.load_button.visible, "pause-owned persistence controls should not be duplicated in the live stage")
 
 	app._show_pause()
 	await process_frame
@@ -117,6 +118,13 @@ func _run() -> void:
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
 	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
+	app.pause_briefing_button.pressed.emit()
+	await process_frame
+	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.onboarding_overlay.visible, "the pause menu should reopen the field briefing without leaving the run")
+	app.game_view._finish_onboarding(true)
+	await process_frame
+	app._show_pause()
+	await process_frame
 	app.pause_settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")

@@ -9,7 +9,7 @@ The battles resolve automatically, but the player chooses the fortress layout, r
 The repository contains an agent-first Godot project with:
 
 - A playtest-focused title flow with guided Start Game, briefing-free Quick Start, save-aware Continue, and a concise run guide.
-- A session-safe pause menu with live run status, Save, Save & Return, and confirmation before discarding progress.
+- A session-safe pause menu with live run status, Save, Save & Return, field briefing, settings, and confirmation before discarding progress.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.
 - Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible.
@@ -30,6 +30,7 @@ The repository contains an agent-first Godot project with:
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
 - An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information, with explicit route review and confirmation.
 - A test-focused command interface with resource cards, chapter and encounter progress, state-aware current orders, and distinct mouse/keyboard/controller focus states.
+- Player-facing persistence and restart actions live in the pause menu instead of being duplicated among the campaign controls.
 - Combat cards showing live enemy arrival countdowns, health or storm pressure, current targets, counters, an explicit six-step timeline, and recent cause-and-effect.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.

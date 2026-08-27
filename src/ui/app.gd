@@ -35,6 +35,7 @@ var pause_summary_label: Label
 var pause_save_status_label: Label
 var pause_save_button: Button
 var save_return_button: Button
+var pause_briefing_button: Button
 var pause_settings_button: Button
 var restart_button: Button
 var title_button: Button
@@ -167,7 +168,7 @@ func _build_title_menu() -> void:
 	start_button.name = "StartGameButton"
 	start_button.text = "START GAME  ·  GUIDED FIRST RUN"
 	start_button.custom_minimum_size = Vector2(0, 62)
-	start_button.tooltip_text = "Begin at Ashgate Depot with the five-part Marchmaster briefing."
+	start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
 	start_button.pressed.connect(_start_new_game)
 	_accent_button(start_button)
 	actions.add_child(start_button)
@@ -435,7 +436,7 @@ func _build_settings_overlay() -> void:
 	display_mode_button = _settings_action(content, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	motion_button = _settings_action(content, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
 	autosave_button = _settings_action(content, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
-	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the five-part Marchmaster briefing on the next guided run.", _reset_briefing)
+	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the four-part Marchmaster briefing on the next guided run.", _reset_briefing)
 	clear_save_button = _settings_action(content, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
 	settings_status_label = Label.new()
 	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -481,7 +482,7 @@ func _build_pause_menu() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_view.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(500, 520)
+	panel.custom_minimum_size = Vector2(500, 580)
 	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#9a805c"), 2, 8, 28))
 	center.add_child(panel)
 	var content := VBoxContainer.new()
@@ -542,15 +543,24 @@ func _build_pause_menu() -> void:
 	save_return_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	save_return_button.pressed.connect(_save_and_return_to_title)
 	save_actions.add_child(save_return_button)
-	var session_actions := HBoxContainer.new()
-	session_actions.add_theme_constant_override("separation", 8)
-	content.add_child(session_actions)
+	var reference_actions := HBoxContainer.new()
+	reference_actions.add_theme_constant_override("separation", 8)
+	content.add_child(reference_actions)
+	pause_briefing_button = Button.new()
+	pause_briefing_button.text = "FIELD BRIEFING"
+	pause_briefing_button.custom_minimum_size = Vector2(0, 46)
+	pause_briefing_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pause_briefing_button.pressed.connect(_show_in_run_briefing)
+	reference_actions.add_child(pause_briefing_button)
 	pause_settings_button = Button.new()
 	pause_settings_button.text = "SETTINGS"
 	pause_settings_button.custom_minimum_size = Vector2(0, 46)
 	pause_settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pause_settings_button.pressed.connect(_show_settings)
-	session_actions.add_child(pause_settings_button)
+	reference_actions.add_child(pause_settings_button)
+	var session_actions := HBoxContainer.new()
+	session_actions.add_theme_constant_override("separation", 8)
+	content.add_child(session_actions)
 	restart_button = Button.new()
 	restart_button.text = "RESTART"
 	restart_button.custom_minimum_size = Vector2(0, 46)
@@ -883,6 +893,14 @@ func _resume_game() -> void:
 	else:
 		game_view.call_deferred("focus_current_action")
 	paused_stage_focus = null
+
+func _show_in_run_briefing() -> void:
+	if game_view == null:
+		return
+	pause_view.visible = false
+	game_view.process_mode = Node.PROCESS_MODE_INHERIT
+	paused_stage_focus = null
+	game_view.call("_show_onboarding", true)
 
 func _restart_game() -> void:
 	_open_stage(false, false)
