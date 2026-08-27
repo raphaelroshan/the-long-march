@@ -2,6 +2,7 @@ class_name LongMarchApp
 extends Control
 
 const GAME_SCENE = preload("res://scenes/Main.tscn")
+const LongMarchState = preload("res://src/core/fortress_state.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 
@@ -513,20 +514,31 @@ func _build_confirmation_overlay() -> void:
 	actions.add_child(confirmation_confirm_button)
 
 func _refresh_title_state() -> void:
-	var has_save := FileAccess.file_exists(SAVE_PATH)
-	continue_button.disabled = not has_save
-	continue_button.text = "CONTINUE SAVED MARCH" if has_save else "CONTINUE  ·  NO SAVE FOUND"
-	save_status_label.text = _saved_run_summary() if has_save else "No save yet · New runs save only when you choose Save."
+	var save_info := _saved_run_info()
+	var has_valid_save := bool(save_info.get("valid", false))
+	continue_button.disabled = not has_valid_save
+	continue_button.text = "CONTINUE SAVED MARCH" if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
+	save_status_label.text = String(save_info.get("summary", "No save yet · New runs save only when you choose Save."))
 
-func _saved_run_summary() -> String:
+func _saved_run_info() -> Dictionary:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return {"exists": false, "valid": false, "summary": "No save yet · New runs save only when you choose Save."}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
-		return "A saved march is available on this device."
-	var parsed = JSON.parse_string(file.get_as_text())
+		return {"exists": true, "valid": false, "summary": "Save unavailable · The local file could not be opened. Start a new run to replace it."}
+	var parser := JSON.new()
+	if parser.parse(file.get_as_text()) != OK:
+		return {"exists": true, "valid": false, "summary": "Save unavailable · Invalid data. Start a new run to replace it."}
+	var parsed = parser.data
 	if not parsed is Dictionary:
-		return "A saved march is available, but its summary is unreadable."
+		return {"exists": true, "valid": false, "summary": "Save unavailable · Invalid data. Start a new run to replace it."}
+	var schema_version := int(parsed.get("save_version", -1))
+	if schema_version != LongMarchState.SAVE_VERSION:
+		return {"exists": true, "valid": false, "summary": "Save unavailable · Expected schema %d, found %d." % [LongMarchState.SAVE_VERSION, schema_version]}
+	if not parsed.has("phase") or not parsed.has("current_location") or not parsed.has("modules"):
+		return {"exists": true, "valid": false, "summary": "Save unavailable · Required campaign state is missing."}
 	var location := String(parsed.get("current_location", "unknown road")).replace("_", " ").capitalize()
-	return "Saved · Day %d · %s · %d/5 encounters" % [int(parsed.get("day", 1)), location, int(parsed.get("campaign_encounters_completed", 0))]
+	return {"exists": true, "valid": true, "summary": "Saved · Day %d · %s · %d/5 encounters" % [int(parsed.get("day", 1)), location, int(parsed.get("campaign_encounters_completed", 0))]}
 
 func _start_new_game() -> void:
 	_open_stage(false, true)
@@ -535,7 +547,7 @@ func _quick_start_game() -> void:
 	_open_stage(false, false)
 
 func _continue_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not bool(_saved_run_info().get("valid", false)):
 		_refresh_title_state()
 		start_button.grab_focus()
 		return
@@ -555,8 +567,14 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	pending_confirmation = ""
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	game_view.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	if load_saved:
-		game_view.call("_on_load_pressed")
+	if load_saved and not bool(game_view.call("load_saved_run")):
+		var failed_game := game_view
+		game_view = null
+		failed_game.queue_free()
+		menu_view.visible = true
+		_refresh_title_state()
+		start_button.grab_focus()
+		return
 	game_view.call_deferred("focus_current_action")
 	var tween := create_tween()
 	tween.tween_property(game_view, "modulate", Color.WHITE, 0.22)

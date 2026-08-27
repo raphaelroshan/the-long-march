@@ -1184,23 +1184,23 @@ func save_run() -> bool:
 func _on_save_pressed() -> void:
 	save_run()
 
-func _on_load_pressed() -> void:
+func load_saved_run() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
 		_set_event("No prototype save exists yet.")
-		return
+		return false
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
 		_set_event("Load failed: %s." % error_string(FileAccess.get_open_error()))
-		return
+		return false
 	var parsed = JSON.parse_string(file.get_as_text())
 	if not parsed is Dictionary:
 		_set_event("Load failed: save data is not valid JSON state.")
-		return
+		return false
 	var restored := LongMarchState.new(0)
 	var result := restored.load_serialized(parsed)
 	if not bool(result.get("ok", false)):
 		_set_event("Load failed: %s." % String(result.get("reason", "unknown")))
-		return
+		return false
 	state = restored
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
@@ -1214,6 +1214,10 @@ func _on_load_pressed() -> void:
 	result_recorded = state.phase == "results"
 	_journal_event("run_loaded", {"phase": state.phase, "day": state.day})
 	_refresh_ui()
+	return true
+
+func _on_load_pressed() -> void:
+	load_saved_run()
 
 func _on_reset_pressed() -> void:
 	_reset_state()

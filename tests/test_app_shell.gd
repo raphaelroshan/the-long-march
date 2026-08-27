@@ -30,6 +30,14 @@ func _run() -> void:
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(app.continue_button.disabled, "Continue should explain that no local save exists")
+	var invalid_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	invalid_save.store_string("{not valid save data")
+	invalid_save.close()
+	app._refresh_title_state()
+	_expect(app.continue_button.disabled and app.continue_button.text.contains("UNAVAILABLE"), "invalid save data should never enable Continue")
+	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	app._refresh_title_state()
 
 	app.guide_button.pressed.emit()
 	await process_frame
@@ -104,7 +112,8 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.money == 42, "Continue should restore the locally saved stage")
-	_expect(not app.game_view.onboarding_overlay.visible, "Continue should return directly to the saved decision state")
+	if app.game_view != null:
+		_expect(not app.game_view.onboarding_overlay.visible, "Continue should return directly to the saved decision state")
 
 	_remove_local_test_files()
 	if failures.is_empty():
