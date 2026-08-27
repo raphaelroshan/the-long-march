@@ -1073,6 +1073,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			selected_module_cell = cell
 			_set_event("Moved %s to cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
 			_journal_event("module_moved", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
+			_checkpoint("module_moved")
 		else:
 			_set_event("Move blocked: %s." % String(result.get("reason", "unknown")))
 	else:
@@ -1084,6 +1085,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			selected_module_cell = cell
 			_set_event("Installed %s at cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
 			_journal_event("module_installed", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
+			_checkpoint("module_installed")
 		else:
 			_set_event("Placement blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -1111,6 +1113,7 @@ func _on_rotate_pressed() -> void:
 			selected_module_cell = origin
 			_set_event("Rotated %s in place." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
 			_journal_event("module_rotated", {"module": selected_module_id, "rotated": placement_rotated})
+			_checkpoint("module_rotated")
 	_refresh_ui()
 
 func _on_remove_pressed() -> void:
@@ -1129,6 +1132,7 @@ func _on_remove_pressed() -> void:
 		selected_module_cell = Vector2i(-1, -1)
 		_set_event("Removed %s. Click an empty cell to place it again." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
 		_journal_event("module_stored", {"module": selected_module_id, "durability": int(removed.get("durability", 0))})
+		_checkpoint("module_stored")
 	else:
 		_set_event("Removal blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
