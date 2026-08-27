@@ -64,7 +64,7 @@ Open the project in Godot 4.x or use:
 bash scripts/verify.sh
 ```
 
-Running the project opens on the title menu. Choose **Start Game · Guided First Run** for the Marchmaster briefing, **Quick Start · Skip Briefing** for repeated flow tests, or **Continue Saved March** when a local save exists. **Field Guide** summarizes the five decisions in a complete run. Press Escape during the stage to pause, inspect run progress, reopen the briefing, save, or safely return to the title.
+Running the project opens on the title menu. On the first run, choose **Start Game · Guided First Run** for the Marchmaster briefing or **Quick Start · Skip Briefing** for an immediate playtest. After the briefing is completed, those equivalent paths collapse into one direct **Start Game · Ashgate Depot** action; Settings can reset the guided introduction. **Continue** restores a compatible local save, and **Field Guide** summarizes the five decisions in a complete run. Press Escape during the stage to pause, inspect run progress, reopen the briefing, save, or safely return to the title.
 
 With Godot export templates installed, create desktop playtest builds with:
 

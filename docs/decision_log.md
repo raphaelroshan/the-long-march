@@ -256,6 +256,10 @@ Unscouted routes preserve their uncertainty through commitment. Their preview an
 
 Exact risk values are paired with Low, Guarded, or High bands. The percentage remains available for deliberate planning, while the worded band makes the relative danger legible at a glance and does not introduce false precision on unscouted roads.
 
+Route-intel text also carries a consistent scan color: green for Low, amber for Guarded, red for High or blocked departure, and violet for genuinely unknown information. The written state remains mandatory, so color accelerates comparison without becoming the only way to read risk.
+
+Once the player completes the Marchmaster briefing, the title collapses Guided Start and Quick Start into one direct Ashgate action. The two buttons otherwise launch the same unbriefed stage because the completion marker suppresses onboarding; hiding the duplicate keeps the first menu honest and shorter. Reset Briefing in Settings immediately restores both first-run choices and their controller navigation.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.

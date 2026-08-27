@@ -312,16 +312,27 @@ func _configure_title_focus() -> void:
 	quit_button.focus_neighbor_left = quit_button.get_path_to(settings_button)
 	quit_button.focus_neighbor_bottom = quit_button.get_path_to(start_button)
 
-func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false) -> void:
-	var upper_action := continue_button if has_valid_save else (save_recovery_button if has_invalid_save else quick_start_button)
-	var active_controls: Array = [start_button, quick_start_button]
+func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, show_quick_start: bool = true) -> void:
+	var saved_action: Button = continue_button if has_valid_save else (save_recovery_button if has_invalid_save else null)
+	var first_after_start: Button = quick_start_button if show_quick_start else (saved_action if saved_action != null else settings_button)
+	var upper_action: Button = saved_action if saved_action != null else (quick_start_button if show_quick_start else start_button)
+	var active_controls: Array = [start_button]
+	if show_quick_start:
+		active_controls.append(quick_start_button)
 	if has_valid_save:
 		active_controls.append(continue_button)
 	elif has_invalid_save:
 		active_controls.append(save_recovery_button)
 	active_controls.append_array([guide_button, settings_button, quit_button])
 	_configure_focus_cycle(active_controls)
-	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(upper_action if upper_action != quick_start_button else settings_button)
+	start_button.focus_neighbor_bottom = start_button.get_path_to(first_after_start)
+	if show_quick_start:
+		quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
+		quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(upper_action if upper_action != quick_start_button else settings_button)
+	if has_valid_save:
+		continue_button.focus_neighbor_top = continue_button.get_path_to(quick_start_button if show_quick_start else start_button)
+	elif has_invalid_save:
+		save_recovery_button.focus_neighbor_top = save_recovery_button.get_path_to(quick_start_button if show_quick_start else start_button)
 	guide_button.focus_neighbor_top = guide_button.get_path_to(upper_action)
 	settings_button.focus_neighbor_top = settings_button.get_path_to(upper_action)
 	quit_button.focus_neighbor_top = quit_button.get_path_to(upper_action)
@@ -872,6 +883,7 @@ func _reset_briefing() -> void:
 	var absolute_path := ProjectSettings.globalize_path(ONBOARDING_PATH)
 	if FileAccess.file_exists(absolute_path):
 		DirAccess.remove_absolute(absolute_path)
+	_refresh_title_state()
 	_refresh_settings("The guided briefing will open on the next Guided First Run.")
 	settings_close_button.grab_focus()
 
@@ -879,11 +891,18 @@ func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
 	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
-	start_button.text = "NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN"
+	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
+	if briefing_complete:
+		start_button.text = "NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT"
+		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
+	else:
+		start_button.text = "NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN"
+		start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
+	quick_start_button.visible = not briefing_complete
 	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save
-	_refresh_title_focus(has_valid_save, has_invalid_save)
+	_refresh_title_focus(has_valid_save, has_invalid_save, not briefing_complete)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
