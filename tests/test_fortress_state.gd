@@ -8,6 +8,7 @@ func _init() -> void:
 	_test_placement_and_shape()
 	_test_rotation_reposition_and_removal()
 	_test_exterior_mount_rules()
+	_test_dependency_graph()
 	_test_mass_and_power()
 	_test_travel_and_deterministic_threat()
 	_test_intervention_and_recovery()
@@ -61,6 +62,38 @@ func _test_exterior_mount_rules() -> void:
 	_expect(state.place_module("repeater_gun", Vector2i(2, 0), true).ok, "repeater gun should use the second exterior mount")
 	_expect(not state.place_module("wall_lamp", Vector2i(3, 0), true).ok, "a third exterior module should exceed mount capacity")
 
+func _test_dependency_graph() -> void:
+	var engine_state := LongMarchState.new(1107)
+	engine_state.place_module("steam_lance_engine", Vector2i(0, 0))
+	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "offline", "engine without adjacent fuel should be offline")
+	engine_state.place_module("coal_cell", Vector2i(0, 1))
+	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "ready", "adjacent Coal Cell should enable the engine")
+	engine_state.reposition_module_at(Vector2i(0, 1), Vector2i(4, 3), false)
+	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "offline", "moving fuel away should immediately break the engine connection")
+
+	var weapon_state := LongMarchState.new(1107)
+	weapon_state.place_module("generator_core", Vector2i(3, 0))
+	weapon_state.place_module("shell_cannon", Vector2i(0, 1), true)
+	_expect(weapon_state.dependency_status_at(Vector2i(0, 1)).state == "strained", "weapon without adjacent ammunition should use emergency rounds")
+	weapon_state.place_module("ammunition_lift", Vector2i(2, 1))
+	_expect(weapon_state.dependency_status_at(Vector2i(0, 1)).state == "ready", "adjacent Ammunition Lift should enable full weapon output")
+
+	var workshop_state := LongMarchState.new(1107)
+	workshop_state.place_module("generator_core", Vector2i(0, 0))
+	workshop_state.place_module("field_workshop", Vector2i(2, 1))
+	_expect(workshop_state.dependency_status_at(Vector2i(2, 1)).state == "offline", "workshop without adjacent crew should be offline")
+	workshop_state.place_module("crew_quarters", Vector2i(2, 0))
+	_expect(workshop_state.dependency_status_at(Vector2i(2, 1)).state == "strained", "crew-connected workshop without parts should provide limited repairs")
+	workshop_state.place_module("parts_crate", Vector2i(4, 1))
+	_expect(workshop_state.dependency_status_at(Vector2i(2, 1)).state == "ready", "adjacent parts should provide full workshop repairs")
+
+	var signal_state := LongMarchState.new(1107)
+	signal_state.place_module("generator_core", Vector2i(0, 0))
+	signal_state.place_module("signal_coil", Vector2i(2, 1))
+	_expect(signal_state.dependency_status_at(Vector2i(2, 1)).state == "strained", "interior signal without exterior visibility should have a broad forecast")
+	signal_state.place_module("wall_lamp", Vector2i(2, 2), true)
+	_expect(signal_state.dependency_status_at(Vector2i(2, 1)).state == "ready", "adjacent exterior signal should provide visibility")
+
 func _test_mass_and_power() -> void:
 	var state := LongMarchState.new(1107)
 	state.place_module("steam_lance_engine", Vector2i(0, 0))
@@ -76,6 +109,8 @@ func _test_travel_and_deterministic_threat() -> void:
 	var second := LongMarchState.new(42)
 	first.place_module("steam_lance_engine", Vector2i(0, 0))
 	second.place_module("steam_lance_engine", Vector2i(0, 0))
+	first.place_module("coal_cell", Vector2i(0, 1))
+	second.place_module("coal_cell", Vector2i(0, 1))
 	var first_travel := first.travel("safe_road")
 	var second_travel := second.travel("safe_road")
 	_expect(first_travel.ok and second_travel.ok, "a working engine should allow safe-road travel")
@@ -85,9 +120,11 @@ func _test_travel_and_deterministic_threat() -> void:
 func _test_intervention_and_recovery() -> void:
 	var state := LongMarchState.new(1107)
 	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
 	state.place_module("generator_core", Vector2i(2, 0))
-	state.place_module("field_workshop", Vector2i(4, 0))
-	state.place_module("parts_crate", Vector2i(0, 2))
+	state.place_module("crew_quarters", Vector2i(4, 0))
+	state.place_module("field_workshop", Vector2i(4, 1))
+	state.place_module("parts_crate", Vector2i(3, 1))
 	var threat := state.resolve_threat("burrowers")
 	_expect(threat.ok, "a known threat should resolve")
 	var vent := state.intervene("vent_heat")
@@ -99,11 +136,12 @@ func _test_intervention_and_recovery() -> void:
 
 func _install_encounter_loadout(state: LongMarchState, include_signal: bool = false) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "journey loadout engine should install")
+	_expect(bool(state.place_module("coal_cell", Vector2i(0, 1)).get("ok", false)), "journey loadout fuel should install beside the engine")
 	_expect(bool(state.place_module("generator_core", Vector2i(2, 0)).get("ok", false)), "journey loadout generator should install")
-	_expect(bool(state.place_module("shell_cannon", Vector2i(4, 0), true).get("ok", false)), "journey loadout cannon should install")
-	_expect(bool(state.place_module("field_workshop", Vector2i(0, 1)).get("ok", false)), "journey loadout workshop should install")
+	_expect(bool(state.place_module("ammunition_lift", Vector2i(2, 1)).get("ok", false)), "journey loadout ammunition lift should install")
+	_expect(bool(state.place_module("shell_cannon", Vector2i(3, 2), true).get("ok", false)), "journey loadout cannon should install beside ammunition")
 	if include_signal:
-		_expect(bool(state.place_module("signal_coil", Vector2i(2, 1)).get("ok", false)), "journey loadout signal should install")
+		_expect(bool(state.place_module("signal_coil", Vector2i(5, 0)).get("ok", false)), "journey loadout signal should install")
 
 func _test_city_journey_and_battle() -> void:
 	var state := LongMarchState.new(1107)

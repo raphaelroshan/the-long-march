@@ -229,6 +229,119 @@ func module_count(module_id: String) -> int:
 func can_refit() -> bool:
 	return not encounter_active and not journey_complete and current_location == "ashgate_depot"
 
+func adjacent_modules(instance: Dictionary) -> Array[Dictionary]:
+	var adjacent: Array[Dictionary] = []
+	var seen_indices: Dictionary = {}
+	var source_index := int(module_at(Vector2i(instance.get("position", Vector2i.ZERO))).get("index", -1))
+	for source_cell in occupied_cells(instance):
+		for direction in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var neighbor_cell: Vector2i = source_cell + direction
+			var neighbor := module_at(neighbor_cell)
+			var neighbor_index := int(neighbor.get("index", -1))
+			if neighbor_index < 0 or neighbor_index == source_index or seen_indices.has(neighbor_index):
+				continue
+			seen_indices[neighbor_index] = true
+			adjacent.append(neighbor)
+	return adjacent
+
+func _connection_source_available(instance: Dictionary) -> bool:
+	if int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
+		return false
+	var definition := module_definition(String(instance.get("id", "")))
+	return int(definition.get("power_draw", 0)) <= 0 or total_power_draw() <= total_power_output()
+
+func _has_adjacent_tag(instance: Dictionary, tag: String) -> bool:
+	for neighbor in adjacent_modules(instance):
+		var definition := module_definition(String(neighbor.get("id", "")))
+		if tag in definition.get("tags", []) and _connection_source_available(neighbor):
+			return true
+	return false
+
+func dependency_status(instance: Dictionary) -> Dictionary:
+	var module_id := String(instance.get("id", ""))
+	var definition := module_definition(module_id)
+	var tags: Array = definition.get("tags", [])
+	var connections: Array[Dictionary] = []
+	var reasons: Array[String] = []
+	var benefits: Array[String] = []
+	var state_name := "ready"
+	var is_operational := true
+	if int(instance.get("durability", 0)) <= 0:
+		return {"module_id": module_id, "state": "offline", "operational": false, "connections": connections, "reasons": ["module is disabled"], "benefits": benefits}
+	if bool(instance.get("sealed", false)):
+		return {"module_id": module_id, "state": "offline", "operational": false, "connections": connections, "reasons": ["compartment is sealed"], "benefits": benefits}
+	if int(definition.get("power_draw", 0)) > 0:
+		var power_ready := total_power_draw() <= total_power_output()
+		connections.append({"id": "power_to_module", "satisfied": power_ready, "benefit": "shared power bus is stable", "failure": "insufficient shared power"})
+		if power_ready:
+			benefits.append("powered")
+		else:
+			state_name = "offline"
+			is_operational = false
+			reasons.append("insufficient shared power")
+	if "engine" in tags:
+		var fuel_ready := _has_adjacent_tag(instance, "fuel")
+		connections.append({"id": "fuel_to_engine", "satisfied": fuel_ready, "benefit": "adjacent fuel feed enables movement", "failure": "engine has no adjacent fuel feed"})
+		if fuel_ready:
+			benefits.append("fuel feed connected")
+		else:
+			state_name = "offline"
+			is_operational = false
+			reasons.append("engine has no adjacent Coal Cell")
+	if "weapon" in tags:
+		var ammunition_ready := _has_adjacent_tag(instance, "ammunition")
+		connections.append({"id": "ammunition_to_weapon", "satisfied": ammunition_ready, "benefit": "full reload cycle", "failure": "weapon uses emergency ammunition"})
+		if ammunition_ready:
+			benefits.append("ammunition lift connected")
+		elif is_operational:
+			state_name = "strained"
+			reasons.append("no adjacent Ammunition Lift; emergency ammunition only")
+	if "repair" in tags:
+		var crew_ready := _has_adjacent_tag(instance, "crew")
+		connections.append({"id": "crew_to_workshop", "satisfied": crew_ready, "benefit": "workshop crew available", "failure": "repair unavailable"})
+		if crew_ready:
+			benefits.append("crew station connected")
+		else:
+			state_name = "offline"
+			is_operational = false
+			reasons.append("workshop has no adjacent Crew Quarters")
+		var parts_ready := _has_adjacent_tag(instance, "parts")
+		connections.append({"id": "parts_to_workshop", "satisfied": parts_ready, "benefit": "full repair amount", "failure": "temporary patch only"})
+		if parts_ready:
+			benefits.append("parts supply connected")
+		elif is_operational:
+			state_name = "strained"
+			reasons.append("no adjacent Parts Crate; repairs are limited")
+	if "signal" in tags:
+		var visibility_ready := bool(instance.get("exterior", false))
+		if not visibility_ready:
+			for neighbor in adjacent_modules(instance):
+				var neighbor_definition := module_definition(String(neighbor.get("id", "")))
+				if "signal" in neighbor_definition.get("tags", []) and bool(neighbor.get("exterior", false)) and _connection_source_available(neighbor):
+					visibility_ready = true
+					break
+		connections.append({"id": "visibility_to_signal", "satisfied": visibility_ready, "benefit": "exact threat target forecast", "failure": "route forecast remains broad"})
+		if visibility_ready:
+			benefits.append("clear exterior visibility")
+		elif is_operational:
+			state_name = "strained"
+			reasons.append("signal has no exterior visibility source")
+	return {"module_id": module_id, "state": state_name, "operational": is_operational, "connections": connections, "reasons": reasons, "benefits": benefits}
+
+func dependency_status_at(cell: Vector2i) -> Dictionary:
+	var instance := module_at(cell)
+	if instance.is_empty():
+		return {}
+	return dependency_status(instance)
+
+func dependency_summary() -> Dictionary:
+	var result := {"ready": 0, "strained": 0, "offline": 0}
+	for instance in modules:
+		var status := dependency_status(instance)
+		var state_name := String(status.get("state", "offline"))
+		result[state_name] = int(result.get(state_name, 0)) + 1
+	return result
+
 func total_mass() -> int:
 	var total := 0
 	for instance in modules:
@@ -263,7 +376,7 @@ func total_heat() -> int:
 func operational(module_id: String) -> bool:
 	for instance in modules:
 		if String(instance.get("id", "")) == module_id:
-			return int(instance.get("durability", 0)) > 0 and not bool(instance.get("sealed", false)) and total_power_draw() <= total_power_output()
+			return bool(dependency_status(instance).get("operational", false))
 	return false
 
 func _recalculate() -> void:
@@ -336,8 +449,8 @@ func intervene(intervention_id: String, target_module: String = "") -> Dictionar
 	return {"ok": false, "reason": "unknown intervention"}
 
 func repair_module(module_id: String, amount: int = 1) -> Dictionary:
-	if not _has_tag("workshop"):
-		return {"ok": false, "reason": "no workshop installed"}
+	if not _has_operational_tag("repair"):
+		return {"ok": false, "reason": "no operational crew-connected workshop"}
 	for index in range(modules.size()):
 		var instance: Dictionary = modules[index]
 		if String(instance.get("id", "")) == module_id:
@@ -349,6 +462,7 @@ func repair_module(module_id: String, amount: int = 1) -> Dictionary:
 	return {"ok": false, "reason": "module not found"}
 
 func summary() -> Dictionary:
+	var dependencies := dependency_summary()
 	return {
 		"day": day,
 		"fuel": fuel,
@@ -371,6 +485,7 @@ func summary() -> Dictionary:
 		"encounter_progress": encounter_progress,
 		"encounter_outcome": encounter_outcome,
 		"module_count": modules.size(),
+		"dependencies": dependencies,
 		"can_travel": _has_engine() and fuel > 0 and not encounter_active,
 		"power_stable": total_power_draw() <= total_power_output()
 	}
@@ -484,13 +599,21 @@ func encounter_forecast() -> Dictionary:
 		exact_target = "engine or workshop modules"
 	elif "siege_beast" in threat_ids:
 		exact_target = "front armor or crew modules"
-	var signal_ready: bool = _has_operational_tag("forecast")
+	var signal_ready: bool = _has_ready_tag("forecast")
 	return {"node": journey_node, "destination": journey_destination, "route": journey_route, "threat_ids": threat_ids, "threats": threat_names, "target_class": exact_target, "exact_target_revealed": signal_ready, "signal_ready": signal_ready}
 
 func _has_operational_tag(tag: String) -> bool:
 	for instance in modules:
 		var definition: Dictionary = module_definition(String(instance.get("id", "")))
-		if tag in definition.get("tags", []) and int(instance.get("durability", 0)) > 0 and not bool(instance.get("sealed", false)):
+		if tag in definition.get("tags", []) and bool(dependency_status(instance).get("operational", false)):
+			return true
+	return false
+
+func _has_ready_tag(tag: String) -> bool:
+	for instance in modules:
+		var definition: Dictionary = module_definition(String(instance.get("id", "")))
+		var status := dependency_status(instance)
+		if tag in definition.get("tags", []) and String(status.get("state", "offline")) == "ready":
 			return true
 	return false
 
@@ -498,21 +621,26 @@ func _encounter_module_damage(enemy_id: String) -> Dictionary:
 	var total_damage: int = 0
 	var attackers: Array[String] = []
 	var behavior_lines: Array[String] = []
-	if total_power_draw() > total_power_output():
-		return {"damage": 0, "attackers": attackers, "lines": ["Power is unstable; weapon modules cannot complete their firing cycle."]}
 	for instance in modules:
-		if int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
+		var status := dependency_status(instance)
+		if not bool(status.get("operational", false)):
 			continue
 		var module_id: String = String(instance.get("id", ""))
 		var definition: Dictionary = module_definition(module_id)
 		var damage: int = 0
 		if module_id == "shell_cannon":
 			damage = 3 if enemy_id in ["road_raiders", "siege_beast"] else 1
+			if String(status.get("state", "ready")) == "strained":
+				damage = maxi(1, damage - 2)
+				behavior_lines.append("Shell Cannon lacks an adjacent Ammunition Lift and fires emergency rounds.")
 			if power_priority == "weapons":
 				damage += 1
 			behavior_lines.append("Shell Cannon fires a burst into the %s." % ENCOUNTER_ENEMIES[enemy_id].name)
 		elif module_id == "repeater_gun":
 			damage = 2 if enemy_id in ["road_raiders", "climbers"] else 1
+			if String(status.get("state", "ready")) == "strained":
+				damage = 1
+				behavior_lines.append("Repeater Gun lacks an adjacent Ammunition Lift and fires short bursts.")
 			behavior_lines.append("Repeater Gun suppresses the %s advance." % ENCOUNTER_ENEMIES[enemy_id].name)
 		elif module_id == "wall_lamp" and enemy_id == "climbers":
 			damage = 2
@@ -579,9 +707,17 @@ func _encounter_repair() -> void:
 			weakest_id = module_id
 			weakest_durability = current
 	if not weakest_id.is_empty():
-		var result: Dictionary = repair_module(weakest_id, 1)
+		var repair_amount := _workshop_repair_amount()
+		var result: Dictionary = repair_module(weakest_id, repair_amount)
 		if bool(result.get("ok", false)):
-			_encounter_log("Field Workshop restores %s by one durability." % module_definition(weakest_id).name)
+			_encounter_log("Field Workshop restores %s by %d durability%s." % [module_definition(weakest_id).name, repair_amount, " with connected parts" if repair_amount > 1 else ""])
+
+func _workshop_repair_amount() -> int:
+	for instance in modules:
+		var definition := module_definition(String(instance.get("id", "")))
+		if "repair" in definition.get("tags", []) and bool(dependency_status(instance).get("operational", false)):
+			return 2 if _has_adjacent_tag(instance, "parts") else 1
+	return 0
 
 func _finish_encounter() -> Dictionary:
 	encounter_active = false
@@ -697,7 +833,7 @@ func _has_exterior_capacity(ignore_index: int = -1) -> bool:
 func _has_engine() -> bool:
 	for instance in modules:
 		var definition := module_definition(String(instance.get("id", "")))
-		if "engine" in definition.get("tags", []) and int(instance.get("durability", 0)) > 0:
+		if "engine" in definition.get("tags", []) and bool(dependency_status(instance).get("operational", false)):
 			return true
 	return false
 

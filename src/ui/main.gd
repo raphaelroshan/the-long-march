@@ -36,11 +36,12 @@ func _ready() -> void:
 func _reset_state() -> void:
 	state = LongMarchState.new(1107)
 	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
 	state.place_module("generator_core", Vector2i(2, 0))
 	state.place_module("crew_quarters", Vector2i(4, 0))
-	state.place_module("field_workshop", Vector2i(0, 1))
-	state.place_module("shell_cannon", Vector2i(4, 1), true)
-	state.place_module("wall_lamp", Vector2i(5, 2), true)
+	state.place_module("ammunition_lift", Vector2i(2, 1))
+	state.place_module("field_workshop", Vector2i(3, 1))
+	state.place_module("repeater_gun", Vector2i(3, 2), true)
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
 
@@ -448,12 +449,18 @@ func _refresh_ui() -> void:
 	var selected_installed := _selected_installed_module()
 	var mount_text := "Exterior mount" if _module_requires_exterior(selected_module_id) else "Interior chassis"
 	if state.can_refit():
-		refit_label.text = "%s · %dx%d · %s. %s" % [
+		var dependency_text := "Place it to evaluate dependencies."
+		if not selected_installed.is_empty():
+			var dependency := state.dependency_status(selected_installed)
+			var reasons: Array = dependency.get("reasons", [])
+			dependency_text = "%s%s" % [String(dependency.get("state", "offline")).capitalize(), ": " + String(reasons[0]) if not reasons.is_empty() else "."]
+		refit_label.text = "%s · %dx%d · %s. %s %s" % [
 			String(selected_definition.get("name", "Select a module")),
 			selected_shape.x,
 			selected_shape.y,
 			mount_text,
-			"Selected on chassis; click an empty cell to move it." if not selected_installed.is_empty() else "Click an empty cell to place it."
+			"Selected on chassis; click an empty cell to move it." if not selected_installed.is_empty() else "Click an empty cell to place it.",
+			dependency_text
 		]
 	else:
 		refit_label.text = "Refit locked during the journey. The current chassis remains visible for battle inspection."
@@ -463,7 +470,8 @@ func _refresh_ui() -> void:
 	travel_button.disabled = state.encounter_active or state.journey_complete
 	advance_encounter_button.disabled = not state.encounter_active
 	encounter_intervention_button.disabled = not state.encounter_active or state.encounter_intervention_used
-	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit]
+	var dependencies: Dictionary = snapshot.dependencies
+	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d\nSystems — %d ready · %d strained · %d offline" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit, int(dependencies.ready), int(dependencies.strained), int(dependencies.offline)]
 	journey_label.text = "JOURNEY — Ashgate Depot → Rill Crossing → Morrowline Camp\nCurrent node: %s | Route: %s | Destination: %s" % [String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "not chosen")), String(LongMarchState.JOURNEY_NODES.get(state.journey_destination, {}).get("name", state.journey_destination))]
 	var encounter_lines: Array[String] = []
 	for enemy in state.encounter_enemies:
@@ -603,10 +611,20 @@ class FortressPanel extends Control:
 		draw_string(ThemeDB.fallback_font, Vector2(x, 70), String(definition.get("name", placement_module_id)), HORIZONTAL_ALIGNMENT_LEFT, 300, 15, Color("#f1e6cf"))
 		draw_string(ThemeDB.fallback_font, Vector2(x, 94), "%dx%d footprint · mass %d · power %d · heat %d" % [shape.x, shape.y, int(definition.get("mass", 0)), int(definition.get("power_draw", 0)), int(definition.get("heat", 0))], HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#aab6ba"))
 		draw_string(ThemeDB.fallback_font, Vector2(x, 118), "Exterior mount" if "exterior" in definition.get("tags", []) else "Interior chassis", HORIZONTAL_ALIGNMENT_LEFT, 300, 12, Color("#d8c389"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Selected module: click empty cell to move" if not selected.is_empty() else "Pending module: click empty cell to place", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 214), "Keyboard/controller: arrows + confirm", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#8fa3a7"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, 236), "R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#8fa3a7"))
+		if not selected.is_empty():
+			var dependency := state.dependency_status(selected)
+			var state_name := String(dependency.get("state", "offline"))
+			var state_color := Color("#73c99b") if state_name == "ready" else (Color("#e3ad55") if state_name == "strained" else Color("#e06f61"))
+			var reasons: Array = dependency.get("reasons", [])
+			var benefits: Array = dependency.get("benefits", [])
+			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "System state: " + state_name.capitalize(), HORIZONTAL_ALIGNMENT_LEFT, 320, 13, state_color)
+			draw_string(ThemeDB.fallback_font, Vector2(x, 178), String(reasons[0]) if not reasons.is_empty() else "All required connections are satisfied.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 200), String(benefits[0]) if not benefits.is_empty() else "Move it to change its dependency graph.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+		else:
+			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "Pending module: click empty cell to place", HORIZONTAL_ALIGNMENT_LEFT, 320, 12, Color("#b9c3bf"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 178), "Connections are evaluated after placement.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+		draw_string(ThemeDB.fallback_font, Vector2(x, 236), "Green preview = valid · red = blocked", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+		draw_string(ThemeDB.fallback_font, Vector2(x, 258), "Arrows + confirm · R rotates · Delete removes", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)
@@ -622,8 +640,17 @@ class FortressPanel extends Control:
 			var definition := state.module_definition(String(instance.get("id", "")))
 			var rect := _module_rect(instance)
 			var color: Color = family_colors.get(String(definition.get("family", "")), Color("#8b8b8b"))
-			draw_rect(rect, color.darkened(0.25) if int(instance.get("durability", 0)) <= 0 else color, true)
+			var dependency := state.dependency_status(instance)
+			var state_name := String(dependency.get("state", "offline"))
+			var fill_color := color
+			if state_name == "offline":
+				fill_color = color.darkened(0.55)
+			elif state_name == "strained":
+				fill_color = color.lerp(Color("#b9823f"), 0.38)
+			draw_rect(rect, fill_color, true)
 			draw_rect(rect, Color("#f0db9a") if bool(instance.get("exterior", false)) else Color("#b9c3bf"), false, 3.0 if bool(instance.get("exterior", false)) else 1.0)
+			if state_name != "ready":
+				draw_rect(rect.grow(-3), Color("#e3ad55") if state_name == "strained" else Color("#e06f61"), false, 2.0)
 			_draw_module_name(rect, String(definition.get("name", instance.get("id", ""))))
 			if selected_cell in state.occupied_cells(instance):
 				draw_rect(rect.grow(2), Color("#69d8cf"), false, 3.0)
