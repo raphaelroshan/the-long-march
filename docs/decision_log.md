@@ -142,6 +142,8 @@ The packaged build opens on a title menu instead of constructing a run immediate
 
 Save, load, and reset controls remain callable by the test harness but are hidden from the live stage because the application shell now owns those operations. The pause menu groups safe continuation, persistence, reference, settings, and destructive session actions; it can reopen the field briefing without abandoning or mutating the current run.
 
+The settings overlay is shared by the title and pause menus, but it names the context it was opened from and changes its return action accordingly. This avoids telling a player that an in-run action will return to the title when it actually restores the paused march.
+
 The title menu separates a guided first run from a briefing-free Quick Start. Quick Start suppresses onboarding only for that stage and does not write the onboarding marker, alter the deterministic seed, or touch the save. A field-guide overlay states the intended five-part test flow so repeated playtests can reach the actual decisions quickly without introducing simulation-only debug shortcuts.
 
 The title presents that material as a chapter and field guide rather than as internal test tooling. Its no-save line follows the autosave preference: automatic checkpoints are explained when enabled, while manual saving through pause is named when disabled. This keeps the first screen truthful without exposing implementation vocabulary.

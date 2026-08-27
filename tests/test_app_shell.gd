@@ -44,6 +44,7 @@ func _run() -> void:
 	app.settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
+	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
 	app.motion_button.pressed.emit()
 	await process_frame
 	_expect(app.reduced_motion and FileAccess.file_exists(ProjectSettings.globalize_path(SETTINGS_PATH)), "reduced motion should persist as a local preference")
@@ -129,6 +130,7 @@ func _run() -> void:
 	app.pause_settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")
+	_expect(app.settings_context_label.text.begins_with("PAUSED MARCH") and app.settings_close_button.text == "BACK TO PAUSE", "in-run Settings should identify and return to the paused march")
 	app.settings_close_button.pressed.emit()
 	await process_frame
 	_expect(app.pause_view.visible and app.pause_settings_button.has_focus(), "closing in-run Settings should return to the pause menu")

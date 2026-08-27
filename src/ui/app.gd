@@ -23,6 +23,7 @@ var guide_button: Button
 var settings_button: Button
 var guide_close_button: Button
 var guide_quick_start_button: Button
+var settings_context_label: Label
 var settings_close_button: Button
 var display_mode_button: Button
 var motion_button: Button
@@ -417,18 +418,18 @@ func _build_settings_overlay() -> void:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 9)
 	panel.add_child(content)
-	var eyebrow := Label.new()
-	eyebrow.text = "APPLICATION SETTINGS"
-	eyebrow.add_theme_font_size_override("font_size", 12)
-	eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
-	content.add_child(eyebrow)
+	settings_context_label = Label.new()
+	settings_context_label.text = "TITLE MENU · SETTINGS"
+	settings_context_label.add_theme_font_size_override("font_size", 12)
+	settings_context_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(settings_context_label)
 	var title := Label.new()
-	title.text = "Playtest preferences"
+	title.text = "Settings"
 	title.add_theme_font_size_override("font_size", 32)
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var intro := Label.new()
-	intro.text = "Display and onboarding controls live outside campaign state. Changing them never alters the simulation or route seed."
+	intro.text = "Adjust display, accessibility, save behavior, and the guided briefing. These preferences stay on this device."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.custom_minimum_size = Vector2(550, 44)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
@@ -693,6 +694,8 @@ func _hide_settings() -> void:
 	settings_opened_from_pause = false
 
 func _refresh_settings(message: String = "") -> void:
+	settings_context_label.text = "PAUSED MARCH · SETTINGS" if settings_opened_from_pause else "TITLE MENU · SETTINGS"
+	settings_close_button.text = "BACK TO PAUSE" if settings_opened_from_pause else "BACK TO TITLE"
 	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen else "FULLSCREEN · OFF"
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
