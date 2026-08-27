@@ -735,6 +735,8 @@ func _reset_briefing() -> void:
 func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
+	start_button.text = "NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN"
+	quick_start_button.text = "NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING"
 	continue_button.disabled = not has_valid_save
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
@@ -777,6 +779,10 @@ func _saved_run_info() -> Dictionary:
 	return {
 		"exists": true,
 		"valid": true,
+		"day": day,
+		"location": location,
+		"phase": phase,
+		"encounters": encounters,
 		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Resume at %s during %s with %d of 5 encounters secured." % [location, phase, encounters],
 		"summary": "Checkpoint · %s · %d/5 encounters secured" % [phase, encounters]
@@ -985,8 +991,10 @@ func _request_confirmation(action: String) -> void:
 		confirmation_body_label.text = "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
 		confirmation_confirm_button.text = "CLEAR SAVE"
 	else:
+		var save_info := _saved_run_info()
+		var saved_context := "Day %d at %s" % [int(save_info.get("day", 1)), String(save_info.get("location", "the last checkpoint"))]
 		confirmation_title_label.text = "Begin a new march?"
-		confirmation_body_label.text = "Your existing save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march."
+		confirmation_body_label.text = "Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." % saved_context
 		confirmation_confirm_button.text = "START NEW"
 	confirmation_cancel_button.text = "KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else "KEEP PLAYING"
 	confirmation_view.visible = true

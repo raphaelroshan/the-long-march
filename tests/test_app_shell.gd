@@ -106,6 +106,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "START NEW", "starting over with an autosave should explain when the previous save will be replaced")
 	_expect(app.confirmation_cancel_button.text == "KEEP SAVE", "the safe new-run confirmation action should preserve the existing save")
+	_expect(app.confirmation_body_label.text.contains("Day 1 at Ashgate Depot"), "the new-run warning should identify the checkpoint being preserved")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
 	app.start_button.pressed.emit()
@@ -170,6 +171,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
+	_expect(app.start_button.text.begins_with("NEW GAME") and app.quick_start_button.text.begins_with("NEW QUICK RUN"), "existing progress should make both fresh-start actions explicit")
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify the saved phase and encounter progress")
