@@ -130,6 +130,8 @@ Morrowline's service controls expose the remaining action budget in the heading 
 
 The complete Morrowline controller loop is rebuilt from usable services and currently open roads. Fully repaired modules, unaffordable services, exhausted service slots, and closed routes are omitted; route commitment joins the loop only after the player deliberately selects a road.
 
+When the selected chassis system is already healthy but another installed system is damaged, the disabled Repair row names the most damaged candidate and its current durability. If nothing needs work it says `All systems full`. Recovery therefore points the player back to the exact Module entry that will enable repair instead of reporting only the irrelevant health of the current selection.
+
 Completed and blocked services write an immediate above-fold receipt. Successful receipts name the restored resource or module, Ashmark cost, and remaining action budget; failures name the blocking condition. Metric changes and prose confirmation therefore arrive together.
 
 ## 2026-08-27 — The campaign map is an interactive graph

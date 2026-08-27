@@ -1408,6 +1408,20 @@ func _selected_installed_module() -> Dictionary:
 		return {}
 	return state.module_at(selected_module_cell)
 
+func _most_damaged_installed_module() -> Dictionary:
+	var candidate: Dictionary = {}
+	var largest_shortfall := 0
+	for instance in state.modules:
+		var module_id := String(instance.get("id", ""))
+		var maximum := int(state.module_definition(module_id).get("durability", 1))
+		var current := int(instance.get("durability", maximum))
+		var shortfall := maximum - current
+		if shortfall > largest_shortfall:
+			candidate = instance.duplicate(true)
+			candidate["maximum_durability"] = maximum
+			largest_shortfall = shortfall
+	return candidate
+
 func _campaign_departure_block_reason(node_id: String) -> String:
 	if node_id.is_empty():
 		return ""
@@ -1854,18 +1868,25 @@ func _refresh_ui() -> void:
 	settlement_title.text = "MORROWLINE SERVICES · %d %s LEFT" % [state.settlement_actions_remaining, action_word]
 	var repair_missing := 0
 	var repair_cost := 0
+	var repair_candidate := _most_damaged_installed_module()
 	if not selected_installed.is_empty():
 		var repair_maximum := int(selected_definition.get("durability", 1))
 		repair_missing = maxi(0, repair_maximum - int(selected_installed.get("durability", 0)))
 		repair_cost = mini(2, repair_missing) * 4
 	var services_open := state.phase == "settlement" and state.settlement_actions_remaining > 0
 	settlement_repair_button.disabled = not services_open or selected_installed.is_empty() or repair_missing <= 0 or state.money < repair_cost
-	if selected_installed.is_empty():
-		settlement_repair_button.text = "REPAIR MODULE · SELECT A DAMAGED SYSTEM"
-	elif repair_missing <= 0:
-		settlement_repair_button.text = "%s · FULL DURABILITY" % String(selected_definition.get("name", "Selected module")).to_upper()
+	if selected_installed.is_empty() or repair_missing <= 0:
+		if repair_candidate.is_empty():
+			settlement_repair_button.text = "REPAIR MODULE · ALL SYSTEMS FULL"
+			settlement_repair_button.tooltip_text = "No installed system currently needs repair."
+		else:
+			var candidate_id := String(repair_candidate.get("id", ""))
+			var candidate_name := String(state.module_definition(candidate_id).get("name", candidate_id))
+			settlement_repair_button.text = "REPAIR · SELECT %s (%d/%d)" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
+			settlement_repair_button.tooltip_text = "Choose %s in the Module list to inspect its repair cost." % candidate_name
 	else:
 		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS" % [String(selected_definition.get("name", "module")).to_upper(), mini(2, repair_missing), repair_cost]
+		settlement_repair_button.tooltip_text = "Restore %d durability to %s for %d Ashmarks." % [mini(2, repair_missing), String(selected_definition.get("name", "the selected module")), repair_cost]
 	settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS"
 	settlement_refuel_button.disabled = not services_open or state.money < 8
 	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +2 HULL · 10 ASHMARKS"

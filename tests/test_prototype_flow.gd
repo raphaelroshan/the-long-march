@@ -297,12 +297,24 @@ func _run() -> void:
 	_expect(game.current_run_flow_step == 2 and game.run_flow_labels[2].text.contains("RECOVER"), "reaching Morrowline should advance the tracker to recovery")
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
-	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("FULL DURABILITY"), "a fully repaired selected module should not present a dead-end repair action")
+	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
 	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
 	var recovery_previous := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) as BaseButton
 	_expect(recovery_previous != null and recovery_previous != game.settlement_repair_button and not recovery_previous.disabled, "settlement Tab navigation should skip the unavailable repair action while retaining refit controls")
 	var recovery_next := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_next) as BaseButton
 	_expect(recovery_next != null and not recovery_next.disabled, "settlement navigation should lead only to an enabled recovery or route action")
+	game.selected_module_id = "steam_lance_engine"
+	game._select_module_option("steam_lance_engine")
+	game._sync_selected_module_context()
+	var damaged_workshop_index: int = game.state._module_index_by_id("field_workshop")
+	var workshop_before: int = int(game.state.modules[damaged_workshop_index].get("durability", 0))
+	game.state.modules[damaged_workshop_index]["durability"] = 1
+	game.state._recalculate()
+	game._refresh_ui()
+	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("SELECT FIELD WORKSHOP (1/3)"), "repair should point to the most damaged system when the current selection is already full")
+	game.state.modules[damaged_workshop_index]["durability"] = workshop_before
+	game.state._recalculate()
+	game._refresh_ui()
 	var saved_pressure: int = game.state.campaign_pressure
 	game.state.campaign_pressure = 5
 	game._refresh_ui()
