@@ -73,6 +73,7 @@ var rotate_button: Button
 var remove_button: Button
 var travel_button: Button
 var advance_encounter_button: Button
+var combat_inspect_button: Button
 var intervention_buttons: Array[Button] = []
 var settlement_repair_button: Button
 var settlement_refuel_button: Button
@@ -676,6 +677,12 @@ func _build_ui() -> void:
 	advance_encounter_button.pressed.connect(_on_advance_encounter_pressed)
 	_accent_button(advance_encounter_button, Color("#593e28"), Color("#e8c58e"))
 	controls.add_child(advance_encounter_button)
+	combat_inspect_button = Button.new()
+	combat_inspect_button.text = "INSPECT CHASSIS · CHOOSE SEAL TARGET"
+	combat_inspect_button.custom_minimum_size = Vector2(0, 44)
+	combat_inspect_button.tooltip_text = "Move keyboard or controller focus to the chassis. Choose a system with A or Enter to return directly to Seal Compartment."
+	combat_inspect_button.pressed.connect(_focus_chassis_for_combat)
+	controls.add_child(combat_inspect_button)
 
 	intervention_title = Label.new()
 	intervention_title.text = "ENCOUNTER ORDER"
@@ -804,6 +811,7 @@ func _connect_desk_focus_scrolling() -> void:
 		route_option,
 		travel_button,
 		advance_encounter_button,
+		combat_inspect_button,
 		feedback_button,
 		play_again_button,
 		results_title_button,
@@ -1335,8 +1343,18 @@ func _focus_chassis_for_refit() -> void:
 	fortress_panel.queue_redraw()
 	fortress_panel.grab_focus()
 
+func _focus_chassis_for_combat() -> void:
+	if state.phase not in ["battle", "final_battle"]:
+		return
+	if selected_module_cell.x >= 0:
+		fortress_panel.cursor_cell = selected_module_cell
+	fortress_panel.queue_redraw()
+	fortress_panel.grab_focus()
+
 func _on_fortress_focus_exit_requested() -> void:
-	if _control_can_receive_focus(focus_chassis_button):
+	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(combat_inspect_button):
+		_focus_control(combat_inspect_button)
+	elif _control_can_receive_focus(focus_chassis_button):
 		_focus_control(focus_chassis_button)
 
 func _scroll_chassis_into_view() -> void:
@@ -1448,6 +1466,8 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		_select_module_option(selected_module_id)
 		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), " and refitting" if state.can_refit() else " or an encounter order"])
 		_refresh_ui()
+		if state.phase in ["battle", "final_battle"]:
+			_focus_control(intervention_buttons[1] if not intervention_buttons[1].disabled else advance_encounter_button)
 		return
 	if not state.can_refit():
 		_set_event("Refit is locked while the fortress is on the road. Select an installed module to inspect or seal it.")
@@ -1839,6 +1859,9 @@ func _refresh_ui() -> void:
 	advance_encounter_button.disabled = not state.encounter_active
 	if is_battle_phase:
 		advance_encounter_button.text = _advance_encounter_action_text()
+	combat_inspect_button.visible = is_battle_phase
+	combat_inspect_button.disabled = not state.encounter_active
+	combat_inspect_button.text = "INSPECT CHASSIS · %s" % ("REVIEW DAMAGE" if state.encounter_intervention_used else "CHOOSE SEAL TARGET")
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
@@ -1859,7 +1882,7 @@ func _refresh_ui() -> void:
 			intervention_buttons[3].text = "Cut loose %s · %s" % [String(cargo_definition.get("name", cargo_id)), cargo_cost]
 			intervention_buttons[3].tooltip_text = "Permanently remove this installed module for the rest of the run to reduce mass and enemy cargo incentive."
 	if is_battle_phase:
-		var combat_actions: Array = [advance_encounter_button]
+		var combat_actions: Array = [advance_encounter_button, combat_inspect_button]
 		for intervention_button in intervention_buttons:
 			if not intervention_button.disabled:
 				combat_actions.append(intervention_button)
@@ -2219,7 +2242,7 @@ class FortressPanel extends Control:
 		elif event.is_action_pressed("ui_accept"):
 			grid_cell_pressed.emit(cursor_cell)
 			accept_event()
-		elif event.is_action_pressed("ui_cancel") and state != null and state.can_refit():
+		elif event.is_action_pressed("ui_cancel"):
 			focus_exit_requested.emit()
 			accept_event()
 		elif event is InputEventKey and event.pressed and not event.echo:

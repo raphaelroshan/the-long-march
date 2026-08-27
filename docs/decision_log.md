@@ -158,6 +158,8 @@ Combat timing is expressed relative to the present state. Approaching enemy card
 
 During combat, Advance, every currently available emergency order, and Field Briefing form one explicit vertical and Tab loop. Once the encounter's single intervention is spent, its disabled actions leave that loop automatically, keeping controller focus on commands that can still respond.
 
+Battle controls include a dedicated `Inspect Chassis` action in that loop. Keyboard and controller players can enter the grid, choose the system they intend to seal, and return directly to the matching Seal order; cancelling inspection returns to its visible desk action. Once the order is spent, the same control remains useful for reviewing damage without implying that refitting is available on the road.
+
 `Cut Loose Cargo` names the exact installed module that its deterministic priority will sacrifice before the player commits the once-per-encounter order. Its visible label also warns whether that means losing shelter, repair supply, or a fuel feed; the result report repeats the discarded module. A desperate mobility action should be costly, not opaque.
 
 Combat describes the intervention budget consistently as one emergency order rather than exposing the underlying two-point legacy value beside a once-per-encounter lock. After any order, the immediate report names its concrete outcome: power and heat change, sealed module and downtime, heat removed and exposure, or discarded cargo and reduced incentive.

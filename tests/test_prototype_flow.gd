@@ -57,7 +57,7 @@ func _advance_until_phase(expected_phase: String) -> void:
 			await process_frame
 			_expect(game.event_label.text.contains("Weapon priority") and game.event_label.text.contains("heat +1"), "an emergency order should immediately report its exact benefit and cost")
 			_expect(game.combat_panel.causal_label.text.contains("Weapon priority") and game.combat_panel.causal_label.text.contains("heat +1"), "the persistent cause-and-effect report should retain the emergency order result")
-			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.advance_encounter_button, "spending the emergency order should remove disabled interventions from controller navigation")
+			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.combat_inspect_button, "spending the emergency order should remove disabled interventions while retaining chassis inspection in controller navigation")
 			_expect(game.advance_encounter_button.has_focus(), "spending an emergency order should return focus to encounter advancement")
 	for _step in range(8):
 		if game.state.phase == expected_phase:
@@ -238,16 +238,27 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_states[0].text.contains("2 STEPS OUT") and game.guidance_label.text.contains("2 steps out"), "approaching enemies should use a live countdown before contact")
 	_expect(game.combat_panel.order_label.text.contains("Emergency order: 1 available") and game.combat_panel.order_label.text.contains("Next step 1/6") and not game.combat_panel.order_label.text.contains("CP") and not game.combat_panel.order_label.text.contains("Step 0"), "combat status should describe the actual order budget and next timeline step without exposing internal counters")
 	_expect(game.intervention_buttons[3].text.contains("Coal Cell") and game.intervention_buttons[3].text.contains("fuel feed"), "cutting loose cargo should disclose the exact module and dependency cost before use")
+	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
+	game.combat_inspect_button.pressed.emit()
+	await process_frame
+	_expect(game.fortress_panel.has_focus(), "the combat inspection action should move controller focus to the chassis")
+	game.fortress_panel.cursor_cell = Vector2i(0, 1)
+	var battle_chassis_select := InputEventAction.new()
+	battle_chassis_select.action = "ui_accept"
+	battle_chassis_select.pressed = true
+	game.fortress_panel._gui_input(battle_chassis_select)
+	await process_frame
+	_expect(game.selected_module_id == "coal_cell" and game.intervention_buttons[1].has_focus() and game.intervention_buttons[1].text.contains("Coal Cell"), "selecting a combat system should return focus to the matching Seal order")
 	game.fortress_panel.grab_focus()
 	var battle_chassis_cancel := InputEventAction.new()
 	battle_chassis_cancel.action = "ui_cancel"
 	battle_chassis_cancel.pressed = true
 	game.fortress_panel._gui_input(battle_chassis_cancel)
 	await process_frame
-	_expect(game.fortress_panel.has_focus(), "chassis inspection should not consume the global pause action while refitting is locked")
+	_expect(game.combat_inspect_button.has_focus(), "B or Escape should return battle inspection focus to its visible desk action")
 	game.advance_encounter_button.grab_focus()
 	await process_frame
-	_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.intervention_buttons[0] and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.advance_encounter_button, "combat actions should form a visible vertical controller loop")
+	_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.intervention_buttons[0] and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.advance_encounter_button, "combat actions should form a visible vertical controller loop through chassis inspection")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_next) == game.advance_encounter_button, "combat Tab navigation should remain inside the active command set")
 	game.advance_encounter_button.pressed.emit()
 	await process_frame
