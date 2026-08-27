@@ -12,7 +12,7 @@ Open the repository's `project.godot` in Godot 4.x, or launch it from the comman
 godot --editor --path .
 ```
 
-The current scene is `scenes/Main.tscn`. The UI is intentionally lightweight; the authoritative state remains in `src/core/fortress_state.gd`.
+The project entry scene is `scenes/App.tscn`, which owns the title, settings, pause, confirmation, save, and stage lifecycle. `scenes/Main.tscn` remains the independently testable playable stage. The authoritative campaign state remains in `src/core/fortress_state.gd`.
 
 ## Run tests
 

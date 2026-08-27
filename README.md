@@ -33,7 +33,8 @@ The repository contains an agent-first Godot project with:
 - An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information, with route previews available even when fuel or movement blocks commitment.
 - A test-focused command interface with resource cards, chapter and encounter progress, state-aware current orders, and distinct mouse/keyboard/controller focus states.
 - Player-facing persistence and restart actions live in the pause menu instead of being duplicated among the campaign controls.
-- Combat cards showing live enemy arrival countdowns, health or storm pressure, current targets, counters, an explicit six-step timeline, and recent cause-and-effect.
+- Combat cards showing live enemy arrival countdowns, health or storm pressure, named targets, exact next-hit damage, counters, an explicit six-step timeline, and recent cause-and-effect.
+- A controller-accessible battle inspection action that enters the chassis, jumps to active targets, and returns a selected system directly to the Seal Compartment order.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
 - Authored event choices that show unmet chassis or resource prerequisites directly on locked options.
 - Specialist recruitment that names its unmet relay, crew-space, or supply requirement directly in the action.
@@ -49,11 +50,11 @@ The repository contains an agent-first Godot project with:
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
 - An Ashgate guard contract, three local route decisions, recruitable signal officer Iven Pell, and persistent settlement trust.
 - Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.
-- A Morrowline recovery phase with a visible two-action budget, availability-aware paid services, free refitting, and a fifth Meridian Pass battle with decisive, scarred, or failed run results.
+- A Morrowline recovery phase with a visible two-action budget, availability-aware paid services, damaged-system repair guidance, free refitting, and a fifth Meridian Pass battle with decisive, scarred, or failed run results.
 - Above-fold service receipts showing the exact restoration, Ashmark cost, and remaining recovery budget.
-- A result debrief that names the missed success thresholds and offers one concrete replay goal before feedback or replay.
+- A result debrief that names missed success thresholds, retains the route and final operating record, and offers one concrete replay goal before feedback or replay.
 - Versioned JSON save/load and an automated UI-level complete-run test.
-- A first-run Marchmaster briefing, phase-specific guidance, and a local-only playtest feedback bundle.
+- A first-run Marchmaster briefing, phase-specific guidance, and an opaque local-only playtest feedback form and bundle.
 - An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.
 
 ## Run locally
