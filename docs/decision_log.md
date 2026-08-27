@@ -212,7 +212,9 @@ The exact application version appears on both the title and pause screens. A tes
 
 The title menu changes its primary action based on verified local state. Start Game is highlighted and focused when no compatible save exists; Continue becomes highlighted and focused after a manual or automatic save. This shortens the common resume path without making a corrupt save actionable.
 
-Starting a Guided or Quick run while a valid save exists now requires confirmation when autosave is enabled. The copy states that the old save remains intact until the new run reaches its first checkpoint. The safe cancellation action is labelled Keep Save and receives focus by default.
+Starting a Guided or Quick run while a valid save exists requires confirmation. With autosave enabled, the copy states that the old save remains intact until the new run reaches its first checkpoint. The safe cancellation action is labelled Keep Save and receives focus by default.
+
+The same confirmation also appears when autosave is disabled. Its copy explains that the old checkpoint remains until the player manually saves or later enables autosave and reaches a checkpoint. Save protection therefore follows every path that can eventually replace the single local slot, not only the default settings path.
 
 ## 2026-08-27 — Autosaves follow confirmed state changes
 

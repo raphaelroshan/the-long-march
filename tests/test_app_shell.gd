@@ -200,6 +200,20 @@ func _run() -> void:
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify the saved phase and encounter progress")
+	app.settings_button.pressed.emit()
+	await process_frame
+	app.autosave_button.pressed.emit()
+	app.settings_close_button.pressed.emit()
+	await process_frame
+	app.quick_start_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.confirmation_body_label.text.contains("save manually or enable autosave"), "a fresh run should protect existing progress even while autosave is off")
+	app.confirmation_cancel_button.pressed.emit()
+	app.settings_button.pressed.emit()
+	await process_frame
+	app.autosave_button.pressed.emit()
+	app.settings_close_button.pressed.emit()
+	await process_frame
 
 	app.continue_button.pressed.emit()
 	await process_frame

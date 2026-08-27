@@ -855,7 +855,7 @@ func _quick_start_game() -> void:
 	_request_new_game(false)
 
 func _request_new_game(show_briefing: bool) -> void:
-	if autosave_enabled and bool(_saved_run_info().get("valid", false)):
+	if bool(_saved_run_info().get("valid", false)):
 		_request_confirmation("new_guided" if show_briefing else "new_quick")
 		return
 	_open_stage(false, show_briefing)
@@ -1051,7 +1051,7 @@ func _request_confirmation(action: String) -> void:
 		var save_info := _saved_run_info()
 		var saved_context := "Day %d at %s" % [int(save_info.get("day", 1)), String(save_info.get("location", "the last checkpoint"))]
 		confirmation_title_label.text = "Begin a new march?"
-		confirmation_body_label.text = "Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." % saved_context
+		confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
 		confirmation_confirm_button.text = "START NEW"
 	confirmation_cancel_button.text = "KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else "KEEP PLAYING"
 	confirmation_view.visible = true
