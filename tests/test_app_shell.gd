@@ -37,6 +37,7 @@ func _run() -> void:
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.settings_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.quick_start_button, "no-save navigation should route around disabled Continue")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should skip Continue and wrap through visible title actions")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("checkpoints"), "the title should use player-facing guide and autosave language")
+	_expect(_tree_contains_text(app.menu_view, "5 ENCOUNTERS TOTAL") and _tree_contains_text(app.menu_view, "FINALE AT 5"), "the title should make clear that the final battle is the fifth encounter, not an additional sixth fight")
 	var completed_briefing := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
 	completed_briefing.store_string("completed for title test")
 	completed_briefing.close()

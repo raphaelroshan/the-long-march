@@ -451,3 +451,7 @@ Play Again from the result screen uses the application confirmation layer before
 ## 2026-08-28 — Blocked departure names the broken movement chain
 
 When no engine can move the fortress, selected-route guidance now reuses the exact movement diagnosis shown at failure: the installed engine, its durability when destroyed, or its first missing dependency such as an adjacent Coal Cell. The map remains inspectable while blocked, but the Commit control and route summary point back to a concrete chassis correction instead of the generic instruction to restore an engine.
+
+## 2026-08-28 — The title counts the finale inside the chapter
+
+The Ashgate overview states that the chapter contains five encounters total, with recovery after the third encounter and the finale at encounter five. This removes the earlier suggestion that five encounters were followed by a separate sixth final battle and gives first-time players an accurate picture of the playable run before they start.

@@ -281,7 +281,7 @@ func _build_title_menu() -> void:
 	briefing.add_theme_color_override("font_color", Color("#d0d8d5"))
 	stage.add_child(briefing)
 	var scope := Label.new()
-	scope.text = "5 ENCOUNTERS   ·   1 RECOVERY STOP   ·   1 FINAL BATTLE"
+	scope.text = "5 ENCOUNTERS TOTAL   ·   RECOVERY AFTER 3   ·   FINALE AT 5"
 	scope.add_theme_font_size_override("font_size", 11)
 	scope.add_theme_color_override("font_color", Color("#d8a650"))
 	stage.add_child(scope)
