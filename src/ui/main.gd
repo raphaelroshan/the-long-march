@@ -51,6 +51,7 @@ var subtitle_label: Label
 var pause_button: Button
 var journey_banner: TextureRect
 var status_label: Label
+var left_scroll: ScrollContainer
 var right_scroll: ScrollContainer
 var journey_label: Label
 var encounter_label: Label
@@ -345,7 +346,7 @@ func _build_ui() -> void:
 	columns.add_theme_constant_override("separation", 18)
 	margin.add_child(columns)
 
-	var left_scroll := ScrollContainer.new()
+	left_scroll = ScrollContainer.new()
 	left_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -430,6 +431,7 @@ func _build_ui() -> void:
 	fortress_panel.rotate_requested.connect(_on_rotate_pressed)
 	fortress_panel.remove_requested.connect(_on_remove_pressed)
 	fortress_panel.focus_exit_requested.connect(_on_fortress_focus_exit_requested)
+	fortress_panel.focus_entered.connect(_scroll_chassis_into_view)
 	left.add_child(fortress_panel)
 
 	event_label = Label.new()
@@ -1304,6 +1306,22 @@ func _focus_chassis_for_refit() -> void:
 func _on_fortress_focus_exit_requested() -> void:
 	if _control_can_receive_focus(focus_chassis_button):
 		_focus_control(focus_chassis_button)
+
+func _scroll_chassis_into_view() -> void:
+	await get_tree().process_frame
+	if not fortress_panel.has_focus() or left_scroll == null or not left_scroll.is_ancestor_of(fortress_panel):
+		return
+	var viewport_rect := left_scroll.get_global_rect()
+	var previous_scroll := left_scroll.scroll_vertical
+	var panel_rect := fortress_panel.get_global_rect()
+	var panel_top := panel_rect.position.y - viewport_rect.position.y + previous_scroll
+	var panel_bottom := panel_rect.end.y - viewport_rect.position.y + previous_scroll
+	if panel_top >= 8.0 and panel_bottom <= viewport_rect.size.y - 8.0:
+		return
+	if panel_rect.size.y <= viewport_rect.size.y - 16.0:
+		left_scroll.scroll_vertical = maxi(0, ceili(panel_bottom - viewport_rect.size.y + 8.0))
+	else:
+		left_scroll.scroll_vertical = maxi(0, ceili(panel_top - 8.0))
 
 func _sync_selected_module_context() -> void:
 	selected_module_cell = Vector2i(-1, -1)

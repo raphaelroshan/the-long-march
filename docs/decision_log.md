@@ -248,6 +248,8 @@ Every interactive control in the Marchmaster's Desk requests contextual scrollin
 
 Chassis cancel is scoped to the refit mode. During preparation or recovery it returns from the grid to `Edit Chassis`; while refitting is locked, the grid does not consume B or Escape, leaving the application shell free to open the pause menu as its persistent control hint promises.
 
+Entering chassis edit mode scrolls the left-hand workspace until the complete grid is visible. This is independent from the right-hand command-desk scrolling, so a player can move between route or recovery controls and spatial refitting without inheriting an obscured chassis from earlier report browsing.
+
 ## 2026-08-27 — Continue is offered only for a readable compatible save
 
 The application shell inspects local save JSON, schema version, and required campaign fields before enabling Continue. Missing, malformed, incomplete, or version-incompatible files receive a concise title-screen explanation. The stage load operation also returns success explicitly; an unexpected load failure returns to the title instead of leaving the player in a fresh state that could be mistaken for the saved run.
