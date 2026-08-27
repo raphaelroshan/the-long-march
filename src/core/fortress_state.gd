@@ -331,7 +331,7 @@ func _choose_target(threat: Dictionary) -> int:
 			continue
 		for tag in target_tags:
 			if tag in definition.get("tags", []):
-			return index
+				return index
 	return -1
 
 func _deterministic_threat(route_id: String) -> String:
