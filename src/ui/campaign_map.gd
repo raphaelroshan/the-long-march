@@ -152,15 +152,16 @@ func _apply_button_style(button: Button, status: String) -> void:
 	button.add_theme_color_override("font_hover_color", text_color.lightened(0.08))
 	button.add_theme_color_override("font_focus_color", text_color)
 
-func _preview_tooltip(preview: Dictionary) -> String:
+func _preview_tooltip(preview: Dictionary, include_intel_upgrade: bool = true) -> String:
 	var visibility := String(preview.get("visibility", "forecast"))
 	var risk := float(preview.get("risk", 0.0))
 	var risk_band := _risk_band(risk)
+	var intel_upgrade := "\nIntel upgrade: ready forecasting gear or Iven Pell reveals exact contacts, lowers route risk by up to 8 points, and reduces encounter pressure by 1." if include_intel_upgrade else ""
 	if visibility == "known":
 		return "Known route · %d day(s) · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s" % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", []))]
 	if visibility == "forecast":
-		return "Forecast route · %d day(s) · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain." % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure"))]
-	return "Unscouted route · %d day(s) · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown." % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure"))]
+		return "Forecast route · %d day(s) · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain.%s" % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure")), intel_upgrade]
+	return "Unscouted route · %d day(s) · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown.%s" % [int(preview.get("days", 0)), int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure")), intel_upgrade]
 
 func _risk_band(risk: float) -> String:
 	if risk <= 0.18:
@@ -205,10 +206,12 @@ func _show_node_detail(node_id: String) -> void:
 
 func detail_for(node_id: String) -> String:
 	var status := status_for(node_id)
-	if status in ["available", "selected"]:
-		return ("SELECTED — " if status == "selected" else "") + _preview_tooltip(current_previews.get(node_id, {}))
+	if status == "available":
+		return _preview_tooltip(current_previews.get(node_id, {}))
+	if status == "selected":
+		return "SELECTED — " + _preview_tooltip(current_previews.get(node_id, {}), false)
 	if status == "closed":
-		return "%s is closed at Break pressure. Reliable forecasting can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
+		return "%s is closed at Break pressure. Ready forecasting gear or Iven Pell can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
 	if status == "blocked":
 		return "Resolve the current contract or local decision before taking this road."
 	if status == "current":
@@ -254,7 +257,7 @@ func configure(view: Dictionary) -> void:
 		if status in ["available", "selected"]:
 			button.tooltip_text = _preview_tooltip(current_previews.get(node_id, {}))
 		elif status == "closed":
-			button.tooltip_text = "Closed by Break pressure. Reliable forecasting can reopen this road."
+			button.tooltip_text = "Closed by Break pressure. Ready forecasting gear or Iven Pell can reopen this road."
 		elif status == "blocked":
 			button.tooltip_text = "Resolve the current contract or local decision before departing."
 		elif status == "current":

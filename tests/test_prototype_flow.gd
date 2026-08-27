@@ -220,6 +220,7 @@ func _run() -> void:
 	game.campaign_map.button_for("soot_orchard").grab_focus()
 	await process_frame
 	_expect(game.route_preview_label.text.contains("GUARDED risk") and game.route_preview_label.get_theme_color("font_color") == Color("#e8c58e"), "guarded route intel should be visually distinct from a low-risk road")
+	_expect(game.route_preview_label.text.contains("ready forecasting gear or Iven Pell") and game.route_preview_label.text.contains("reduces encounter pressure by 1"), "uncertain route intel should explain exactly how scouting improves it")
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
 	await _press_campaign_node("rill_crossing")
@@ -294,6 +295,7 @@ func _run() -> void:
 	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
 	await process_frame
 	_expect(game.route_preview_label.text.contains("Unscouted route") and game.route_preview_label.text.contains("unknown"), "focusing an unscouted road should preserve uncertainty in the visible route intel")
+	_expect(game.route_preview_label.text.contains("ready forecasting gear or Iven Pell"), "an unscouted road should teach the player how to reveal its hidden information")
 	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#cbb8e8"), "unscouted route intel should carry a distinct unknown-information tone")
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
 	await process_frame
@@ -342,6 +344,7 @@ func _run() -> void:
 	game.state.campaign_pressure = 5
 	game._refresh_ui()
 	_expect(game.campaign_map.status_for("signal_causeway") == "closed" and game.campaign_map.status_for("lower_ash_road") == "available", "the visual map should show Break closing only the optional causeway")
+	_expect(game.campaign_map.detail_for("signal_causeway").contains("Ready forecasting gear or Iven Pell"), "a closed route should name both ways to restore access")
 	game.state.campaign_pressure = saved_pressure
 	game._refresh_ui()
 	var saved_money: int = game.state.money

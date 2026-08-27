@@ -112,6 +112,8 @@ The two-leg prototype is superseded by the Ashgate Lowlands alpha chapter. Every
 
 Known nodes reveal exact threats, forecast nodes reveal hazard class and pressure, and unscouted nodes reveal only a broad warning. Reliable signal support or Iven Pell upgrades immediate information and reduces risk. The interface must not leak exact threat composition through labels, tooltips, or disabled controls when a node is unscouted.
 
+Forecast and unscouted route details state how the player can improve that information: ready forecasting gear or Iven Pell reveals exact contacts, lowers route risk by up to eight percentage points, and reduces encounter pressure by one. Closed Signal Causeway guidance names the same two recovery paths, turning uncertainty into a build or recruitment objective without revealing the hidden contact list.
+
 ## 2026-08-27 — Closure pressure removes advantage, not progression
 
 Watch, Closing, and Break are visible regional pressure bands. At Break, the optional Signal Causeway may close without reliable forecasting, but Lower Ash Road remains available. This establishes the campaign rule that time pressure can remove a safer or more informative option but cannot silently delete the only recovery or progression route.
