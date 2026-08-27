@@ -45,6 +45,13 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
 	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
+	app.display_mode_button.pressed.emit()
+	await process_frame
+	var display_config := ConfigFile.new()
+	display_config.load(SETTINGS_PATH)
+	_expect(app.fullscreen_enabled and bool(display_config.get_value("display", "fullscreen", false)), "fullscreen should persist as a local preference")
+	app.display_mode_button.pressed.emit()
+	await process_frame
 	app.motion_button.pressed.emit()
 	await process_frame
 	_expect(app.reduced_motion and FileAccess.file_exists(ProjectSettings.globalize_path(SETTINGS_PATH)), "reduced motion should persist as a local preference")

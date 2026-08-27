@@ -49,6 +49,7 @@ var confirmation_cancel_button: Button
 var save_status_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
+var fullscreen_enabled: bool = false
 var reduced_motion: bool = false
 var autosave_enabled: bool = true
 var settings_opened_from_pause: bool = false
@@ -86,6 +87,7 @@ func _create_menu_theme() -> Theme:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_load_preferences()
+	_apply_display_mode()
 	theme = _create_menu_theme()
 	_build_title_menu()
 	_build_guide_overlay()
@@ -663,6 +665,7 @@ func _build_checkpoint_toast() -> void:
 func _load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
+		fullscreen_enabled = bool(config.get_value("display", "fullscreen", false))
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
 		autosave_enabled = bool(config.get_value("gameplay", "autosave_enabled", true))
 
@@ -671,6 +674,7 @@ func _build_version() -> String:
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
+	config.set_value("display", "fullscreen", fullscreen_enabled)
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
 	config.set_value("gameplay", "autosave_enabled", autosave_enabled)
 	config.save(SETTINGS_PATH)
@@ -696,8 +700,7 @@ func _hide_settings() -> void:
 func _refresh_settings(message: String = "") -> void:
 	settings_context_label.text = "PAUSED MARCH · SETTINGS" if settings_opened_from_pause else "TITLE MENU · SETTINGS"
 	settings_close_button.text = "BACK TO PAUSE" if settings_opened_from_pause else "BACK TO TITLE"
-	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
-	display_mode_button.text = "FULLSCREEN · ON" if fullscreen else "FULLSCREEN · OFF"
+	display_mode_button.text = "FULLSCREEN · ON" if fullscreen_enabled else "FULLSCREEN · OFF"
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
 	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
@@ -708,10 +711,14 @@ func _refresh_settings(message: String = "") -> void:
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _toggle_display_mode() -> void:
-	var fullscreen := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)
+	fullscreen_enabled = not fullscreen_enabled
+	_apply_display_mode()
+	_save_preferences()
 	_refresh_settings("Display mode changed. Press the same control to switch back.")
 	display_mode_button.grab_focus()
+
+func _apply_display_mode() -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen_enabled else DisplayServer.WINDOW_MODE_WINDOWED)
 
 func _toggle_reduced_motion() -> void:
 	reduced_motion = not reduced_motion
