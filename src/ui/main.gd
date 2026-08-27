@@ -439,9 +439,7 @@ func _build_ui() -> void:
 	module_ids.sort()
 	for module_id in module_ids:
 		var definition: Dictionary = LongMarchState.MODULE_DEFS[module_id]
-		var shape: Vector2i = definition.get("shape", Vector2i.ONE)
-		var mount_text := " · exterior" if "exterior" in definition.get("tags", []) else ""
-		module_option.add_item("%s · %dx%d · mass %d%s" % [definition.name, shape.x, shape.y, int(definition.mass), mount_text])
+		module_option.add_item(String(definition.name))
 		module_option.set_item_metadata(module_option.item_count - 1, module_id)
 	module_option.item_selected.connect(_on_module_selected)
 	selected_module_id = "steam_lance_engine"
@@ -1103,7 +1101,13 @@ func _on_module_selected(index: int) -> void:
 	selected_module_id = String(module_option.get_item_metadata(index))
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
-	_set_event("Selected %s. Choose an empty chassis cell to place it." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+	for instance in state.modules:
+		if String(instance.get("id", "")) == selected_module_id:
+			selected_module_cell = Vector2i(instance.get("position", Vector2i(-1, -1)))
+			placement_rotated = bool(instance.get("rotated", false))
+			break
+	var module_name := String(state.module_definition(selected_module_id).get("name", selected_module_id))
+	_set_event("Selected %s on the chassis for inspection or refitting." % module_name if selected_module_cell.x >= 0 else "Selected stored %s. Choose an empty chassis cell to install it." % module_name)
 	_refresh_ui()
 
 func _select_module_option(module_id: String) -> void:
@@ -1111,6 +1115,25 @@ func _select_module_option(module_id: String) -> void:
 		if String(module_option.get_item_metadata(index)) == module_id:
 			module_option.select(index)
 			return
+
+func _refresh_module_options() -> void:
+	for index in range(module_option.item_count):
+		var module_id := String(module_option.get_item_metadata(index))
+		var definition := state.module_definition(module_id)
+		var instance: Dictionary = {}
+		for installed in state.modules:
+			if String(installed.get("id", "")) == module_id:
+				instance = installed
+				break
+		if instance.is_empty():
+			for stored in state.stored_modules:
+				if String(stored.get("id", "")) == module_id:
+					instance = stored
+					break
+		var maximum := int(definition.get("durability", 1))
+		var durability := int(instance.get("durability", maximum))
+		var location := "ON CHASSIS" if state.module_count(module_id) > 0 else ("STORED" if state.stored_module_count(module_id) > 0 else "UNAVAILABLE")
+		module_option.set_item_text(index, "%s · %s · %d/%d" % [String(definition.get("name", module_id)), location, durability, maximum])
 
 func _module_requires_exterior(module_id: String) -> bool:
 	return "exterior" in state.module_definition(module_id).get("tags", [])
@@ -1437,6 +1460,7 @@ func _refresh_ui() -> void:
 	var selected_definition := state.module_definition(selected_module_id)
 	var selected_shape := state.module_shape(selected_module_id, placement_rotated)
 	var selected_installed := _selected_installed_module()
+	_refresh_module_options()
 	_refresh_campaign_controls()
 	var mount_text := "Exterior mount" if _module_requires_exterior(selected_module_id) else "Interior chassis"
 	if state.can_refit():

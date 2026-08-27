@@ -11,6 +11,12 @@ func _expect(condition: bool, message: String) -> void:
 func _mark_return_to_title_requested() -> void:
 	return_to_title_requested = true
 
+func _module_picker_index(module_id: String) -> int:
+	for index in range(game.module_option.item_count):
+		if String(game.module_option.get_item_metadata(index)) == module_id:
+			return index
+	return -1
+
 func _init() -> void:
 	call_deferred("_run")
 
@@ -77,6 +83,20 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	var generator_index := _module_picker_index("generator_core")
+	game.module_option.select(generator_index)
+	game.module_option.item_selected.emit(generator_index)
+	await process_frame
+	_expect(game.selected_module_cell == Vector2i(2, 0) and game.module_option.get_item_text(generator_index).contains("ON CHASSIS"), "the module picker should navigate directly to installed systems")
+	var cannon_index := _module_picker_index("shell_cannon")
+	game.module_option.select(cannon_index)
+	game.module_option.item_selected.emit(cannon_index)
+	await process_frame
+	_expect(game.selected_module_cell.x < 0 and game.module_option.get_item_text(cannon_index).contains("STORED"), "the module picker should distinguish stored modules ready for placement")
+	var engine_index := _module_picker_index("steam_lance_engine")
+	game.module_option.select(engine_index)
+	game.module_option.item_selected.emit(engine_index)
+	await process_frame
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")

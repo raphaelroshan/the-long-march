@@ -25,7 +25,7 @@ The repository contains an agent-first Godot project with:
 - A four-part guided briefing with concrete first actions for command, chassis, routes, and survival.
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.
-- Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
+- Interactive Ashgate refitting: an installed/stored durability-aware module picker plus place, rotate, move, and remove actions with mouse, keyboard, or controller navigation.
 - Explicit dependency states for fuel-fed engines, ammunition-fed weapons, crew/parts-supported workshops, shared power, and signal visibility.
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
 - An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information, with explicit route review and confirmation.

@@ -70,6 +70,8 @@ Prototype saves include a schema version and serialize grid positions as integer
 
 The prototype also treats the starter palette as a finite inventory. Removing a module returns that same instance to storage with its durability intact; it does not create a fresh replacement or erase battle damage. This keeps refitting tactically useful without turning it into a free repair exploit.
 
+The module picker exposes whether each system is installed, stored, or unavailable together with current durability. Choosing an installed system selects its actual chassis position for inspection or movement; choosing a stored system enters placement mode. The same control therefore acts as inventory and navigation instead of creating a misleading second copy of an installed module.
+
 ## 2026-08-27 — Playtest guidance teaches causality, not a winning recipe
 
 The first-run briefing explains dependencies, route commitments, encounter reading, intervention limits, and recovery. A short phase-specific NEXT line remains visible after onboarding, but it does not prescribe a layout or route. Testers can reopen the briefing at any time, and completion is remembered locally.
