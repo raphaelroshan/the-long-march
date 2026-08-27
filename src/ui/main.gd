@@ -1477,9 +1477,26 @@ func _refresh_ui() -> void:
 	settlement_refuel_button.visible = state.phase == "settlement"
 	settlement_hull_button.visible = state.phase == "settlement"
 	final_journey_button.visible = state.phase == "settlement" and not state.campaign_active
-	settlement_repair_button.disabled = state.phase != "settlement" or selected_installed.is_empty() or state.settlement_actions_remaining <= 0
-	settlement_refuel_button.disabled = state.phase != "settlement" or state.settlement_actions_remaining <= 0
-	settlement_hull_button.disabled = state.phase != "settlement" or state.settlement_actions_remaining <= 0
+	var action_word := "ACTION" if state.settlement_actions_remaining == 1 else "ACTIONS"
+	settlement_title.text = "MORROWLINE SERVICES · %d %s LEFT" % [state.settlement_actions_remaining, action_word]
+	var repair_missing := 0
+	var repair_cost := 0
+	if not selected_installed.is_empty():
+		var repair_maximum := int(selected_definition.get("durability", 1))
+		repair_missing = maxi(0, repair_maximum - int(selected_installed.get("durability", 0)))
+		repair_cost = mini(2, repair_missing) * 4
+	var services_open := state.phase == "settlement" and state.settlement_actions_remaining > 0
+	settlement_repair_button.disabled = not services_open or selected_installed.is_empty() or repair_missing <= 0 or state.money < repair_cost
+	if selected_installed.is_empty():
+		settlement_repair_button.text = "REPAIR MODULE · SELECT A DAMAGED SYSTEM"
+	elif repair_missing <= 0:
+		settlement_repair_button.text = "%s · FULL DURABILITY" % String(selected_definition.get("name", "Selected module")).to_upper()
+	else:
+		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS" % [String(selected_definition.get("name", "module")).to_upper(), mini(2, repair_missing), repair_cost]
+	settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS"
+	settlement_refuel_button.disabled = not services_open or state.money < 8
+	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +2 HULL · 10 ASHMARKS"
+	settlement_hull_button.disabled = not services_open or state.hull_condition >= 10 or state.money < 10
 	final_journey_button.disabled = state.phase != "settlement"
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
 	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:

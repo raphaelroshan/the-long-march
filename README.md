@@ -42,7 +42,7 @@ The repository contains an agent-first Godot project with:
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
 - An Ashgate guard contract, three local route decisions, recruitable signal officer Iven Pell, and persistent settlement trust.
 - Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.
-- A Morrowline recovery phase with limited paid repairs/refueling, continued refitting, and a fifth Meridian Pass battle with decisive, scarred, or failed run results.
+- A Morrowline recovery phase with a visible two-action budget, availability-aware paid services, free refitting, and a fifth Meridian Pass battle with decisive, scarred, or failed run results.
 - Versioned JSON save/load and an automated UI-level complete-run test.
 - A first-run Marchmaster briefing, phase-specific guidance, and a local-only playtest feedback bundle.
 - An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.
