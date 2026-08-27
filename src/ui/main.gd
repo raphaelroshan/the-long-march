@@ -1104,12 +1104,15 @@ func _on_campaign_event_pressed(index: int) -> void:
 		return
 	var result := state.resolve_campaign_event(choice_id)
 	if bool(result.get("ok", false)):
-		_set_event("Decision recorded: %s." % choice_id.replace("_", " ").capitalize())
+		var result_message := String(result.get("message", "Decision recorded: %s." % choice_id.replace("_", " ").capitalize()))
+		_set_event(result_message)
 		_journal_event("campaign_event_resolved", {"event": String(result.get("event", "")), "choice": choice_id})
 		_checkpoint("event_resolved")
 	else:
 		_set_event("Decision blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
+	if bool(result.get("ok", false)):
+		encounter_label.text = "DECISION CONSEQUENCE\n%s" % String(result.get("message", "Decision recorded."))
 
 func _on_recruit_iven_pressed() -> void:
 	var result := state.recruit_iven_pell()

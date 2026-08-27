@@ -110,6 +110,8 @@ Journey doctrine is explained as mechanics at selection time. Protect Cargo and 
 
 Locked authored choices state their prerequisite directly in the control instead of relying on a hover tooltip. Refuge capacity, signal capability, and Ashmark requirements are therefore visible to mouse, keyboard, controller, and touch players alike, and unavailable choices become useful build information for a later run.
 
+Resolving an authored event returns its human-readable mechanical result from the simulation. The stage promotes that result into the above-fold consequence line before focusing the next road, so changes to fuel, trust, day, pressure, and route risk are visible at the moment they occur instead of being buried in the historical log.
+
 ## 2026-08-27 — Non-final defeat retreats to a viable state
 
 A failed regional encounter returns the fortress to its last secured node with explicit time, money, and pressure penalties. A road crew restores only enough hull, fuel, engine, and fuel-module durability to make another decision possible. Meridian Pass remains a hard endpoint because it is presented as the chapter's final commitment; earlier failures remain recoverable and retain their consequences.

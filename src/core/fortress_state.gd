@@ -452,18 +452,19 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 	if campaign_event_pending.is_empty():
 		return {"ok": false, "reason": "no campaign decision is pending"}
 	var resolved_event := campaign_event_pending
+	var result_message := ""
 	if resolved_event == "salvage_choice":
 		if choice_id == "take_fuel":
 			fuel += 2
 			settlement_trust -= 1
-			log.append("The fortress recovers the orchard fuel while the workers scatter from the fire.")
+			result_message = "The fortress recovers 2 fuel while the orchard workers scatter; Morrowline trust falls by 1."
 		elif choice_id == "rescue_workers" and _has_operational_tag("refuge"):
 			workers_rescued = true
 			settlement_trust += 2
 			shelter_tendency += 1
 			day += 1
 			campaign_pressure += 1
-			log.append("The Refugee Bunk carries the orchard workers toward Morrowline; the rescue costs one day.")
+			result_message = "The Refugee Bunk carries the workers toward Morrowline; trust rises by 2, but the rescue costs 1 day and 1 pressure."
 		else:
 			return {"ok": false, "reason": "that orchard choice is not currently available"}
 	elif resolved_event == "lost_signal":
@@ -472,29 +473,30 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			knowledge_tendency += 1
 			settlement_trust += 1
 			campaign_pressure += 1
-			log.append("The Broken Relay broadcasts again. The next routes are clearer, and the blockade hears the signal.")
+			result_message = "The Broken Relay broadcasts again. Forecasts improve and trust rises by 1, but blockade pressure rises by 1."
 		elif choice_id == "move_silent":
 			campaign_pressure = maxi(0, campaign_pressure - 1)
 			route_risk_modifier = maxf(-0.12, route_risk_modifier - 0.03)
-			log.append("The fortress leaves the Broken Relay dark and gains a quieter road.")
+			result_message = "The fortress leaves the relay dark. Blockade pressure falls by 1 and future route risk falls by 3%."
 		else:
 			return {"ok": false, "reason": "that relay choice is not currently available"}
 	elif resolved_event == "toll_decision":
 		if choice_id == "pay_toll" and money >= 10:
 			money -= 10
 			campaign_pressure = maxi(0, campaign_pressure - 1)
-			log.append("The Red Wheel accepts 10 Ashmarks and delays its pursuit.")
+			result_message = "The Red Wheel accepts 10 Ashmarks and delays pursuit; blockade pressure falls by 1."
 		elif choice_id == "break_blockade":
 			money += 8
 			settlement_trust += 1
 			campaign_pressure += 1
-			log.append("The fortress breaks the toll post and recovers 8 Ashmarks of seized road coin.")
+			result_message = "The fortress breaks the toll post, recovering 8 Ashmarks and 1 trust while blockade pressure rises by 1."
 		else:
 			return {"ok": false, "reason": "that toll choice is not currently available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
+	log.append(result_message)
 	campaign_event_pending = ""
-	return {"ok": true, "event": resolved_event, "choice": choice_id, "summary": summary()}
+	return {"ok": true, "event": resolved_event, "choice": choice_id, "message": result_message, "summary": summary()}
 
 func iven_recruitment_status() -> Dictionary:
 	if not campaign_active or current_location != "broken_relay" or phase != "map":
