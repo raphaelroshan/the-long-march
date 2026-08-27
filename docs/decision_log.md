@@ -443,3 +443,7 @@ Result copy now treats final-contact defeat and seven remaining hull as the deci
 ## 2026-08-28 — Run records name system condition
 
 The result card records the final doctrine and names every damaged or unavailable installed system with current durability and the first dependency reason. Aggregate ready, strained, and offline counts remain for scanning, but replay diagnosis no longer requires the tester to reconstruct specific system failures from the chassis after the run has ended.
+
+## 2026-08-28 — Replay confirms before replacing Continue
+
+Play Again from the result screen uses the application confirmation layer before resetting the stage. With autosave enabled, the dialog states that Continue will immediately switch to the fresh Ashgate checkpoint; with autosave disabled, it explains that the completed checkpoint remains until a later save. Cancelling restores the intact result and focus, while saved local feedback files remain independent from campaign state.

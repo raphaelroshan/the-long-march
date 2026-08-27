@@ -2,6 +2,7 @@ extends Control
 
 signal return_to_title_requested
 signal checkpoint_reached(reason: String)
+signal play_again_requested
 signal pause_requested
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
@@ -1821,6 +1822,12 @@ func _on_reset_pressed() -> void:
 	_refresh_ui()
 
 func _on_play_again_pressed() -> void:
+	if not play_again_requested.get_connections().is_empty():
+		play_again_requested.emit()
+		return
+	start_replay_from_results()
+
+func start_replay_from_results() -> void:
 	_reset_state()
 	fortress_panel.state = state
 	_set_event("A new Ashgate march is ready. Answer the contract, inspect the chassis, and choose the first road.")

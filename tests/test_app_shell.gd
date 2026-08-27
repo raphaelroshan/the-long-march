@@ -312,6 +312,15 @@ func _run() -> void:
 	app.game_view._refresh_ui()
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
+	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN" and app.confirmation_cancel_button.text == "KEEP RESULT", "Play Again should require an explicit result-preserving confirmation")
+	_expect(app.game_view.state.phase == "results", "opening replay confirmation should preserve the completed run")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(not app.confirmation_view.visible and app.game_view.state.phase == "results" and app.game_view.play_again_button.has_focus(), "cancelling replay should return to the intact result action")
+	app.game_view.play_again_button.pressed.emit()
+	await process_frame
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
 	var replay_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(app.last_checkpoint_reason == "new_run_started", "the application shell should identify the replay checkpoint")
 	_expect(replay_payload is Dictionary and String(replay_payload.get("phase", "")) == "refit" and String(replay_payload.get("guard_contract_status", "")) == "offered", "Play Again should replace a completed autosave with the fresh Ashgate state immediately")

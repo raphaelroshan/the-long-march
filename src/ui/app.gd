@@ -1035,6 +1035,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 	game_view.set("show_onboarding_on_ready", show_briefing)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
+	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))
 	game_view.connect("pause_requested", Callable(self, "_show_pause"))
 	add_child(game_view)
 	move_child(game_view, 0)
@@ -1197,8 +1198,14 @@ func _show_in_run_briefing() -> void:
 func _restart_game() -> void:
 	_open_stage(false, false)
 
+func _request_replay_confirmation() -> void:
+	if game_view == null:
+		return
+	game_view.process_mode = Node.PROCESS_MODE_DISABLED
+	_request_confirmation("replay")
+
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick"]:
+	if action not in ["restart", "replay", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick"]:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1208,6 +1215,10 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Restart from Ashgate?"
 		confirmation_body_label.text = "Current stage progress will be discarded. Your existing local save remains available."
 		confirmation_confirm_button.text = "RESTART"
+	elif action == "replay":
+		confirmation_title_label.text = "Begin another march?"
+		confirmation_body_label.text = "The completed result remains in your local playtest notes. Continue will switch to the fresh Ashgate run immediately." if autosave_enabled else "The completed Continue checkpoint remains until you save manually or enable autosave during the fresh run."
+		confirmation_confirm_button.text = "PLAY AGAIN"
 	elif action == "title":
 		confirmation_title_label.text = "Return without saving?"
 		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
@@ -1222,7 +1233,7 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Begin a new march?"
 		confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
 		confirmation_confirm_button.text = "START NEW"
-	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else ("KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else "KEEP PLAYING")
+	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else ("KEEP SAVE" if action in ["clear_save", "new_guided", "new_quick"] else ("KEEP RESULT" if action == "replay" else "KEEP PLAYING"))
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
@@ -1232,6 +1243,10 @@ func _cancel_confirmation() -> void:
 	confirmation_view.visible = false
 	if previous_action == "restart":
 		restart_button.grab_focus()
+	elif previous_action == "replay":
+		if game_view != null:
+			game_view.process_mode = Node.PROCESS_MODE_INHERIT
+			game_view.play_again_button.grab_focus()
 	elif previous_action == "clear_save":
 		clear_save_button.grab_focus()
 	elif previous_action == "clear_invalid_save":
@@ -1249,6 +1264,10 @@ func _confirm_pending_action() -> void:
 	confirmation_view.visible = false
 	if action == "restart":
 		_restart_game()
+	elif action == "replay":
+		if game_view != null:
+			game_view.process_mode = Node.PROCESS_MODE_INHERIT
+			game_view.call("start_replay_from_results")
 	elif action == "title":
 		_return_to_title()
 	elif action in ["clear_save", "clear_invalid_save"]:
