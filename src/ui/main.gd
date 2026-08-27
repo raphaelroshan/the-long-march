@@ -2210,6 +2210,13 @@ class FortressPanel extends Control:
 			return "PLACEMENT READY · A / ENTER TO APPLY"
 		return "BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
 
+	func interaction_heading() -> String:
+		if not has_focus():
+			return "CHASSIS GRID — exterior mounts use a bright edge"
+		if state != null and state.can_refit():
+			return "CHASSIS EDIT MODE — arrows move · A acts · B returns"
+		return "CHASSIS INSPECTION — arrows move · A selects · B returns"
+
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			var next_cell := _cell_from_point(event.position)
@@ -2315,7 +2322,7 @@ class FortressPanel extends Control:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)
 		if has_focus():
 			draw_rect(Rect2(Vector2.ZERO, size).grow(-2), Color("#f0cf96"), false, 3.0)
-		draw_string(ThemeDB.fallback_font, Vector2(ORIGIN.x, 14), "CHASSIS EDIT MODE — arrows move · A acts · B returns" if has_focus() else "CHASSIS GRID — exterior mounts use a bright edge", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#f0cf96") if has_focus() else Color("#b9c3bf"))
+		draw_string(ThemeDB.fallback_font, Vector2(ORIGIN.x, 14), interaction_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#f0cf96") if has_focus() else Color("#b9c3bf"))
 		for y in range(LongMarchState.GRID_HEIGHT):
 			for x in range(LongMarchState.GRID_WIDTH):
 				draw_rect(Rect2(ORIGIN + Vector2(x * CELL, y * CELL), Vector2(CELL - 3, CELL - 3)), Color("#223139"), true)

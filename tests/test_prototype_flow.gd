@@ -145,7 +145,7 @@ func _run() -> void:
 	game.focus_chassis_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell, "Edit Chassis should focus the selected module cell")
+	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell and game.fortress_panel.interaction_heading().contains("EDIT MODE"), "Edit Chassis should focus the selected module cell in a clearly named refit mode")
 	_expect(game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "entering chassis edit mode should reveal the complete grid")
 	_expect(game.fortress_panel.placement_status_text().begins_with("SELECTED") and game.fortress_panel.placement_status_text().contains("STEAM LANCE ENGINE"), "the chassis should identify the selected module under its cursor")
 	var chassis_right := InputEventAction.new()
@@ -241,7 +241,7 @@ func _run() -> void:
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
 	game.combat_inspect_button.pressed.emit()
 	await process_frame
-	_expect(game.fortress_panel.has_focus(), "the combat inspection action should move controller focus to the chassis")
+	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS INSPECTION") and not game.fortress_panel.interaction_heading().contains("EDIT MODE"), "the combat inspection action should enter a clearly named non-refit chassis mode")
 	game.fortress_panel.cursor_cell = Vector2i(0, 1)
 	var battle_chassis_select := InputEventAction.new()
 	battle_chassis_select.action = "ui_accept"
