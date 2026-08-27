@@ -28,6 +28,8 @@ bash scripts/verify.sh
 
 A missing local Godot executable is an environment limitation and causes `scripts/verify.sh` to exit with status `2`. The verifier requires each suite's explicit PASS marker and rejects Godot `ERROR:` or `SCRIPT ERROR:` output even if the engine process exits zero. GitHub Actions installs Godot 4.4.1 and runs the actual test suite on both operating systems.
 
+The policy scanner checks tracked files and untracked files that Git would include, while respecting `.gitignore`. Local export folders and downloaded release artifacts therefore do not create false large-file or secret-pattern failures, but any newly introduced publishable file is still scanned before commit.
+
 ## AI review roles
 
 The reviewer runs architecture, gameplay, QA, and security roles against the change diff and the untrusted `ci/quality_contract.md`. Reviewers return structured findings and do not modify the repository. The default model is `gpt-5-mini`; set the repository variable `AI_REVIEW_MODELS` only when a deliberate model change is needed. Set `AI_REVIEW_REQUIRED=true` only after configuring the secret and agreeing to the operational cost.
