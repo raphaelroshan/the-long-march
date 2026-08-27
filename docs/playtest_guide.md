@@ -2,17 +2,19 @@
 
 ## What this build is testing
 
-This playtest is about one question: can a player understand how a fortress layout causes a journey outcome? It is not a content-volume test. A useful session is one complete attempt from Ashgate Depot to Meridian Pass, including retreat or failure.
+This playtest is about two connected questions: can a player understand how a fortress layout causes a battle outcome, and can they use incomplete map information to plan five encounters? It is not a content-volume test. A useful session is one complete attempt from Ashgate Depot to Meridian Pass, including contract, route decisions, Morrowline recovery, retreat, or failure.
 
 The build opens with a five-part Marchmaster briefing. **How to play** reopens it at any time. The green **NEXT** line on the Marchmaster's Desk gives one contextual instruction for the current phase without prescribing a winning layout.
 
 ## Suggested session
 
-1. Complete one run with the prepared layout and the Long Road.
-2. On a second attempt, move at least one dependency and try a different route or doctrine.
+1. At Ashgate, compare Rill Crossing and The Soot Orchard before choosing; ask what the player believes each visibility label promises.
+2. Accept or decline the guard contract without coaching, then complete one route through Broken Relay or Red Wheel Toll Bridge.
 3. During battle, stop after each step and explain aloud why an enemy chose its target.
-4. At Morrowline, decide whether repairing, refueling, or changing the layout is more valuable.
-5. At the result screen, inspect the surviving systems and open **Playtest feedback**.
+4. Resolve the local event and ask whether its cost and consequence were clear before clicking.
+5. At Morrowline, decide whether repairing, refueling, changing the layout, or preserving money is more valuable.
+6. Complete the last two encounters. On a second attempt, change at least one dependency and take the other branch or deliberately test a recoverable retreat.
+7. At the result screen, inspect the secured path, pressure, contract, specialist, and surviving systems, then open **Playtest feedback**.
 
 Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision.
 
@@ -38,9 +40,13 @@ Generated builds are written to `build/` and are intentionally ignored by Git. T
 
 - Could they identify why a module was ready, strained, or offline?
 - Did route risk, pressure, fuel, and heat lead to a deliberate route choice?
+- Did known, forecast, and unscouted information feel distinct and trustworthy?
+- Did closure pressure create urgency without making the route feel arbitrary?
 - Could they predict an enemy target before contact?
 - Did the single intervention feel consequential and correctly timed?
+- Were the contract, event choices, and Iven's value understandable before committing resources?
 - At Morrowline, did recovery create a real trade-off?
+- After retreat, did the player understand both the penalty and how to continue?
 - Did the final result explain enough for them to want to change the next build?
 
 The next implementation slice should be chosen from repeated playtest evidence, not from the longest feature list.

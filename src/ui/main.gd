@@ -20,7 +20,7 @@ const ONBOARDING_STEPS := [
 	},
 	{
 		"title": "Choose a road and a promise",
-		"body": "The Long Road teaches the systems, the Exposed Cut is faster and harsher, and the Salvage Detour expects a purpose-built lower hull. Your doctrine changes who the fortress protects and how it fights. Read fuel, risk, pressure, and predicted heat before departing."
+		"body": "The authored map shows two or three forward nodes with known, forecast, or unscouted information. The visible blockade clock changes optional routes but never removes the only recovery road. Your doctrine changes who the fortress protects and how it fights."
 	},
 	{
 		"title": "Read the battle",
@@ -28,7 +28,7 @@ const ONBOARDING_STEPS := [
 	},
 	{
 		"title": "Recover, adapt, finish",
-		"body": "Morrowline gives you two paid service actions and free refitting before the final march. Save whenever you need to stop. At the end, use Playtest feedback to create a local JSON bundle; nothing is uploaded automatically."
+		"body": "Morrowline gives you two paid service actions and free refitting midway through the five-encounter chapter. Save whenever you need to stop. At the end, use Playtest feedback to create a local JSON bundle; nothing is uploaded automatically."
 	}
 ]
 
@@ -59,6 +59,19 @@ var route_group: Control
 var doctrine_group: Control
 var intervention_title: Label
 var settlement_title: Label
+var settlement_group: Control
+var campaign_title: Label
+var campaign_pressure_label: Label
+var campaign_path_label: Label
+var campaign_node_buttons: Array[Button] = []
+var contract_title: Label
+var contract_label: Label
+var contract_accept_button: Button
+var contract_decline_button: Button
+var campaign_event_title: Label
+var campaign_event_label: Label
+var campaign_event_buttons: Array[Button] = []
+var recruit_iven_button: Button
 var save_button: Button
 var load_button: Button
 var guidance_label: Label
@@ -104,6 +117,7 @@ func _reset_state() -> void:
 	state.place_module("field_workshop", Vector2i(3, 1))
 	state.place_module("repeater_gun", Vector2i(3, 2), true)
 	state.seed_starter_inventory()
+	state.start_campaign()
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
 	result_recorded = false
@@ -269,6 +283,96 @@ func _build_ui() -> void:
 	refit_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	controls.add_child(refit_label)
 
+	settlement_group = VBoxContainer.new()
+	settlement_group.add_theme_constant_override("separation", 8)
+	settlement_title = Label.new()
+	settlement_title.text = "MORROWLINE SERVICES"
+	settlement_title.add_theme_font_size_override("font_size", 17)
+	settlement_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	settlement_group.add_child(settlement_title)
+	settlement_repair_button = Button.new()
+	settlement_repair_button.text = "Repair selected module"
+	settlement_repair_button.pressed.connect(_on_settlement_repair_pressed)
+	settlement_group.add_child(settlement_repair_button)
+	settlement_refuel_button = Button.new()
+	settlement_refuel_button.text = "Buy 2 fuel · 8 Ashmarks"
+	settlement_refuel_button.pressed.connect(_on_settlement_refuel_pressed)
+	settlement_group.add_child(settlement_refuel_button)
+	settlement_hull_button = Button.new()
+	settlement_hull_button.text = "Repair 2 hull · 10 Ashmarks"
+	settlement_hull_button.pressed.connect(_on_settlement_hull_pressed)
+	settlement_group.add_child(settlement_hull_button)
+	final_journey_button = Button.new()
+	final_journey_button.text = "Depart for Meridian Pass"
+	final_journey_button.tooltip_text = "Begin the final Siege Beast encounter using the selected doctrine."
+	final_journey_button.pressed.connect(_on_final_journey_pressed)
+	settlement_group.add_child(final_journey_button)
+	controls.add_child(settlement_group)
+
+	contract_title = Label.new()
+	contract_title.text = "ASHGATE CONTRACT"
+	contract_title.add_theme_font_size_override("font_size", 17)
+	contract_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	controls.add_child(contract_title)
+	contract_label = Label.new()
+	contract_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contract_label.custom_minimum_size = Vector2(320, 54)
+	contract_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	controls.add_child(contract_label)
+	var contract_actions := HBoxContainer.new()
+	contract_actions.add_theme_constant_override("separation", 8)
+	contract_accept_button = Button.new()
+	contract_accept_button.text = "Guard the convoy"
+	contract_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contract_accept_button.pressed.connect(_on_guard_contract_pressed.bind(true))
+	contract_actions.add_child(contract_accept_button)
+	contract_decline_button = Button.new()
+	contract_decline_button.text = "Travel unbound"
+	contract_decline_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contract_decline_button.pressed.connect(_on_guard_contract_pressed.bind(false))
+	contract_actions.add_child(contract_decline_button)
+	controls.add_child(contract_actions)
+
+	campaign_title = Label.new()
+	campaign_title.text = "ASHGATE LOWLANDS MAP"
+	campaign_title.add_theme_font_size_override("font_size", 17)
+	campaign_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	controls.add_child(campaign_title)
+	campaign_pressure_label = Label.new()
+	campaign_pressure_label.add_theme_color_override("font_color", Color("#e89270"))
+	controls.add_child(campaign_pressure_label)
+	campaign_path_label = Label.new()
+	campaign_path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_path_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	controls.add_child(campaign_path_label)
+	for index in range(3):
+		var node_button := Button.new()
+		node_button.text = "Route option %d" % (index + 1)
+		node_button.pressed.connect(_on_campaign_node_pressed.bind(index))
+		campaign_node_buttons.append(node_button)
+		controls.add_child(node_button)
+
+	campaign_event_title = Label.new()
+	campaign_event_title.add_theme_font_size_override("font_size", 17)
+	campaign_event_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	controls.add_child(campaign_event_title)
+	campaign_event_label = Label.new()
+	campaign_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_event_label.custom_minimum_size = Vector2(320, 52)
+	campaign_event_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	controls.add_child(campaign_event_label)
+	for index in range(3):
+		var event_button := Button.new()
+		event_button.text = "Node decision %d" % (index + 1)
+		event_button.pressed.connect(_on_campaign_event_pressed.bind(index))
+		campaign_event_buttons.append(event_button)
+		controls.add_child(event_button)
+	recruit_iven_button = Button.new()
+	recruit_iven_button.text = "Recruit Iven Pell · 12 Ashmarks"
+	recruit_iven_button.tooltip_text = "Requires restored relay and operational Crew Quarters. Iven reveals exact immediate threats and helps navigate storms."
+	recruit_iven_button.pressed.connect(_on_recruit_iven_pressed)
+	controls.add_child(recruit_iven_button)
+
 	route_option = OptionButton.new()
 	for route_id in LongMarchState.ROUTES.keys():
 		route_option.add_item(LongMarchState.ROUTES[route_id].name)
@@ -318,29 +422,6 @@ func _build_ui() -> void:
 		intervention.pressed.connect(_use_intervention.bind(String(action.id)))
 		intervention_buttons.append(intervention)
 		controls.add_child(intervention)
-
-	settlement_title = Label.new()
-	settlement_title.text = "MORROWLINE SERVICES"
-	settlement_title.add_theme_font_size_override("font_size", 17)
-	settlement_title.add_theme_color_override("font_color", Color("#e8c58e"))
-	controls.add_child(settlement_title)
-	settlement_repair_button = Button.new()
-	settlement_repair_button.text = "Repair selected module"
-	settlement_repair_button.pressed.connect(_on_settlement_repair_pressed)
-	controls.add_child(settlement_repair_button)
-	settlement_refuel_button = Button.new()
-	settlement_refuel_button.text = "Buy 2 fuel · 8 Ashmarks"
-	settlement_refuel_button.pressed.connect(_on_settlement_refuel_pressed)
-	controls.add_child(settlement_refuel_button)
-	settlement_hull_button = Button.new()
-	settlement_hull_button.text = "Repair 2 hull · 10 Ashmarks"
-	settlement_hull_button.pressed.connect(_on_settlement_hull_pressed)
-	controls.add_child(settlement_hull_button)
-	final_journey_button = Button.new()
-	final_journey_button.text = "Depart for Meridian Pass"
-	final_journey_button.tooltip_text = "Begin the final Siege Beast encounter using the selected doctrine."
-	final_journey_button.pressed.connect(_on_final_journey_pressed)
-	controls.add_child(final_journey_button)
 
 	save_button = Button.new()
 	save_button.text = "Save prototype state"
@@ -586,6 +667,11 @@ func _state_journal_summary() -> Dictionary:
 		"route": state.journey_route,
 		"doctrine": state.target_doctrine,
 		"result": state.final_result,
+		"campaign_encounters": state.campaign_encounters_completed,
+		"campaign_pressure": state.campaign_pressure,
+		"contract": state.guard_contract_status,
+		"settlement_trust": state.settlement_trust,
+		"specialist": state.specialist_id,
 		"ready_systems": int(dependencies.get("ready", 0)),
 		"strained_systems": int(dependencies.get("strained", 0)),
 		"offline_systems": int(dependencies.get("offline", 0))
@@ -606,6 +692,53 @@ func _selected_id(option: OptionButton) -> String:
 	return String(option.get_item_metadata(option.selected))
 
 func _on_departure_option_changed(_index: int) -> void:
+	_refresh_ui()
+
+func _on_guard_contract_pressed(accept: bool) -> void:
+	var result := state.choose_guard_contract(accept)
+	if bool(result.get("ok", false)):
+		_set_event("Accepted the Morrowline Parts Guard contract." if accept else "Declined the guard contract. The fortress will travel without the convoy obligation.")
+		_journal_event("guard_contract_answered", {"accepted": accept})
+	else:
+		_set_event("Contract choice blocked: %s." % String(result.get("reason", "unknown")))
+	_refresh_ui()
+
+func _on_campaign_node_pressed(index: int) -> void:
+	if index < 0 or index >= campaign_node_buttons.size():
+		return
+	var node_id := String(campaign_node_buttons[index].get_meta("node_id", ""))
+	if node_id.is_empty():
+		return
+	var doctrine := _selected_id(doctrine_option)
+	var result := state.begin_campaign_route(node_id, doctrine)
+	if bool(result.get("ok", false)):
+		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
+		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
+	else:
+		_set_event("Route blocked: %s." % String(result.get("reason", "unknown")))
+	_refresh_ui()
+
+func _on_campaign_event_pressed(index: int) -> void:
+	if index < 0 or index >= campaign_event_buttons.size():
+		return
+	var choice_id := String(campaign_event_buttons[index].get_meta("choice_id", ""))
+	if choice_id.is_empty():
+		return
+	var result := state.resolve_campaign_event(choice_id)
+	if bool(result.get("ok", false)):
+		_set_event("Decision recorded: %s." % choice_id.replace("_", " ").capitalize())
+		_journal_event("campaign_event_resolved", {"event": String(result.get("event", "")), "choice": choice_id})
+	else:
+		_set_event("Decision blocked: %s." % String(result.get("reason", "unknown")))
+	_refresh_ui()
+
+func _on_recruit_iven_pressed() -> void:
+	var result := state.recruit_iven_pell()
+	if bool(result.get("ok", false)):
+		_set_event("Iven Pell joins the fortress as signal officer.")
+		_journal_event("specialist_recruited", {"specialist": "iven_pell"})
+	else:
+		_set_event("Recruitment blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 
 func _on_module_selected(index: int) -> void:
@@ -831,11 +964,85 @@ func _on_reset_pressed() -> void:
 func _set_event(text: String) -> void:
 	event_label.text = text
 
+func _refresh_campaign_controls() -> void:
+	var planning_phase := state.phase in ["refit", "map", "settlement"]
+	campaign_title.visible = state.campaign_active and planning_phase
+	campaign_pressure_label.visible = state.campaign_active
+	campaign_path_label.visible = state.campaign_active
+	var path_names: Array[String] = []
+	for node_id in state.campaign_path:
+		path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
+	campaign_pressure_label.text = "Blockade — %s · pressure %d · encounters %d/5" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure, state.campaign_encounters_completed]
+	campaign_path_label.text = "Secured route: %s\nGuard contract: %s · Specialist: %s" % [" → ".join(path_names), state.guard_contract_status.replace("_", " ").capitalize(), "Iven Pell" if state.specialist_id == "iven_pell" else "none"]
+
+	var contract_offered := state.campaign_active and state.guard_contract_status == "offered" and state.current_location == "ashgate_depot"
+	contract_title.visible = contract_offered
+	contract_label.visible = contract_offered
+	contract_accept_button.visible = contract_offered
+	contract_decline_button.visible = contract_offered
+	contract_label.text = "Morrowline needs its parts wagon guarded. Accepting adds pressure to the camp approach, then pays 30 Ashmarks and 2 trust if the convoy arrives."
+
+	var options := state.campaign_available_nodes()
+	var state_summary := state.summary()
+	var movement_ready := state.operational("steam_lance_engine") or state.operational("ash_runner_engine")
+	var phase_can_depart := movement_ready
+	if state.phase == "refit":
+		phase_can_depart = bool(state_summary.can_travel)
+	elif state.phase == "settlement":
+		phase_can_depart = bool(state_summary.can_continue)
+	for index in range(campaign_node_buttons.size()):
+		var button := campaign_node_buttons[index]
+		if not planning_phase or index >= options.size():
+			button.visible = false
+			button.set_meta("node_id", "")
+			continue
+		var node_id := String(options[index])
+		var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+		button.visible = true
+		button.set_meta("node_id", node_id)
+		var visibility := String(preview.get("visibility", "forecast"))
+		if visibility == "known":
+			button.text = "%s · Known\n%dd · %d fuel · %.0f%% risk · %d Ashmarks" % [String(preview.name), int(preview.days), int(preview.fuel), float(preview.risk) * 100.0, int(preview.reward)]
+			button.tooltip_text = "Threats: %s. Risk %.0f%%, reward %d Ashmarks, pressure +%d." % [", ".join(preview.threats), float(preview.risk) * 100.0, int(preview.reward), int(preview.pressure_gain)]
+		elif visibility == "forecast":
+			button.text = "%s · Forecast\n%dd · %d fuel · %.0f%% risk · pressure +%d" % [String(preview.name), int(preview.days), int(preview.fuel), float(preview.risk) * 100.0, int(preview.pressure_gain)]
+			button.tooltip_text = "Forecast: %s. Risk %.0f%%, pressure +%d. Exact contacts remain uncertain." % [String(preview.threat_hint), float(preview.risk) * 100.0, int(preview.pressure_gain)]
+		else:
+			button.text = "%s · Unscouted\n%dd · %d fuel · %s" % [String(preview.name), int(preview.days), int(preview.fuel), String(preview.threat_hint)]
+			button.tooltip_text = "Unscouted %s. Broad warning: %s. Reward and exact contacts are unknown." % [String(preview.type), String(preview.threat_hint)]
+		button.disabled = contract_offered or state.fuel < int(preview.fuel) or not phase_can_depart
+
+	var event := state.campaign_event_details()
+	var event_pending := not event.is_empty()
+	campaign_event_title.visible = event_pending
+	campaign_event_label.visible = event_pending
+	if event_pending:
+		campaign_event_title.text = String(event.title).to_upper()
+		campaign_event_label.text = String(event.body)
+	var choices: Array = event.get("choices", [])
+	for index in range(campaign_event_buttons.size()):
+		var button := campaign_event_buttons[index]
+		if not event_pending or index >= choices.size():
+			button.visible = false
+			button.set_meta("choice_id", "")
+			continue
+		var choice: Dictionary = choices[index]
+		button.visible = true
+		button.text = String(choice.label)
+		button.disabled = not bool(choice.get("enabled", false))
+		button.set_meta("choice_id", String(choice.id))
+
+	var recruit_status := state.iven_recruitment_status()
+	recruit_iven_button.visible = state.campaign_active and state.current_location == "broken_relay" and state.phase == "map" and state.specialist_id.is_empty() and state.campaign_event_pending.is_empty()
+	recruit_iven_button.disabled = not bool(recruit_status.get("available", false))
+	recruit_iven_button.tooltip_text = String(recruit_status.get("reason", ""))
+
 func _refresh_ui() -> void:
 	var snapshot := state.summary()
 	var selected_definition := state.module_definition(selected_module_id)
 	var selected_shape := state.module_shape(selected_module_id, placement_rotated)
 	var selected_installed := _selected_installed_module()
+	_refresh_campaign_controls()
 	var mount_text := "Exterior mount" if _module_requires_exterior(selected_module_id) else "Interior chassis"
 	if state.can_refit():
 		var dependency_text := "Place it to evaluate dependencies."
@@ -860,7 +1067,9 @@ func _refresh_ui() -> void:
 	var is_battle_phase := state.phase in ["battle", "final_battle"]
 	match state.phase:
 		"refit":
-			guidance_label.text = "NEXT — Inspect the dependency state, compare the three routes, then choose the promise your doctrine will protect."
+			guidance_label.text = "NEXT — Inspect dependencies, answer the guard contract, then choose one of the visible map nodes."
+		"map":
+			guidance_label.text = "NEXT — Resolve any local decision, compare the forward nodes, then commit to the next road."
 		"battle", "final_battle":
 			guidance_label.text = "NEXT — Advance one step, read each target and causal line, then spend at most one emergency order."
 		"settlement":
@@ -871,11 +1080,11 @@ func _refresh_ui() -> void:
 	module_group.visible = is_refit_phase
 	refit_actions.visible = is_refit_phase
 	refit_label.visible = is_refit_phase
-	route_group.visible = state.phase == "refit"
-	doctrine_group.visible = is_refit_phase
+	route_group.visible = state.phase == "refit" and not state.campaign_active
+	doctrine_group.visible = state.phase in ["refit", "map", "settlement"]
 	route_option.disabled = state.phase != "refit"
 	doctrine_option.disabled = state.phase in ["battle", "final_battle", "results"]
-	travel_button.visible = state.phase == "refit"
+	travel_button.visible = state.phase == "refit" and not state.campaign_active
 	travel_button.disabled = state.phase != "refit"
 	advance_encounter_button.visible = is_battle_phase
 	advance_encounter_button.disabled = not state.encounter_active
@@ -883,17 +1092,25 @@ func _refresh_ui() -> void:
 	for index in range(intervention_buttons.size()):
 		intervention_buttons[index].visible = is_battle_phase
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty())
+	settlement_group.visible = state.phase == "settlement"
 	settlement_title.visible = state.phase == "settlement"
 	settlement_repair_button.visible = state.phase == "settlement"
 	settlement_refuel_button.visible = state.phase == "settlement"
 	settlement_hull_button.visible = state.phase == "settlement"
-	final_journey_button.visible = state.phase == "settlement"
+	final_journey_button.visible = state.phase == "settlement" and not state.campaign_active
 	settlement_repair_button.disabled = state.phase != "settlement" or selected_installed.is_empty() or state.settlement_actions_remaining <= 0
 	settlement_refuel_button.disabled = state.phase != "settlement" or state.settlement_actions_remaining <= 0
 	settlement_hull_button.disabled = state.phase != "settlement" or state.settlement_actions_remaining <= 0
 	final_journey_button.disabled = state.phase != "settlement"
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
-	if state.phase == "refit":
+	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:
+		if not state.campaign_event_pending.is_empty():
+			route_preview_label.text = "A local decision blocks departure. Resolve it before choosing the next road."
+		elif state.guard_contract_status == "offered":
+			route_preview_label.text = "The first map branches are visible after the Ashgate contract is answered."
+		else:
+			route_preview_label.text = "Choose a forward node. Signal readiness and Iven Pell improve how much of each route is revealed."
+	elif state.phase == "refit":
 		var departure := state.route_preview(_selected_id(route_option), _selected_id(doctrine_option))
 		if bool(departure.get("ok", false)):
 			route_preview_label.text = "Departure forecast — %d day(s), %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [int(departure.days), int(departure.fuel), float(departure.risk) * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT]
@@ -904,18 +1121,30 @@ func _refresh_ui() -> void:
 	else:
 		route_preview_label.text = "On the road — risk %.0f%%, pressure %d, doctrine %s." % [state.current_route_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()]
 	var dependencies: Dictionary = snapshot.dependencies
-	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d\nSystems — %d ready · %d strained · %d offline" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit, int(dependencies.ready), int(dependencies.strained), int(dependencies.offline)]
+	status_label.text = "Day %d  |  Fuel %d  |  Ashmarks %d  |  Hull %d  |  Mass %d/%d  |  Power %d/%d  |  Heat %d/%d\nSystems — %d ready · %d strained · %d offline%s" % [snapshot.day, snapshot.fuel, snapshot.money, snapshot.hull_condition, snapshot.mass, snapshot.mass_limit, snapshot.power_draw, snapshot.power_output, snapshot.heat, snapshot.heat_limit, int(dependencies.ready), int(dependencies.strained), int(dependencies.offline), " · Blockade %s %d" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure] if state.campaign_active else ""]
 	var route_name := String(LongMarchState.ROUTES.get(state.journey_route, {}).get("name", "Meridian Pass" if state.journey_route == "meridian_pass" else "not chosen"))
-	journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
+	if state.campaign_active:
+		var path_names: Array[String] = []
+		for node_id in state.campaign_path:
+			path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
+		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | Encounter %d/5" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), state.campaign_encounters_completed]
+	else:
+		journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
 	var encounter_lines: Array[String] = []
 	for enemy in state.encounter_enemies:
 		var enemy_id: String = String(enemy.get("id", ""))
 		var enemy_name: String = String(LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {}).get("name", enemy_id))
-		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
+		var enemy_state: String
+		if bool(enemy.get("defeated", false)):
+			enemy_state = "cleared" if enemy_id == "storm_front" else "defeated"
+		elif enemy_id == "storm_front":
+			enemy_state = "pressure %d/%d" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
+		else:
+			enemy_state = "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0))]
 		var target: String = String(enemy.get("target", "approaching"))
 		encounter_lines.append("%s — %s — target %s" % [enemy_name, enemy_state, target])
 	if state.phase == "results":
-		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, int(dependencies.offline)]
+		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
 	else:
 		encounter_label.text = "ENCOUNTER — %s | step %d/6 | progress %.0f%%\n%s" % ["active" if state.encounter_active else (state.encounter_outcome if not state.encounter_outcome.is_empty() else "not started"), state.encounter_step, state.encounter_progress * 100.0, " | ".join(encounter_lines) if not encounter_lines.is_empty() else "No active contacts. Depart from Ashgate Depot to begin the test battle."]
 	var recent: Array[String] = []

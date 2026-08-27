@@ -7,7 +7,7 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
 const BASE_HEAT_LIMIT := 6
@@ -28,7 +28,12 @@ const JOURNEY_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "kind": "city", "description": "The departure yard: fuel, parts, and one last decision."},
 	"rill_crossing": {"name": "Rill Crossing", "kind": "crossing", "description": "A broken bridge where the road narrows between ash channels."},
 	"morrowline_camp": {"name": "Morrowline Camp", "kind": "city", "description": "A moving convoy shelter waiting for engines, tools, and protection."},
-	"meridian_pass": {"name": "Meridian Pass", "kind": "finale", "description": "The last open road, blocked by a Siege Beast."}
+	"meridian_pass": {"name": "Meridian Pass", "kind": "finale", "description": "The last open road, blocked by a Siege Beast."},
+	"soot_orchard": {"name": "The Soot Orchard", "kind": "salvage", "description": "A burning orchard where fuel and stranded workers compete for time."},
+	"broken_relay": {"name": "Broken Relay", "kind": "relay", "description": "A dead signal mast watched by Climbers and one stubborn operator."},
+	"red_wheel_toll_bridge": {"name": "Red Wheel Toll Bridge", "kind": "ambush", "description": "A fortified crossing where the blockade has learned the fortress silhouette."},
+	"lower_ash_road": {"name": "Lower Ash Road", "kind": "hazard", "description": "A buried service road where Burrowers test the lower hull."},
+	"signal_causeway": {"name": "Signal Causeway", "kind": "hazard", "description": "An exposed relay causeway caught inside a moving storm front."}
 }
 const JOURNEY_ENCOUNTERS := {
 	"safe_road": ["road_raiders", "road_raiders"],
@@ -38,8 +43,30 @@ const JOURNEY_ENCOUNTERS := {
 const ENCOUNTER_ENEMIES := {
 	"road_raiders": {"name": "Road Raider", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["cargo", "exterior"], "route": "road flank", "counter": "shell cannon or repeater gun"},
 	"climbers": {"name": "Climber", "health": 4, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "exterior", "crew"], "route": "fortress flank", "counter": "wall lamp or repeater gun"},
-	"burrowers": {"name": "Burrower", "health": 7, "damage": 2, "arrival_step": 2, "target_tags": ["engine", "workshop", "lower_hull"], "route": "under-road", "counter": "shell cannon and spare engine"},
+	"burrowers": {"name": "Burrower", "health": 7, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "workshop", "lower_hull"], "route": "under-road", "counter": "lower-hull armor, shifted weapons, or a spare engine"},
+	"storm_front": {"name": "Storm Front", "health": 7, "damage": 1, "arrival_step": 1, "target_tags": ["signal", "exterior"], "route": "weather line", "counter": "signal coverage, armor, or vent heat"},
 	"siege_beast": {"name": "Siege Beast", "health": 10, "damage": 3, "arrival_step": 4, "target_tags": ["armor", "crew"], "route": "direct road", "counter": "shell cannon and front armor"}
+}
+const CAMPAIGN_NODES := {
+	"ashgate_depot": {"name": "Ashgate Depot", "type": "settlement", "visibility": "known", "description": "Refit, choose the first guard contract, and leave before the blockade closes."},
+	"rill_crossing": {"name": "Rill Crossing", "type": "ambush", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.14, "pressure": 1, "reward": 12, "threat_hint": "cargo raiders", "encounter": ["road_raiders"]},
+	"soot_orchard": {"name": "The Soot Orchard", "type": "salvage", "visibility": "forecast", "days": 2, "fuel": 1, "risk": 0.22, "pressure": 1, "reward": 10, "mass_sensitive": true, "threat_hint": "fire and weather", "encounter": ["storm_front"]},
+	"broken_relay": {"name": "Broken Relay", "type": "relay", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.24, "pressure": 1, "reward": 14, "threat_hint": "upper-hull movement", "encounter": ["climbers"]},
+	"red_wheel_toll_bridge": {"name": "Red Wheel Toll Bridge", "type": "ambush", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.36, "pressure": 2, "reward": 24, "threat_hint": "organized blockade", "encounter": ["road_raiders", "climbers"]},
+	"morrowline_camp": {"name": "Morrowline Camp", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.28, "pressure": 1, "reward": 16, "threat_hint": "raiders on the convoy approach", "encounter": ["road_raiders"]},
+	"lower_ash_road": {"name": "Lower Ash Road", "type": "hazard", "visibility": "forecast", "days": 2, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 24, "mass_sensitive": true, "threat_hint": "movement below the road", "encounter": ["burrowers"]},
+	"signal_causeway": {"name": "Signal Causeway", "type": "hazard", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.43, "pressure": 2, "reward": 20, "threat_hint": "weather and exposed approaches", "encounter": ["storm_front", "climbers"]},
+	"meridian_pass": {"name": "Meridian Pass", "type": "boss", "visibility": "known", "days": 2, "fuel": 2, "risk": 0.58, "pressure": 2, "reward": 40, "threat_hint": "Siege Beast", "encounter": ["siege_beast"]}
+}
+const CAMPAIGN_EDGES := {
+	"ashgate_depot": ["rill_crossing", "soot_orchard"],
+	"rill_crossing": ["broken_relay", "red_wheel_toll_bridge"],
+	"soot_orchard": ["broken_relay", "red_wheel_toll_bridge"],
+	"broken_relay": ["morrowline_camp"],
+	"red_wheel_toll_bridge": ["morrowline_camp"],
+	"morrowline_camp": ["lower_ash_road", "signal_causeway"],
+	"lower_ash_road": ["meridian_pass"],
+	"signal_causeway": ["meridian_pass"]
 }
 const MODULE_DEFS := {
 	"steam_lance_engine": {"name": "Steam Lance Engine", "family": "engine", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 0, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"]},
@@ -98,6 +125,22 @@ var run_complete: bool = false
 var final_result: String = ""
 var settlement_actions_remaining: int = 0
 var settlement_report: Array[String] = []
+var campaign_active: bool = false
+var campaign_encounters_completed: int = 0
+var campaign_path: Array[String] = []
+var campaign_target_node: String = ""
+var campaign_last_safe_node: String = "ashgate_depot"
+var campaign_pressure: int = 0
+var campaign_retreats: int = 0
+var campaign_event_pending: String = ""
+var guard_contract_status: String = "unoffered"
+var settlement_trust: int = 0
+var mobility_tendency: int = 0
+var shelter_tendency: int = 0
+var knowledge_tendency: int = 0
+var specialist_id: String = ""
+var relay_repaired: bool = false
+var workers_rescued: bool = false
 
 func _init(world_seed: int = 1107) -> void:
 	seed = world_seed
@@ -278,6 +321,249 @@ func module_count(module_id: String) -> int:
 
 func can_refit() -> bool:
 	return not encounter_active and phase in ["refit", "settlement"] and current_location in ["ashgate_depot", "morrowline_camp"]
+
+func start_campaign() -> Dictionary:
+	campaign_active = true
+	campaign_encounters_completed = 0
+	campaign_path = ["ashgate_depot"]
+	campaign_target_node = ""
+	campaign_last_safe_node = "ashgate_depot"
+	campaign_pressure = 0
+	campaign_retreats = 0
+	campaign_event_pending = ""
+	guard_contract_status = "offered"
+	settlement_trust = 0
+	mobility_tendency = 0
+	shelter_tendency = 0
+	knowledge_tendency = 0
+	specialist_id = ""
+	relay_repaired = false
+	workers_rescued = false
+	journey_node = "ashgate_depot"
+	journey_destination = ""
+	journey_route = ""
+	journey_leg = 0
+	current_location = "ashgate_depot"
+	phase = "refit"
+	journey_complete = false
+	run_complete = false
+	final_result = ""
+	encounter_active = false
+	encounter_outcome = ""
+	log.append("The Ashgate Lowlands map is open. Choose whether to guard Morrowline's parts convoy before taking the first road.")
+	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
+
+func campaign_pressure_band() -> String:
+	if campaign_pressure >= 5:
+		return "break"
+	if campaign_pressure >= 3:
+		return "closing"
+	return "watch"
+
+func campaign_node_closed(node_id: String) -> bool:
+	if node_id == "signal_causeway" and campaign_pressure_band() == "break" and specialist_id != "iven_pell" and not _has_ready_tag("forecast"):
+		return true
+	return false
+
+func campaign_available_nodes() -> Array[String]:
+	var result: Array[String] = []
+	if not campaign_active or encounter_active or not campaign_event_pending.is_empty() or phase == "results":
+		return result
+	for raw_node_id in CAMPAIGN_EDGES.get(current_location, []):
+		var node_id := String(raw_node_id)
+		if not campaign_node_closed(node_id):
+			result.append(node_id)
+	return result
+
+func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") -> Dictionary:
+	var node: Dictionary = CAMPAIGN_NODES.get(node_id, {})
+	if node.is_empty():
+		return {"ok": false, "reason": "unknown campaign node"}
+	var mass_penalty := 1 if bool(node.get("mass_sensitive", false)) and total_mass() > BASE_MASS_LIMIT - 2 else 0
+	var fuel_cost := int(node.get("fuel", 0)) + mass_penalty
+	var predicted_heat := maxi(0, total_heat() + (2 if doctrine == "run_hot" else 0))
+	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
+	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
+	var signal_discount := 0.08 if informed else 0.0
+	var heat_penalty := 0.08 if predicted_heat > BASE_HEAT_LIMIT else 0.0
+	var risk := clampf(float(node.get("risk", 0.0)) + route_risk_modifier + campaign_pressure * 0.02 + float(mass_penalty) * 0.05 + heat_penalty - signal_discount, 0.0, 0.95)
+	var pressure_gain := int(node.get("pressure", 1))
+	var encounter_difficulty := maxi(0, pressure_gain - (1 if informed else 0))
+	if predicted_heat > BASE_HEAT_LIMIT:
+		encounter_difficulty += 1
+	var threat_names: Array[String] = []
+	if visibility == "known":
+		for enemy_id in node.get("encounter", []):
+			threat_names.append(String(ENCOUNTER_ENEMIES.get(String(enemy_id), {}).get("name", enemy_id)))
+	return {
+		"ok": true,
+		"id": node_id,
+		"name": String(node.get("name", node_id)),
+		"type": String(node.get("type", "route")),
+		"visibility": visibility,
+		"days": int(node.get("days", 0)),
+		"fuel": fuel_cost,
+		"risk": risk,
+		"pressure_gain": pressure_gain,
+		"encounter_pressure": encounter_difficulty,
+		"predicted_heat": predicted_heat,
+		"reward": int(node.get("reward", 0)),
+		"threat_hint": String(node.get("threat_hint", "uncertain road pressure")),
+		"threats": threat_names,
+		"closed": campaign_node_closed(node_id)
+	}
+
+func choose_guard_contract(accept: bool) -> Dictionary:
+	if not campaign_active or current_location != "ashgate_depot" or phase != "refit":
+		return {"ok": false, "reason": "the guard contract is only offered at Ashgate Depot"}
+	if guard_contract_status != "offered":
+		return {"ok": false, "reason": "the guard contract has already been answered"}
+	guard_contract_status = "accepted" if accept else "declined"
+	if accept:
+		log.append("Accepted the Morrowline Parts Guard contract. The convoy approach gains additional enemy endurance, but pays 30 Ashmarks and 2 trust.")
+	else:
+		mobility_tendency += 1
+		log.append("Declined the Morrowline Parts Guard contract to preserve freedom of movement.")
+	return {"ok": true, "status": guard_contract_status, "summary": summary()}
+
+func campaign_event_details() -> Dictionary:
+	match campaign_event_pending:
+		"salvage_choice":
+			return {"id": "salvage_choice", "title": "The Orchard Burns", "body": "Fuel lies under the burning orchard, but workers are still trapped beyond the firebreak.", "choices": [
+				{"id": "take_fuel", "label": "Recover 2 fuel first", "enabled": true},
+				{"id": "rescue_workers", "label": "Carry the stranded workers", "enabled": _has_operational_tag("refuge")}
+			]}
+		"lost_signal":
+			return {"id": "lost_signal", "title": "The Silence Between Lamps", "body": "The relay can be restored and broadcast, or the fortress can leave quietly before more Climbers arrive.", "choices": [
+				{"id": "restore_relay", "label": "Restore and broadcast the relay", "enabled": _has_operational_tag("signal")},
+				{"id": "move_silent", "label": "Mark the route and move in silence", "enabled": true}
+			]}
+		"toll_decision":
+			return {"id": "toll_decision", "title": "The Red Wheel Ledger", "body": "The toll captain offers a quiet crossing for coin. Breaking the post helps later convoys but brings the blockade closer.", "choices": [
+				{"id": "pay_toll", "label": "Pay 10 Ashmarks", "enabled": money >= 10},
+				{"id": "break_blockade", "label": "Break the toll post", "enabled": true}
+			]}
+	return {}
+
+func resolve_campaign_event(choice_id: String) -> Dictionary:
+	if campaign_event_pending.is_empty():
+		return {"ok": false, "reason": "no campaign decision is pending"}
+	var resolved_event := campaign_event_pending
+	if resolved_event == "salvage_choice":
+		if choice_id == "take_fuel":
+			fuel += 2
+			settlement_trust -= 1
+			log.append("The fortress recovers the orchard fuel while the workers scatter from the fire.")
+		elif choice_id == "rescue_workers" and _has_operational_tag("refuge"):
+			workers_rescued = true
+			settlement_trust += 2
+			shelter_tendency += 1
+			day += 1
+			campaign_pressure += 1
+			log.append("The Refugee Bunk carries the orchard workers toward Morrowline; the rescue costs one day.")
+		else:
+			return {"ok": false, "reason": "that orchard choice is not currently available"}
+	elif resolved_event == "lost_signal":
+		if choice_id == "restore_relay" and _has_operational_tag("signal"):
+			relay_repaired = true
+			knowledge_tendency += 1
+			settlement_trust += 1
+			campaign_pressure += 1
+			log.append("The Broken Relay broadcasts again. The next routes are clearer, and the blockade hears the signal.")
+		elif choice_id == "move_silent":
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			route_risk_modifier = maxf(-0.12, route_risk_modifier - 0.03)
+			log.append("The fortress leaves the Broken Relay dark and gains a quieter road.")
+		else:
+			return {"ok": false, "reason": "that relay choice is not currently available"}
+	elif resolved_event == "toll_decision":
+		if choice_id == "pay_toll" and money >= 10:
+			money -= 10
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			log.append("The Red Wheel accepts 10 Ashmarks and delays its pursuit.")
+		elif choice_id == "break_blockade":
+			money += 8
+			settlement_trust += 1
+			campaign_pressure += 1
+			log.append("The fortress breaks the toll post and recovers 8 Ashmarks of seized road coin.")
+		else:
+			return {"ok": false, "reason": "that toll choice is not currently available"}
+	else:
+		return {"ok": false, "reason": "unknown campaign event"}
+	campaign_event_pending = ""
+	return {"ok": true, "event": resolved_event, "choice": choice_id, "summary": summary()}
+
+func iven_recruitment_status() -> Dictionary:
+	if not campaign_active or current_location != "broken_relay" or phase != "map":
+		return {"available": false, "reason": "Iven Pell can only join at the Broken Relay"}
+	if not relay_repaired:
+		return {"available": false, "reason": "Iven will not leave until the relay is restored"}
+	if not specialist_id.is_empty():
+		return {"available": false, "reason": "the prototype crew station is already assigned"}
+	if not _has_operational_tag("crew"):
+		return {"available": false, "reason": "an operational Crew Quarters is required"}
+	if money < 12:
+		return {"available": false, "reason": "Iven needs 12 Ashmarks of route supplies"}
+	return {"available": true, "reason": "Iven can join as signal officer"}
+
+func recruit_iven_pell() -> Dictionary:
+	var status := iven_recruitment_status()
+	if not bool(status.get("available", false)):
+		return {"ok": false, "reason": String(status.get("reason", "recruitment unavailable"))}
+	money -= 12
+	specialist_id = "iven_pell"
+	log.append("Iven Pell joins as signal officer. Immediate-node forecasts now reveal exact threats and gain a risk discount.")
+	return {"ok": true, "specialist": specialist_id, "summary": summary()}
+
+func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -> Dictionary:
+	if not campaign_active:
+		return {"ok": false, "reason": "the authored campaign has not started"}
+	if encounter_active or phase not in ["refit", "map", "settlement"]:
+		return {"ok": false, "reason": "the fortress cannot choose a map route in the current phase"}
+	if guard_contract_status == "offered":
+		return {"ok": false, "reason": "answer the Ashgate guard contract before departure"}
+	if not campaign_event_pending.is_empty():
+		return {"ok": false, "reason": "resolve the current node decision before leaving"}
+	if node_id not in campaign_available_nodes():
+		return {"ok": false, "reason": "that node is not reachable from the current position"}
+	var preview := campaign_node_preview(node_id, doctrine)
+	if fuel < int(preview.get("fuel", 0)):
+		return {"ok": false, "reason": "not enough fuel for that route"}
+	if not _has_engine():
+		return {"ok": false, "reason": "no operational fuel-connected engine"}
+	target_doctrine = doctrine
+	encounter_target_doctrine = doctrine
+	heat_relief = 0
+	heat_surge = 2 if doctrine == "run_hot" else 0
+	vent_exposure = false
+	_recalculate()
+	fuel -= int(preview.fuel)
+	day += int(preview.days)
+	campaign_pressure += int(preview.pressure_gain)
+	current_route_risk = float(preview.risk)
+	encounter_pressure = int(preview.encounter_pressure)
+	pending_route_reward = int(preview.reward)
+	campaign_target_node = node_id
+	journey_destination = node_id
+	journey_route = node_id
+	journey_node = node_id
+	current_location = node_id
+	journey_leg = campaign_encounters_completed + 1
+	command_points = 2
+	power_priority = "balanced"
+	phase = "final_battle" if node_id == "meridian_pass" else "battle"
+	var node: Dictionary = CAMPAIGN_NODES[node_id]
+	var composition: Array = node.get("encounter", []).duplicate()
+	if node_id == "meridian_pass" and campaign_pressure_band() == "break":
+		composition.append("climbers")
+	_configure_encounter(composition, String(node.name), String(JOURNEY_NODES.get(node_id, {}).get("description", "The route narrows ahead.")))
+	if node_id == "morrowline_camp" and guard_contract_status == "accepted":
+		for index in range(encounter_enemies.size()):
+			encounter_enemies[index]["hp"] = int(encounter_enemies[index].get("hp", 0)) + 1
+			encounter_enemies[index]["max_hp"] = int(encounter_enemies[index].get("max_hp", 0)) + 1
+		_encounter_log("Guard contract: the raiders commit to the convoy approach, adding one enemy endurance.")
+	log.append("Campaign route selected: %s. Closure pressure is %s (%d)." % [String(node.name), campaign_pressure_band(), campaign_pressure])
+	return {"ok": true, "node": node_id, "preview": preview, "forecast": encounter_forecast(), "encounter": encounter_summary(), "summary": summary()}
 
 func adjacent_modules(instance: Dictionary) -> Array[Dictionary]:
 	var adjacent: Array[Dictionary] = []
@@ -577,7 +863,23 @@ func summary() -> Dictionary:
 		"journey_leg": journey_leg,
 		"run_complete": run_complete,
 		"final_result": final_result,
-		"settlement_actions_remaining": settlement_actions_remaining
+		"settlement_actions_remaining": settlement_actions_remaining,
+		"campaign_active": campaign_active,
+		"campaign_encounters_completed": campaign_encounters_completed,
+		"campaign_path": campaign_path.duplicate(),
+		"campaign_target_node": campaign_target_node,
+		"campaign_pressure": campaign_pressure,
+		"campaign_pressure_band": campaign_pressure_band(),
+		"campaign_retreats": campaign_retreats,
+		"campaign_event_pending": campaign_event_pending,
+		"guard_contract_status": guard_contract_status,
+		"settlement_trust": settlement_trust,
+		"mobility_tendency": mobility_tendency,
+		"shelter_tendency": shelter_tendency,
+		"knowledge_tendency": knowledge_tendency,
+		"specialist_id": specialist_id,
+		"relay_repaired": relay_repaired,
+		"workers_rescued": workers_rescued
 	}
 
 func serialize() -> Dictionary:
@@ -618,6 +920,22 @@ func serialize() -> Dictionary:
 		"final_result": final_result,
 		"settlement_actions_remaining": settlement_actions_remaining,
 		"settlement_report": settlement_report.duplicate(),
+		"campaign_active": campaign_active,
+		"campaign_encounters_completed": campaign_encounters_completed,
+		"campaign_path": campaign_path.duplicate(),
+		"campaign_target_node": campaign_target_node,
+		"campaign_last_safe_node": campaign_last_safe_node,
+		"campaign_pressure": campaign_pressure,
+		"campaign_retreats": campaign_retreats,
+		"campaign_event_pending": campaign_event_pending,
+		"guard_contract_status": guard_contract_status,
+		"settlement_trust": settlement_trust,
+		"mobility_tendency": mobility_tendency,
+		"shelter_tendency": shelter_tendency,
+		"knowledge_tendency": knowledge_tendency,
+		"specialist_id": specialist_id,
+		"relay_repaired": relay_repaired,
+		"workers_rescued": workers_rescued,
 		"modules": _serialized_modules(),
 		"stored_modules": _serialized_stored_modules(),
 		"log": log.duplicate()
@@ -708,6 +1026,22 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	final_result = String(data.get("final_result", final_result))
 	settlement_actions_remaining = int(data.get("settlement_actions_remaining", settlement_actions_remaining))
 	settlement_report = _string_array(data.get("settlement_report", []))
+	campaign_active = bool(data.get("campaign_active", campaign_active))
+	campaign_encounters_completed = int(data.get("campaign_encounters_completed", campaign_encounters_completed))
+	campaign_path = _string_array(data.get("campaign_path", []))
+	campaign_target_node = String(data.get("campaign_target_node", campaign_target_node))
+	campaign_last_safe_node = String(data.get("campaign_last_safe_node", campaign_last_safe_node))
+	campaign_pressure = int(data.get("campaign_pressure", campaign_pressure))
+	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
+	campaign_event_pending = String(data.get("campaign_event_pending", campaign_event_pending))
+	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
+	settlement_trust = int(data.get("settlement_trust", settlement_trust))
+	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))
+	shelter_tendency = int(data.get("shelter_tendency", shelter_tendency))
+	knowledge_tendency = int(data.get("knowledge_tendency", knowledge_tendency))
+	specialist_id = String(data.get("specialist_id", specialist_id))
+	relay_repaired = bool(data.get("relay_repaired", relay_repaired))
+	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
 	modules = _deserialized_modules(data.get("modules", []))
 	stored_modules = _deserialized_modules(data.get("stored_modules", []))
 	if not data.has("stored_modules"):
@@ -864,7 +1198,7 @@ func encounter_forecast() -> Dictionary:
 		exact_target = "engine or workshop modules"
 	elif "siege_beast" in threat_ids:
 		exact_target = "front armor or crew modules"
-	var signal_ready: bool = _has_ready_tag("forecast")
+	var signal_ready: bool = _has_ready_tag("forecast") or specialist_id == "iven_pell"
 	var likely_target := ""
 	if signal_ready and not threat_ids.is_empty():
 		likely_target = _encounter_choose_target(threat_ids[0])
@@ -896,13 +1230,22 @@ func _encounter_module_damage(enemy_id: String) -> Dictionary:
 		var module_id: String = String(instance.get("id", ""))
 		var definition: Dictionary = module_definition(module_id)
 		var damage: int = 0
-		if module_id == "shell_cannon":
+		if enemy_id == "storm_front":
+			var tags: Array = definition.get("tags", [])
+			if "forecast" in tags or "long_range" in tags:
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("%s charts a stable line through the ash." % definition.name)
+			elif "armor" in tags:
+				damage = 1
+				behavior_lines.append("%s keeps the storm from opening the chassis." % definition.name)
+			elif "engine" in tags:
+				damage = 1
+				behavior_lines.append("%s holds the fortress against the weather line." % definition.name)
+		elif module_id == "shell_cannon":
 			damage = 3 if enemy_id in ["road_raiders", "siege_beast"] else 1
 			if String(status.get("state", "ready")) == "strained":
 				damage = maxi(1, damage - 2)
 				behavior_lines.append("Shell Cannon lacks an adjacent Ammunition Lift and fires emergency rounds.")
-			if power_priority == "weapons":
-				damage += 1
 			behavior_lines.append("Shell Cannon fires a burst into the %s." % ENCOUNTER_ENEMIES[enemy_id].name)
 		elif module_id == "repeater_gun":
 			damage = 2 if enemy_id in ["road_raiders", "climbers"] else 1
@@ -913,6 +1256,9 @@ func _encounter_module_damage(enemy_id: String) -> Dictionary:
 		elif module_id == "wall_lamp" and enemy_id == "climbers":
 			damage = 2
 			behavior_lines.append("Wall Lamp exposes the climber’s route.")
+		if damage > 0 and power_priority == "weapons" and "weapon" in definition.get("tags", []):
+			damage += 1
+			behavior_lines.append("Shift Power increases %s output." % definition.name)
 		if damage > 0 and encounter_target_doctrine == "protect_cargo" and enemy_id == "road_raiders":
 			damage += 1
 			behavior_lines.append("Protect Cargo doctrine focuses fire on the raider approach.")
@@ -925,6 +1271,10 @@ func _encounter_module_damage(enemy_id: String) -> Dictionary:
 		if damage > 0:
 			attackers.append(module_id)
 			total_damage += damage
+	if enemy_id == "storm_front" and specialist_id == "iven_pell":
+		total_damage += 2
+		attackers.append("iven_pell")
+		behavior_lines.append("Iven Pell reads the relay drift and calls a path through the storm.")
 	return {"damage": total_damage, "attackers": attackers, "lines": behavior_lines}
 
 func _encounter_choose_target(enemy_id: String) -> String:
@@ -939,9 +1289,13 @@ func _encounter_choose_target(enemy_id: String) -> String:
 		var module_def: Dictionary = module_definition(String(instance.get("id", "")))
 		var module_tags: Array = module_def.get("tags", [])
 		var score := 0
+		var matches_target := false
 		for tag in target_tags:
 			if tag in module_tags:
 				score += 10
+				matches_target = true
+		if not matches_target:
+			continue
 		var position: Vector2i = instance.get("position", Vector2i.ZERO)
 		if enemy_id == "road_raiders":
 			if "cargo" in module_tags:
@@ -1089,11 +1443,116 @@ func _workshop_repair_amount() -> int:
 			return 2 if _has_adjacent_tag(instance, "parts") else 1
 	return 0
 
+func _campaign_event_for_node(node_id: String) -> String:
+	match node_id:
+		"soot_orchard":
+			return "salvage_choice"
+		"broken_relay":
+			return "lost_signal"
+		"red_wheel_toll_bridge":
+			return "toll_decision"
+	return ""
+
+func _campaign_restore_limping_engine() -> void:
+	for index in range(modules.size()):
+		var module_id := String(modules[index].get("id", ""))
+		if "engine" in module_definition(module_id).get("tags", []):
+			modules[index]["durability"] = maxi(1, int(modules[index].get("durability", 0)))
+		if "fuel" in module_definition(module_id).get("tags", []):
+			modules[index]["durability"] = maxi(1, int(modules[index].get("durability", 0)))
+
+func _campaign_recover_from_failure() -> Dictionary:
+	encounter_outcome = "forced_retreat"
+	campaign_retreats += 1
+	campaign_pressure += 2
+	day += 1
+	money = maxi(0, money - 10)
+	fuel = maxi(2, fuel)
+	hull_condition = maxi(3, hull_condition)
+	_campaign_restore_limping_engine()
+	command_points = 2
+	power_priority = "balanced"
+	heat_surge = 0
+	heat_relief = 0
+	pending_route_reward = 0
+	campaign_target_node = ""
+	journey_node = campaign_last_safe_node
+	current_location = campaign_last_safe_node
+	journey_destination = ""
+	phase = "settlement" if campaign_last_safe_node == "morrowline_camp" else ("refit" if campaign_last_safe_node == "ashgate_depot" else "map")
+	if phase == "settlement":
+		settlement_actions_remaining = maxi(1, settlement_actions_remaining)
+	_recalculate()
+	_encounter_log("Outcome: forced retreat to %s. A road crew patches one engine, restores a limping hull, and charges 10 Ashmarks; closure pressure rises." % String(JOURNEY_NODES.get(campaign_last_safe_node, {}).get("name", campaign_last_safe_node)))
+	_clear_temporary_seals()
+	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "recovered_to": campaign_last_safe_node, "report": encounter_report.duplicate(), "summary": summary()}
+
+func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
+	var arrived_node := campaign_target_node
+	if hull_condition <= 0 or not engine_alive:
+		if arrived_node == "meridian_pass":
+			encounter_outcome = "march_failed"
+			final_result = "march_failed"
+			run_complete = true
+			journey_complete = true
+			phase = "results"
+			_encounter_log("Outcome: the campaign ends at Meridian Pass. The final report preserves the dependency chain that stopped the fortress.")
+			_clear_temporary_seals()
+			return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+		return _campaign_recover_from_failure()
+
+	campaign_encounters_completed += 1
+	if arrived_node not in campaign_path:
+		campaign_path.append(arrived_node)
+	campaign_last_safe_node = arrived_node
+	money += pending_route_reward
+	pending_route_reward = 0
+	command_points = 2
+	power_priority = "balanced"
+	heat_surge = 0
+	heat_relief = 0
+	_recalculate()
+	if arrived_node == "morrowline_camp":
+		phase = "settlement"
+		settlement_actions_remaining = 2
+		settlement_report.clear()
+		if guard_contract_status == "accepted":
+			guard_contract_status = "completed"
+			money += 30
+			settlement_trust += 2
+			_encounter_log("Contract complete: the Morrowline parts convoy arrives under guard. Payment is 30 Ashmarks and settlement trust rises by 2.")
+		if workers_rescued:
+			settlement_trust += 1
+			_encounter_log("The rescued orchard workers reach Morrowline and add one settlement trust.")
+		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
+		_encounter_log("Outcome: %s at Morrowline Camp. Two service actions and a full refit window are available." % encounter_outcome.replace("_", " "))
+	elif arrived_node == "meridian_pass":
+		journey_complete = true
+		run_complete = true
+		phase = "results"
+		if _all_encounter_enemies_defeated() and hull_condition >= 7 and guard_contract_status != "failed":
+			encounter_outcome = "decisive_march"
+			final_result = "decisive_march"
+		else:
+			encounter_outcome = "scarred_march"
+			final_result = "scarred_march"
+		_encounter_log("Outcome: %s after five campaign encounters. Contract, crew, trust, pressure, and surviving systems are preserved in the result." % final_result.replace("_", " "))
+	else:
+		phase = "map"
+		campaign_event_pending = _campaign_event_for_node(arrived_node)
+		encounter_outcome = "route_secured"
+		_encounter_log("Outcome: %s is secured. Choose the next visible node%s." % [String(JOURNEY_NODES.get(arrived_node, {}).get("name", arrived_node)), " after resolving the local decision" if not campaign_event_pending.is_empty() else ""])
+	campaign_target_node = ""
+	_clear_temporary_seals()
+	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+
 func _finish_encounter() -> Dictionary:
 	encounter_active = false
 	encounter_progress = 1.0
 	vent_exposure = false
 	var engine_alive: bool = _has_engine()
+	if campaign_active:
+		return _finish_campaign_encounter(engine_alive)
 	if hull_condition <= 0 or not engine_alive:
 		if journey_leg >= 2:
 			encounter_outcome = "march_failed"
@@ -1173,12 +1632,18 @@ func _encounter_step() -> Dictionary:
 		if damage > 0:
 			enemy["hp"] = maxi(0, int(enemy.get("hp", 0)) - damage)
 			enemy["damage_taken"] = int(enemy.get("damage_taken", 0)) + damage
-			_encounter_log("%s takes %d damage from %s." % [ENCOUNTER_ENEMIES[enemy_id].name, damage, ", ".join(attack_result.get("attackers", []))])
+			if enemy_id == "storm_front":
+				_encounter_log("Storm pressure falls by %d through %s." % [damage, ", ".join(attack_result.get("attackers", []))])
+			else:
+				_encounter_log("%s takes %d damage from %s." % [ENCOUNTER_ENEMIES[enemy_id].name, damage, ", ".join(attack_result.get("attackers", []))])
 			for line in attack_result.get("lines", []):
 				_encounter_log(String(line))
 		if int(enemy.get("hp", 0)) <= 0:
 			enemy["defeated"] = true
-			_encounter_log("%s is stopped before contact." % ENCOUNTER_ENEMIES[enemy_id].name)
+			if enemy_id == "storm_front":
+				_encounter_log("The Storm Front breaks around the fortress before it can cause further damage.")
+			else:
+				_encounter_log("%s is stopped before contact." % ENCOUNTER_ENEMIES[enemy_id].name)
 			encounter_enemies[index] = enemy
 			continue
 		if encounter_step >= int(ENCOUNTER_ENEMIES[enemy_id].arrival_step):

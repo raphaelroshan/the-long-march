@@ -20,6 +20,11 @@ func _init() -> void:
 	_test_settlement_and_final_march()
 	_test_salvage_counter_build()
 	_test_encounter_save_round_trip()
+	_test_campaign_graph_and_visibility()
+	_test_campaign_contract_and_specialist()
+	_test_campaign_events_and_closure()
+	_test_complete_five_encounter_campaign()
+	_test_campaign_recoverable_failure()
 	if failures.is_empty():
 		print("PASS: The Long March fortress-state tests")
 		quit(0)
@@ -312,3 +317,136 @@ func _test_save_round_trip() -> void:
 	var future_save := state.serialize()
 	future_save["save_version"] = LongMarchState.SAVE_VERSION + 1
 	_expect(not bool(LongMarchState.new(0).load_serialized(future_save).get("ok", false)), "future save versions should be rejected safely")
+
+func _install_campaign_signal_loadout(state: LongMarchState) -> void:
+	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "campaign engine should install")
+	_expect(bool(state.place_module("coal_cell", Vector2i(0, 1)).get("ok", false)), "campaign fuel should install beside the engine")
+	_expect(bool(state.place_module("generator_core", Vector2i(2, 0)).get("ok", false)), "campaign generator should install")
+	_expect(bool(state.place_module("crew_quarters", Vector2i(4, 0)).get("ok", false)), "campaign crew quarters should install")
+	_expect(bool(state.place_module("ammunition_lift", Vector2i(2, 1)).get("ok", false)), "campaign ammunition lift should install")
+	_expect(bool(state.place_module("signal_coil", Vector2i(5, 1)).get("ok", false)), "campaign signal coil should install")
+	_expect(bool(state.place_module("repeater_gun", Vector2i(3, 2), true).get("ok", false)), "campaign repeater should install")
+	state.seed_starter_inventory()
+
+func _campaign_battle(state: LongMarchState, node_id: String, doctrine: String = "protect_crew") -> Dictionary:
+	var begun := state.begin_campaign_route(node_id, doctrine)
+	if not bool(begun.get("ok", false)):
+		return begun
+	state.advance_encounter(1.0)
+	state.use_encounter_intervention("shift_power")
+	return state.advance_encounter(6.0)
+
+func _test_campaign_graph_and_visibility() -> void:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	state.start_campaign()
+	_expect(state.guard_contract_status == "offered", "Ashgate should present the first guard contract")
+	_expect(state.campaign_available_nodes() == ["rill_crossing", "soot_orchard"], "the authored map should begin with two forward nodes")
+	var preview := state.campaign_node_preview("red_wheel_toll_bridge", "protect_cargo")
+	_expect(String(preview.visibility) == "unscouted" and preview.get("threats", []).is_empty(), "a strained signal should leave an unscouted branch's exact threats hidden")
+	state.choose_guard_contract(false)
+	var first := _campaign_battle(state, "rill_crossing")
+	_expect(bool(first.get("resolved", false)) and state.phase == "map", "securing Rill Crossing should return to the campaign map")
+	_expect(state.campaign_encounters_completed == 1 and state.campaign_path.has("rill_crossing"), "the campaign should count and record secured nodes")
+	_expect(state.campaign_available_nodes() == ["broken_relay", "red_wheel_toll_bridge"], "Rill Crossing should branch toward the relay or toll bridge")
+
+func _test_campaign_contract_and_specialist() -> void:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	state.start_campaign()
+	_expect(bool(state.choose_guard_contract(true).get("ok", false)), "the Morrowline guard contract should be accepted at Ashgate")
+	_campaign_battle(state, "rill_crossing", "protect_cargo")
+	_campaign_battle(state, "broken_relay")
+	_expect(state.campaign_event_pending == "lost_signal", "the Broken Relay should require an authored local decision")
+	_expect(bool(state.resolve_campaign_event("restore_relay").get("ok", false)), "an operational signal should restore the relay")
+	_expect(bool(state.recruit_iven_pell().get("ok", false)), "Iven Pell should join a fortress with crew quarters after the relay is restored")
+	var preview := state.campaign_node_preview("signal_causeway")
+	_expect(String(preview.visibility) == "known" and not preview.get("threats", []).is_empty(), "Iven should reveal exact immediate-node threats")
+	var restored := LongMarchState.new(0)
+	restored.load_serialized(state.serialize())
+	_expect(restored.specialist_id == "iven_pell" and restored.guard_contract_status == "accepted", "save/load should preserve the specialist and contract")
+	_expect(restored.campaign_path == state.campaign_path and restored.campaign_pressure == state.campaign_pressure, "save/load should preserve the campaign map state")
+
+func _test_campaign_events_and_closure() -> void:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	_expect(bool(state.deploy_stored_module("wall_lamp", Vector2i(5, 2)).get("ok", false)), "the alternate branch loadout should connect an exterior signal lamp")
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	var orchard_result := _campaign_battle(state, "soot_orchard")
+	_expect(bool(orchard_result.get("resolved", false)) and state.campaign_event_pending == "salvage_choice", "the Soot Orchard branch should be viable and open its local decision")
+	var orchard := state.campaign_event_details()
+	_expect(not bool(orchard.choices[1].enabled), "rescuing orchard workers should require an operational refuge module")
+	var fuel_before := state.fuel
+	_expect(bool(state.resolve_campaign_event("take_fuel").get("ok", false)) and state.fuel == fuel_before + 2, "the orchard fuel choice should grant two fuel")
+
+	var toll_result := _campaign_battle(state, "red_wheel_toll_bridge", "protect_cargo")
+	_expect(bool(toll_result.get("resolved", false)) and state.campaign_event_pending == "toll_decision", "the Red Wheel branch should be viable and open its toll decision")
+	var pressure_before := state.campaign_pressure
+	var money_before := state.money
+	_expect(bool(state.resolve_campaign_event("break_blockade").get("ok", false)), "the fortress should be able to break the Red Wheel toll post")
+	_expect(state.money == money_before + 8 and state.campaign_pressure == pressure_before + 1, "breaking the toll should recover coin and increase closure pressure")
+	var morrowline_result := _campaign_battle(state, "morrowline_camp")
+	_expect(bool(morrowline_result.get("resolved", false)) and state.phase == "settlement", "the Soot Orchard and Red Wheel path should reach Morrowline after three encounters")
+
+	var refuge_state := LongMarchState.new(1107)
+	refuge_state.place_module("refugee_bunk", Vector2i(0, 0))
+	refuge_state.start_campaign()
+	refuge_state.choose_guard_contract(false)
+	refuge_state.campaign_event_pending = "salvage_choice"
+	var rescue_day := refuge_state.day
+	_expect(bool(refuge_state.campaign_event_details().choices[1].enabled), "an operational refuge module should enable the orchard rescue")
+	_expect(bool(refuge_state.resolve_campaign_event("rescue_workers").get("ok", false)), "the orchard workers should be rescuable when refuge space is operational")
+	_expect(refuge_state.workers_rescued and refuge_state.day == rescue_day + 1 and refuge_state.settlement_trust == 2, "worker rescue should persist and cost a day while raising trust")
+
+	var toll_state := LongMarchState.new(1107)
+	toll_state.start_campaign()
+	toll_state.choose_guard_contract(false)
+	toll_state.campaign_event_pending = "toll_decision"
+	toll_state.money = 14
+	toll_state.campaign_pressure = 4
+	_expect(bool(toll_state.resolve_campaign_event("pay_toll").get("ok", false)), "the Red Wheel toll should accept payment when the fortress can afford it")
+	_expect(toll_state.money == 4 and toll_state.campaign_pressure == 3, "paying the toll should cost 10 Ashmarks and reduce closure pressure")
+
+	state.current_location = "morrowline_camp"
+	state.phase = "settlement"
+	state.campaign_pressure = 5
+	_expect(state.campaign_node_closed("signal_causeway"), "Signal Causeway should close at Break pressure without reliable forecasting")
+	_expect(state.campaign_available_nodes() == ["lower_ash_road"], "closure pressure must leave the Lower Ash Road recovery route available")
+	state.specialist_id = "iven_pell"
+	_expect(not state.campaign_node_closed("signal_causeway"), "Iven should keep the Signal Causeway readable at Break pressure")
+	_expect(state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "reliable forecasting should restore both Morrowline departures")
+
+func _test_complete_five_encounter_campaign() -> void:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	state.start_campaign()
+	state.choose_guard_contract(true)
+	_campaign_battle(state, "rill_crossing", "protect_cargo")
+	_campaign_battle(state, "broken_relay")
+	state.resolve_campaign_event("restore_relay")
+	state.recruit_iven_pell()
+	_campaign_battle(state, "morrowline_camp", "protect_cargo")
+	_expect(state.phase == "settlement" and state.guard_contract_status == "completed", "surviving the third encounter should complete the guard contract at Morrowline")
+	state.settlement_refuel()
+	state.remove_module_at(Vector2i(3, 2))
+	state.remove_module_at(Vector2i(5, 1))
+	_expect(bool(state.deploy_stored_module("shell_cannon", Vector2i(3, 2), false).get("ok", false)), "Morrowline refit should replace the repeater and signal coil with a shell cannon")
+	var fourth := _campaign_battle(state, "signal_causeway")
+	_expect(bool(fourth.get("resolved", false)) and state.phase == "map", "Iven and the refitted fortress should secure the Signal Causeway")
+	var fifth := _campaign_battle(state, "meridian_pass")
+	_expect(bool(fifth.get("resolved", false)) and state.phase == "results", "the fifth campaign encounter should resolve at Meridian Pass")
+	_expect(state.campaign_encounters_completed == 5 and state.run_complete, "the alpha chapter should complete exactly five encounters")
+	_expect(state.final_result in ["decisive_march", "scarred_march"], "a surviving five-encounter campaign should produce a final result")
+
+func _test_campaign_recoverable_failure() -> void:
+	var state := LongMarchState.new(1107)
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	state.begin_campaign_route("rill_crossing", "protect_crew")
+	state.advance_encounter(6.0)
+	_expect(state.phase == "refit" and state.current_location == "ashgate_depot", "an early route failure should retreat to Ashgate instead of ending the run")
+	_expect(state.campaign_retreats == 1 and state.campaign_pressure >= 2, "retreat should be recorded and advance closure pressure")
+	_expect(state.operational("steam_lance_engine") and state.fuel >= 2 and state.hull_condition >= 3, "the road crew should restore a viable limping recovery state")

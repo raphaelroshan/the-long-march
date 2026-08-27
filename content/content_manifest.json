@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "the-long-march",
-  "content_version": "0.1.0",
+  "content_version": "0.2.0",
   "campaign": {
     "title": "The Long March",
     "premise": "A mobile fortress crosses a ruined continent carrying people, tools, and the last working promises between settlements.",
@@ -111,7 +111,8 @@
       ],
       "available_events": [
         "wake_the_engine",
-        "first_refit"
+        "first_refit",
+        "morrowline_parts_guard"
       ]
     },
     {
@@ -201,7 +202,51 @@
         "low supplies"
       ],
       "available_events": [
-        "convoy_request"
+        "convoy_request",
+        "morrowline_parts_guard"
+      ]
+    },
+    {
+      "id": "red_wheel_toll_bridge",
+      "name": "Red Wheel Toll Bridge",
+      "role": "ambush and blockade",
+      "story_function": "Turns Red Wheel pressure into a visible choice between payment and resistance.",
+      "visual_motif": "A plated toll gantry, chained wagons, and red wheel marks painted over old road signs.",
+      "problems": [
+        "organized raider blockade",
+        "confiscated road coin"
+      ],
+      "available_events": [
+        "toll_decision"
+      ]
+    },
+    {
+      "id": "lower_ash_road",
+      "name": "Lower Ash Road",
+      "role": "lower-hull hazard",
+      "story_function": "Tests whether the fortress prepared for Burrowers before the final gate.",
+      "visual_motif": "A sunken service road, cracked ash crust, and iron stakes marking old collapses.",
+      "problems": [
+        "burrower tunnels",
+        "heavy-build fuel cost"
+      ],
+      "available_events": [
+        "lower_hull_breach"
+      ]
+    },
+    {
+      "id": "signal_causeway",
+      "name": "Signal Causeway",
+      "role": "storm and signal hazard",
+      "story_function": "Rewards signal preparation and Iven Pell while exposing roof-mounted systems.",
+      "visual_motif": "A raised road of relay pylons disappearing into a wall of pale ash.",
+      "problems": [
+        "storm front",
+        "climber approach",
+        "route closure"
+      ],
+      "available_events": [
+        "weather_front"
       ]
     },
     {
@@ -535,6 +580,43 @@
       "follow_up": "road_raider_probe"
     },
     {
+      "id": "morrowline_parts_guard",
+      "title": "The Parts Wagon Promise",
+      "type": "contract",
+      "chapter": "chapter_1_the_road_out",
+      "locations": [
+        "ashgate_depot",
+        "morrowline_camp"
+      ],
+      "trigger": "campaign_start",
+      "setup": "Morrowline's last parts wagon is leaving Ashgate under the fortress's shadow. Guarding it will draw a committed raider attack on the camp approach.",
+      "choices": [
+        {
+          "id": "accept_guard_contract",
+          "label": "Guard the parts wagon to Morrowline.",
+          "requirements": [
+            "fortress_operational"
+          ],
+          "effects": [
+            "morrowline_approach_pressure:+1",
+            "contract_reward:30",
+            "settlement_trust_on_success:+2"
+          ],
+          "visible_result": "The convoy approach becomes harder, but safe arrival pays for a meaningful recovery."
+        },
+        {
+          "id": "decline_guard_contract",
+          "label": "Travel without the convoy obligation.",
+          "requirements": [],
+          "effects": [
+            "mobility_tendency:+1"
+          ],
+          "visible_result": "The fortress keeps its freedom of movement and gives up the contract reward."
+        }
+      ],
+      "follow_up": "road_raider_probe"
+    },
+    {
       "id": "road_raider_probe",
       "title": "The Toll of Being Large",
       "type": "travel",
@@ -588,6 +670,44 @@
         }
       ],
       "follow_up": "settlement_contract"
+    },
+    {
+      "id": "toll_decision",
+      "title": "The Red Wheel Ledger",
+      "type": "faction",
+      "chapter": "chapter_1_the_road_out",
+      "locations": [
+        "red_wheel_toll_bridge"
+      ],
+      "trigger": "toll_bridge_secured",
+      "setup": "The toll captain offers a quiet crossing for coin. Breaking the post helps later convoys but brings the wider blockade closer.",
+      "choices": [
+        {
+          "id": "pay_toll",
+          "label": "Pay 10 Ashmarks.",
+          "requirements": [
+            "money >= 10"
+          ],
+          "effects": [
+            "money:-10",
+            "closure_pressure:-1"
+          ],
+          "visible_result": "The blockade delays pursuit and keeps the seized road coin."
+        },
+        {
+          "id": "break_blockade",
+          "label": "Break the toll post.",
+          "requirements": [
+            "fortress_operational"
+          ],
+          "effects": [
+            "money:+8",
+            "settlement_trust:+1",
+            "closure_pressure:+1"
+          ],
+          "visible_result": "The road opens for later convoys, and the rest of the Red Wheel begins closing in."
+        }
+      ]
     },
     {
       "id": "lost_signal",
@@ -984,7 +1104,10 @@
         "rill_crossing",
         "soot_orchard",
         "broken_relay",
-        "morrowline_camp"
+        "red_wheel_toll_bridge",
+        "morrowline_camp",
+        "lower_ash_road",
+        "signal_causeway"
       ]
     },
     {
@@ -1126,13 +1249,16 @@
     }
   ],
   "implemented_journey_slice": {
-    "id": "ashgate_to_meridian_pass",
-    "title": "Ashgate to Meridian Pass",
+    "id": "ashgate_lowlands_alpha",
+    "title": "The Road Out",
     "status": "vertical_slice",
-    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp", "meridian_pass"],
-    "route_choices": ["safe_road", "exposed_shortcut", "salvage_detour"],
-    "encounter_id": "first_road_battle",
-    "player_question": "Can the fortress adapt its layout, recover at Morrowline, and survive Meridian Pass?",
+    "nodes": ["ashgate_depot", "rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "signal_causeway", "meridian_pass"],
+    "route_choices": ["rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "lower_ash_road", "signal_causeway", "meridian_pass"],
+    "encounter_id": "ashgate_lowlands_campaign",
+    "encounter_count": 5,
+    "contract_id": "morrowline_parts_guard",
+    "specialist_id": "iven_pell",
+    "player_question": "Can the fortress keep a contract, read a closing map, recover at Morrowline, and survive five linked encounters?",
     "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat", "decisive_march", "scarred_march", "march_failed"]
   },
   "map_rules": [

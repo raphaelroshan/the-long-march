@@ -13,16 +13,19 @@ The repository contains an agent-first Godot project with:
 - Interactive Ashgate refitting: select, place, rotate, move, and remove modules with mouse, keyboard, or controller navigation.
 - Explicit dependency states for fuel-fed engines, ammunition-fed weapons, crew/parts-supported workshops, shared power, and signal visibility.
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
-- Routes with distance, fuel, reward, and threat risk.
+- An authored branching campaign map with known, forecast, and unscouted route information.
+- Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.
 - Repair and save/load behavior.
 - A lightweight UI prototype showing the fortress and state summary.
 - Structured campaign content in `content/content_manifest.json` and `content/gameplay_framework.json`.
 - Deterministic headless tests in `tests/test_fortress_state.gd`.
-- An implemented Ashgate Depot → Rill Crossing → Morrowline Camp journey slice with safe-road, exposed-shortcut, and salvage-detour encounter variants.
+- A complete five-encounter Ashgate Lowlands chapter with branching routes through Rill Crossing, The Soot Orchard, Broken Relay, Red Wheel Toll Bridge, Morrowline Camp, Lower Ash Road, and Signal Causeway.
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
-- A Morrowline recovery phase with limited paid repairs/refueling, continued refitting, and a final Meridian Pass battle with decisive, scarred, or failed run results.
+- An Ashgate guard contract, three local route decisions, recruitable signal officer Iven Pell, and persistent settlement trust.
+- Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.
+- A Morrowline recovery phase with limited paid repairs/refueling, continued refitting, and a fifth Meridian Pass battle with decisive, scarred, or failed run results.
 - Versioned JSON save/load and an automated UI-level complete-run test.
 - A first-run Marchmaster briefing, phase-specific guidance, and a local-only playtest feedback bundle.
 - An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.
@@ -59,7 +62,7 @@ The recommended sequence is:
 
 ## Initial journey test release
 
-The current focused test flow begins at Ashgate Depot, recovers at Morrowline Camp, and ends at Meridian Pass. The release contract, tester checklist, and known boundaries are in [`docs/internal_test_release.md`](docs/internal_test_release.md), while the authored first encounter contract is in [`design/ashgate_city_to_city_battle.md`](design/ashgate_city_to_city_battle.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
+The current focused test flow begins at Ashgate Depot, branches through five encounters, recovers at Morrowline Camp, and ends at Meridian Pass. The chapter contract is in [`design/ashgate_lowlands_alpha.md`](design/ashgate_lowlands_alpha.md); the release checklist is in [`docs/internal_test_release.md`](docs/internal_test_release.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
 
 The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
 The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
@@ -76,4 +79,4 @@ The broader fortress plan is documented separately so agents can implement it in
 - [`design/map_regions_and_settlements.md`](design/map_regions_and_settlements.md) — FTL-like node map, visibility, closure pressure, regions, settlements, and route archetypes.
 - [`design/characters_factions_and_campaign.md`](design/characters_factions_and_campaign.md) — crew, rivals, factions, campaign pressures, regional arcs, and endings.
 
-The machine-readable campaign manifest now includes regions, settlements, extended character hooks, map rules, and additional authored events. The gameplay framework includes the planned facility catalog and campaign-pressure model; these future-facing definitions remain distinct from the current vertical slice until each one has runtime behavior and deterministic tests.
+The machine-readable campaign manifest now includes regions, settlements, extended character hooks, map rules, and authored events. The Ashgate Lowlands graph, pressure model, guard contract, Iven recruitment, and recovery loop have runtime behavior and deterministic tests; later regions remain design targets until implemented to the same standard.

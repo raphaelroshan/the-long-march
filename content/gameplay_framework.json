@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "the-long-march",
-  "framework_version": "0.1.0",
+  "framework_version": "0.2.0",
   "design_promise": "Every module provides a useful capability and creates a visible dependency, while the fortress must remain mobile enough to keep its promises.",
   "spaces": [
     {"id": "chassis_grid", "name": "Chassis Grid", "dimensions": [6, 4], "purpose": "Interior engines, rooms, workshops, armor, and cargo."},
@@ -140,10 +140,10 @@
     "required_player_explanations": ["why a module failed", "why the route was risky", "what intervention changed", "how to recover"]
   },
   "implemented_journey_slice": {
-    "id": "ashgate_to_meridian_pass",
+    "id": "ashgate_lowlands_alpha",
     "status": "vertical_slice",
-    "nodes": ["ashgate_depot", "rill_crossing", "morrowline_camp", "meridian_pass"],
-    "routes": ["safe_road", "exposed_shortcut", "salvage_detour", "meridian_pass"],
+    "nodes": ["ashgate_depot", "rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "signal_causeway", "meridian_pass"],
+    "routes": ["rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "signal_causeway", "meridian_pass"],
     "encounter_steps": 6,
     "primary_units": ["steam_lance_engine", "shell_cannon", "field_workshop", "signal_coil"],
     "enemy_families": ["road_raiders", "climbers", "burrowers", "siege_beast"],
@@ -151,8 +151,17 @@
       "safe_road": ["road_raiders", "road_raiders"],
       "exposed_shortcut": ["road_raiders", "climbers"],
       "salvage_detour": ["burrowers"],
-      "meridian_pass": ["siege_beast", "climbers"]
+      "meridian_pass": ["siege_beast", "climbers"],
+      "rill_crossing": ["road_raiders"],
+      "soot_orchard": ["storm_front"],
+      "broken_relay": ["climbers"],
+      "red_wheel_toll_bridge": ["road_raiders", "climbers"],
+      "morrowline_camp": ["road_raiders"],
+      "lower_ash_road": ["burrowers"],
+      "signal_causeway": ["storm_front", "climbers"]
     },
+    "contract": "morrowline_parts_guard",
+    "recruitable_specialist": "iven_pell",
     "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat", "decisive_march", "scarred_march", "march_failed"],
     "behavior_contract": "modules attack by authored role while enemies choose the weakest matching operational target",
     "determinism_contract": "seed, route, module layout, and commands reproduce the same forecast, report, and outcome"

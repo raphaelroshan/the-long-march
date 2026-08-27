@@ -1,5 +1,7 @@
 # Ashgate Depot → Morrowline Camp: initial journey battle
 
+> Historical slice: this defined the earlier one-encounter journey. The implemented alpha chapter supersedes it with the five-encounter graph in [`ashgate_lowlands_alpha.md`](ashgate_lowlands_alpha.md). The threat and causality notes below remain useful background, but its scope boundaries are no longer current.
+
 ## Purpose
 
 This slice turns The Long March from a fortress-loadout shell into a small, testable journey. The fortress departs **Ashgate Depot**, travels through the Ashgate Lowlands, and reaches **Morrowline Camp** after one authored road encounter. The player prepares the moving fortress, chooses a route posture, watches the threat approach, and uses a limited intervention before the automatic battle resolves.

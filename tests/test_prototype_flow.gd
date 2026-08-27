@@ -10,7 +10,29 @@ func _expect(condition: bool, message: String) -> void:
 func _init() -> void:
 	call_deferred("_run")
 
+func _press_campaign_node(node_id: String) -> void:
+	for button in game.campaign_node_buttons:
+		if button.visible and String(button.get_meta("node_id", "")) == node_id:
+			button.pressed.emit()
+			await process_frame
+			return
+	_expect(false, "campaign node button should be available: " + node_id)
+
+func _press_campaign_event(choice_id: String) -> void:
+	for button in game.campaign_event_buttons:
+		if button.visible and String(button.get_meta("choice_id", "")) == choice_id:
+			button.pressed.emit()
+			await process_frame
+			return
+	_expect(false, "campaign event choice should be available: " + choice_id)
+
 func _advance_until_phase(expected_phase: String) -> void:
+	if game.state.encounter_active:
+		game.advance_encounter_button.pressed.emit()
+		await process_frame
+		if game.state.encounter_active and not game.state.encounter_intervention_used:
+			game.intervention_buttons[0].pressed.emit()
+			await process_frame
 	for _step in range(8):
 		if game.state.phase == expected_phase:
 			return
@@ -34,11 +56,20 @@ func _run() -> void:
 		await process_frame
 	_expect(not game.onboarding_overlay.visible and FileAccess.file_exists(onboarding_path), "completing onboarding should dismiss it and persist the choice")
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
-	game.travel_button.pressed.emit()
+	game.contract_accept_button.pressed.emit()
 	await process_frame
-	_expect(game.state.phase == "battle", "departure should begin the road battle")
+	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
+	await _press_campaign_node("rill_crossing")
+	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
+	await _advance_until_phase("map")
+	await _press_campaign_node("broken_relay")
+	await _advance_until_phase("map")
+	_expect(game.state.campaign_event_pending == "lost_signal", "the Broken Relay should surface its authored decision")
+	await _press_campaign_event("move_silent")
+	await _press_campaign_node("morrowline_camp")
 	await _advance_until_phase("settlement")
-	_expect(game.state.phase == "settlement", "surviving the road should open Morrowline services")
+	_expect(game.state.phase == "settlement" and game.state.campaign_encounters_completed == 3, "the third encounter should open Morrowline services")
+	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	var saved_money: int = game.state.money
 	game.save_button.pressed.emit()
 	await process_frame
@@ -50,11 +81,13 @@ func _run() -> void:
 	game.settlement_refuel_button.pressed.emit()
 	await process_frame
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
-	game.final_journey_button.pressed.emit()
-	await process_frame
-	_expect(game.state.phase == "final_battle", "Morrowline departure should begin the final battle")
+	await _press_campaign_node("lower_ash_road")
+	await _advance_until_phase("map")
+	_expect(game.state.campaign_encounters_completed == 4, "the lower-hull route should become the fourth encounter")
+	await _press_campaign_node("meridian_pass")
+	_expect(game.state.phase == "final_battle", "the fifth map node should begin the final battle")
 	await _advance_until_phase("results")
-	_expect(game.state.phase == "results" and game.state.run_complete, "final battle should produce a completed run")
+	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	game.feedback_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
