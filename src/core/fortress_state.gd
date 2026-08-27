@@ -1458,7 +1458,49 @@ func encounter_enemy_impact_preview(enemy: Dictionary) -> Dictionary:
 	profile["target"] = target_id
 	profile["current_durability"] = current_durability
 	profile["remaining_durability"] = maxi(0, current_durability - int(profile.get("damage", 0)))
+	profile["dependency_changes"] = _encounter_dependency_impact_preview(profile)
 	return profile
+
+func _encounter_dependency_impact_preview(profile: Dictionary) -> Array[Dictionary]:
+	var affected_indices: Array[int] = []
+	var target_index := int(profile.get("target_index", -1))
+	if target_index >= 0 and int(profile.get("remaining_durability", 1)) <= 0:
+		affected_indices.append(target_index)
+	var armor_index := int(profile.get("armor_index", -1))
+	if armor_index >= 0 and armor_index != target_index and int(profile.get("armor_remaining_durability", 1)) <= 0:
+		affected_indices.append(armor_index)
+	if affected_indices.is_empty():
+		return []
+
+	var before_states: Array[String] = []
+	for instance in modules:
+		before_states.append(String(dependency_status(instance).get("state", "offline")))
+	var original_durabilities := {}
+	for index in affected_indices:
+		original_durabilities[index] = int(modules[index].get("durability", 0))
+		modules[index]["durability"] = 0
+
+	var changes: Array[Dictionary] = []
+	for index in range(modules.size()):
+		if index in affected_indices:
+			continue
+		var status := dependency_status(modules[index])
+		var after_state := String(status.get("state", "offline"))
+		if before_states[index] == after_state:
+			continue
+		var module_id := String(modules[index].get("id", ""))
+		var reasons: Array = status.get("reasons", [])
+		changes.append({
+			"module_id": module_id,
+			"name": String(module_definition(module_id).get("name", module_id)),
+			"from": before_states[index],
+			"to": after_state,
+			"reason": String(reasons[0]) if not reasons.is_empty() else "dependency lost"
+		})
+
+	for index in affected_indices:
+		modules[index]["durability"] = int(original_durabilities[index])
+	return changes
 
 func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure_bonus: int = 0) -> int:
 	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]

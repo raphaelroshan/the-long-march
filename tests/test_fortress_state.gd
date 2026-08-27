@@ -245,6 +245,10 @@ func _test_spatial_targeting_and_causality() -> void:
 	causal.place_module("steam_lance_engine", Vector2i(0, 0))
 	causal.place_module("coal_cell", Vector2i(0, 1))
 	causal.encounter_target_doctrine = "run_hot"
+	var causal_preview := causal.encounter_enemy_impact_preview({"id": "road_raiders", "arrived": true, "defeated": false, "target": "coal_cell", "damage_bonus": 1})
+	var predicted_changes: Array = causal_preview.get("dependency_changes", [])
+	_expect(predicted_changes.size() == 1 and String(predicted_changes[0].get("module_id", "")) == "steam_lance_engine" and String(predicted_changes[0].get("to", "")) == "offline", "a disabling fuel hit should preview the downstream engine failure")
+	_expect(causal.dependency_status_at(Vector2i(0, 0)).state == "ready" and int(causal.module_at(Vector2i(0, 1)).durability) == 2, "dependency impact previews must not mutate live fortress state")
 	causal._encounter_apply_enemy_damage("road_raiders", "coal_cell", 1)
 	_expect(causal.dependency_status_at(Vector2i(0, 0)).state == "offline", "destroyed fuel should disable its adjacent engine")
 	_expect(causal.encounter_report.filter(func(line: String) -> bool: return line.contains("Dependency change") and line.contains("Steam Lance Engine")).size() > 0, "combat report should explain downstream dependency failure")

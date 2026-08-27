@@ -210,6 +210,14 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 				var armor_after := int(impact.get("armor_remaining_durability", maxi(0, armor_before - armor_absorbed)))
 				var armor_warning := " · BREAKS" if armor_after <= 0 else ""
 				target_text += "\nARMOR · %s · %d→%d%s" % [armor_name.to_upper(), armor_before, armor_after, armor_warning]
+			var dependency_changes: Array = impact.get("dependency_changes", [])
+			if not dependency_changes.is_empty():
+				var cascade_labels: Array[String] = []
+				for change_index in range(mini(2, dependency_changes.size())):
+					var change: Dictionary = dependency_changes[change_index]
+					cascade_labels.append("%s → %s" % [String(change.get("name", "system")).to_upper(), String(change.get("to", "offline")).to_upper()])
+				var hidden_count := dependency_changes.size() - cascade_labels.size()
+				target_text += "\nCASCADE · %s%s" % [", ".join(cascade_labels), " · +%d MORE" % hidden_count if hidden_count > 0 else ""]
 		enemy_states[index].text = "%s\n%s %d/%d%s" % [contact_state, health_word, int(enemy.get("hp", 0)), int(enemy.get("max_hp", 0)), target_text]
 		enemy_states[index].add_theme_color_override("font_color", state_color)
 		enemy_counters[index].text = "Counter: %s" % String(definition.get("counter", "unknown"))
