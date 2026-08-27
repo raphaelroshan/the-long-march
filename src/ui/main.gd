@@ -300,7 +300,12 @@ func _refresh_run_flow_tracker() -> void:
 	for index in range(run_flow_panels.size()):
 		var panel := run_flow_panels[index]
 		var label := run_flow_labels[index]
-		if index < current_run_flow_step:
+		var failed_final := state.phase == "results" and state.final_result == "march_failed" and index == 3
+		if failed_final:
+			panel.add_theme_stylebox_override("panel", _flat_style(Color("#482929"), Color("#e06f61"), 2, 4, 2))
+			label.text = "×\n%s" % RUN_FLOW_STEPS[index]
+			label.add_theme_color_override("font_color", Color("#ffd4cd"))
+		elif index < current_run_flow_step:
 			panel.add_theme_stylebox_override("panel", _flat_style(Color("#183329"), Color("#4e8d72"), 1, 4, 3))
 			label.text = "✓\n%s" % RUN_FLOW_STEPS[index]
 			label.add_theme_color_override("font_color", Color("#9fddbd"))

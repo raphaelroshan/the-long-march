@@ -495,3 +495,7 @@ The completed-run action is explicitly labelled Save Result & Return and writes 
 ## 2026-08-28 — Replay warnings inspect the actual Continue slot
 
 Play Again confirmation distinguishes a result already saved under Continue, an older checkpoint that does not contain the result, and no usable checkpoint. It also states whether automatic checkpoints will replace the slot immediately or manual saving will leave it intact. The dialog no longer assumes that finishing a run automatically persisted it when autosave was disabled or a write failed.
+
+## 2026-08-28 — Terminal failure remains visible in the run rail
+
+When Meridian Pass ends in March Failed, the Final stage uses a red failed marker while Result remains the current step. Decisive and scarred crossings still show Final as completed. The persistent run-flow summary therefore no longer contradicts the failure debrief by awarding a green completion check to the terminal battle.

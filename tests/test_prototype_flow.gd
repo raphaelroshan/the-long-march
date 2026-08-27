@@ -564,6 +564,7 @@ func _run() -> void:
 	_expect(game.results_summary_label.text.contains("hull reached zero"), "a hull failure should name the exact terminal cause")
 	_expect(game.results_replay_label.text.contains("HULL FIRST") and game.results_replay_label.text.contains("Morrowline service"), "a hull failure should recommend a matching next-run adjustment")
 	_expect(game.results_record_label.text.contains("Stopped at: Meridian Pass") and game.results_record_label.text.contains("4/5 encounters secured"), "a failed final road should remain visible beside the secured path")
+	_expect(game.run_flow_labels[3].text.begins_with("×") and game.run_flow_labels[4].text.contains("RESULT"), "a terminal Meridian failure should mark the final stage as failed instead of completed")
 	var failed_engine_index: int = game.state._module_index_by_id("steam_lance_engine")
 	var failed_engine_before: int = int(game.state.modules[failed_engine_index].get("durability", 0))
 	game.state.hull_condition = 6
