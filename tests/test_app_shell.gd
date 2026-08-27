@@ -44,6 +44,9 @@ func _run() -> void:
 	_expect(app.continue_button.disabled and app.continue_button.text.contains("UNAVAILABLE"), "invalid save data should never enable Continue")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
 	_expect(app.save_recovery_button.visible and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose a direct recovery action in the title flow")
+	app._continue_game()
+	await process_frame
+	_expect(app.save_recovery_button.has_focus(), "a failed Continue attempt should focus the newly available recovery action")
 	app.save_recovery_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "REMOVE SAVE" and app.confirmation_cancel_button.text == "KEEP FILE", "invalid-save removal should require a specific confirmation")

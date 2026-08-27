@@ -907,7 +907,7 @@ func _request_new_game(show_briefing: bool) -> void:
 func _continue_game() -> void:
 	if not bool(_saved_run_info().get("valid", false)):
 		_refresh_title_state()
-		start_button.grab_focus()
+		(save_recovery_button if save_recovery_button.visible else start_button).grab_focus()
 		return
 	_open_stage(true, false)
 
@@ -935,7 +935,7 @@ func _open_stage(load_saved: bool, show_briefing: bool) -> void:
 		failed_game.queue_free()
 		menu_view.visible = true
 		_refresh_title_state()
-		start_button.grab_focus()
+		(save_recovery_button if save_recovery_button.visible else start_button).grab_focus()
 		return
 	last_checkpoint_reason = "loaded save" if load_saved else ""
 	game_view.call_deferred("focus_current_action")
