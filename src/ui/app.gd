@@ -924,6 +924,8 @@ func _saved_run_info() -> Dictionary:
 	var saved_build := String(parsed.get("build_version", "earlier build"))
 	var saved_at_unix := int(parsed.get("saved_at_unix", FileAccess.get_modified_time(SAVE_PATH)))
 	var save_age := _save_age_label(saved_at_unix)
+	var current_build := String(ProjectSettings.get_setting("application/config/version", "development"))
+	var build_note := "" if saved_build == current_build else "\nCompatible checkpoint from %s" % saved_build
 	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
 	return {
 		"exists": true,
@@ -935,7 +937,7 @@ func _saved_run_info() -> Dictionary:
 		"condition": condition,
 		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
-		"summary": "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
+		"summary": "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
 	}
 
 func _save_age_label(saved_at_unix: int) -> String:

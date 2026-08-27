@@ -226,6 +226,12 @@ func _run() -> void:
 	var saved_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(saved_payload is Dictionary and String(saved_payload.get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version")), "campaign saves should record their exact application build")
 	_expect(saved_payload is Dictionary and int(saved_payload.get("saved_at_unix", 0)) > 0, "campaign saves should record when the checkpoint was created")
+	saved_payload["build_version"] = "0.2.0-test"
+	var older_build_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	older_build_save.store_string(JSON.stringify(saved_payload))
+	older_build_save.close()
+	app._refresh_title_state()
+	_expect(app.save_status_label.text.contains("Compatible checkpoint from 0.2.0-test"), "a compatible save from another build should identify that build without requiring a tooltip")
 	app.settings_button.pressed.emit()
 	await process_frame
 	app.autosave_button.pressed.emit()
