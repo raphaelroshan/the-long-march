@@ -174,6 +174,8 @@ The title classifies that snapshot as Stable, Watch, or Critical using the same 
 
 New campaign saves include the application build that created them. The Continue tooltip exposes that provenance while older compatible saves fall back to `earlier build`, allowing playtest reports and unexpected behavior to be traced without invalidating existing schema-compatible progress.
 
+The title also shows the checkpoint's relative age using a save timestamp, with the file modification time as a compatibility fallback for older saves. Returning testers can distinguish a current run from stale local progress without opening it, while saves remain portable and schema-compatible.
+
 The fresh-start actions also switch from `Start` to `New` when Continue progress exists. Their confirmation names the preserved day and location and explains exactly when a future automatic checkpoint will replace it, so the title screen does not hide the relationship between starting over and the single local save slot.
 
 The title menu separates a guided first run from a briefing-free Quick Start. Quick Start suppresses onboarding only for that stage and does not write the onboarding marker, alter the deterministic seed, or touch the save. A field-guide overlay states the intended five-part test flow so repeated playtests can reach the actual decisions quickly without introducing simulation-only debug shortcuts.

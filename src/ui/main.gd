@@ -1446,6 +1446,7 @@ func save_run(silent: bool = false) -> bool:
 		return false
 	var payload := state.serialize()
 	payload["build_version"] = String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	payload["saved_at_unix"] = int(Time.get_unix_time_from_system())
 	file.store_string(JSON.stringify(payload))
 	if not silent:
 		_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)

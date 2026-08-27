@@ -15,6 +15,7 @@ The repository contains an agent-first Godot project with:
 - Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible together with their current-order context when space allows.
 - Prominent post-run actions for feedback, replaying from Ashgate, or returning to the title screen.
 - Exact build identifiers on title and pause screens for reproducible playtest reports.
+- Visible checkpoint age on the title screen so returning testers can recognize stale local progress.
 - Silent local checkpoints after confirmed contracts, route departures, event choices, encounter steps, interventions, and settlement services.
 - Brief non-blocking checkpoint notices that confirm autosave without replacing gameplay explanations.
 - Full simulation-level save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.

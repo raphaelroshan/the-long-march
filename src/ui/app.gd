@@ -922,6 +922,8 @@ func _saved_run_info() -> Dictionary:
 	var hull := int(parsed.get("hull_condition", 0))
 	var heat := int(parsed.get("heat", 0))
 	var saved_build := String(parsed.get("build_version", "earlier build"))
+	var saved_at_unix := int(parsed.get("saved_at_unix", FileAccess.get_modified_time(SAVE_PATH)))
+	var save_age := _save_age_label(saved_at_unix)
 	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
 	return {
 		"exists": true,
@@ -933,8 +935,22 @@ func _saved_run_info() -> Dictionary:
 		"condition": condition,
 		"action": "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
-		"summary": "Checkpoint · %s · %s · %d/5 · Fuel %d · Hull %d/10 · Heat %d/%d" % [condition.capitalize(), phase, encounters, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
+		"summary": "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT]
 	}
+
+func _save_age_label(saved_at_unix: int) -> String:
+	if saved_at_unix <= 0:
+		return "Saved earlier"
+	var age_seconds := maxi(0, int(Time.get_unix_time_from_system()) - saved_at_unix)
+	if age_seconds < 60:
+		return "Saved just now"
+	if age_seconds < 3600:
+		return "Saved %d min ago" % maxi(1, int(age_seconds / 60))
+	if age_seconds < 86400:
+		return "Saved %d hr ago" % maxi(1, int(age_seconds / 3600))
+	if age_seconds < 2592000:
+		return "Saved %d d ago" % maxi(1, int(age_seconds / 86400))
+	return "Saved earlier"
 
 func _empty_save_summary() -> String:
 	return "No saved march · Progress checkpoints after committed decisions." if autosave_enabled else "No saved march · Use Save March from the pause menu."
