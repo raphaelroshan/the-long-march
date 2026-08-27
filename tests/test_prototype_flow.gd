@@ -54,6 +54,8 @@ func _advance_until_phase(expected_phase: String) -> void:
 		if game.state.encounter_active and not game.state.encounter_intervention_used:
 			game.intervention_buttons[0].pressed.emit()
 			await process_frame
+			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.advance_encounter_button, "spending the emergency order should remove disabled interventions from controller navigation")
+			_expect(game.advance_encounter_button.has_focus(), "spending an emergency order should return focus to encounter advancement")
 	for _step in range(8):
 		if game.state.phase == expected_phase:
 			return
@@ -181,6 +183,8 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	_expect(game.combat_panel.step_labels[0].text == "NEXT · 1" and game.advance_encounter_button.text.contains("STEP 1 OF 6"), "combat controls should identify the exact next timeline step")
 	_expect(game.combat_panel.enemy_states[0].text.contains("2 STEPS OUT") and game.guidance_label.text.contains("2 steps out"), "approaching enemies should use a live countdown before contact")
+	_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.intervention_buttons[0] and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.advance_encounter_button, "combat actions should form a visible vertical controller loop")
+	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_next) == game.advance_encounter_button, "combat Tab navigation should remain inside the active command set")
 	game.advance_encounter_button.pressed.emit()
 	await process_frame
 	_expect(game.combat_panel.enemy_states[0].text.contains("1 STEP OUT") and game.advance_encounter_button.text.contains("STEP 2 OF 6"), "the arrival countdown and advance action should update after each step")

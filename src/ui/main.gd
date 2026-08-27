@@ -216,6 +216,15 @@ func _configure_focus_cycle(controls: Array) -> void:
 		control.focus_previous = control.get_path_to(previous)
 		control.focus_next = control.get_path_to(next)
 
+func _configure_vertical_focus_cycle(controls: Array) -> void:
+	_configure_focus_cycle(controls)
+	for index in range(controls.size()):
+		var control: Control = controls[index]
+		var previous: Control = controls[(index - 1 + controls.size()) % controls.size()]
+		var next: Control = controls[(index + 1) % controls.size()]
+		control.focus_neighbor_top = control.get_path_to(previous)
+		control.focus_neighbor_bottom = control.get_path_to(next)
+
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	var heading := Label.new()
 	heading.text = "RUN FLOW"
@@ -1701,6 +1710,13 @@ func _refresh_ui() -> void:
 		intervention_buttons[index].disabled = not state.encounter_active or state.encounter_intervention_used or (index == 1 and selected_installed.is_empty())
 	if intervention_buttons.size() >= 4:
 		intervention_buttons[1].text = "Seal %s · protected / offline" % (String(selected_definition.get("name", "selected")) if not selected_installed.is_empty() else "selected module")
+	if is_battle_phase:
+		var combat_actions: Array = [advance_encounter_button]
+		for intervention_button in intervention_buttons:
+			if not intervention_button.disabled:
+				combat_actions.append(intervention_button)
+		combat_actions.append(how_to_play_button)
+		_configure_vertical_focus_cycle(combat_actions)
 	settlement_group.visible = state.phase == "settlement"
 	settlement_title.visible = state.phase == "settlement"
 	settlement_repair_button.visible = state.phase == "settlement"
