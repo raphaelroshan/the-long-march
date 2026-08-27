@@ -194,6 +194,7 @@ func configure(view: Dictionary) -> void:
 	selected_node = String(view.get("selected_node", ""))
 	current_previews = view.get("previews", {}).duplicate(true)
 	var can_depart := bool(view.get("can_depart", false))
+	var departure_block_reason := String(view.get("departure_block_reason", ""))
 	var show_commit := bool(view.get("show_commit", true))
 	interaction_is_blocked = bool(view.get("interaction_blocked", false))
 	node_statuses.clear()
@@ -221,7 +222,7 @@ func configure(view: Dictionary) -> void:
 		elif status == "blocked":
 			state_text = "Decision required"
 		button.text = "%s\n%s" % [String(SHORT_NAMES.get(node_id, node_id)), state_text]
-		button.disabled = status not in ["available", "selected"] or not can_depart or interaction_is_blocked
+		button.disabled = status not in ["available", "selected"] or interaction_is_blocked
 		if status in ["available", "selected"]:
 			button.tooltip_text = _preview_tooltip(current_previews.get(node_id, {}))
 		elif status == "closed":
@@ -236,11 +237,15 @@ func configure(view: Dictionary) -> void:
 			button.tooltip_text = "This node is visible on the regional chart but is not yet reachable."
 		_apply_button_style(button, status)
 	commit_button.visible = show_commit and not interaction_is_blocked
-	commit_button.disabled = selected_node.is_empty() or selected_node not in available_nodes or not can_depart or interaction_is_blocked
+	commit_button.disabled = selected_node.is_empty() or selected_node not in available_nodes or not can_depart or not departure_block_reason.is_empty() or interaction_is_blocked
 	if not selected_node.is_empty() and selected_node in available_nodes:
 		var selected_preview: Dictionary = current_previews.get(selected_node, {})
-		commit_button.text = "COMMIT · %s\n%d day(s) · %d fuel · %.0f%% risk · pressure +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0))]
-		commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
+		if not departure_block_reason.is_empty() or not can_depart:
+			commit_button.text = "DEPARTURE BLOCKED\n%s" % (departure_block_reason.to_upper() if not departure_block_reason.is_empty() else "FORTRESS NOT READY")
+			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
+		else:
+			commit_button.text = "COMMIT · %s\n%d day(s) · %d fuel · %.0f%% risk · pressure +%d" % [String(SHORT_NAMES.get(selected_node, selected_node)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0))]
+			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter."
 		_show_node_detail(selected_node)
 	elif not available_nodes.is_empty():
 		commit_button.text = "Select a route to continue"

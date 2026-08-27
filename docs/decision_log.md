@@ -118,6 +118,8 @@ The alpha presents the entire regional route graph instead of reducing each choi
 
 Route selection and departure are separate actions. Selecting a node highlights the road and preserves the current state while the player reviews time, fuel, risk, pressure, visibility, and doctrine. A dedicated commit control begins travel, preventing accidental departures and making controller navigation predictable.
 
+Route inspection remains available when the fortress cannot move. The selected route, desk order, detail copy, and disabled Commit control all state the exact fuel shortfall or fuel-connected-engine requirement. This keeps “learn about the road” separate from “pay its cost and leave,” making recovery failures diagnosable instead of turning the map inert.
+
 ## 2026-08-27 — Combat presents causes before spectacle
 
 The alpha battle view uses enemy cards, arrival timing, target labels, counters, a six-step timeline, and the latest causal report lines. Targeted modules receive a visible chassis outline and every module shows durability. Emergency orders state both their benefit and cost. Animation and effects should reinforce this information later rather than replace it.

@@ -1143,6 +1143,17 @@ func _selected_installed_module() -> Dictionary:
 		return {}
 	return state.module_at(selected_module_cell)
 
+func _campaign_departure_block_reason(node_id: String) -> String:
+	if node_id.is_empty():
+		return ""
+	if not (state.operational("steam_lance_engine") or state.operational("ash_runner_engine")):
+		return "Restore a fuel-connected engine"
+	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+	var fuel_required := int(preview.get("fuel", 0))
+	if state.fuel < fuel_required:
+		return "Need %d fuel · %d available" % [fuel_required, state.fuel]
+	return ""
+
 func _on_grid_cell_pressed(cell: Vector2i) -> void:
 	var clicked := state.module_at(cell)
 	if not clicked.is_empty():
@@ -1409,6 +1420,7 @@ func _refresh_campaign_controls() -> void:
 	var previews := {}
 	for node_id in options:
 		previews[node_id] = state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+	var departure_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 	var outgoing_nodes: Array[String] = []
 	var closed_nodes: Array[String] = []
 	for raw_node_id in LongMarchState.CAMPAIGN_EDGES.get(state.current_location, []):
@@ -1426,6 +1438,7 @@ func _refresh_campaign_controls() -> void:
 		"selected_node": selected_campaign_node_id,
 		"previews": previews,
 		"can_depart": phase_can_depart,
+		"departure_block_reason": departure_block_reason,
 		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})
@@ -1554,7 +1567,8 @@ func _refresh_ui() -> void:
 			route_preview_label.text = "The first map branches are visible after the Ashgate contract is answered."
 		elif not selected_campaign_node_id.is_empty():
 			var selected_preview := state.campaign_node_preview(selected_campaign_node_id, _selected_id(doctrine_option))
-			route_preview_label.text = "Selected %s — %d day(s), %d fuel, %.0f%% risk, pressure +%d. Commit on the map when ready." % [String(selected_preview.get("name", selected_campaign_node_id)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0))]
+			var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
+			route_preview_label.text = "Selected %s — %d day(s), %d fuel, %.0f%% risk, pressure +%d.%s" % [String(selected_preview.get("name", selected_campaign_node_id)), int(selected_preview.get("days", 0)), int(selected_preview.get("fuel", 0)), float(selected_preview.get("risk", 0.0)) * 100.0, int(selected_preview.get("pressure_gain", 0)), " Departure blocked: %s." % block_reason if not block_reason.is_empty() else " Commit on the map when ready."]
 		else:
 			route_preview_label.text = "Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals."
 	elif state.phase == "refit":
@@ -1600,7 +1614,9 @@ func _refresh_ui() -> void:
 		var last_consequence := state.encounter_report[-1] if not state.encounter_report.is_empty() else "The road is clear."
 		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step(s)\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, String(last_consequence)]
 	else:
-		var waiting_instruction := "Answer the Ashgate convoy contract to open the first roads." if state.guard_contract_status == "offered" else ("Select a cyan route and review its costs." if selected_campaign_node_id.is_empty() else "Review the selected route, then commit when ready.")
+		var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
+		var selected_instruction := "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review the selected route, then commit when ready."
+		var waiting_instruction := "Answer the Ashgate convoy contract to open the first roads." if state.guard_contract_status == "offered" else ("Select a cyan route and review its costs." if selected_campaign_node_id.is_empty() else selected_instruction)
 		encounter_label.text = "NO ENCOUNTER UNDERWAY\n%s" % waiting_instruction
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
@@ -1656,6 +1672,9 @@ func _current_guidance() -> String:
 		return "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
 	if not selected_campaign_node_id.is_empty():
 		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
+		var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
+		if not block_reason.is_empty():
+			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again." % block_reason
 		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit." % node_name
 	if state.phase == "settlement":
 		return "RECOVERY · %d service action(s) remain. Repair or refuel, refit freely, then choose the next road." % state.settlement_actions_remaining

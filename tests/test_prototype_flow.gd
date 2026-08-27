@@ -109,6 +109,17 @@ func _run() -> void:
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
 	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
+	var available_fuel: int = game.state.fuel
+	game.state.fuel = 0
+	game._refresh_ui()
+	_expect(not game.campaign_map.button_for("rill_crossing").disabled, "a blocked fortress should still be able to inspect an available route")
+	game.campaign_map.button_for("rill_crossing").pressed.emit()
+	await process_frame
+	_expect(game.campaign_map.commit_button.disabled and game.campaign_map.commit_button.text.contains("NEED 1 FUEL"), "route commitment should explain an exact fuel shortfall")
+	_expect(game.guidance_label.text.begins_with("DEPARTURE BLOCKED"), "the current order should explain why the selected route cannot begin")
+	game.state.fuel = available_fuel
+	game.selected_campaign_node_id = ""
+	game._refresh_ui()
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
 	_expect(game.campaign_map.detail_label.text.contains("Known route"), "keyboard or controller focus should expose the same route detail as mouse hover")
