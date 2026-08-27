@@ -1711,6 +1711,7 @@ func _on_play_again_pressed() -> void:
 	fortress_panel.state = state
 	_set_event("A new Ashgate march is ready. Answer the contract, inspect the chassis, and choose the first road.")
 	_journal_event("run_restarted_from_results")
+	_checkpoint("new_run_started")
 	_refresh_ui()
 	focus_current_action.call_deferred()
 

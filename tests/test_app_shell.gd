@@ -288,6 +288,19 @@ func _run() -> void:
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
 		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should collapse cleanly after the last one-shot action is consumed")
 
+	app._open_stage(false, false)
+	await process_frame
+	await process_frame
+	app.game_view.state.phase = "results"
+	app.game_view.state.final_result = "scarred_march"
+	app.game_view.state.run_complete = true
+	app.game_view._refresh_ui()
+	app.game_view.play_again_button.pressed.emit()
+	await process_frame
+	var replay_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	_expect(app.last_checkpoint_reason == "new_run_started", "the application shell should identify the replay checkpoint")
+	_expect(replay_payload is Dictionary and String(replay_payload.get("phase", "")) == "refit" and String(replay_payload.get("guard_contract_status", "")) == "offered", "Play Again should replace a completed autosave with the fresh Ashgate state immediately")
+
 	_remove_local_test_files()
 	if failures.is_empty():
 		print("PASS: The Long March application shell")

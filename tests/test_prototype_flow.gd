@@ -3,6 +3,7 @@ extends SceneTree
 var game: Control
 var failures: Array[String] = []
 var return_to_title_requested: bool = false
+var last_checkpoint_reason: String = ""
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -10,6 +11,9 @@ func _expect(condition: bool, message: String) -> void:
 
 func _mark_return_to_title_requested() -> void:
 	return_to_title_requested = true
+
+func _record_checkpoint(reason: String) -> void:
+	last_checkpoint_reason = reason
 
 func _module_picker_index(module_id: String) -> int:
 	for index in range(game.module_option.item_count):
@@ -74,6 +78,7 @@ func _run() -> void:
 			DirAccess.remove_absolute(path)
 	game = load("res://scenes/Main.tscn").instantiate()
 	game.return_to_title_requested.connect(_mark_return_to_title_requested)
+	game.checkpoint_reached.connect(_record_checkpoint)
 	root.add_child(game)
 	await process_frame
 	await process_frame
@@ -464,6 +469,7 @@ func _run() -> void:
 	game.play_again_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.contract_accept_button.has_focus(), "Play Again should create a fresh focused Ashgate stage")
+	_expect(last_checkpoint_reason == "new_run_started", "Play Again should request a fresh checkpoint instead of leaving Continue on the completed result")
 	for path in [save_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)

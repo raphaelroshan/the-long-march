@@ -19,6 +19,7 @@ const CHECKPOINT_LABELS := {
 	"encounter_advanced": "Battle step",
 	"settlement_service": "Recovery action",
 	"intervention_used": "Emergency order",
+	"new_run_started": "New march",
 	"manual save": "Manual save",
 	"loaded save": "Loaded save"
 }

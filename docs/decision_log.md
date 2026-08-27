@@ -86,6 +86,8 @@ The prototype records a small local journal of gameplay decisions and outcomes. 
 
 The result screen explains its classification before asking for feedback. A Scarred March names each missed decisive threshold—hull, surviving final contacts, or contract failure—while failure identifies hull loss or loss of operational movement. A short next-run prompt turns the result into a testable strategy without claiming there is one correct build.
 
+Choosing `Play Again` from results immediately creates a fresh Ashgate checkpoint when autosave is enabled. A crash or return to title before the next contract choice can therefore resume the new attempt instead of reopening the completed debrief the player explicitly left behind.
+
 The debrief card retains a compact run record beside that explanation: the complete secured path, final closure pressure, contract state, specialist, and ready/strained/offline system counts. These facts remain readable next to the replay prompt instead of requiring the tester to reconstruct the run from separate status regions or the raw log.
 
 A failed final road distinguishes secured progress from the place where the fortress stopped. Its summary identifies hull collapse, a destroyed engine, or the engine dependency that went offline; its replay prompt then recommends a matching hull or movement experiment. Failure guidance must follow the recorded cause rather than repeat a generic build tip.
