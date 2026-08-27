@@ -210,6 +210,9 @@ func _run() -> void:
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("FULL DURABILITY"), "a fully repaired selected module should not present a dead-end repair action")
 	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
+	_expect(game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) == game.how_to_play_button, "settlement Tab navigation should skip the unavailable repair action and wrap through visible controls")
+	var recovery_next := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_next) as BaseButton
+	_expect(recovery_next != null and not recovery_next.disabled, "settlement navigation should lead only to an enabled recovery or route action")
 	var saved_pressure: int = game.state.campaign_pressure
 	game.state.campaign_pressure = 5
 	game._refresh_ui()

@@ -225,6 +225,22 @@ func _configure_vertical_focus_cycle(controls: Array) -> void:
 		control.focus_neighbor_top = control.get_path_to(previous)
 		control.focus_neighbor_bottom = control.get_path_to(next)
 
+func _refresh_settlement_focus() -> void:
+	if state.phase != "settlement":
+		return
+	var active_controls: Array = []
+	if not selected_campaign_node_id.is_empty() and not campaign_commit_button.disabled:
+		active_controls.append(campaign_commit_button)
+	for service_button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
+		if service_button.visible and not service_button.disabled:
+			active_controls.append(service_button)
+	if selected_campaign_node_id.is_empty():
+		for node_button in campaign_node_buttons:
+			if node_button.visible and not node_button.disabled:
+				active_controls.append(node_button)
+	active_controls.append(how_to_play_button)
+	_configure_vertical_focus_cycle(active_controls)
+
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	var heading := Label.new()
 	heading.text = "RUN FLOW"
@@ -1744,6 +1760,7 @@ func _refresh_ui() -> void:
 	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +2 HULL · 10 ASHMARKS"
 	settlement_hull_button.disabled = not services_open or state.hull_condition >= 10 or state.money < 10
 	final_journey_button.disabled = state.phase != "settlement"
+	_refresh_settlement_focus()
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
 	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:
 		if not state.campaign_event_pending.is_empty():
