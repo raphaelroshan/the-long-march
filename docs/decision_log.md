@@ -515,3 +515,7 @@ Removing a module now asks the player to choose an empty chassis cell rather tha
 ## 2026-08-28 — A fresh run explains its first checkpoint
 
 Before the player commits any decision, the pause menu now states that there is no decision checkpoint yet and names both ways forward: commit a choice for the automatic checkpoint or use Save March immediately. This preserves the deliberate committed-decision autosave boundary without leaving a new player to interpret a bare unsaved warning.
+
+## 2026-08-28 — The pause shortcut reflects nested controls
+
+The persistent Pause action no longer advertises B or Escape while those inputs belong to chassis inspection or an open route review. Its visible state and tooltip explain which nested interaction will close first; once that interaction ends, the normal pause shortcut returns. The button itself remains an immediate pointer-accessible route to Pause in every state.

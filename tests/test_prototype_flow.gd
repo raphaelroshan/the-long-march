@@ -175,6 +175,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell and game.fortress_panel.interaction_heading().contains("EDIT MODE") and game.fortress_panel.interaction_heading().contains("MOUNTS 1/2"), "Edit Chassis should focus the selected module cell and expose current exterior-mount capacity in its mode heading")
+	_expect(game.pause_button.text.contains("CHASSIS ACTIVE") and game.pause_button.tooltip_text.contains("leaves chassis inspection first"), "the persistent pause action should not claim that B or Escape pauses while chassis controls own cancel")
 	_expect(game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "entering chassis edit mode should reveal the complete grid")
 	_expect(game.fortress_panel.placement_status_text().begins_with("SELECTED") and game.fortress_panel.placement_status_text().contains("STEAM LANCE ENGINE"), "the chassis should identify the selected module under its cursor")
 	var chassis_right := InputEventAction.new()
@@ -196,6 +197,7 @@ func _run() -> void:
 	game.fortress_panel._gui_input(chassis_cancel)
 	await process_frame
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
+	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
 	_expect(game.campaign_commit_button.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_button.get_index() == game.campaign_map.get_index() + 1, "route commitment should remain directly below the map it confirms")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
@@ -222,12 +224,14 @@ func _run() -> void:
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
 	_expect(game.encounter_label.text.contains("Rill Crossing selected"), "the route-review status should name the road being considered")
 	_expect(game.route_preview_label.text.contains("ROUTE READY · RILL CROSSING") and not game.route_preview_label.text.contains("SOOT ORCHARD"), "route selection should replace stale focus intel with the road being committed")
+	_expect(game.pause_button.text.contains("ROUTE REVIEW") and game.pause_button.tooltip_text.contains("clears the selected route first"), "the persistent pause action should disclose that B or Escape cancels route review before pausing")
 	var route_cancel := InputEventJoypadButton.new()
 	route_cancel.button_index = JOY_BUTTON_B
 	route_cancel.pressed = true
 	game._unhandled_input(route_cancel)
 	await process_frame
 	_expect(game.selected_campaign_node_id.is_empty() and game.campaign_map.button_for("rill_crossing").has_focus() and game.encounter_label.text.begins_with("ROUTE PLANNING"), "controller cancel should leave route preview without departing and restore route focus")
+	_expect(game.pause_button.text.contains("ESC / B"), "cancelling route review should restore the ordinary pause shortcut hint")
 	game.doctrine_option.select(0)
 	game.doctrine_option.item_selected.emit(0)
 	game._refresh_ui()

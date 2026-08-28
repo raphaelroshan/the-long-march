@@ -778,7 +778,7 @@ func _build_checkpoint_toast() -> void:
 	checkpoint_toast = PanelContainer.new()
 	checkpoint_toast.name = "CheckpointToast"
 	checkpoint_toast.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	checkpoint_toast.position = Vector2(350, 22)
+	checkpoint_toast.position = Vector2(320, 22)
 	checkpoint_toast.size = Vector2(318, 54)
 	checkpoint_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	checkpoint_toast.visible = false

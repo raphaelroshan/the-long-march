@@ -388,7 +388,7 @@ func _build_ui() -> void:
 	header.add_child(title)
 	pause_button = Button.new()
 	pause_button.text = "PAUSE · ESC / B"
-	pause_button.custom_minimum_size = Vector2(150, 42)
+	pause_button.custom_minimum_size = Vector2(190, 42)
 	pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
 	header.add_child(pause_button)
@@ -451,6 +451,8 @@ func _build_ui() -> void:
 	fortress_panel.remove_requested.connect(_on_remove_pressed)
 	fortress_panel.focus_exit_requested.connect(_on_fortress_focus_exit_requested)
 	fortress_panel.focus_entered.connect(_scroll_chassis_into_view)
+	fortress_panel.focus_entered.connect(_refresh_pause_action_hint)
+	fortress_panel.focus_exited.connect(func() -> void: _refresh_pause_action_hint.call_deferred())
 	left.add_child(fortress_panel)
 
 	event_label = Label.new()
@@ -1442,6 +1444,17 @@ func _on_fortress_focus_exit_requested() -> void:
 	elif _control_can_receive_focus(focus_chassis_button):
 		_focus_control(focus_chassis_button)
 
+func _refresh_pause_action_hint() -> void:
+	if fortress_panel != null and fortress_panel.has_focus():
+		pause_button.text = "PAUSE · CHASSIS ACTIVE"
+		pause_button.tooltip_text = "Pause with this button. B or Escape leaves chassis inspection first."
+	elif not selected_campaign_node_id.is_empty():
+		pause_button.text = "PAUSE · ROUTE REVIEW"
+		pause_button.tooltip_text = "Pause with this button. B or Escape clears the selected route first."
+	else:
+		pause_button.text = "PAUSE · ESC / B"
+		pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
+
 func _scroll_chassis_into_view() -> void:
 	await get_tree().process_frame
 	if not fortress_panel.has_focus() or left_scroll == null or not left_scroll.is_ancestor_of(fortress_panel):
@@ -1996,6 +2009,7 @@ func _refresh_ui() -> void:
 		results_record_label.text = _result_record_text()
 		results_replay_label.text = _result_replay_text()
 	guidance_label.text = _current_guidance()
+	_refresh_pause_action_hint()
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
 	refit_title.visible = is_refit_phase
 	module_group.visible = is_refit_phase
