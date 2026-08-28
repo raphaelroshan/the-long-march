@@ -6,6 +6,7 @@ signal application_quit_requested
 const GAME_SCENE = preload("res://scenes/Main.tscn")
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const CampaignProgress = preload("res://src/support/campaign_progress.gd")
+const InterfaceAudio = preload("res://src/support/interface_audio.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
@@ -54,6 +55,7 @@ var settings_close_button: Button
 var display_mode_button: Button
 var text_scale_button: Button
 var motion_button: Button
+var interface_audio_button: Button
 var autosave_button: Button
 var reset_briefing_button: Button
 var reset_charter_button: Button
@@ -93,12 +95,14 @@ var close_request_process_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
 var fullscreen_enabled: bool = false
 var text_scale_percent: int = 100
 var reduced_motion: bool = false
+var interface_audio_percent: int = InterfaceAudio.DEFAULT_VOLUME_PERCENT
 var autosave_enabled: bool = true
 var settings_opened_from_pause: bool = false
 var last_checkpoint_reason: String = ""
 var checkpoint_toast_tween: Tween
 var campaign_progress: CampaignProgress
 var campaign_progress_error: String = ""
+var interface_audio: LongMarchInterfaceAudio
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -132,6 +136,10 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().auto_accept_quit = false
 	_load_preferences()
+	interface_audio = InterfaceAudio.new()
+	interface_audio.name = "InterfaceAudio"
+	add_child(interface_audio)
+	interface_audio.set_volume_percent(interface_audio_percent)
 	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
 	var progress_result := campaign_progress.load_progress()
 	if not bool(progress_result.get("ok", false)):
@@ -144,6 +152,7 @@ func _ready() -> void:
 	_build_pause_menu()
 	_build_confirmation_overlay()
 	_build_checkpoint_toast()
+	interface_audio.register_root(self)
 	_apply_text_scale()
 	_configure_overlay_focus()
 	_refresh_title_state()
@@ -402,8 +411,10 @@ func _configure_overlay_focus() -> void:
 	text_scale_button.focus_neighbor_top = text_scale_button.get_path_to(display_mode_button)
 	text_scale_button.focus_neighbor_bottom = text_scale_button.get_path_to(motion_button)
 	motion_button.focus_neighbor_top = motion_button.get_path_to(text_scale_button)
-	motion_button.focus_neighbor_bottom = motion_button.get_path_to(autosave_button)
-	autosave_button.focus_neighbor_top = autosave_button.get_path_to(motion_button)
+	motion_button.focus_neighbor_bottom = motion_button.get_path_to(interface_audio_button)
+	interface_audio_button.focus_neighbor_top = interface_audio_button.get_path_to(motion_button)
+	interface_audio_button.focus_neighbor_bottom = interface_audio_button.get_path_to(autosave_button)
+	autosave_button.focus_neighbor_top = autosave_button.get_path_to(interface_audio_button)
 	resume_button.focus_neighbor_bottom = resume_button.get_path_to(pause_save_button)
 	pause_save_button.focus_neighbor_top = pause_save_button.get_path_to(resume_button)
 	pause_save_button.focus_neighbor_right = pause_save_button.get_path_to(save_return_button)
@@ -627,7 +638,7 @@ func _build_settings_overlay() -> void:
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var intro := Label.new()
-	intro.text = "Adjust display, accessibility, save behavior, and the guided briefing. These preferences stay on this device."
+	intro.text = "Adjust display, accessibility, interface audio, save behavior, and the guided briefing. These preferences stay on this device."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.custom_minimum_size = Vector2(550, 36)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
@@ -647,6 +658,8 @@ func _build_settings_overlay() -> void:
 	display_mode_button = _settings_action(settings_actions, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	text_scale_button = _settings_action(settings_actions, "TEXT SIZE", "Increase interface text while preserving the complete 1280×720 decision layout.", _toggle_text_scale)
 	motion_button = _settings_action(settings_actions, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
+	interface_audio_button = _settings_action(settings_actions, "INTERFACE AUDIO", "Cycle restrained focus, confirmation, warning, and checkpoint cue volume.", _cycle_interface_audio)
+	interface_audio_button.set_meta("long_march_audio_manual_press", true)
 	autosave_button = _settings_action(settings_actions, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
 	reset_briefing_button = _settings_action(settings_actions, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
 	reset_charter_button = _settings_action(settings_actions, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
@@ -893,6 +906,7 @@ func _load_preferences() -> void:
 	fullscreen_enabled = false
 	text_scale_percent = 100
 	reduced_motion = false
+	interface_audio_percent = InterfaceAudio.DEFAULT_VOLUME_PERCENT
 	autosave_enabled = true
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
@@ -900,6 +914,8 @@ func _load_preferences() -> void:
 		var stored_scale := int(config.get_value("accessibility", "text_scale_percent", 100))
 		text_scale_percent = stored_scale if stored_scale in [100, 110] else 100
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
+		var stored_audio := int(config.get_value("audio", "interface_percent", InterfaceAudio.DEFAULT_VOLUME_PERCENT))
+		interface_audio_percent = stored_audio if stored_audio in InterfaceAudio.VOLUME_LEVELS else InterfaceAudio.DEFAULT_VOLUME_PERCENT
 		autosave_enabled = bool(config.get_value("gameplay", "autosave_enabled", true))
 
 func _build_version() -> String:
@@ -910,6 +926,7 @@ func _save_preferences() -> void:
 	config.set_value("display", "fullscreen", fullscreen_enabled)
 	config.set_value("accessibility", "text_scale_percent", text_scale_percent)
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
+	config.set_value("audio", "interface_percent", interface_audio_percent)
 	config.set_value("gameplay", "autosave_enabled", autosave_enabled)
 	config.save(SETTINGS_PATH)
 
@@ -937,6 +954,7 @@ func _refresh_settings(message: String = "") -> void:
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen_enabled else "FULLSCREEN · OFF"
 	text_scale_button.text = "TEXT SIZE · %d%%" % text_scale_percent
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
+	interface_audio_button.text = "INTERFACE AUDIO · MUTED" if interface_audio_percent == 0 else "INTERFACE AUDIO · %d%%" % interface_audio_percent
 	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
 	reset_briefing_button.text = "RESET COMPLETED BRIEFING" if briefing_complete else "BRIEFING · ENABLED FOR NEXT RUN"
@@ -952,7 +970,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
-	var active_controls: Array = [display_mode_button, text_scale_button, motion_button, autosave_button]
+	var active_controls: Array = [display_mode_button, text_scale_button, motion_button, interface_audio_button, autosave_button]
 	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button, reset_playtest_button]:
 		if not optional_button.disabled:
 			active_controls.append(optional_button)
@@ -1005,6 +1023,19 @@ func _toggle_reduced_motion() -> void:
 	_save_preferences()
 	_refresh_settings("Reduced motion enabled." if reduced_motion else "Standard transition motion enabled.")
 	motion_button.grab_focus()
+
+func _cycle_interface_audio() -> void:
+	var current_index := InterfaceAudio.VOLUME_LEVELS.find(interface_audio_percent)
+	interface_audio_percent = InterfaceAudio.VOLUME_LEVELS[(current_index + 1) % InterfaceAudio.VOLUME_LEVELS.size()]
+	interface_audio.set_volume_percent(interface_audio_percent)
+	_save_preferences()
+	if interface_audio_percent == 0:
+		_refresh_settings("Interface audio muted. Visual focus, warnings, and receipts remain unchanged.")
+	else:
+		_refresh_settings("Interface audio set to %d%%. This affects menu and command cues only." % interface_audio_percent)
+		interface_audio.play_notice()
+	interface_audio_button.grab_focus()
+	call_deferred("_ensure_settings_control_visible", interface_audio_button)
 
 func _toggle_autosave() -> void:
 	autosave_enabled = not autosave_enabled
@@ -1295,6 +1326,7 @@ func _reset_playtest_data() -> Dictionary:
 	_load_preferences()
 	_apply_display_mode()
 	_apply_text_scale()
+	interface_audio.set_volume_percent(interface_audio_percent)
 	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
 	var progress_result := campaign_progress.load_progress()
 	campaign_progress_error = "" if bool(progress_result.get("ok", false)) else String(progress_result.get("reason", "regional record could not be read"))
@@ -1499,6 +1531,7 @@ func _show_checkpoint_toast(reason: String) -> void:
 	checkpoint_toast_label.text = "CHECKPOINT SAVED · %s" % _checkpoint_label(reason).to_upper()
 	checkpoint_toast.modulate = Color.WHITE
 	checkpoint_toast.visible = true
+	interface_audio.play_notice()
 	checkpoint_toast_tween = create_tween()
 	checkpoint_toast_tween.tween_interval(1.6)
 	if not reduced_motion:
@@ -1677,6 +1710,7 @@ func _request_confirmation(action: String) -> void:
 	else:
 		confirmation_cancel_button.text = "KEEP PLAYING"
 	confirmation_view.visible = true
+	interface_audio.play_warning()
 	confirmation_cancel_button.grab_focus()
 
 func _cancel_confirmation() -> void:

@@ -30,6 +30,8 @@ Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file co
 
 Before handing the build to a new tester, use **Settings → Reset Playtest Data** from the title. Confirm that the guided first-run title returns. Previously exported feedback reports remain in the user-data folder and must be managed separately by the test owner.
 
+Settings also includes **Interface Audio** at Muted, 40%, 70%, or 100%. These short cues reinforce focus, activation, warnings, and saved checkpoints, but never replace visible state. Ask the tester whether the default 70% feels useful or tiring; test Muted once to confirm the complete run remains understandable without sound.
+
 ## Building locally
 
 Install Godot 4.4.1 with export templates, then run:

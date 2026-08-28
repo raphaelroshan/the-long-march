@@ -11,6 +11,7 @@ The repository contains an agent-first Godot project with:
 - A playtest-focused title flow with guided Ashgate, Flooded Veyru, chapter-aware Continue, and a concise run guide.
 - A session-safe pause menu with live run status, Save, Save & Return, field briefing, context-aware local playtest notes with a copyable export path, settings, and confirmation before discarding progress.
 - A persistent 100%/110% text-size preference with scroll-safe Settings and responsive title spacing at 1280×720.
+- Restrained focus, confirmation, warning, and checkpoint cues with a persistent mute/volume setting; every cue retains a visible equivalent.
 - A title-only clean-playtest reset that restores first-launch state while preserving tester-exported feedback reports.
 - A visible in-stage Pause action alongside Esc/controller-B shortcuts, keeping session controls discoverable for every input method.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.

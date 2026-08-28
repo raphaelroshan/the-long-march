@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.243`; Feeds A through N are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.244`; Feeds A through O are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -89,6 +89,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.243` through the copyable local report path.
 
 > After a successful local feedback export, expose its complete path through a controller-accessible action and visible copy receipt. Restore it while the file exists, remove stale actions safely, and preserve the explicit no-upload boundary. Do not open external applications or add automatic sharing.
+
+### Current Feed O — interface audio feedback
+
+**Status:** Complete in `0.3.0-alpha.244` through generated local interface cues and bounded volume control.
+
+> Add restrained focus, activation, warning, and checkpoint audio cues across the title, overlays, and dynamically created stage controls. Provide a persistent Muted/40%/70%/100% setting, keep every cue paired with existing visual feedback, and verify clean reset. Do not imply that music, ambience, combat sound, or final mixing is complete.
 
 ## Historical prototype feed sequence
 

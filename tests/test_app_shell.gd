@@ -30,16 +30,19 @@ func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	var persisted_scale_config := ConfigFile.new()
 	persisted_scale_config.set_value("accessibility", "text_scale_percent", 110)
+	persisted_scale_config.set_value("audio", "interface_percent", 40)
 	persisted_scale_config.save(SETTINGS_PATH)
 	var restored_scale_app = load("res://scenes/App.tscn").instantiate()
 	root.add_child(restored_scale_app)
 	await process_frame
 	await process_frame
 	_expect(restored_scale_app.text_scale_percent == 110 and restored_scale_app.theme.default_font_size == 18 and not restored_scale_app.title_control_contract_label.visible and not restored_scale_app.title_right_spacer.visible, "a new application shell should restore and apply the persisted large-text layout")
+	_expect(restored_scale_app.interface_audio_percent == 40 and restored_scale_app.interface_audio.volume_percent == 40, "a new application shell should restore the local interface-audio level")
 	restored_scale_app.queue_free()
 	await process_frame
 	var invalid_scale_config := ConfigFile.new()
 	invalid_scale_config.set_value("accessibility", "text_scale_percent", 175)
+	invalid_scale_config.set_value("audio", "interface_percent", 135)
 	invalid_scale_config.save(SETTINGS_PATH)
 	app = load("res://scenes/App.tscn").instantiate()
 	var quit_probe := {"count": 0}
@@ -104,9 +107,11 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
 	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
-	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, and save consequences without requiring mouse-only tooltips")
+	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Cycle restrained focus") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, audio, and save consequences without requiring mouse-only tooltips")
 	_expect(app.text_scale_button.text == "TEXT SIZE · 100%" and app.theme.default_font_size == 16, "Settings should safely normalize an unsupported stored text size to the standard interface size")
+	_expect(app.interface_audio_percent == 70 and app.interface_audio_button.text == "INTERFACE AUDIO · 70%", "Settings should safely normalize an unsupported stored audio level to the comfortable default")
 	_expect(app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_bottom) == app.text_scale_button and app.text_scale_button.get_node_or_null(app.text_scale_button.focus_neighbor_bottom) == app.motion_button, "controller navigation should place text size between display mode and motion")
+	_expect(app.motion_button.get_node_or_null(app.motion_button.focus_neighbor_bottom) == app.interface_audio_button and app.interface_audio_button.get_node_or_null(app.interface_audio_button.focus_neighbor_bottom) == app.autosave_button, "controller navigation should place interface audio between motion and save behavior")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "Settings navigation should retain the available clean-start action while skipping unavailable category resets")
 	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
 	app.text_scale_button.pressed.emit()
@@ -135,6 +140,20 @@ func _run() -> void:
 	app.motion_button.pressed.emit()
 	await process_frame
 	_expect(app.reduced_motion and FileAccess.file_exists(ProjectSettings.globalize_path(SETTINGS_PATH)), "reduced motion should persist as a local preference")
+	app.interface_audio_button.pressed.emit()
+	await process_frame
+	var audio_config := ConfigFile.new()
+	audio_config.load(SETTINGS_PATH)
+	_expect(app.interface_audio_percent == 100 and app.interface_audio.volume_percent == 100 and int(audio_config.get_value("audio", "interface_percent", -1)) == 100, "interface-audio changes should apply immediately and persist locally")
+	app.interface_audio_button.pressed.emit()
+	await process_frame
+	_expect(app.interface_audio_percent == 0 and app.interface_audio_button.text.contains("MUTED") and app.settings_status_label.text.contains("Visual focus"), "muting should explicitly preserve the visual interaction contract")
+	app.interface_audio_button.pressed.emit()
+	await process_frame
+	_expect(app.interface_audio_percent == 40 and app.interface_audio.last_cue_kind == "notice", "restoring audible interface feedback should preview the selected level")
+	app.interface_audio_button.pressed.emit()
+	await process_frame
+	_expect(app.interface_audio_percent == 70, "the settings cycle should return to the documented default level")
 	app.autosave_button.pressed.emit()
 	await process_frame
 	_expect(not app.autosave_enabled and app.autosave_button.text.contains("OFF"), "automatic checkpoints should be optional and visibly disabled")
@@ -161,6 +180,8 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the title should open Flooded Veyru as a separate chapter at Lantern Quay")
+	var stage_audio_callback := Callable(app.interface_audio, "_on_button_pressed").bind(app.game_view.contract_accept_button)
+	_expect(app.game_view.contract_accept_button.pressed.is_connected(stage_audio_callback), "buttons created inside the playable stage should inherit the same interface feedback as title controls")
 	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.contract_accept_button.has_focus(), "Veyru should skip the Ashgate briefing and focus its medicine decision")
 	app._request_application_close()
 	await process_frame
@@ -776,7 +797,7 @@ func _run() -> void:
 	for cleared_path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
 		_expect(not FileAccess.file_exists(cleared_path), "clean-start reset should remove %s" % cleared_path.get_file())
 	_expect(FileAccess.file_exists(FEEDBACK_PRESERVE_PATH) and FileAccess.get_file_as_string(FEEDBACK_PRESERVE_PATH) == "tester-owned export", "clean-start reset should preserve previously exported playtest reports exactly")
-	_expect(not app.fullscreen_enabled and app.text_scale_percent == 100 and not app.reduced_motion and app.autosave_enabled and app.theme.default_font_size == 16, "clean-start reset should immediately restore every device preference default")
+	_expect(not app.fullscreen_enabled and app.text_scale_percent == 100 and not app.reduced_motion and app.interface_audio_percent == 70 and app.interface_audio.volume_percent == 70 and app.autosave_enabled and app.theme.default_font_size == 16, "clean-start reset should immediately restore every device preference default")
 	_expect(app.campaign_progress.developments.is_empty() and app.campaign_progress.region_results.is_empty() and app.title_charter_label.text.contains("0/2 REGIONS SURVIVED"), "clean-start reset should rebuild an empty in-memory March Charter")
 	_expect(not app.continue_button.visible and app.quick_start_button.visible and app.start_button.text.contains("GUIDED FIRST RUN"), "clean-start reset should immediately restore the first-launch title flow")
 	_expect(app.reset_playtest_button.disabled and app.settings_status_label.text.contains("Exported feedback reports were kept") and app.settings_close_button.has_focus(), "successful clean-start reset should disable itself, report preservation, and focus an enabled return action")
