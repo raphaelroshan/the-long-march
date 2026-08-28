@@ -1664,7 +1664,7 @@ func _on_remove_pressed() -> void:
 		selected_module_id = String(removed.get("id", selected_module_id))
 		placement_rotated = bool(removed.get("rotated", false))
 		selected_module_cell = Vector2i(-1, -1)
-		_set_event("Removed %s. Click an empty cell to place it again." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+		_set_event("Removed %s. Choose an empty chassis cell to place it again." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
 		_journal_event("module_stored", {"module": selected_module_id, "durability": int(removed.get("durability", 0))})
 		_checkpoint("module_stored")
 	else:
@@ -2166,7 +2166,8 @@ func _refresh_ui() -> void:
 		var departure := state.route_preview(_selected_id(route_option), _selected_id(doctrine_option))
 		if bool(departure.get("ok", false)):
 			var risk := float(departure.risk)
-			_set_route_preview("Departure forecast — %d day(s), %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [int(departure.days), int(departure.fuel), risk * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT], "safe" if risk <= 0.18 else ("warning" if risk <= 0.32 else "danger"))
+			var days := int(departure.days)
+			_set_route_preview("Departure forecast — %d day%s, %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [days, "" if days == 1 else "s", int(departure.fuel), risk * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT], "safe" if risk <= 0.18 else ("warning" if risk <= 0.32 else "danger"))
 	elif state.phase == "settlement":
 		_set_route_preview("Morrowline recovery — %s. Refit freely, then choose a doctrine for Meridian Pass." % _service_action_status_text(), "safe")
 	elif state.phase == "results":
@@ -2218,7 +2219,7 @@ func _refresh_ui() -> void:
 		encounter_label.add_theme_color_override("font_color", Color("#f0d29d"))
 	elif not state.encounter_outcome.is_empty():
 		var last_consequence := state.encounter_report[-1] if not state.encounter_report.is_empty() else "The road is clear."
-		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step(s)\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, String(last_consequence)]
+		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step%s\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, "" if state.encounter_step == 1 else "s", String(last_consequence)]
 		encounter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
 		var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)

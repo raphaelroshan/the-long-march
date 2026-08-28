@@ -507,3 +507,7 @@ Morrowline guidance and completed-service receipts derive “0 service actions r
 ## 2026-08-28 — Retreat recovery remains the current order
 
 After a non-final forced retreat, the command desk tells the player to review the exact losses and patched movement chain before refitting or choosing another road. A retreat to Morrowline also retains the remaining service budget in that instruction. Selecting a new route still advances guidance to the normal route-ready state, so the recovery explanation persists only until the player deliberately moves on.
+
+## 2026-08-28 — Shared instructions stay input-neutral and natural
+
+Removing a module now asks the player to choose an empty chassis cell rather than assuming a mouse click. Route intel and after-action reports also render real singular and plural day and step counts instead of exposing placeholder forms such as `day(s)` and `step(s)`. Tooltips, keyboard focus, and visible receipts therefore use the same natural language across input methods.

@@ -160,6 +160,15 @@ func _run() -> void:
 	game.module_option.select(engine_index)
 	game.module_option.item_selected.emit(engine_index)
 	await process_frame
+	var before_remove_copy: Dictionary = game.state.serialize()
+	game.remove_button.pressed.emit()
+	await process_frame
+	_expect(game.event_label.text.contains("Choose an empty chassis cell") and not game.event_label.text.contains("Click an empty cell"), "refit receipts should remain input-neutral after removing a module")
+	game.state.load_serialized(before_remove_copy)
+	game.selected_module_id = "steam_lance_engine"
+	game._sync_selected_module_context()
+	game._select_module_option("steam_lance_engine")
+	game._refresh_ui()
 	_expect(game.focus_chassis_button.visible and not game.focus_chassis_button.disabled, "refit should expose an explicit keyboard and controller path into the chassis")
 	_expect(game.module_option.get_node_or_null(game.module_option.focus_neighbor_bottom) == game.focus_chassis_button and game.focus_chassis_button.get_node_or_null(game.focus_chassis_button.focus_neighbor_bottom) == game.rotate_button, "planning navigation should include module selection, chassis editing, and refit actions in visible order")
 	game.focus_chassis_button.pressed.emit()
@@ -243,7 +252,7 @@ func _run() -> void:
 	game._refresh_ui()
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
-	_expect(game.route_preview_label.text.contains("ROUTE INTEL · RILL CROSSING") and game.route_preview_label.text.contains("Known route") and game.route_preview_label.text.contains("LOW risk"), "keyboard or controller focus should expose readable route intel above the map")
+	_expect(game.route_preview_label.text.contains("ROUTE INTEL · RILL CROSSING") and game.route_preview_label.text.contains("Known route") and game.route_preview_label.text.contains("1 day") and not game.route_preview_label.text.contains("day(s)") and game.route_preview_label.text.contains("LOW risk"), "keyboard or controller focus should expose naturally phrased route intel above the map")
 	_expect(game.route_preview_label.text.contains("Current risk factors: baseline 14%."), "known route intel should expose the baseline behind its displayed risk")
 	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#9fddbd"), "low-risk route intel should use the safe scan color while retaining its text label")
 	game.campaign_map.button_for("soot_orchard").grab_focus()
@@ -407,6 +416,8 @@ func _run() -> void:
 	game._refresh_ui()
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
+	var resolved_step_text := "%d step%s" % [game.state.encounter_step, "" if game.state.encounter_step == 1 else "s"]
+	_expect(game.encounter_label.text.contains("resolved in %s" % resolved_step_text) and not game.encounter_label.text.contains("step(s)"), "after-action summaries should use the actual natural singular or plural step count")
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
