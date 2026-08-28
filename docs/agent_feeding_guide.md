@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.244`; Feeds A through O are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.245`; Feeds A through P are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -95,6 +95,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.244` through generated local interface cues and bounded volume control.
 
 > Add restrained focus, activation, warning, and checkpoint audio cues across the title, overlays, and dynamically created stage controls. Provide a persistent Muted/40%/70%/100% setting, keep every cue paired with existing visual feedback, and verify clean reset. Do not imply that music, ambience, combat sound, or final mixing is complete.
+
+### Current Feed P — high-contrast interface
+
+**Status:** Complete in `0.3.0-alpha.245` through the persistent Standard/High visual contrast mode.
+
+> Add one bounded high-contrast preference that darkens image-backed surfaces, brightens muted copy, and strengthens interactive, map, and combat outlines. Preserve every written status label and symbol, restore authored colors when disabled, verify 110% text at 1280×720, and avoid claiming full accessibility certification.
 
 ## Historical prototype feed sequence
 

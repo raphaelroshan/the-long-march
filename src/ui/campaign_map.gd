@@ -1,6 +1,8 @@
 class_name CampaignMapView
 extends Control
 
+const VisualContrast = preload("res://src/support/visual_contrast.gd")
+
 signal node_selected(node_id: String)
 signal route_committed(node_id: String)
 signal node_inspected(node_id: String, detail: String)
@@ -103,6 +105,7 @@ var current_fuel: int = 0
 var current_day: int = 0
 var current_pressure: int = 0
 var commit_button: Button
+var high_contrast_enabled: bool = false
 
 func _init() -> void:
 	custom_minimum_size = MAP_SIZE
@@ -186,6 +189,10 @@ func _style(fill: Color, border: Color, border_width: int = 2) -> StyleBoxFlat:
 	style.content_margin_bottom = 4
 	return style
 
+func set_high_contrast(enabled: bool) -> void:
+	high_contrast_enabled = enabled
+	queue_redraw()
+
 func _apply_button_style(button: Button, status: String) -> void:
 	var fill := Color("#1b252b")
 	var border := Color("#536268")
@@ -223,11 +230,17 @@ func _apply_button_style(button: Button, status: String) -> void:
 			fill = Color("#403725")
 			border = Color("#d8a650")
 			text_color = Color("#f1ddb5")
-	button.add_theme_stylebox_override("normal", _style(fill, border))
-	button.add_theme_stylebox_override("disabled", _style(fill.darkened(0.12), border.darkened(0.18)))
-	button.add_theme_stylebox_override("hover", _style(fill.lightened(0.08), border.lightened(0.12), 3))
-	button.add_theme_stylebox_override("pressed", _style(fill.darkened(0.08), Color("#ffffff"), 3))
-	button.add_theme_stylebox_override("focus", _style(fill, Color("#ffffff"), 3))
+	if high_contrast_enabled:
+		fill = fill.darkened(0.38)
+		border = VisualContrast.display_color(border)
+		text_color = VisualContrast.display_color(text_color)
+	var normal_width := 3 if high_contrast_enabled else 2
+	var focus_width := 4 if high_contrast_enabled else 3
+	button.add_theme_stylebox_override("normal", _style(fill, border, normal_width))
+	button.add_theme_stylebox_override("disabled", _style(fill.darkened(0.08), border.darkened(0.10), normal_width))
+	button.add_theme_stylebox_override("hover", _style(fill.lightened(0.08), border.lightened(0.08), focus_width))
+	button.add_theme_stylebox_override("pressed", _style(fill.darkened(0.08), Color.WHITE, focus_width))
+	button.add_theme_stylebox_override("focus", _style(fill, Color.WHITE, focus_width))
 	button.add_theme_color_override("font_color", text_color)
 	button.add_theme_color_override("font_disabled_color", text_color.darkened(0.18))
 	button.add_theme_color_override("font_hover_color", text_color.lightened(0.08))
@@ -422,11 +435,16 @@ func configure(view: Dictionary) -> void:
 		elif _risk_band(risk) == "GUARDED":
 			commit_fill = Color("#4d4029")
 			commit_border = Color("#e8c58e")
-		commit_button.add_theme_stylebox_override("normal", _style(commit_fill, commit_border, 2))
-		commit_button.add_theme_stylebox_override("hover", _style(commit_fill.lightened(0.08), commit_border.lightened(0.1), 2))
-		commit_button.add_theme_stylebox_override("pressed", _style(commit_fill.darkened(0.08), Color("#ffffff"), 2))
-		commit_button.add_theme_stylebox_override("focus", _style(commit_fill, Color("#ffffff"), 3))
-		commit_button.add_theme_stylebox_override("disabled", _style(commit_fill.darkened(0.16), commit_border.darkened(0.18), 2))
+		if high_contrast_enabled:
+			commit_fill = commit_fill.darkened(0.38)
+			commit_border = VisualContrast.display_color(commit_border)
+		var commit_width := 3 if high_contrast_enabled else 2
+		var commit_focus_width := 4 if high_contrast_enabled else 3
+		commit_button.add_theme_stylebox_override("normal", _style(commit_fill, commit_border, commit_width))
+		commit_button.add_theme_stylebox_override("hover", _style(commit_fill.lightened(0.08), commit_border.lightened(0.08), commit_width))
+		commit_button.add_theme_stylebox_override("pressed", _style(commit_fill.darkened(0.08), Color.WHITE, commit_width))
+		commit_button.add_theme_stylebox_override("focus", _style(commit_fill, Color.WHITE, commit_focus_width))
+		commit_button.add_theme_stylebox_override("disabled", _style(commit_fill.darkened(0.10), commit_border.darkened(0.10), commit_width))
 		if not departure_block_reason.is_empty() or not can_depart:
 			var blocked_copy := departure_block_reason.to_upper().replace(": ", "\n") if not departure_block_reason.is_empty() else "FORTRESS NOT READY"
 			commit_button.text = "DEPARTURE BLOCKED\n%s" % blocked_copy
@@ -469,8 +487,8 @@ func _path_contains_edge(from_id: String, to_id: String) -> bool:
 	return false
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#141e24"), true)
-	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#34454c"), false, 1.0)
+	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#05090c") if high_contrast_enabled else Color("#141e24"), true)
+	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#a8b8bd") if high_contrast_enabled else Color("#34454c"), false, 2.0 if high_contrast_enabled else 1.0)
 	for raw_source in campaign_edges.keys():
 		var source := String(raw_source)
 		for raw_target in campaign_edges.get(source, []):
@@ -496,4 +514,7 @@ func _draw() -> void:
 			elif source == current_node and target in outgoing_nodes:
 				color = Color("#d8a650")
 				width = 3.0
+			if high_contrast_enabled:
+				color = VisualContrast.display_color(color)
+				width += 1.0
 			draw_line(_node_center(source), _node_center(target), color, width, true)

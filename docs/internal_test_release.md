@@ -46,6 +46,7 @@ This is a testable two-chapter alpha for The Long March. It proves separate five
 17. Save one feedback report, then choose **Reset Playtest Data** from title Settings. Cancel once and verify all state remains; confirm once and verify Continue, backup, Charter, briefing completion, preferences, and the current journal are gone while the exported report remains.
 18. Save Playtest Notes, choose **Copy Report Path**, and confirm the visible copied receipt. Reopen the form and verify the action remains while the report exists; move or delete the file and confirm the stale action disappears safely.
 19. In Settings, cycle **Interface Audio** through 100%, Muted, and back to 70%. Confirm focus, activation, warning-dialog, and checkpoint cues are restrained and distinct; at Muted, verify every focus state, warning, and save receipt remains fully visible.
+20. Enable **Visual Contrast · High** at 110% text. Confirm the title backdrop darkens, keyboard/controller focus gains a thicker white outline, muted copy brightens, and route/combat borders remain distinct while every status still names itself in text. Return to Standard once and verify the authored palette is restored.
 
 The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 

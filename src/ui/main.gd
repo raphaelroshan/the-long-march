@@ -9,6 +9,7 @@ signal playtest_notes_closed
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
+const VisualContrast = preload("res://src/support/visual_contrast.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const CombatPanel = preload("res://src/ui/combat_panel.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
@@ -234,6 +235,7 @@ var show_onboarding_on_ready: bool = true
 var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
 var starting_region_results: Dictionary = {}
+var high_contrast_enabled: bool = false
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -247,20 +249,20 @@ func _flat_style(background: Color, border: Color, width: int = 1, radius: int =
 	style.content_margin_bottom = padding
 	return style
 
-func _create_ui_theme() -> Theme:
+func _create_ui_theme(high_contrast: bool = false) -> Theme:
 	var ui_theme := Theme.new()
 	ui_theme.default_font_size = 14
 	for control_type in ["Button", "OptionButton"]:
-		ui_theme.set_stylebox("normal", control_type, _flat_style(Color("#24323a"), Color("#50636b"), 1, 5, 7))
-		ui_theme.set_stylebox("hover", control_type, _flat_style(Color("#30434c"), Color("#79cfc3"), 2, 5, 6))
-		ui_theme.set_stylebox("pressed", control_type, _flat_style(Color("#172229"), Color("#e8c58e"), 2, 5, 6))
-		ui_theme.set_stylebox("focus", control_type, _flat_style(Color("#283942"), Color("#f3dfad"), 2, 5, 6))
-		ui_theme.set_stylebox("disabled", control_type, _flat_style(Color("#182127"), Color("#39474d"), 1, 5, 7))
+		ui_theme.set_stylebox("normal", control_type, _flat_style(Color("#080d10") if high_contrast else Color("#24323a"), Color("#a8b8bd") if high_contrast else Color("#50636b"), 2 if high_contrast else 1, 5, 6 if high_contrast else 7))
+		ui_theme.set_stylebox("hover", control_type, _flat_style(Color("#10262b") if high_contrast else Color("#30434c"), Color("#75efff") if high_contrast else Color("#79cfc3"), 3 if high_contrast else 2, 5, 5 if high_contrast else 6))
+		ui_theme.set_stylebox("pressed", control_type, _flat_style(Color("#05090c") if high_contrast else Color("#172229"), Color("#ffe6a3") if high_contrast else Color("#e8c58e"), 3 if high_contrast else 2, 5, 5 if high_contrast else 6))
+		ui_theme.set_stylebox("focus", control_type, _flat_style(Color("#10262b") if high_contrast else Color("#283942"), Color.WHITE if high_contrast else Color("#f3dfad"), 4 if high_contrast else 2, 5, 4 if high_contrast else 6))
+		ui_theme.set_stylebox("disabled", control_type, _flat_style(Color("#11171a") if high_contrast else Color("#182127"), Color("#718087") if high_contrast else Color("#39474d"), 2 if high_contrast else 1, 5, 6 if high_contrast else 7))
 		ui_theme.set_color("font_color", control_type, Color("#eef3ef"))
 		ui_theme.set_color("font_hover_color", control_type, Color("#ffffff"))
 		ui_theme.set_color("font_pressed_color", control_type, Color("#fff1ce"))
 		ui_theme.set_color("font_focus_color", control_type, Color("#ffffff"))
-		ui_theme.set_color("font_disabled_color", control_type, Color("#718087"))
+		ui_theme.set_color("font_disabled_color", control_type, Color("#c5d0d3") if high_contrast else Color("#718087"))
 	ui_theme.set_stylebox("background", "ProgressBar", _flat_style(Color("#18242b"), Color("#34454c"), 1, 3, 0))
 	ui_theme.set_stylebox("fill", "ProgressBar", _flat_style(Color("#5fae91"), Color("#79cfc3"), 0, 3, 0))
 	ui_theme.set_color("font_color", "ProgressBar", Color("#f1e6cf"))
@@ -298,10 +300,12 @@ func _set_metric(metric_id: String, value: String, color: Color = Color("#f1e6cf
 	label.add_theme_color_override("font_color", color)
 
 func _accent_button(button: Button, background: Color, border: Color) -> void:
-	button.add_theme_stylebox_override("normal", _flat_style(background, border, 2, 5, 7))
-	button.add_theme_stylebox_override("hover", _flat_style(background.lightened(0.08), border.lightened(0.12), 2, 5, 7))
-	button.add_theme_stylebox_override("pressed", _flat_style(background.darkened(0.1), Color("#ffffff"), 2, 5, 7))
-	button.add_theme_stylebox_override("focus", _flat_style(background, Color("#ffffff"), 3, 5, 6))
+	var adjusted_background := background.darkened(0.35) if high_contrast_enabled else background
+	var adjusted_border := VisualContrast.display_color(border) if high_contrast_enabled else border
+	button.add_theme_stylebox_override("normal", _flat_style(adjusted_background, adjusted_border, 3 if high_contrast_enabled else 2, 5, 5 if high_contrast_enabled else 7))
+	button.add_theme_stylebox_override("hover", _flat_style(adjusted_background.lightened(0.08), adjusted_border.lightened(0.08), 3 if high_contrast_enabled else 2, 5, 5 if high_contrast_enabled else 7))
+	button.add_theme_stylebox_override("pressed", _flat_style(adjusted_background.darkened(0.1), Color.WHITE, 3 if high_contrast_enabled else 2, 5, 5 if high_contrast_enabled else 7))
+	button.add_theme_stylebox_override("focus", _flat_style(adjusted_background, Color.WHITE, 4 if high_contrast_enabled else 3, 5, 4 if high_contrast_enabled else 6))
 
 func _configure_focus_cycle(controls: Array) -> void:
 	for index in range(controls.size()):
@@ -407,14 +411,35 @@ func _refresh_run_flow_tracker() -> void:
 			label.add_theme_color_override("font_color", Color("#738286"))
 
 func _ready() -> void:
-	theme = _create_ui_theme()
+	theme = _create_ui_theme(high_contrast_enabled)
 	journal = PlaytestJournal.new()
 	_reset_state()
 	_build_ui()
+	campaign_map.set_high_contrast(high_contrast_enabled)
+	combat_panel.set_high_contrast(high_contrast_enabled)
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
 	if show_onboarding_on_ready and not FileAccess.file_exists(ONBOARDING_PATH):
 		_show_onboarding()
+
+func set_high_contrast(enabled: bool) -> void:
+	high_contrast_enabled = enabled
+	theme = _create_ui_theme(high_contrast_enabled)
+	if not high_contrast_enabled:
+		VisualContrast.apply_to_tree(self, false)
+	if campaign_map != null:
+		campaign_map.set_high_contrast(high_contrast_enabled)
+	if combat_panel != null:
+		combat_panel.set_high_contrast(high_contrast_enabled)
+	for button_data in [
+		[contract_accept_button, Color("#285348"), Color("#73c99b")],
+		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
+		[feedback_button, Color("#285348"), Color("#73c99b")],
+		[march_on_button, Color("#5a4528"), Color("#e3b963")]
+	]:
+		if button_data[0] != null:
+			_accent_button(button_data[0], button_data[1], button_data[2])
+	_refresh_ui()
 
 func _reset_state() -> void:
 	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)
@@ -2785,6 +2810,8 @@ func _refresh_ui() -> void:
 			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull" and target_id not in fortress_panel.combat_target_ids:
 				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
+	if high_contrast_enabled:
+		VisualContrast.apply_to_tree(self, true)
 	_ensure_current_focus()
 
 func _current_guidance() -> String:

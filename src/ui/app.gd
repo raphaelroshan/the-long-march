@@ -7,6 +7,7 @@ const GAME_SCENE = preload("res://scenes/Main.tscn")
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const CampaignProgress = preload("res://src/support/campaign_progress.gd")
 const InterfaceAudio = preload("res://src/support/interface_audio.gd")
+const VisualContrast = preload("res://src/support/visual_contrast.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
@@ -32,6 +33,7 @@ const CHECKPOINT_LABELS := {
 }
 
 var menu_view: Control
+var title_veil: ColorRect
 var guide_view: Control
 var settings_view: Control
 var settings_scroll: ScrollContainer
@@ -54,6 +56,7 @@ var settings_context_label: Label
 var settings_close_button: Button
 var display_mode_button: Button
 var text_scale_button: Button
+var contrast_button: Button
 var motion_button: Button
 var interface_audio_button: Button
 var autosave_button: Button
@@ -94,6 +97,7 @@ var close_request_was_paused: bool = false
 var close_request_process_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
 var fullscreen_enabled: bool = false
 var text_scale_percent: int = 100
+var high_contrast_enabled: bool = false
 var reduced_motion: bool = false
 var interface_audio_percent: int = InterfaceAudio.DEFAULT_VOLUME_PERCENT
 var autosave_enabled: bool = true
@@ -116,20 +120,20 @@ func _flat_style(background: Color, border: Color, width: int = 1, radius: int =
 	style.content_margin_bottom = padding
 	return style
 
-func _create_menu_theme() -> Theme:
+func _create_menu_theme(high_contrast: bool = false) -> Theme:
 	var menu_theme := Theme.new()
 	menu_theme.default_font_size = 16
 	for control_type in ["Button", "OptionButton"]:
-		menu_theme.set_stylebox("normal", control_type, _flat_style(Color("#182329e8"), Color("#59696d"), 1, 6, 12))
-		menu_theme.set_stylebox("hover", control_type, _flat_style(Color("#273b40f2"), Color("#79cfc3"), 2, 6, 11))
-		menu_theme.set_stylebox("pressed", control_type, _flat_style(Color("#111a1ff2"), Color("#f0cf96"), 2, 6, 11))
-		menu_theme.set_stylebox("focus", control_type, _flat_style(Color("#24373cf2"), Color("#f3dfad"), 3, 6, 10))
-		menu_theme.set_stylebox("disabled", control_type, _flat_style(Color("#12191ddb"), Color("#354146"), 1, 6, 12))
+		menu_theme.set_stylebox("normal", control_type, _flat_style(Color("#080d10f5") if high_contrast else Color("#182329e8"), Color("#a8b8bd") if high_contrast else Color("#59696d"), 2 if high_contrast else 1, 6, 11 if high_contrast else 12))
+		menu_theme.set_stylebox("hover", control_type, _flat_style(Color("#10262bf8") if high_contrast else Color("#273b40f2"), Color("#75efff") if high_contrast else Color("#79cfc3"), 3 if high_contrast else 2, 6, 10 if high_contrast else 11))
+		menu_theme.set_stylebox("pressed", control_type, _flat_style(Color("#05090cf8") if high_contrast else Color("#111a1ff2"), Color("#ffe6a3") if high_contrast else Color("#f0cf96"), 3 if high_contrast else 2, 6, 10 if high_contrast else 11))
+		menu_theme.set_stylebox("focus", control_type, _flat_style(Color("#10262bf8") if high_contrast else Color("#24373cf2"), Color.WHITE if high_contrast else Color("#f3dfad"), 4 if high_contrast else 3, 6, 9 if high_contrast else 10))
+		menu_theme.set_stylebox("disabled", control_type, _flat_style(Color("#11171af2") if high_contrast else Color("#12191ddb"), Color("#718087") if high_contrast else Color("#354146"), 2 if high_contrast else 1, 6, 11 if high_contrast else 12))
 		menu_theme.set_color("font_color", control_type, Color("#eef3ef"))
 		menu_theme.set_color("font_hover_color", control_type, Color("#ffffff"))
 		menu_theme.set_color("font_pressed_color", control_type, Color("#fff1ce"))
 		menu_theme.set_color("font_focus_color", control_type, Color("#ffffff"))
-		menu_theme.set_color("font_disabled_color", control_type, Color("#6c777a"))
+		menu_theme.set_color("font_disabled_color", control_type, Color("#b8c4c7") if high_contrast else Color("#6c777a"))
 	return menu_theme
 
 func _ready() -> void:
@@ -145,7 +149,7 @@ func _ready() -> void:
 	if not bool(progress_result.get("ok", false)):
 		campaign_progress_error = String(progress_result.get("reason", "regional record could not be read"))
 	_apply_display_mode()
-	theme = _create_menu_theme()
+	theme = _create_menu_theme(high_contrast_enabled)
 	_build_title_menu()
 	_build_guide_overlay()
 	_build_settings_overlay()
@@ -154,6 +158,7 @@ func _ready() -> void:
 	_build_checkpoint_toast()
 	interface_audio.register_root(self)
 	_apply_text_scale()
+	_apply_visual_contrast()
 	_configure_overlay_focus()
 	_refresh_title_state()
 	_focus_title_primary()
@@ -172,11 +177,11 @@ func _build_title_menu() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	menu_view.add_child(background)
 
-	var veil := ColorRect.new()
-	veil.color = Color(0.025, 0.035, 0.037, 0.48)
-	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	menu_view.add_child(veil)
+	title_veil = ColorRect.new()
+	title_veil.color = Color(0.025, 0.035, 0.037, 0.48)
+	title_veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	menu_view.add_child(title_veil)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -409,8 +414,10 @@ func _configure_overlay_focus() -> void:
 	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
 	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(text_scale_button)
 	text_scale_button.focus_neighbor_top = text_scale_button.get_path_to(display_mode_button)
-	text_scale_button.focus_neighbor_bottom = text_scale_button.get_path_to(motion_button)
-	motion_button.focus_neighbor_top = motion_button.get_path_to(text_scale_button)
+	text_scale_button.focus_neighbor_bottom = text_scale_button.get_path_to(contrast_button)
+	contrast_button.focus_neighbor_top = contrast_button.get_path_to(text_scale_button)
+	contrast_button.focus_neighbor_bottom = contrast_button.get_path_to(motion_button)
+	motion_button.focus_neighbor_top = motion_button.get_path_to(contrast_button)
 	motion_button.focus_neighbor_bottom = motion_button.get_path_to(interface_audio_button)
 	interface_audio_button.focus_neighbor_top = interface_audio_button.get_path_to(motion_button)
 	interface_audio_button.focus_neighbor_bottom = interface_audio_button.get_path_to(autosave_button)
@@ -471,20 +478,24 @@ func _configure_vertical_focus_cycle(controls: Array) -> void:
 		control.focus_neighbor_bottom = control.get_path_to(next)
 
 func _accent_button(button: Button) -> void:
-	button.add_theme_stylebox_override("normal", _flat_style(Color("#285348f2"), Color("#89d9b1"), 2, 6, 12))
-	button.add_theme_stylebox_override("hover", _flat_style(Color("#35695cf7"), Color("#adf0ce"), 2, 6, 12))
-	button.add_theme_stylebox_override("pressed", _flat_style(Color("#1c3e35f7"), Color("#ffffff"), 2, 6, 12))
-	button.add_theme_stylebox_override("focus", _flat_style(Color("#285348f7"), Color("#ffffff"), 3, 6, 11))
+	var normal_fill := Color("#102b24fa") if high_contrast_enabled else Color("#285348f2")
+	var normal_border := Color("#9fffb7") if high_contrast_enabled else Color("#89d9b1")
+	button.add_theme_stylebox_override("normal", _flat_style(normal_fill, normal_border, 3 if high_contrast_enabled else 2, 6, 10 if high_contrast_enabled else 12))
+	button.add_theme_stylebox_override("hover", _flat_style(Color("#174035fa") if high_contrast_enabled else Color("#35695cf7"), Color("#c9ffdc") if high_contrast_enabled else Color("#adf0ce"), 3 if high_contrast_enabled else 2, 6, 10 if high_contrast_enabled else 12))
+	button.add_theme_stylebox_override("pressed", _flat_style(Color("#081a15fa") if high_contrast_enabled else Color("#1c3e35f7"), Color.WHITE, 3 if high_contrast_enabled else 2, 6, 10 if high_contrast_enabled else 12))
+	button.add_theme_stylebox_override("focus", _flat_style(normal_fill, Color.WHITE, 4 if high_contrast_enabled else 3, 6, 9 if high_contrast_enabled else 11))
 
 func _clear_button_accent(button: Button) -> void:
 	for style_name in ["normal", "hover", "pressed", "focus"]:
 		button.remove_theme_stylebox_override(style_name)
 
 func _warning_button(button: Button) -> void:
-	button.add_theme_stylebox_override("normal", _flat_style(Color("#2d211fe8"), Color("#8f6254"), 1, 6, 12))
-	button.add_theme_stylebox_override("hover", _flat_style(Color("#3c2925f2"), Color("#d48a70"), 2, 6, 11))
-	button.add_theme_stylebox_override("pressed", _flat_style(Color("#211714f2"), Color("#efb39d"), 2, 6, 11))
-	button.add_theme_stylebox_override("focus", _flat_style(Color("#3c2925f2"), Color("#ffffff"), 3, 6, 10))
+	var normal_fill := Color("#2b1014fa") if high_contrast_enabled else Color("#2d211fe8")
+	var normal_border := Color("#ff9fa8") if high_contrast_enabled else Color("#8f6254")
+	button.add_theme_stylebox_override("normal", _flat_style(normal_fill, normal_border, 2 if high_contrast_enabled else 1, 6, 11 if high_contrast_enabled else 12))
+	button.add_theme_stylebox_override("hover", _flat_style(Color("#43171efa") if high_contrast_enabled else Color("#3c2925f2"), Color("#ffc0c4") if high_contrast_enabled else Color("#d48a70"), 3 if high_contrast_enabled else 2, 6, 10 if high_contrast_enabled else 11))
+	button.add_theme_stylebox_override("pressed", _flat_style(Color("#1b090cfa") if high_contrast_enabled else Color("#211714f2"), Color("#ffe0e1") if high_contrast_enabled else Color("#efb39d"), 3 if high_contrast_enabled else 2, 6, 10 if high_contrast_enabled else 11))
+	button.add_theme_stylebox_override("focus", _flat_style(normal_fill, Color.WHITE, 4 if high_contrast_enabled else 3, 6, 9 if high_contrast_enabled else 10))
 
 func _stage_rule(number: String, title: String, detail: String) -> Control:
 	var row := HBoxContainer.new()
@@ -657,6 +668,7 @@ func _build_settings_overlay() -> void:
 	settings_scroll.add_child(settings_actions)
 	display_mode_button = _settings_action(settings_actions, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	text_scale_button = _settings_action(settings_actions, "TEXT SIZE", "Increase interface text while preserving the complete 1280×720 decision layout.", _toggle_text_scale)
+	contrast_button = _settings_action(settings_actions, "VISUAL CONTRAST", "Darken backdrops, brighten muted copy, and strengthen interactive outlines without hiding status text.", _toggle_high_contrast)
 	motion_button = _settings_action(settings_actions, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
 	interface_audio_button = _settings_action(settings_actions, "INTERFACE AUDIO", "Cycle restrained focus, confirmation, warning, and checkpoint cue volume.", _cycle_interface_audio)
 	interface_audio_button.set_meta("long_march_audio_manual_press", true)
@@ -905,6 +917,7 @@ func _build_checkpoint_toast() -> void:
 func _load_preferences() -> void:
 	fullscreen_enabled = false
 	text_scale_percent = 100
+	high_contrast_enabled = false
 	reduced_motion = false
 	interface_audio_percent = InterfaceAudio.DEFAULT_VOLUME_PERCENT
 	autosave_enabled = true
@@ -913,6 +926,7 @@ func _load_preferences() -> void:
 		fullscreen_enabled = bool(config.get_value("display", "fullscreen", false))
 		var stored_scale := int(config.get_value("accessibility", "text_scale_percent", 100))
 		text_scale_percent = stored_scale if stored_scale in [100, 110] else 100
+		high_contrast_enabled = bool(config.get_value("accessibility", "high_contrast", false))
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
 		var stored_audio := int(config.get_value("audio", "interface_percent", InterfaceAudio.DEFAULT_VOLUME_PERCENT))
 		interface_audio_percent = stored_audio if stored_audio in InterfaceAudio.VOLUME_LEVELS else InterfaceAudio.DEFAULT_VOLUME_PERCENT
@@ -925,6 +939,7 @@ func _save_preferences() -> void:
 	var config := ConfigFile.new()
 	config.set_value("display", "fullscreen", fullscreen_enabled)
 	config.set_value("accessibility", "text_scale_percent", text_scale_percent)
+	config.set_value("accessibility", "high_contrast", high_contrast_enabled)
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
 	config.set_value("audio", "interface_percent", interface_audio_percent)
 	config.set_value("gameplay", "autosave_enabled", autosave_enabled)
@@ -953,6 +968,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_close_button.text = "BACK TO PAUSE" if settings_opened_from_pause else "BACK TO TITLE"
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen_enabled else "FULLSCREEN · OFF"
 	text_scale_button.text = "TEXT SIZE · %d%%" % text_scale_percent
+	contrast_button.text = "VISUAL CONTRAST · HIGH" if high_contrast_enabled else "VISUAL CONTRAST · STANDARD"
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
 	interface_audio_button.text = "INTERFACE AUDIO · MUTED" if interface_audio_percent == 0 else "INTERFACE AUDIO · %d%%" % interface_audio_percent
 	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
@@ -970,7 +986,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
-	var active_controls: Array = [display_mode_button, text_scale_button, motion_button, interface_audio_button, autosave_button]
+	var active_controls: Array = [display_mode_button, text_scale_button, contrast_button, motion_button, interface_audio_button, autosave_button]
 	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button, reset_playtest_button]:
 		if not optional_button.disabled:
 			active_controls.append(optional_button)
@@ -1017,6 +1033,32 @@ func _apply_text_scale_to_tree(node: Node) -> void:
 			control.add_theme_font_size_override("font_size", roundi(float(base_font_size) * float(text_scale_percent) / 100.0))
 	for child in node.get_children():
 		_apply_text_scale_to_tree(child)
+
+func _toggle_high_contrast() -> void:
+	high_contrast_enabled = not high_contrast_enabled
+	_apply_visual_contrast()
+	_save_preferences()
+	_refresh_settings("High visual contrast enabled. Status names and symbols remain visible." if high_contrast_enabled else "Standard visual contrast restored.")
+	contrast_button.grab_focus()
+	call_deferred("_ensure_settings_control_visible", contrast_button)
+
+func _apply_visual_contrast() -> void:
+	theme = _create_menu_theme(high_contrast_enabled)
+	if title_veil != null:
+		title_veil.color = Color(0.015, 0.02, 0.024, 0.72 if high_contrast_enabled else 0.48)
+	VisualContrast.apply_to_tree(self, high_contrast_enabled)
+	if game_view != null:
+		game_view.call("set_high_contrast", high_contrast_enabled)
+	_apply_text_scale_to_tree(self)
+	_refresh_contrast_button_styles()
+
+func _refresh_contrast_button_styles() -> void:
+	for button in [guide_quick_start_button, settings_close_button, resume_button, confirmation_cancel_button]:
+		if button != null:
+			_accent_button(button)
+	for button in [reset_playtest_button, restart_button, title_button]:
+		if button != null:
+			_warning_button(button)
 
 func _toggle_reduced_motion() -> void:
 	reduced_motion = not reduced_motion
@@ -1115,6 +1157,8 @@ func _refresh_title_state() -> void:
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
 	_accent_button(continue_button if has_valid_save else start_button)
+	if high_contrast_enabled:
+		VisualContrast.apply_to_tree(self, true)
 
 func _march_charter_text() -> String:
 	if not campaign_progress_error.is_empty():
@@ -1326,6 +1370,7 @@ func _reset_playtest_data() -> Dictionary:
 	_load_preferences()
 	_apply_display_mode()
 	_apply_text_scale()
+	_apply_visual_contrast()
 	interface_audio.set_volume_percent(interface_audio_percent)
 	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
 	var progress_result := campaign_progress.load_progress()
@@ -1352,6 +1397,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.set("starting_region_id", region_id)
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
+	game_view.set("high_contrast_enabled", high_contrast_enabled)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
 	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))

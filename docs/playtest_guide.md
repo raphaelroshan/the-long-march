@@ -32,6 +32,8 @@ Before handing the build to a new tester, use **Settings → Reset Playtest Data
 
 Settings also includes **Interface Audio** at Muted, 40%, 70%, or 100%. These short cues reinforce focus, activation, warnings, and saved checkpoints, but never replace visible state. Ask the tester whether the default 70% feels useful or tiring; test Muted once to confirm the complete run remains understandable without sound.
 
+**Visual Contrast** switches between the authored Standard palette and a darker, brighter-outlined High mode. Test it on the title, one route decision, and one contact card. Ask whether focus and secondary copy become easier to find without flattening the difference between safe, warning, danger, and unknown states; every state should remain understandable from its words and symbols alone.
+
 ## Building locally
 
 Install Godot 4.4.1 with export templates, then run:

@@ -859,3 +859,7 @@ A successful local feedback export exposes Copy Report Path as a visible action 
 ## 2026-08-28 — Interface audio reinforces rather than carries state
 
 The shell generates four short local cues for focus, activation, warning dialogs, and checkpoint receipts, then applies them to both existing menus and buttons created inside a stage. Settings uses a bounded Muted/40%/70%/100% control instead of presenting an unsupported final mixer. Muting never removes text, focus styling, confirmation copy, or save receipts. Runtime-generated PCM keeps the checkpoint offline and license-free while the final music, ambience, combat sound, and platform mix remain separate human-reviewed work.
+
+## 2026-08-28 — High contrast preserves authored meaning
+
+Settings can darken image-backed surfaces, brighten reviewed text colors, and strengthen button, route-map, and combat outlines across the running shell. The transformer records the latest authored base color rather than repeatedly lightening its own output, so dynamic warning changes remain reversible and switching back restores the standard palette. Route visibility, risk, pressure, dependency state, combat contact, and run progress continue to name themselves through text and symbols; color remains reinforcement rather than authority. This is a bounded playtest aid, not a substitute for a measured accessibility audit.
