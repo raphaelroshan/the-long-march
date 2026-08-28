@@ -107,6 +107,9 @@ func _run() -> void:
 			_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_back_button, "later briefing steps should restore Previous to controller navigation")
 			_expect(game.onboarding_skip_button.get_node_or_null(game.onboarding_skip_button.focus_next) == game.onboarding_back_button, "later briefing steps should restore Previous to the modal Tab cycle")
 			_expect(game.onboarding_body_label.text.contains("Edit Chassis") and game.onboarding_body_label.text.contains("B or Escape returns"), "the briefing should explain how controller users enter and leave chassis editing")
+		if _step == 2:
+			_expect(game.onboarding_body_label.text.contains("contacts and counters") and game.onboarding_body_label.text.contains("Closing at 3") and game.onboarding_body_label.text.contains("Break at 5"), "the route briefing should explain what exact scouting reveals and when blockade pressure escalates")
+			_expect(game.onboarding_action_label.text.contains("whether the chassis answers") and game.onboarding_action_label.text.contains("Commit"), "the route briefing should turn revealed counters into a concrete pre-commit check")
 		if _step == game.ONBOARDING_STEPS.size() - 1:
 			_expect(game.onboarding_next_button.text == "ENTER ASHGATE", "the final briefing action should clearly enter the playable stage")
 		game.onboarding_next_button.pressed.emit()

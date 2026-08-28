@@ -48,8 +48,8 @@ const ONBOARDING_STEPS := [
 	},
 	{
 		"title": "Choose, review, then commit",
-		"body": "Cyan map nodes are reachable. Known routes reveal exact danger; forecasts reveal a class of danger; unscouted roads remain uncertain. Selecting a route is only a preview. A separate Commit action pays its fuel and time cost.",
-		"action": "LOOK FOR · Compare risk, fuel, pressure, visibility, and doctrine before committing the fortress."
+		"body": "Cyan map nodes are reachable. Known routes reveal exact contacts and counters; forecasts reveal a hazard class; unscouted roads remain broad. Watch becomes Closing at 3 pressure and Break at 5. Selecting a route is only a preview.",
+		"action": "LOOK FOR · Compare fuel, time, risk, pressure, doctrine, and whether the chassis answers any revealed counter before Commit."
 	},
 	{
 		"title": "Read, intervene, recover",

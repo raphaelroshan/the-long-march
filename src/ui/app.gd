@@ -473,7 +473,7 @@ func _build_guide_overlay() -> void:
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
 	content.add_child(_flow_step("1", "ASHGATE · REFIT", "Green systems are ready, amber are strained, and red are offline or blocked. Stored parts are finite; inspect dependencies before moving one."))
-	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Known roads name the threat, forecasts reveal its class, and unscouted roads stay broad. Preview fuel, time, risk, pressure, and heat before Commit."))
+	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Known roads name contacts and counters; forecasts reveal a hazard class; unscouted roads stay broad. Watch becomes Closing at 3 pressure and Break at 5. Confirm fuel, time, risk, heat, and doctrine before Commit."))
 	content.add_child(_flow_step("3", "ENCOUNTER · READ", "Each advance resolves one combat step. Read arriving enemies and named targets first; only one emergency order is available per encounter."))
 	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend at most two service actions, then refit around lasting damage. Disabled services state the exact missing money, damage, or action."))
 	content.add_child(_flow_step("5", "MERIDIAN · DEBRIEF", "Commit to the final road, resolve the Siege Beast, then use the result thresholds and replay goal to plan one deliberate change."))

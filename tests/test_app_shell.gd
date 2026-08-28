@@ -107,7 +107,7 @@ func _run() -> void:
 	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
 	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_left) == app.guide_close_button, "the field guide should have explicit horizontal controller navigation")
 	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_top) == app.guide_quick_start_button and app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_next) == app.guide_close_button, "the field guide should trap directional and Tab focus inside its actions")
-	_expect(_tree_contains_text(app.guide_view, "Known roads name the threat") and _tree_contains_text(app.guide_view, "only one emergency order"), "the field guide should explain visibility and intervention rules, not only list screens")
+	_expect(_tree_contains_text(app.guide_view, "Known roads name contacts and counters") and _tree_contains_text(app.guide_view, "Closing at 3 pressure and Break at 5") and _tree_contains_text(app.guide_view, "only one emergency order"), "the field guide should explain visibility, pressure, and intervention rules, not only list screens")
 	_expect(_tree_contains_text(app.guide_view, "same simulation, seed, route graph, and checkpoint rules apply"), "the Quick Start note should preserve normal save expectations instead of claiming that the save file cannot change")
 	app.guide_close_button.pressed.emit()
 	await process_frame

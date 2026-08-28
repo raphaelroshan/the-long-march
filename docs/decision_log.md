@@ -667,3 +667,7 @@ Resolved Soot Orchard, Broken Relay, and Red Wheel choices are now stored explic
 ## 2026-08-28 — Feedback bundles preserve campaign context
 
 The local-only feedback export now includes the secured campaign path, exact authored route decisions, and unused Morrowline recovery actions in its final-state summary. A tester's comments can therefore be interpreted against the choices and missed resources that produced them without collecting identity, device, or network data.
+
+## 2026-08-28 — Route teaching matches the live decision
+
+The first-run briefing and persistent Field Guide now explain that known routes reveal both contacts and counters, and that closure pressure enters Closing at 3 and Break at 5. Their action text asks the player to compare those facts with the current chassis before Commit, matching the information and vocabulary on the live command desk.
