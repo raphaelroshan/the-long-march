@@ -26,6 +26,7 @@ func _init() -> void:
 	_test_campaign_contract_and_specialist()
 	_test_campaign_events_and_closure()
 	_test_water_condenser_route_unlock()
+	_test_water_condenser_threat_and_recovery()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -673,6 +674,67 @@ func _test_water_condenser_route_unlock() -> void:
 	var departure := ready_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
 	_expect(bool(departure.get("ok", false)) and ready_state.fuel == fuel_before - 1, "committing to Dry Cistern Cut should charge the discounted fuel cost")
 	_expect(ready_state.encounter_enemies.size() == 1 and String(ready_state.encounter_enemies[0].get("id", "")) == "storm_front", "Dry Cistern Cut should begin its authored Storm Front encounter")
+
+func _install_water_condenser_loadout(state: LongMarchState) -> void:
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("water_condenser", Vector2i(4, 1))
+
+func _test_water_condenser_threat_and_recovery() -> void:
+	var vulnerable := LongMarchState.new(1107)
+	_install_water_condenser_loadout(vulnerable)
+	vulnerable.journey_route = "dry_cistern_cut"
+	var condenser := vulnerable.module_at(Vector2i(4, 1))
+	var rationale := vulnerable.encounter_target_rationale("storm_front", condenser)
+	_expect(vulnerable._encounter_choose_target("storm_front") == "water_condenser" and String(rationale.get("reason", "")).contains("dry-road sustain role"), "Storm Front should select and explain the condenser's dry-road sustain vulnerability")
+	var impact := vulnerable.encounter_enemy_impact_preview({"id": "storm_front", "arrived": true, "defeated": false, "target": "water_condenser", "damage_bonus": 0})
+	_expect(int(impact.get("damage", 0)) == 2 and String(impact.get("threat_effect", "")) == "sustain_exposure", "an exposed sustain system should preview one additional Storm Front damage")
+	vulnerable._encounter_apply_enemy_damage("storm_front", "water_condenser")
+	_expect(int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 1 and vulnerable.encounter_report[-2].contains("Dry-system exposure"), "the Storm Front report should explain the condenser's extra damage before recording the hit")
+	_expect(bool(vulnerable.repair_module("water_condenser", 1).get("ok", false)) and int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 2, "an operational Field Workshop should repair a damaged Water Condenser")
+	vulnerable.phase = "settlement"
+	vulnerable.current_location = "morrowline_camp"
+	vulnerable.settlement_actions_remaining = 1
+	vulnerable.money = 8
+	var settlement_repair := vulnerable.settlement_repair("water_condenser")
+	_expect(bool(settlement_repair.get("ok", false)) and int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 3, "Morrowline service should fully restore the damaged Water Condenser")
+
+	var armored := LongMarchState.new(1107)
+	armored.place_module("generator_core", Vector2i(0, 0))
+	armored.place_module("crew_quarters", Vector2i(2, 0))
+	armored.place_module("field_workshop", Vector2i(2, 1))
+	armored.place_module("water_condenser", Vector2i(4, 1))
+	armored.place_module("front_armor_plate", Vector2i(4, 2))
+	var armored_preview := armored.encounter_enemy_impact_preview({"id": "storm_front", "arrived": true, "defeated": false, "target": "water_condenser", "damage_bonus": 0})
+	_expect(int(armored_preview.get("damage", 0)) == 1 and int(armored_preview.get("armor_absorbed", 0)) == 1, "adjacent armor should absorb one point of the condenser's Storm Front hit")
+
+	var sealed := LongMarchState.new(1107)
+	_install_water_condenser_loadout(sealed)
+	sealed.journey_node = "dry_cistern_cut"
+	sealed.journey_route = "dry_cistern_cut"
+	sealed._configure_encounter(["storm_front"], "Dry Cistern Cut", "A dry weather line closes over the cisterns.")
+	sealed.encounter_enemies[0]["arrived"] = true
+	sealed.encounter_enemies[0]["target"] = "water_condenser"
+	var seal_result := sealed.use_encounter_intervention("seal_compartment", "water_condenser")
+	_expect(bool(seal_result.get("ok", false)) and String(sealed.encounter_enemies[0].get("target", "")) != "water_condenser", "Seal Compartment should immediately redirect a Storm Front away from the Water Condenser")
+	_expect(sealed.dependency_status_at(Vector2i(4, 1)).state == "offline" and String(seal_result.get("effect", "")).contains("protected from targeting"), "sealing the condenser should expose its temporary offline trade-off")
+	sealed._clear_temporary_seals()
+	_expect(sealed.dependency_status_at(Vector2i(4, 1)).state == "ready", "the condenser should return to Ready after the encounter seal clears")
+
+	var first := LongMarchState.new(1107)
+	var second := LongMarchState.new(1107)
+	for replay_state in [first, second]:
+		_install_water_condenser_loadout(replay_state)
+		replay_state.start_campaign()
+		replay_state.choose_guard_contract(false)
+		replay_state.current_location = "morrowline_camp"
+		replay_state.phase = "settlement"
+		replay_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
+		replay_state.advance_encounter(6.0)
+	_expect(first.encounter_report == second.encounter_report and first.modules == second.modules and first.hull_condition == second.hull_condition, "the Water Condenser teaching encounter should replay deterministically from the same seed, layout, and doctrine")
 
 func _test_complete_five_encounter_campaign() -> void:
 	var state := LongMarchState.new(1107)

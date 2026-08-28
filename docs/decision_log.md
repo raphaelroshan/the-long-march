@@ -771,3 +771,7 @@ The first post-alpha module is a rotatable two-cell interior system with two hea
 ## 2026-08-28 — Gated roads remain visible on the campaign map
 
 Dry Cistern Cut is a one-day Storm Front road from Morrowline to Meridian Pass. Its authored cost is two fuel; a Ready Water Condenser both unlocks it and reduces that cost to one. Without the required system, the node remains visible with a distinct `SYSTEM REQUIRED` state and names shared power plus adjacent operational workshop maintenance. This keeps build-gated content legible and aspirational instead of silently removing it from comparison or presenting an unusable Commit action.
+
+## 2026-08-28 — Storms pressure the system that enabled the shortcut
+
+Storm Front targeting now includes sustain systems and strongly prefers the Water Condenser that enabled Dry Cistern Cut. A sustain hit deals one additional damage, making an unprotected condenser deteriorate faster than a basic workshop patch can restore it. Adjacent armor absorbs one point, while Seal Compartment removes the condenser from targeting at the explicit cost of taking it offline until the encounter ends. The target rationale, impact preview, and causal report all use the same rule, and both field repair and Morrowline service can restore the resulting damage.

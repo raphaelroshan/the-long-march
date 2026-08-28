@@ -56,7 +56,7 @@
     {"id": "road_raiders", "name": "Road Raiders", "doctrine": "attack cargo and access hatches", "targets": ["cargo", "access", "exterior_mount"], "counters": ["repeater_gun", "crew_quarters", "cut_loose_cargo"]},
     {"id": "climbers", "name": "Climbers", "doctrine": "bypass the front and attack exposed mounts", "targets": ["signal", "exterior_mount", "crew"], "counters": ["wall_lamp", "signal_coil", "crew_quarters"]},
     {"id": "burrowers", "name": "Burrowers", "doctrine": "surface near engines and workshops", "targets": ["engine", "workshop", "lower_hull"], "counters": ["side_armor_skirt", "field_workshop", "redundant_generator"]},
-    {"id": "storm_front", "name": "Storm Front", "doctrine": "reduce visibility, raise heat, and damage exposed systems", "targets": ["signal", "exterior_mount", "heat"], "counters": ["signal_coil", "vent_heat", "front_armor_plate"]},
+    {"id": "storm_front", "name": "Storm Front", "doctrine": "reduce visibility, raise heat, and damage exposed or sustain systems", "targets": ["signal", "exterior_mount", "sustain", "heat"], "counters": ["signal_coil", "seal_compartment", "front_armor_plate"]},
     {"id": "siege_beast", "name": "Siege Beast", "doctrine": "deal area damage to armor and adjacent modules", "targets": ["front_armor", "adjacent_modules", "crew"], "counters": ["front_armor_plate", "seal_compartment", "controlled_sacrifice"]}
   ],
   "progression_tracks": [

@@ -28,7 +28,7 @@ const THREATS := {
 	"road_raiders": {"name": "Road Raiders", "target_tags": ["cargo", "exterior"], "damage": 1},
 	"climbers": {"name": "Climbers", "target_tags": ["signal", "exterior", "crew"], "damage": 1},
 	"burrowers": {"name": "Burrowers", "target_tags": ["engine", "workshop", "lower_hull"], "damage": 2},
-	"storm_front": {"name": "Storm Front", "target_tags": ["signal", "exterior"], "damage": 1},
+	"storm_front": {"name": "Storm Front", "target_tags": ["signal", "exterior", "sustain"], "damage": 1},
 	"siege_beast": {"name": "Siege Beast", "target_tags": ["armor", "crew"], "damage": 2}
 }
 const JOURNEY_NODES := {
@@ -52,7 +52,7 @@ const ENCOUNTER_ENEMIES := {
 	"road_raiders": {"name": "Road Raider", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["cargo", "exterior"], "route": "road flank", "counter": "shell cannon or repeater gun", "counter_modules": ["shell_cannon", "repeater_gun"]},
 	"climbers": {"name": "Climber", "health": 4, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "exterior", "crew"], "route": "fortress flank", "counter": "wall lamp or repeater gun", "counter_modules": ["wall_lamp", "repeater_gun"]},
 	"burrowers": {"name": "Burrower", "health": 7, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "workshop", "lower_hull"], "route": "under-road", "counter": "lower-hull armor, shifted weapons, or a spare engine", "counter_modules": ["side_armor_skirt", "shell_cannon", "repeater_gun"]},
-	"storm_front": {"name": "Storm Front", "health": 7, "damage": 1, "arrival_step": 1, "target_tags": ["signal", "exterior"], "route": "weather line", "counter": "signal coverage, armor, or vent heat", "counter_modules": ["signal_coil", "signal_mast", "front_armor_plate"]},
+	"storm_front": {"name": "Storm Front", "health": 7, "damage": 1, "arrival_step": 1, "target_tags": ["signal", "exterior", "sustain"], "route": "weather line", "counter": "signal coverage, adjacent armor, Seal Compartment, or vent heat", "counter_modules": ["signal_coil", "signal_mast", "front_armor_plate", "side_armor_skirt"]},
 	"siege_beast": {"name": "Siege Beast", "health": 10, "damage": 3, "arrival_step": 4, "target_tags": ["armor", "crew"], "route": "direct road", "counter": "shell cannon and front armor", "counter_modules": ["shell_cannon", "front_armor_plate"]}
 }
 const CAMPAIGN_NODES := {
@@ -1573,6 +1573,8 @@ func encounter_forecast() -> Dictionary:
 		exact_target = "signal or exterior modules"
 	elif "burrowers" in threat_ids:
 		exact_target = "engine or workshop modules"
+	elif "storm_front" in threat_ids:
+		exact_target = "signal, exterior, or sustain systems"
 	elif "siege_beast" in threat_ids:
 		exact_target = "front armor or crew modules"
 	var signal_ready: bool = _has_ready_tag("forecast") or specialist_id == "iven_pell"
@@ -1713,6 +1715,9 @@ func encounter_target_rationale(enemy_id: String, instance: Dictionary) -> Dicti
 		if "engine" in module_tags or "workshop" in module_tags:
 			score += 4
 			reasons.append("mobility or repair role")
+	elif enemy_id == "storm_front" and "sustain" in module_tags:
+		score += 12
+		reasons.append("dry-road sustain role" if journey_route == "dry_cistern_cut" else "journey sustain role")
 	elif enemy_id == "siege_beast" and ("armor" in module_tags or "crew" in module_tags):
 		score += 6
 		reasons.append("frontline or occupied role")
@@ -1867,6 +1872,7 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 		"armor_index": -1,
 		"armor_absorbed": 0,
 		"doctrine_effect": "",
+		"threat_effect": "",
 		"vent_exposed": false
 	}
 	if target_id == "hull":
@@ -1895,6 +1901,9 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 	var instance: Dictionary = modules[target_index]
 	var module_def: Dictionary = module_definition(target_id)
 	var target_tags: Array = module_def.get("tags", [])
+	if enemy_id == "storm_front" and "sustain" in target_tags:
+		damage += 1
+		profile["threat_effect"] = "sustain_exposure"
 	if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
 		damage = maxi(0, damage - 1)
 		profile["doctrine_effect"] = "protect_cargo"
@@ -2004,6 +2013,8 @@ func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure
 			_encounter_log("Protect Crew doctrine reduces the impact on %s." % module_def.name)
 		elif doctrine_effect == "run_hot":
 			_encounter_log("Run Hot instability increases the impact on %s." % module_def.name)
+		if String(profile.get("threat_effect", "")) == "sustain_exposure":
+			_encounter_log("Dry-system exposure adds 1 Storm Front damage to %s." % module_def.name)
 		if bool(profile.get("vent_exposed", false)):
 			vent_exposure = false
 			_encounter_log("Open heat vents expose %s to one additional damage." % module_def.name)
