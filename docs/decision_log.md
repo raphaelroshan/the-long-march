@@ -755,3 +755,7 @@ Combat cards now state why an arrived threat chose its current target before sho
 ## 2026-08-28 — The title names the build's real boundary
 
 The title now identifies Ashgate Lowlands as the current complete test journey, names Ashgate Depot as its starting point, and states that later regions are not included. Existing encounter, recovery, finale, and duration expectations remain prominent. This replaces the ambiguous “Chapter One” framing without adding a defensive disclaimer screen or diminishing the playable chapter.
+
+## 2026-08-28 — Guided onboarding teaches one dependency at a time
+
+The Marchmaster briefing now separates engine fuel, weapon ammunition, workshop staffing and parts, signal visibility, route pressure, and contact response into focused steps. The contract remains first and each page names one concrete inspection or decision. This accepts a slightly longer optional briefing in exchange for avoiding the previous compressed chassis page, where several unrelated dependencies competed for attention.

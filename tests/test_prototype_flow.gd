@@ -94,7 +94,7 @@ func _run() -> void:
 	_expect(combat_receipt.contains("Lower Hull Plate absorbs") and combat_receipt.contains("Burrower hits Coal Cell") and combat_receipt.contains("March Engine is now offline") and combat_receipt.contains("Field Workshop restores"), "the combat receipt should preserve the latest impact from mitigation through dependency failure and repair")
 	_expect(not combat_receipt.contains("Shell Cannon fires"), "the combat receipt should prefer the latest incoming cause-and-effect chain over older outgoing detail")
 	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
-	_expect(game.ONBOARDING_STEPS.size() == 4 and game.onboarding_step_panels.size() == 4, "the guided briefing should use four concise, visible stages")
+	_expect(game.ONBOARDING_STEPS.size() == 7 and game.onboarding_step_panels.size() == 7, "the guided briefing should teach each core dependency and journey decision in a separate visible stage")
 	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_skip_button, "the first briefing step should route left around its disabled Previous action")
 	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_next) == game.onboarding_skip_button and game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_top) == game.onboarding_next_button, "the briefing should trap Tab and vertical focus inside its actions")
 	_expect(game.onboarding_progress_label.text.contains("D-pad") and game.onboarding_progress_label.text.contains("A / Enter"), "the briefing should name controller and keyboard navigation together")
@@ -106,8 +106,14 @@ func _run() -> void:
 		if _step == 1:
 			_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_back_button, "later briefing steps should restore Previous to controller navigation")
 			_expect(game.onboarding_skip_button.get_node_or_null(game.onboarding_skip_button.focus_next) == game.onboarding_back_button, "later briefing steps should restore Previous to the modal Tab cycle")
-			_expect(game.onboarding_body_label.text.contains("Edit Chassis") and game.onboarding_body_label.text.contains("B or Escape returns"), "the briefing should explain how controller users enter and leave chassis editing")
+			_expect(game.onboarding_body_label.text.contains("adjacent Coal Cell") and game.onboarding_body_label.text.contains("Edit Chassis") and game.onboarding_body_label.text.contains("B or Escape returns"), "the engine briefing should teach movement dependency and chassis controls together")
 		if _step == 2:
+			_expect(game.onboarding_body_label.text.contains("Ammunition Lift") and game.onboarding_body_label.text.contains("emergency ammunition"), "the weapon briefing should explain full and strained ammunition states")
+		if _step == 3:
+			_expect(game.onboarding_body_label.text.contains("Crew Quarters") and game.onboarding_body_label.text.contains("Parts Crate"), "the workshop briefing should separate staffing from repair supply")
+		if _step == 4:
+			_expect(game.onboarding_body_label.text.contains("exterior visibility") and game.onboarding_body_label.text.contains("exact forecasts"), "the signal briefing should explain the information-for-exposure tradeoff")
+		if _step == 5:
 			_expect(game.onboarding_body_label.text.contains("contacts and counters") and game.onboarding_body_label.text.contains("Closing at 3") and game.onboarding_body_label.text.contains("Break at 5"), "the route briefing should explain what exact scouting reveals and when blockade pressure escalates")
 			_expect(game.onboarding_action_label.text.contains("whether the chassis answers") and game.onboarding_action_label.text.contains("Commit"), "the route briefing should turn revealed counters into a concrete pre-commit check")
 		if _step == game.ONBOARDING_STEPS.size() - 1:

@@ -200,7 +200,7 @@ func _build_title_menu() -> void:
 	start_button.name = "StartGameButton"
 	start_button.text = "START GAME  ·  GUIDED FIRST RUN"
 	start_button.custom_minimum_size = Vector2(0, 62)
-	start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
+	start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
 	start_button.pressed.connect(_start_new_game)
 	_accent_button(start_button)
 	actions.add_child(start_button)
@@ -576,7 +576,7 @@ func _build_settings_overlay() -> void:
 	display_mode_button = _settings_action(content, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	motion_button = _settings_action(content, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
 	autosave_button = _settings_action(content, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
-	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the four-part Marchmaster briefing on the next guided run.", _reset_briefing)
+	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
 	clear_save_button = _settings_action(content, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
 	settings_status_label = Label.new()
 	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -910,7 +910,7 @@ func _refresh_title_state() -> void:
 		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
 	else:
 		start_button.text = "PLAY AGAIN · GUIDED BRIEFING" if has_completed_save else ("NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN")
-		start_button.tooltip_text = "Begin at Ashgate Depot with the four-part Marchmaster briefing."
+		start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
 	quick_start_button.visible = not briefing_complete
 	quick_start_button.text = "QUICK REPLAY · SKIP BRIEFING" if has_completed_save else ("NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING")
 	guide_quick_start_button.text = "QUICK REPLAY ASHGATE" if has_completed_save else ("START NEW ASHGATE RUN" if has_valid_save else "QUICK START ASHGATE")

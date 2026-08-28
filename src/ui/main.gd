@@ -27,7 +27,7 @@ const DOCTRINE_COMMIT_SUMMARIES := {
 	"protect_crew": "Climbers / Siege Beast take +1 · crew hits −1",
 	"run_hot": "all attacks +1 · heat +2 · overheating raises danger"
 }
-const ONBOARDING_LABELS := ["COMMAND", "CHASSIS", "ROUTE", "SURVIVE"]
+const ONBOARDING_LABELS := ["COMMAND", "ENGINE", "WEAPON", "REPAIR", "SIGNAL", "ROAD", "CONTACT"]
 const ROUTE_INTEL_COLORS := {
 	"neutral": Color("#d8c389"),
 	"safe": Color("#9fddbd"),
@@ -42,9 +42,24 @@ const ONBOARDING_STEPS := [
 		"action": "FIRST ACTION · Answer the Ashgate convoy contract. The choice changes reward, trust, and road pressure."
 	},
 	{
-		"title": "Read the machine",
-		"body": "Select an installed module to see what keeps it Ready. Engines need adjacent fuel; weapons benefit from ammunition lifts; workshops need crew. Choose Edit Chassis; arrows move the gold cursor, A or Enter acts, and B or Escape returns.",
-		"action": "TRY THIS · Select the Steam Lance Engine and read its dependency status before changing the layout."
+		"title": "Keep movement alive",
+		"body": "The Steam Lance Engine needs a working adjacent Coal Cell. If that link is lost, movement stops and departure can be blocked. Select the engine to read its dependency card. Choose Edit Chassis; arrows move the gold cursor, A or Enter acts, and B or Escape returns.",
+		"action": "TRY THIS · Select the Steam Lance Engine and find DEPENDS ON, IF LOST, and COUNTER."
+	},
+	{
+		"title": "Feed the weapons",
+		"body": "Weapons need shared power. An adjacent Ammunition Lift provides full output; without it, a gun remains strained and fires emergency ammunition for less damage.",
+		"action": "TRY THIS · Inspect the Repeater Gun, then locate the Ammunition Lift connected beside it."
+	},
+	{
+		"title": "Keep repairs staffed",
+		"body": "The Field Workshop needs adjacent Crew Quarters to operate. An adjacent Parts Crate improves each repair from a temporary patch to a stronger restoration.",
+		"action": "TRY THIS · Inspect the Field Workshop and decide which crew or parts link you would protect first."
+	},
+	{
+		"title": "Trade exposure for knowledge",
+		"body": "Signal systems need power and exterior visibility for exact forecasts. Without a clear exterior signal, route information stays broad; exposed signal equipment is easier for Climbers and storms to reach.",
+		"action": "LOOK FOR · Compare exact, forecast, and unscouted route information before exposing a signal module."
 	},
 	{
 		"title": "Choose, review, then commit",
@@ -52,9 +67,9 @@ const ONBOARDING_STEPS := [
 		"action": "LOOK FOR · Compare fuel, time, risk, pressure, doctrine, and whether the chassis answers any revealed counter before Commit."
 	},
 	{
-		"title": "Read, intervene, recover",
-		"body": "Battles advance one readable step at a time. Enemies name their targets and the report explains dependency failures. You may issue one emergency order per encounter, then refit and recover at Morrowline before the final road.",
-		"action": "IN CONTACT · Read the current target before advancing. At the end, record what felt clear or confusing."
+		"title": "Read the contact",
+		"body": "Battles advance one readable step at a time. Each contact names its target, why it chose that system, and the next hit. You may issue one emergency order per encounter, then refit and recover at Morrowline before the final road.",
+		"action": "IN CONTACT · Read TARGET, WHY, and NEXT before advancing. At the end, record what felt clear or confusing."
 	}
 ]
 
@@ -875,7 +890,7 @@ func _build_ui() -> void:
 
 	how_to_play_button = Button.new()
 	how_to_play_button.text = "OPEN FIELD BRIEFING"
-	how_to_play_button.tooltip_text = "Review the four-part Marchmaster briefing without leaving this run."
+	how_to_play_button.tooltip_text = "Review the seven-step Marchmaster briefing without leaving this run."
 	how_to_play_button.pressed.connect(_show_onboarding.bind(true))
 	controls.add_child(how_to_play_button)
 
