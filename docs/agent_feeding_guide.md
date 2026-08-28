@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.239`; Feeds A through J are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.240`; Feeds A through K are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -65,6 +65,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.239` through validated predecessor recovery.
 
 > Before overwriting a valid Continue checkpoint, preserve and validate its predecessor. When the primary is missing or corrupt, offer an explicit title recovery instead of only deletion; identify the backup chapter, day, and location, preserve unrelated local data, and keep normal Continue bound to the primary file. Do not add multiple selectable save slots or cloud sync.
+
+### Current Feed K — pause-accessible playtest notes
+
+**Status:** Complete in `0.3.0-alpha.240` through the context-preserving Pause handoff.
+
+> Let a tester open the existing local-only Playtest Notes form from Pause at any live decision. Name the region, day, location, and phase; preserve draft text and deterministic run state; return controller focus to Pause; and keep the result-screen path unchanged. Do not add analytics, uploads, accounts, or another feedback format.
 
 ## Historical prototype feed sequence
 

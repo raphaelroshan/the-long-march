@@ -839,3 +839,7 @@ Title Settings exposes March Charter reset independently from Continue clearing 
 ## 2026-08-28 — Continue keeps one validated predecessor
 
 Before a valid primary checkpoint is overwritten, the stage preserves and validates its complete previous serialized state as a local recovery backup. The title never loads that file silently: when the primary is missing or invalid it disables Continue, names the recoverable chapter/day/location, and requires an explicit Restore Backup confirmation. Invalid primary bytes cannot replace a valid predecessor, and Clear Local Save removes both files while preserving the March Charter and other local data categories.
+
+## 2026-08-28 — Playtest notes are available at the decision
+
+The existing local-only feedback form is reachable from Pause as well as the final debrief. A paused handoff names the active region, day, location, and phase, preserves unfinished text for the current stage, and returns to the suspended pause menu without mutating campaign state or losing the pre-pause focus target. This was chosen over background telemetry or automatic uploads because early tests need authentic explanation in the tester's own words and an explicit sharing boundary.

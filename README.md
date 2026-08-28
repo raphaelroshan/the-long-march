@@ -9,7 +9,7 @@ The battles resolve automatically, but the player chooses the fortress layout, r
 The repository contains an agent-first Godot project with:
 
 - A playtest-focused title flow with guided Ashgate, Flooded Veyru, chapter-aware Continue, and a concise run guide.
-- A session-safe pause menu with live run status, Save, Save & Return, field briefing, settings, and confirmation before discarding progress.
+- A session-safe pause menu with live run status, Save, Save & Return, field briefing, context-aware local playtest notes, settings, and confirmation before discarding progress.
 - A visible in-stage Pause action alongside Esc/controller-B shortcuts, keeping session controls discoverable for every input method.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.

@@ -41,6 +41,7 @@ This is a testable two-chapter alpha for The Long March. It proves separate five
 12. Change an unsaved decision, then close the game window. Confirm **Save before quitting?** names the chapter and location. Choose **Keep Playing** once, then repeat and choose **Save & Quit**; relaunch and verify Continue restores that decision.
 13. From title Settings, reset the March Charter. Confirm the warning names regional results and Public Archive Signal, then verify Continue and settings remain while the title returns to `0/2` survived regions. Confirm the action is unavailable from paused Settings.
 14. Create at least two checkpoints, corrupt or remove the primary Continue file, and relaunch. Confirm the title names a valid backup, requires explicit restoration, and resumes the predecessor checkpoint. Clearing Local Save must remove both files.
+15. Pause at a live route, event, recovery, or battle decision and open **Record Playtest Notes**. Confirm the form names the current chapter/day/location/phase, keeps unsaved text during the stage, and returns to the still-paused run without changing state.
 
 The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 

@@ -5,6 +5,7 @@ signal checkpoint_reached(reason: String)
 signal play_again_requested
 signal march_on_requested(region_id: String)
 signal pause_requested
+signal playtest_notes_closed
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
@@ -212,6 +213,7 @@ var onboarding_skip_button: Button
 var onboarding_step: int = 0
 var onboarding_reopened: bool = false
 var feedback_overlay: Control
+var feedback_context_label: Label
 var feedback_clear_text: TextEdit
 var feedback_confusing_text: TextEdit
 var feedback_score_option: OptionButton
@@ -219,6 +221,7 @@ var feedback_status_label: Label
 var feedback_save_button: Button
 var feedback_close_button: Button
 var last_feedback_path: String = ""
+var feedback_return_context: String = "results"
 var journal: PlaytestJournal
 var result_recorded: bool = false
 var fortress_panel: Control
@@ -1180,6 +1183,11 @@ func _build_feedback_overlay() -> void:
 	privacy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	privacy.add_theme_color_override("font_color", Color("#9fd2c2"))
 	content.add_child(privacy)
+	feedback_context_label = Label.new()
+	feedback_context_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	feedback_context_label.add_theme_font_size_override("font_size", 12)
+	feedback_context_label.add_theme_color_override("font_color", Color("#d8c389"))
+	content.add_child(feedback_context_label)
 	var clear_label := Label.new()
 	clear_label.text = "What felt clear or satisfying?"
 	content.add_child(clear_label)
@@ -1305,7 +1313,18 @@ func _finish_onboarding(skipped: bool) -> void:
 	onboarding_reopened = false
 	focus_current_action.call_deferred()
 
+func show_playtest_notes(return_context: String = "results") -> void:
+	feedback_return_context = return_context if return_context in ["results", "pause"] else "results"
+	_show_feedback()
+
 func _show_feedback() -> void:
+	feedback_context_label.text = "%s · DAY %d · %s · %s" % [
+		state.campaign_region_name().to_upper(),
+		state.day,
+		state.current_location.replace("_", " ").capitalize(),
+		state.phase.replace("_", " ").capitalize()
+	]
+	feedback_close_button.text = "BACK TO PAUSE" if feedback_return_context == "pause" else "BACK TO RESULTS"
 	if not last_feedback_path.is_empty() and FileAccess.file_exists(last_feedback_path):
 		feedback_status_label.text = "LAST SAVED LOCALLY · %s\nEdits can be saved as a fresh report." % last_feedback_path.get_file()
 		feedback_status_label.tooltip_text = last_feedback_path
@@ -1317,11 +1336,15 @@ func _show_feedback() -> void:
 		feedback_save_button.text = "SAVE NOTES LOCALLY"
 	feedback_overlay.visible = true
 	feedback_clear_text.grab_focus()
-	_journal_event("feedback_opened", {"phase": state.phase})
+	_journal_event("feedback_opened", {"phase": state.phase, "opened_from": feedback_return_context})
 
 func _hide_feedback() -> void:
 	feedback_overlay.visible = false
-	_focus_control(feedback_button)
+	if feedback_return_context == "pause":
+		feedback_return_context = "results"
+		playtest_notes_closed.emit()
+	else:
+		_focus_control(feedback_button)
 
 func _save_feedback() -> void:
 	_journal_event("feedback_saved", {"phase": state.phase, "replay_score": feedback_score_option.selected + 1})

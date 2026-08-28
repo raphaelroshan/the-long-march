@@ -292,15 +292,42 @@ func _run() -> void:
 
 	app.game_view._finish_onboarding(false)
 	await process_frame
+	var stage_focus_before_pause := app.get_viewport().gui_get_focus_owner()
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_view.visible, "the in-stage menu should pause the march")
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
 	_expect(app.resume_button.get_node_or_null(app.resume_button.focus_neighbor_bottom) == app.pause_save_button and app.pause_save_button.get_node_or_null(app.pause_save_button.focus_neighbor_right) == app.save_return_button, "the pause menu should have explicit directional navigation")
+	_expect(app.pause_briefing_button.get_node_or_null(app.pause_briefing_button.focus_neighbor_bottom) == app.pause_notes_button and app.pause_notes_button.get_node_or_null(app.pause_notes_button.focus_neighbor_bottom) == app.restart_button, "pause navigation should include the local playtest-notes action before destructive session controls")
 	_expect(app.title_button.get_node_or_null(app.title_button.focus_next) == app.resume_button and app.resume_button.get_node_or_null(app.resume_button.focus_previous) == app.title_button, "the pause menu should trap Tab navigation inside its visible actions")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
 	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
+	var state_before_notes: Dictionary = app.game_view.state.serialize()
+	app.pause_notes_button.pressed.emit()
+	await process_frame
+	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.feedback_overlay.visible, "Playtest Notes should open from Pause without leaving or advancing the run")
+	_expect(app.game_view.feedback_close_button.text == "BACK TO PAUSE" and app.game_view.feedback_context_label.text.contains("ASHGATE LOWLANDS · DAY 1 · Ashgate Depot · Refit"), "paused notes should name their exact run context and return destination")
+	_expect(app.game_view.feedback_clear_text.has_focus() and app.game_view.feedback_status_label.text.contains("Nothing is sent automatically"), "paused notes should focus the first prompt and retain the local-only privacy statement")
+	app.game_view.feedback_confusing_text.text = "I paused at this exact decision."
+	var notes_cancel_input := InputEventJoypadButton.new()
+	notes_cancel_input.button_index = JOY_BUTTON_B
+	notes_cancel_input.pressed = true
+	app.game_view._unhandled_input(notes_cancel_input)
+	await process_frame
+	_expect(not app.game_view.feedback_overlay.visible and app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED and app.pause_notes_button.has_focus(), "controller cancel should return paused notes to the suspended pause menu")
+	_expect(app._saved_values_match(state_before_notes, app.game_view.state.serialize()), "opening and closing paused notes should not mutate deterministic campaign state")
+	app.pause_notes_button.pressed.emit()
+	await process_frame
+	_expect(app.game_view.feedback_confusing_text.text == "I paused at this exact decision.", "unsaved note text should survive a pause-menu round trip during the same stage")
+	app.game_view.feedback_close_button.pressed.emit()
+	await process_frame
+	_expect(app.pause_view.visible and app.pause_notes_button.has_focus(), "the visible Back to Pause action should restore the notes entry point")
+	app.resume_button.pressed.emit()
+	await process_frame
+	_expect(not app.pause_view.visible and app.get_viewport().gui_get_focus_owner() == stage_focus_before_pause, "resuming after paused notes should restore the exact stage control focused before Pause")
+	app._show_pause()
+	await process_frame
 	app.pause_briefing_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.onboarding_overlay.visible, "the pause menu should reopen the field briefing without leaving the run")

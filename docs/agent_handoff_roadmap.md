@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.239`
+**Current code baseline:** `0.3.0-alpha.240`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -526,7 +526,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; save-aware close, explicit Charter reset, and validated Continue backup recovery are complete through `0.3.0-alpha.239`.
+**Status:** In progress; save-aware close, explicit Charter reset, validated Continue backup recovery, and pause-accessible contextual playtest notes are complete through `0.3.0-alpha.240`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 
@@ -682,7 +682,7 @@ One bounded follow-up, not a broad feature list.
 
 ## 9. Release and private-alpha discipline
 
-The repository is private and should remain internal until the human owner approves a broader test release.
+The source repository is public by owner decision. Playtest executables, storefront claims, credentials, and promoted releases remain human-controlled until the owner approves a broader test release.
 
 Before commit, the agent must run:
 

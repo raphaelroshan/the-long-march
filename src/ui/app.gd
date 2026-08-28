@@ -62,6 +62,7 @@ var pause_save_status_label: Label
 var pause_save_button: Button
 var save_return_button: Button
 var pause_briefing_button: Button
+var pause_notes_button: Button
 var pause_settings_button: Button
 var restart_button: Button
 var title_button: Button
@@ -402,17 +403,19 @@ func _configure_overlay_focus() -> void:
 	save_return_button.focus_neighbor_bottom = save_return_button.get_path_to(pause_settings_button)
 	pause_briefing_button.focus_neighbor_top = pause_briefing_button.get_path_to(pause_save_button)
 	pause_briefing_button.focus_neighbor_right = pause_briefing_button.get_path_to(pause_settings_button)
-	pause_briefing_button.focus_neighbor_bottom = pause_briefing_button.get_path_to(restart_button)
+	pause_briefing_button.focus_neighbor_bottom = pause_briefing_button.get_path_to(pause_notes_button)
 	pause_settings_button.focus_neighbor_top = pause_settings_button.get_path_to(save_return_button)
 	pause_settings_button.focus_neighbor_left = pause_settings_button.get_path_to(pause_briefing_button)
-	pause_settings_button.focus_neighbor_bottom = pause_settings_button.get_path_to(title_button)
-	restart_button.focus_neighbor_top = restart_button.get_path_to(pause_briefing_button)
+	pause_settings_button.focus_neighbor_bottom = pause_settings_button.get_path_to(pause_notes_button)
+	pause_notes_button.focus_neighbor_top = pause_notes_button.get_path_to(pause_briefing_button)
+	pause_notes_button.focus_neighbor_bottom = pause_notes_button.get_path_to(restart_button)
+	restart_button.focus_neighbor_top = restart_button.get_path_to(pause_notes_button)
 	restart_button.focus_neighbor_right = restart_button.get_path_to(title_button)
 	restart_button.focus_neighbor_bottom = restart_button.get_path_to(resume_button)
-	title_button.focus_neighbor_top = title_button.get_path_to(pause_settings_button)
+	title_button.focus_neighbor_top = title_button.get_path_to(pause_notes_button)
 	title_button.focus_neighbor_left = title_button.get_path_to(restart_button)
 	title_button.focus_neighbor_bottom = title_button.get_path_to(resume_button)
-	_configure_focus_cycle([resume_button, pause_save_button, save_return_button, pause_briefing_button, pause_settings_button, restart_button, title_button])
+	_configure_focus_cycle([resume_button, pause_save_button, save_return_button, pause_briefing_button, pause_settings_button, pause_notes_button, restart_button, title_button])
 	_configure_focus_pair(confirmation_cancel_button, confirmation_confirm_button)
 
 func _configure_focus_pair(first: Control, second: Control) -> void:
@@ -746,6 +749,12 @@ func _build_pause_menu() -> void:
 	pause_settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pause_settings_button.pressed.connect(_show_settings)
 	reference_actions.add_child(pause_settings_button)
+	pause_notes_button = Button.new()
+	pause_notes_button.text = "RECORD PLAYTEST NOTES"
+	pause_notes_button.custom_minimum_size = Vector2(0, 44)
+	pause_notes_button.tooltip_text = "Record what felt clear or confusing at this exact decision. Notes stay local until you choose to share the exported file."
+	pause_notes_button.pressed.connect(_show_pause_playtest_notes)
+	content.add_child(pause_notes_button)
 	var session_actions := HBoxContainer.new()
 	session_actions.add_theme_constant_override("separation", 8)
 	content.add_child(session_actions)
@@ -1223,6 +1232,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))
 	game_view.connect("march_on_requested", Callable(self, "_request_march_on_confirmation"))
 	game_view.connect("pause_requested", Callable(self, "_show_pause"))
+	game_view.connect("playtest_notes_closed", Callable(self, "_return_from_playtest_notes"))
 	add_child(game_view)
 	move_child(game_view, 0)
 	menu_view.visible = false
@@ -1431,6 +1441,20 @@ func _show_in_run_briefing() -> void:
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	paused_stage_focus = null
 	game_view.call("_show_onboarding", true)
+
+func _show_pause_playtest_notes() -> void:
+	if game_view == null or not pause_view.visible:
+		return
+	pause_view.visible = false
+	game_view.process_mode = Node.PROCESS_MODE_INHERIT
+	game_view.call("show_playtest_notes", "pause")
+
+func _return_from_playtest_notes() -> void:
+	if game_view == null:
+		return
+	game_view.process_mode = Node.PROCESS_MODE_DISABLED
+	pause_view.visible = true
+	pause_notes_button.grab_focus()
 
 func _restart_game() -> void:
 	var region_id := String(game_view.get("state").get("campaign_region_id")) if game_view != null else "ashgate_lowlands"

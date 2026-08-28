@@ -20,7 +20,7 @@ The build opens with a seven-step Marchmaster briefing that introduces one core 
 10. Choose **March On**, read the destination and save explanation, cancel once, then confirm. Verify the other chapter starts normally and the title March Charter later retains the best result from each region.
 11. Make one unsaved change and close the window. Verify the game pauses for **Save & Quit**, that **Keep Playing** restores the exact context, and that saving before close can be resumed from Continue after relaunch.
 
-Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision.
+Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision. A tester may pause and choose **Record Playtest Notes** at any decision; closing the form returns to the still-suspended pause menu with the run unchanged.
 
 ## Feedback bundle
 
