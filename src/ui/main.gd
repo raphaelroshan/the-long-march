@@ -542,21 +542,16 @@ func _build_ui() -> void:
 	columns.add_theme_constant_override("separation", 18)
 	margin.add_child(columns)
 
-	left_scroll = ScrollContainer.new()
-	left_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	columns.add_child(left_scroll)
-
-	var left := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(760, 760)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_theme_constant_override("separation", 10)
-	left_scroll.add_child(left)
+	var left_column := VBoxContainer.new()
+	left_column.custom_minimum_size = Vector2(760, 0)
+	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_column.add_theme_constant_override("separation", 10)
+	columns.add_child(left_column)
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
-	left.add_child(header)
+	left_column.add_child(header)
 	var title := Label.new()
 	title.text = "THE LONG MARCH"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -569,6 +564,18 @@ func _build_ui() -> void:
 	pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
 	header.add_child(pause_button)
+
+	left_scroll = ScrollContainer.new()
+	left_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	left_column.add_child(left_scroll)
+
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(760, 0)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_theme_constant_override("separation", 10)
+	left_scroll.add_child(left)
 
 	subtitle_label = Label.new()
 	subtitle_label.text = "A fortress is only strong if it can keep moving."
@@ -2627,7 +2634,7 @@ func _refresh_ui() -> void:
 	var is_refit_phase := state.phase in ["refit", "settlement"]
 	var is_battle_phase := state.phase in ["battle", "final_battle"]
 	subtitle_label.visible = not is_battle_phase
-	journey_banner.visible = not is_battle_phase
+	journey_banner.visible = not is_battle_phase and state.phase != "results"
 	asset_row.visible = state.phase in ["refit", "battle", "final_battle"]
 	_refresh_run_flow_tracker()
 	results_group.visible = state.phase == "results"

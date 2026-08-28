@@ -48,6 +48,8 @@ Settings also includes **Interface Audio** at Muted, 40%, 70%, or 100%. These sh
 
 Automatic saves also produce a short `Saved · <reason>` receipt in the stage header. At 110% text it should remain between the title and the widest contextual Pause label, including Route Review, without covering either control or entering the command-desk scroll area. Opening Pause dismisses the receipt immediately.
 
+The title and contextual **Pause** action remain fixed above the left evidence scroll. Enter chassis editing or inspection at 110% text and confirm the complete grid can scroll into view without moving Pause off-screen. The journey illustration remains during preparation but retires on the debrief so result evidence and the final chassis receive the available space.
+
 Chassis language follows the current phase. During battle, **Inspect Chassis** enters read-only target review and returns to the encounter orders. A new debrief resets its view and focuses **Inspect Final Chassis** before feedback; selecting a system stays in review, and cancel returns to the debrief action. After review begins, the current-order and Pause shortcuts advance to feedback. Neither inspection path permits placement outside a refit stop.
 
 Inside the inspector, **Battle System**, **Final System**, and **Refit Locked** distinguish targeting, debrief review, and road-state inspection. At 110% text, verify that these labels and their complete helper sentences fit the right-hand detail column; no instruction should end mid-word or disappear beneath the panel edge.

@@ -923,3 +923,7 @@ A newly opened debrief now resets inherited battle scrolling and focuses Inspect
 ## 2026-08-28 — Chassis detail copy obeys its fixed column
 
 Locked-phase chassis help now uses compact labelled instructions sized for the existing 320-pixel detail column, with a two-line drawing bound as a fallback. Battle names the selected module as a Battle System and points to targeting; results use Final System and review language; road states name the refit lock and next road-stop opportunity. This preserves the dense inspector layout while removing visibly truncated instructions and generic headings, without changing any simulation or input behavior.
+
+## 2026-08-28 — Session controls stay above stage scrolling
+
+The stage title and contextual Pause action now sit in a fixed left-column header, while metrics, route evidence, combat, chassis, and reports scroll beneath them. Chassis focus can still reveal the complete inspector at 110% text without moving Pause out of pointer reach. Results also hide the decorative journey banner because the completed path, result, and machine are the relevant evidence. Shortcut priority and simulation state are unchanged.

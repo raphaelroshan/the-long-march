@@ -246,6 +246,7 @@ func _run() -> void:
 	await process_frame
 	game._refresh_ui()
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell and game.fortress_panel.interaction_heading().contains("EDIT MODE") and game.fortress_panel.interaction_heading().contains("MOUNTS 1/2"), "Edit Chassis should focus the selected module cell and expose current exterior-mount capacity in its mode heading")
+	_expect(not game.left_scroll.is_ancestor_of(game.pause_button) and game.get_global_rect().encloses(game.pause_button.get_global_rect()), "active chassis editing should keep the fixed pointer-accessible Pause action outside the evidence scroll")
 	_expect(game.pause_button.text.contains("CHASSIS ACTIVE") and game.pause_button.tooltip_text.contains("leaves chassis inspection first"), "the persistent pause action should not claim that B or Escape pauses while chassis controls own cancel")
 	_expect(game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "entering chassis edit mode should reveal the complete grid")
 	_expect(game.fortress_panel.placement_status_text().begins_with("SELECTED") and game.fortress_panel.placement_status_text().contains("STEAM LANCE ENGINE"), "the chassis should identify the selected module under its cursor")
@@ -404,6 +405,7 @@ func _run() -> void:
 	game.combat_inspect_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS INSPECTION") and not game.fortress_panel.interaction_heading().contains("EDIT MODE"), "the combat inspection action should enter a clearly named non-refit chassis mode")
+	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()), "battle chassis inspection should keep the fixed pointer-accessible Pause action visible")
 	game.fortress_panel.cursor_cell = Vector2i(0, 1)
 	var battle_chassis_select := InputEventAction.new()
 	battle_chassis_select.action = "ui_accept"
@@ -788,7 +790,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
-	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose final chassis review, onward, replay, and return-to-title actions")
+	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible and not game.journey_banner.visible, "results should expose final chassis review and follow-up actions while retiring the completed journey's decorative banner")
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
 	_expect(game.results_inspect_button.has_focus() and game.current_order_button.text == "GO TO CHASSIS REVIEW ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.results_inspect_button, "a newly opened debrief should focus and name final chassis review before asking for feedback")
 	_expect(game.right_scroll.get_global_rect().encloses(game.results_heading.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.results_inspect_button.get_global_rect()), "debrief arrival should reset inherited battle scrolling and keep both the outcome heading and first action visible")
@@ -798,7 +800,9 @@ func _run() -> void:
 	_expect(game.results_inspect_button.has_focus(), "Go to Chassis Review should focus the debrief's first interpretation action without opening it")
 	game.results_inspect_button.pressed.emit()
 	await process_frame
+	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.inspection_detail_heading() == "FINAL SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("REVIEW") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0 and game.fortress_panel.tooltip_text.contains("returns to the debrief") and game.current_order_button.text == "GO TO FEEDBACK ↓" and game.guidance_label.text.contains("Final chassis reviewed"), "Inspect Final Chassis should enter a fitted result-specific review mode and advance the debrief handoff toward feedback")
+	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()) and game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "active final chassis review should keep both the fixed Pause action and complete inspector visible at 720p")
 	var result_chassis_select := InputEventAction.new()
 	result_chassis_select.action = "ui_accept"
 	result_chassis_select.pressed = true

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.260`; Feeds A through AE are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.261`; Feeds A through AF are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -191,6 +191,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.260` through bounded phase-labelled inspector copy.
 
 > Replace clipped one-line locked-phase chassis instructions with concise battle, result, and road-state hints that fit the 320-pixel detail column. Give battle and result inspection distinct detail headings, preserve refit terminology, and add deterministic width and semantic assertions.
+
+### Current Feed AF — persistent stage header
+
+**Status:** Complete in `0.3.0-alpha.261` through a fixed title and Pause row above stage evidence.
+
+> Keep the contextual Pause action pointer-accessible while chassis focus scrolls the evidence column. Move the stage header outside the left scroll, preserve complete chassis visibility at 110% text, retire the decorative journey banner on results, and verify refit, battle, and debrief inspection states.
 
 ## Historical prototype feed sequence
 
