@@ -12,9 +12,10 @@ The repository contains an agent-first Godot project with:
 - A session-safe pause menu with live run status, Save, Save & Return, field briefing, context-aware local playtest notes with a copyable export path, settings, and confirmation before discarding progress.
 - A persistent 100%/110% text-size preference with scroll-safe Settings and responsive title spacing at 1280×720.
 - A persistent high-contrast mode that strengthens backdrops, muted copy, map/combat outlines, and focus without replacing written status labels.
+- A persistent A-confirm/B-confirm controller preference that remaps accept/cancel and updates every visible shortcut while preserving Enter/Escape.
 - Restrained focus, confirmation, warning, and checkpoint cues with a persistent mute/volume setting; every cue retains a visible equivalent.
 - A title-only clean-playtest reset that restores first-launch state while preserving tester-exported feedback reports.
-- A visible in-stage Pause action alongside Esc/controller-B shortcuts, keeping session controls discoverable for every input method.
+- A visible in-stage Pause action alongside Escape and the configured controller-cancel shortcut, keeping session controls discoverable for every input method.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.
 - Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible together with their current-order context when space allows.

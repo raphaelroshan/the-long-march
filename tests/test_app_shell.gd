@@ -31,6 +31,7 @@ func _run() -> void:
 	var persisted_scale_config := ConfigFile.new()
 	persisted_scale_config.set_value("accessibility", "text_scale_percent", 110)
 	persisted_scale_config.set_value("accessibility", "high_contrast", true)
+	persisted_scale_config.set_value("input", "controller_layout", "east_confirm")
 	persisted_scale_config.set_value("audio", "interface_percent", 40)
 	persisted_scale_config.save(SETTINGS_PATH)
 	var restored_scale_app = load("res://scenes/App.tscn").instantiate()
@@ -39,12 +40,14 @@ func _run() -> void:
 	await process_frame
 	_expect(restored_scale_app.text_scale_percent == 110 and restored_scale_app.theme.default_font_size == 18 and not restored_scale_app.title_control_contract_label.visible and not restored_scale_app.title_right_spacer.visible, "a new application shell should restore and apply the persisted large-text layout")
 	_expect(restored_scale_app.high_contrast_enabled and restored_scale_app.title_veil.color.a > 0.7 and restored_scale_app.theme.get_stylebox("focus", "Button").border_width_left == 4, "a new application shell should restore the stronger backdrop and focus outline")
+	_expect(restored_scale_app.controller_layout_id == "east_confirm" and restored_scale_app.title_input_legend_label.text.contains("B / Enter confirms") and restored_scale_app.title_input_legend_label.text.contains("A / Esc closes"), "a new application shell should restore the alternate controller layout and matching visible legend")
 	_expect(restored_scale_app.interface_audio_percent == 40 and restored_scale_app.interface_audio.volume_percent == 40, "a new application shell should restore the local interface-audio level")
 	restored_scale_app.queue_free()
 	await process_frame
 	var invalid_scale_config := ConfigFile.new()
 	invalid_scale_config.set_value("accessibility", "text_scale_percent", 175)
 	invalid_scale_config.set_value("audio", "interface_percent", 135)
+	invalid_scale_config.set_value("input", "controller_layout", "unsupported")
 	invalid_scale_config.save(SETTINGS_PATH)
 	app = load("res://scenes/App.tscn").instantiate()
 	var quit_probe := {"count": 0}
@@ -109,11 +112,12 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
 	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
-	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Darken backdrops") and _tree_contains_text(app.settings_view, "Cycle restrained focus") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, contrast, audio, and save consequences without requiring mouse-only tooltips")
+	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Darken backdrops") and _tree_contains_text(app.settings_view, "Swap the A/B") and _tree_contains_text(app.settings_view, "Cycle restrained focus") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, contrast, controller, audio, and save consequences without requiring mouse-only tooltips")
 	_expect(app.text_scale_button.text == "TEXT SIZE · 100%" and app.theme.default_font_size == 16, "Settings should safely normalize an unsupported stored text size to the standard interface size")
 	_expect(not app.high_contrast_enabled and app.contrast_button.text == "VISUAL CONTRAST · STANDARD", "Settings should default to the authored standard palette when no contrast preference is stored")
+	_expect(app.controller_layout_id == "south_confirm" and app.controller_layout_button.text == "CONTROLLER CONFIRM · A", "Settings should normalize an unsupported controller layout to the default A-confirm mapping")
 	_expect(app.interface_audio_percent == 70 and app.interface_audio_button.text == "INTERFACE AUDIO · 70%", "Settings should safely normalize an unsupported stored audio level to the comfortable default")
-	_expect(app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_bottom) == app.text_scale_button and app.text_scale_button.get_node_or_null(app.text_scale_button.focus_neighbor_bottom) == app.contrast_button and app.contrast_button.get_node_or_null(app.contrast_button.focus_neighbor_bottom) == app.motion_button, "controller navigation should place visual contrast between text size and motion")
+	_expect(app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_bottom) == app.text_scale_button and app.text_scale_button.get_node_or_null(app.text_scale_button.focus_neighbor_bottom) == app.contrast_button and app.contrast_button.get_node_or_null(app.contrast_button.focus_neighbor_bottom) == app.controller_layout_button and app.controller_layout_button.get_node_or_null(app.controller_layout_button.focus_neighbor_bottom) == app.motion_button, "controller navigation should place controller layout between visual contrast and motion")
 	_expect(app.motion_button.get_node_or_null(app.motion_button.focus_neighbor_bottom) == app.interface_audio_button and app.interface_audio_button.get_node_or_null(app.interface_audio_button.focus_neighbor_bottom) == app.autosave_button, "controller navigation should place interface audio between motion and save behavior")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "Settings navigation should retain the available clean-start action while skipping unavailable category resets")
 	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
@@ -170,6 +174,20 @@ func _run() -> void:
 	app.interface_audio_button.pressed.emit()
 	await process_frame
 	_expect(app.interface_audio_percent == 70, "the settings cycle should return to the documented default level")
+	app.controller_layout_button.pressed.emit()
+	await process_frame
+	var controller_config := ConfigFile.new()
+	controller_config.load(SETTINGS_PATH)
+	_expect(app.controller_layout_id == "east_confirm" and String(controller_config.get_value("input", "controller_layout", "")) == "east_confirm" and app.controller_layout_button.text == "CONTROLLER CONFIRM · B", "the alternate controller layout should apply immediately and persist locally")
+	_expect(app.title_input_legend_label.text.contains("B / Enter confirms") and app.title_input_legend_label.text.contains("A / Esc closes"), "changing controller layout should update visible title instructions even while Settings is open")
+	var swapped_cancel := InputEventJoypadButton.new()
+	swapped_cancel.button_index = JOY_BUTTON_A
+	swapped_cancel.pressed = true
+	app._unhandled_input(swapped_cancel)
+	await process_frame
+	_expect(not app.settings_view.visible and app.settings_button.has_focus(), "the remapped cancel button should close Settings and restore title focus")
+	app.settings_button.pressed.emit()
+	await process_frame
 	app.autosave_button.pressed.emit()
 	await process_frame
 	_expect(not app.autosave_enabled and app.autosave_button.text.contains("OFF"), "automatic checkpoints should be optional and visibly disabled")
@@ -197,6 +215,13 @@ func _run() -> void:
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the title should open Flooded Veyru as a separate chapter at Lantern Quay")
 	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across controls, map, and combat presentation")
+	_expect(app.game_view.controller_layout_id == "east_confirm" and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.focus_chassis_button.tooltip_text.contains("B / Enter") and app.game_view.fortress_panel.controller_cancel_label == "A", "a newly opened playable stage should inherit the remapped face buttons and matching visible instructions")
+	var controller_copy_phase: String = app.game_view.state.phase
+	app.game_view.state.phase = "results"
+	app._refresh_controller_copy()
+	_expect(app.pause_hint_label.text == "A / Esc returns to debrief", "changing controller layout should preserve the debrief-specific pause return hint")
+	app.game_view.state.phase = controller_copy_phase
+	app._refresh_controller_copy()
 	var stage_audio_callback := Callable(app.interface_audio, "_on_button_pressed").bind(app.game_view.contract_accept_button)
 	_expect(app.game_view.contract_accept_button.pressed.is_connected(stage_audio_callback), "buttons created inside the playable stage should inherit the same interface feedback as title controls")
 	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.contract_accept_button.has_focus(), "Veyru should skip the Ashgate briefing and focus its medicine decision")
@@ -289,7 +314,7 @@ func _run() -> void:
 	_expect(not app.game_view.onboarding_overlay.visible, "Quick Start should skip the briefing for repeated flow tests")
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "Quick Start should not permanently mark the briefing complete")
 	_expect(app.game_view.contract_accept_button.has_focus(), "Quick Start should focus the first required Ashgate decision")
-	_expect(app.game_view.pause_button.visible and app.game_view.pause_button.text.contains("ESC / B"), "the live stage should expose a visible mouse and controller pause action")
+	_expect(app.game_view.pause_button.visible and app.game_view.pause_button.text.contains("ESC / A"), "the live stage should expose the remapped controller pause action")
 	app.game_view.contract_decline_button.grab_focus()
 	app.game_view.pause_button.pressed.emit()
 	await process_frame
@@ -353,7 +378,7 @@ func _run() -> void:
 	_expect(app.game_view.onboarding_overlay.visible, "the guided Start Game path should open the Marchmaster briefing")
 	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
 	_expect(not app.game_view.save_button.visible and not app.game_view.load_button.visible, "pause-owned persistence controls should not be duplicated in the live stage")
-	_expect(app.game_view.onboarding_skip_button.text == "SKIP FOR THIS RUN" and app.game_view.onboarding_progress_label.text.contains("closes for this run"), "the first-run briefing should describe Skip and B/Esc as temporary choices")
+	_expect(app.game_view.onboarding_skip_button.text == "SKIP FOR THIS RUN" and app.game_view.onboarding_progress_label.text.contains("A / Esc closes for this run"), "the first-run briefing should describe Skip and the active cancel button as temporary choices")
 	app.text_scale_percent = 110
 	app._apply_text_scale()
 	_expect(app.game_view.theme.default_font_size == 15 and app.game_view.phase_badge.get_theme_font_size("font_size") == 13, "the selected text size should apply to a newly created playable stage and its explicit status text")
@@ -387,7 +412,7 @@ func _run() -> void:
 	_expect(app.game_view.feedback_clear_text.has_focus() and app.game_view.feedback_status_label.text.contains("Nothing is sent automatically"), "paused notes should focus the first prompt and retain the local-only privacy statement")
 	app.game_view.feedback_confusing_text.text = "I paused at this exact decision."
 	var notes_cancel_input := InputEventJoypadButton.new()
-	notes_cancel_input.button_index = JOY_BUTTON_B
+	notes_cancel_input.button_index = JOY_BUTTON_A
 	notes_cancel_input.pressed = true
 	app.game_view._unhandled_input(notes_cancel_input)
 	await process_frame
@@ -445,7 +470,7 @@ func _run() -> void:
 	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.clear_save_button and app.clear_save_button.get_node_or_null(app.clear_save_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should reroute immediately after a one-shot action becomes unavailable")
 	var cancel_input := InputEventJoypadButton.new()
-	cancel_input.button_index = JOY_BUTTON_B
+	cancel_input.button_index = JOY_BUTTON_A
 	cancel_input.pressed = true
 	app._unhandled_input(cancel_input)
 	await process_frame
@@ -814,7 +839,7 @@ func _run() -> void:
 	for cleared_path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
 		_expect(not FileAccess.file_exists(cleared_path), "clean-start reset should remove %s" % cleared_path.get_file())
 	_expect(FileAccess.file_exists(FEEDBACK_PRESERVE_PATH) and FileAccess.get_file_as_string(FEEDBACK_PRESERVE_PATH) == "tester-owned export", "clean-start reset should preserve previously exported playtest reports exactly")
-	_expect(not app.fullscreen_enabled and app.text_scale_percent == 100 and not app.high_contrast_enabled and app.title_veil.color.a < 0.5 and not app.reduced_motion and app.interface_audio_percent == 70 and app.interface_audio.volume_percent == 70 and app.autosave_enabled and app.theme.default_font_size == 16, "clean-start reset should immediately restore every device preference default")
+	_expect(not app.fullscreen_enabled and app.text_scale_percent == 100 and not app.high_contrast_enabled and app.title_veil.color.a < 0.5 and app.controller_layout_id == "south_confirm" and InputMap.event_is_action(_joy_button_for_test(JOY_BUTTON_A), "ui_accept") and InputMap.event_is_action(_joy_button_for_test(JOY_BUTTON_B), "ui_cancel") and not app.reduced_motion and app.interface_audio_percent == 70 and app.interface_audio.volume_percent == 70 and app.autosave_enabled and app.theme.default_font_size == 16, "clean-start reset should immediately restore every device preference default")
 	_expect(app.campaign_progress.developments.is_empty() and app.campaign_progress.region_results.is_empty() and app.title_charter_label.text.contains("0/2 REGIONS SURVIVED"), "clean-start reset should rebuild an empty in-memory March Charter")
 	_expect(not app.continue_button.visible and app.quick_start_button.visible and app.start_button.text.contains("GUIDED FIRST RUN"), "clean-start reset should immediately restore the first-launch title flow")
 	_expect(app.reset_playtest_button.disabled and app.settings_status_label.text.contains("Exported feedback reports were kept") and app.settings_close_button.has_focus(), "successful clean-start reset should disable itself, report preservation, and focus an enabled return action")
@@ -835,3 +860,9 @@ func _tree_contains_text(node: Node, fragment: String) -> bool:
 		if _tree_contains_text(child, fragment):
 			return true
 	return false
+
+func _joy_button_for_test(button_index: JoyButton) -> InputEventJoypadButton:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button_index
+	event.pressed = true
+	return event

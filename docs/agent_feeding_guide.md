@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.245`; Feeds A through P are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.246`; Feeds A through Q are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -101,6 +101,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.245` through the persistent Standard/High visual contrast mode.
 
 > Add one bounded high-contrast preference that darkens image-backed surfaces, brightens muted copy, and strengthens interactive, map, and combat outlines. Preserve every written status label and symbol, restore authored colors when disabled, verify 110% text at 1280×720, and avoid claiming full accessibility certification.
+
+### Current Feed Q — controller confirm convention
+
+**Status:** Complete in `0.3.0-alpha.246` through the persistent A-confirm/B-confirm controller layout.
+
+> Let a tester swap the south/east face buttons used for confirm and cancel. Apply the real `ui_accept`/`ui_cancel` bindings, preserve Enter/Escape, update every visible controller hint, pass the layout into newly opened stages, and provide a safe default through clean reset. Do not describe this bounded convention switch as a complete binding editor.
 
 ## Historical prototype feed sequence
 

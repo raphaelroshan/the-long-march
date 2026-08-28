@@ -34,6 +34,8 @@ Settings also includes **Interface Audio** at Muted, 40%, 70%, or 100%. These sh
 
 **Visual Contrast** switches between the authored Standard palette and a darker, brighter-outlined High mode. Test it on the title, one route decision, and one contact card. Ask whether focus and secondary copy become easier to find without flattening the difference between safe, warning, danger, and unknown states; every state should remain understandable from its words and symbols alone.
 
+**Controller Confirm** can use A or B. The paired face button becomes Cancel, while Enter and Escape never change. After switching, check the title legend, Pause shortcut, briefing, route review, and chassis instructions; report any place whose hint disagrees with the button that actually acts.
+
 ## Building locally
 
 Install Godot 4.4.1 with export templates, then run:

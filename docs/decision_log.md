@@ -863,3 +863,7 @@ The shell generates four short local cues for focus, activation, warning dialogs
 ## 2026-08-28 — High contrast preserves authored meaning
 
 Settings can darken image-backed surfaces, brighten reviewed text colors, and strengthen button, route-map, and combat outlines across the running shell. The transformer records the latest authored base color rather than repeatedly lightening its own output, so dynamic warning changes remain reversible and switching back restores the standard palette. Route visibility, risk, pressure, dependency state, combat contact, and run progress continue to name themselves through text and symbols; color remains reinforcement rather than authority. This is a bounded playtest aid, not a substitute for a measured accessibility audit.
+
+## 2026-08-28 — Controller convention changes bindings and copy together
+
+Settings can swap the south/east face buttons assigned to `ui_accept` and `ui_cancel` while preserving Enter, Escape, navigation, and pointer input. The shell applies the mapping before initial focus and passes the preference into each stage before it enters the tree. Title, Pause, briefing, route, and chassis hints derive from the same layout identifier, preventing instructions from drifting away from runtime behavior. The preference deliberately stops short of a complete binding editor, which would require conflict handling, device-specific glyphs, and an inaccessible-binding recovery path.

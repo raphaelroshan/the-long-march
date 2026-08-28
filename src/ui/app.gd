@@ -8,6 +8,7 @@ const LongMarchState = preload("res://src/core/fortress_state.gd")
 const CampaignProgress = preload("res://src/support/campaign_progress.gd")
 const InterfaceAudio = preload("res://src/support/interface_audio.gd")
 const VisualContrast = preload("res://src/support/visual_contrast.gd")
+const ControllerLayout = preload("res://src/support/controller_layout.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
@@ -57,6 +58,7 @@ var settings_close_button: Button
 var display_mode_button: Button
 var text_scale_button: Button
 var contrast_button: Button
+var controller_layout_button: Button
 var motion_button: Button
 var interface_audio_button: Button
 var autosave_button: Button
@@ -82,6 +84,7 @@ var pause_hint_label: Label
 var title_build_label: Label
 var pause_build_label: Label
 var title_control_contract_label: Label
+var title_input_legend_label: Label
 var title_right_spacer: Control
 var confirmation_title_label: Label
 var confirmation_body_label: Label
@@ -98,6 +101,7 @@ var close_request_process_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
 var fullscreen_enabled: bool = false
 var text_scale_percent: int = 100
 var high_contrast_enabled: bool = false
+var controller_layout_id: String = ControllerLayout.DEFAULT_LAYOUT
 var reduced_motion: bool = false
 var interface_audio_percent: int = InterfaceAudio.DEFAULT_VOLUME_PERCENT
 var autosave_enabled: bool = true
@@ -140,6 +144,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().auto_accept_quit = false
 	_load_preferences()
+	ControllerLayout.apply(controller_layout_id)
 	interface_audio = InterfaceAudio.new()
 	interface_audio.name = "InterfaceAudio"
 	add_child(interface_audio)
@@ -159,6 +164,7 @@ func _ready() -> void:
 	interface_audio.register_root(self)
 	_apply_text_scale()
 	_apply_visual_contrast()
+	_refresh_controller_copy()
 	_configure_overlay_focus()
 	_refresh_title_state()
 	_focus_title_primary()
@@ -357,12 +363,11 @@ func _build_title_menu() -> void:
 	stage.add_child(_stage_rule("02", "Read the regional pressure", "Compare risk, fuel, time, rising danger, and what the fortress can see."))
 	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once per contact, and recover mid-run."))
 
-	var controls := Label.new()
-	controls.text = "MOUSE · KEYBOARD · CONTROLLER\nD-pad / arrows move  ·  A / Enter confirms  ·  B / Esc closes panels"
-	controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	controls.add_theme_font_size_override("font_size", 12)
-	controls.add_theme_color_override("font_color", Color("#aab6ba"))
-	right.add_child(controls)
+	title_input_legend_label = Label.new()
+	title_input_legend_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	title_input_legend_label.add_theme_font_size_override("font_size", 12)
+	title_input_legend_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	right.add_child(title_input_legend_label)
 	_configure_title_focus()
 
 func _configure_title_focus() -> void:
@@ -416,8 +421,10 @@ func _configure_overlay_focus() -> void:
 	text_scale_button.focus_neighbor_top = text_scale_button.get_path_to(display_mode_button)
 	text_scale_button.focus_neighbor_bottom = text_scale_button.get_path_to(contrast_button)
 	contrast_button.focus_neighbor_top = contrast_button.get_path_to(text_scale_button)
-	contrast_button.focus_neighbor_bottom = contrast_button.get_path_to(motion_button)
-	motion_button.focus_neighbor_top = motion_button.get_path_to(contrast_button)
+	contrast_button.focus_neighbor_bottom = contrast_button.get_path_to(controller_layout_button)
+	controller_layout_button.focus_neighbor_top = controller_layout_button.get_path_to(contrast_button)
+	controller_layout_button.focus_neighbor_bottom = controller_layout_button.get_path_to(motion_button)
+	motion_button.focus_neighbor_top = motion_button.get_path_to(controller_layout_button)
 	motion_button.focus_neighbor_bottom = motion_button.get_path_to(interface_audio_button)
 	interface_audio_button.focus_neighbor_top = interface_audio_button.get_path_to(motion_button)
 	interface_audio_button.focus_neighbor_bottom = interface_audio_button.get_path_to(autosave_button)
@@ -649,7 +656,7 @@ func _build_settings_overlay() -> void:
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var intro := Label.new()
-	intro.text = "Adjust display, accessibility, interface audio, save behavior, and the guided briefing. These preferences stay on this device."
+	intro.text = "Adjust display, accessibility, controls, interface audio, save behavior, and the guided briefing. These preferences stay on this device."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.custom_minimum_size = Vector2(550, 36)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
@@ -669,6 +676,7 @@ func _build_settings_overlay() -> void:
 	display_mode_button = _settings_action(settings_actions, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	text_scale_button = _settings_action(settings_actions, "TEXT SIZE", "Increase interface text while preserving the complete 1280×720 decision layout.", _toggle_text_scale)
 	contrast_button = _settings_action(settings_actions, "VISUAL CONTRAST", "Darken backdrops, brighten muted copy, and strengthen interactive outlines without hiding status text.", _toggle_high_contrast)
+	controller_layout_button = _settings_action(settings_actions, "CONTROLLER BUTTONS", "Swap the A/B confirm and cancel buttons while Enter and Escape stay fixed.", _toggle_controller_layout)
 	motion_button = _settings_action(settings_actions, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
 	interface_audio_button = _settings_action(settings_actions, "INTERFACE AUDIO", "Cycle restrained focus, confirmation, warning, and checkpoint cue volume.", _cycle_interface_audio)
 	interface_audio_button.set_meta("long_march_audio_manual_press", true)
@@ -831,7 +839,7 @@ func _build_pause_menu() -> void:
 	_warning_button(title_button)
 	session_actions.add_child(title_button)
 	pause_hint_label = Label.new()
-	pause_hint_label.text = "B / Esc resumes"
+	pause_hint_label.text = "%s / Esc resumes" % ControllerLayout.cancel_label(controller_layout_id)
 	pause_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_hint_label.add_theme_font_size_override("font_size", 12)
 	pause_hint_label.add_theme_color_override("font_color", Color("#829092"))
@@ -918,6 +926,7 @@ func _load_preferences() -> void:
 	fullscreen_enabled = false
 	text_scale_percent = 100
 	high_contrast_enabled = false
+	controller_layout_id = ControllerLayout.DEFAULT_LAYOUT
 	reduced_motion = false
 	interface_audio_percent = InterfaceAudio.DEFAULT_VOLUME_PERCENT
 	autosave_enabled = true
@@ -927,6 +936,7 @@ func _load_preferences() -> void:
 		var stored_scale := int(config.get_value("accessibility", "text_scale_percent", 100))
 		text_scale_percent = stored_scale if stored_scale in [100, 110] else 100
 		high_contrast_enabled = bool(config.get_value("accessibility", "high_contrast", false))
+		controller_layout_id = ControllerLayout.normalize(String(config.get_value("input", "controller_layout", ControllerLayout.DEFAULT_LAYOUT)))
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
 		var stored_audio := int(config.get_value("audio", "interface_percent", InterfaceAudio.DEFAULT_VOLUME_PERCENT))
 		interface_audio_percent = stored_audio if stored_audio in InterfaceAudio.VOLUME_LEVELS else InterfaceAudio.DEFAULT_VOLUME_PERCENT
@@ -940,6 +950,7 @@ func _save_preferences() -> void:
 	config.set_value("display", "fullscreen", fullscreen_enabled)
 	config.set_value("accessibility", "text_scale_percent", text_scale_percent)
 	config.set_value("accessibility", "high_contrast", high_contrast_enabled)
+	config.set_value("input", "controller_layout", controller_layout_id)
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
 	config.set_value("audio", "interface_percent", interface_audio_percent)
 	config.set_value("gameplay", "autosave_enabled", autosave_enabled)
@@ -969,6 +980,7 @@ func _refresh_settings(message: String = "") -> void:
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen_enabled else "FULLSCREEN · OFF"
 	text_scale_button.text = "TEXT SIZE · %d%%" % text_scale_percent
 	contrast_button.text = "VISUAL CONTRAST · HIGH" if high_contrast_enabled else "VISUAL CONTRAST · STANDARD"
+	controller_layout_button.text = "CONTROLLER CONFIRM · %s" % ControllerLayout.confirm_label(controller_layout_id)
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
 	interface_audio_button.text = "INTERFACE AUDIO · MUTED" if interface_audio_percent == 0 else "INTERFACE AUDIO · %d%%" % interface_audio_percent
 	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
@@ -986,7 +998,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
-	var active_controls: Array = [display_mode_button, text_scale_button, contrast_button, motion_button, interface_audio_button, autosave_button]
+	var active_controls: Array = [display_mode_button, text_scale_button, contrast_button, controller_layout_button, motion_button, interface_audio_button, autosave_button]
 	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button, reset_playtest_button]:
 		if not optional_button.disabled:
 			active_controls.append(optional_button)
@@ -1059,6 +1071,32 @@ func _refresh_contrast_button_styles() -> void:
 	for button in [reset_playtest_button, restart_button, title_button]:
 		if button != null:
 			_warning_button(button)
+
+func _toggle_controller_layout() -> void:
+	controller_layout_id = ControllerLayout.EAST_CONFIRM if controller_layout_id == ControllerLayout.SOUTH_CONFIRM else ControllerLayout.SOUTH_CONFIRM
+	_apply_controller_layout()
+	_save_preferences()
+	_refresh_settings("Controller %s now confirms; %s cancels. Enter and Escape are unchanged." % [ControllerLayout.confirm_label(controller_layout_id), ControllerLayout.cancel_label(controller_layout_id)])
+	controller_layout_button.grab_focus()
+	call_deferred("_ensure_settings_control_visible", controller_layout_button)
+
+func _apply_controller_layout() -> void:
+	ControllerLayout.apply(controller_layout_id)
+	_refresh_controller_copy()
+	if game_view != null:
+		game_view.call("set_controller_layout", controller_layout_id)
+
+func _refresh_controller_copy() -> void:
+	var confirm_label := ControllerLayout.confirm_label(controller_layout_id)
+	if title_input_legend_label != null:
+		title_input_legend_label.text = "MOUSE · KEYBOARD · CONTROLLER\nD-pad / arrows move  ·  %s / Enter confirms  ·  %s / Esc closes panels" % [confirm_label, ControllerLayout.cancel_label(controller_layout_id)]
+	if pause_hint_label != null:
+		pause_hint_label.text = _pause_cancel_hint()
+
+func _pause_cancel_hint() -> String:
+	var cancel_label := ControllerLayout.cancel_label(controller_layout_id)
+	var viewing_debrief := game_view != null and String(game_view.get("state").get("phase")) == "results"
+	return "%s / Esc returns to debrief" % cancel_label if viewing_debrief else "%s / Esc resumes" % cancel_label
 
 func _toggle_reduced_motion() -> void:
 	reduced_motion = not reduced_motion
@@ -1371,6 +1409,7 @@ func _reset_playtest_data() -> Dictionary:
 	_apply_display_mode()
 	_apply_text_scale()
 	_apply_visual_contrast()
+	_apply_controller_layout()
 	interface_audio.set_volume_percent(interface_audio_percent)
 	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
 	var progress_result := campaign_progress.load_progress()
@@ -1398,6 +1437,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
 	game_view.set("high_contrast_enabled", high_contrast_enabled)
+	game_view.set("controller_layout_id", controller_layout_id)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
 	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))
@@ -1461,7 +1501,7 @@ func _refresh_pause_summary(message: String = "") -> void:
 	pause_save_button.text = "SAVE RESULT" if viewing_debrief else "SAVE MARCH"
 	restart_button.text = "PLAY AGAIN" if viewing_debrief else "RESTART"
 	restart_button.tooltip_text = "Begin another %s march after confirmation." % region_name if viewing_debrief else "Discard the current %s stage state and begin again." % region_name
-	pause_hint_label.text = "B / Esc returns to debrief" if viewing_debrief else "B / Esc resumes"
+	pause_hint_label.text = _pause_cancel_hint()
 	pause_summary_label.text = "%s · DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [region_name.to_upper(), int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
 	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."

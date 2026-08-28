@@ -10,6 +10,7 @@ signal playtest_notes_closed
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
 const VisualContrast = preload("res://src/support/visual_contrast.gd")
+const ControllerLayout = preload("res://src/support/controller_layout.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const CombatPanel = preload("res://src/ui/combat_panel.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
@@ -236,6 +237,7 @@ var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
 var starting_region_results: Dictionary = {}
 var high_contrast_enabled: bool = false
+var controller_layout_id: String = ControllerLayout.DEFAULT_LAYOUT
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -417,6 +419,7 @@ func _ready() -> void:
 	_build_ui()
 	campaign_map.set_high_contrast(high_contrast_enabled)
 	combat_panel.set_high_contrast(high_contrast_enabled)
+	_refresh_controller_copy()
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
 	if show_onboarding_on_ready and not FileAccess.file_exists(ONBOARDING_PATH):
@@ -440,6 +443,31 @@ func set_high_contrast(enabled: bool) -> void:
 		if button_data[0] != null:
 			_accent_button(button_data[0], button_data[1], button_data[2])
 	_refresh_ui()
+
+func set_controller_layout(layout_id: String) -> void:
+	controller_layout_id = ControllerLayout.normalize(layout_id)
+	_refresh_controller_copy()
+	_refresh_ui()
+
+func _controller_confirm_label() -> String:
+	return ControllerLayout.confirm_label(controller_layout_id)
+
+func _controller_cancel_label() -> String:
+	return ControllerLayout.cancel_label(controller_layout_id)
+
+func _confirm_shortcut() -> String:
+	return "%s / Enter" % _controller_confirm_label()
+
+func _cancel_shortcut(spaced: bool = true) -> String:
+	return "%s / Esc" % _controller_cancel_label() if spaced else "%s/Esc" % _controller_cancel_label()
+
+func _refresh_controller_copy() -> void:
+	if focus_chassis_button != null:
+		focus_chassis_button.tooltip_text = "Move keyboard or controller focus to the chassis. Use arrows to move, %s to select or place, and %s to return." % [_confirm_shortcut(), _cancel_shortcut()]
+	if combat_inspect_button != null:
+		combat_inspect_button.tooltip_text = "Move keyboard or controller focus to the chassis. Choose a system with %s to return directly to Seal Compartment." % _confirm_shortcut()
+	if fortress_panel != null:
+		fortress_panel.set_controller_labels(_controller_confirm_label(), _controller_cancel_label())
 
 func _reset_state() -> void:
 	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)
@@ -513,7 +541,7 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", Color("#e8c58e"))
 	header.add_child(title)
 	pause_button = Button.new()
-	pause_button.text = "PAUSE · ESC / B"
+	pause_button.text = "PAUSE · ESC / %s" % _controller_cancel_label()
 	pause_button.custom_minimum_size = Vector2(190, 42)
 	pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
@@ -1145,7 +1173,7 @@ func _build_onboarding_overlay() -> void:
 	onboarding_action_label.add_theme_color_override("font_color", Color("#aee4cf"))
 	action_panel.add_child(onboarding_action_label)
 	onboarding_progress_label = Label.new()
-	onboarding_progress_label.text = "D-pad / arrows or Tab move · A / Enter confirms · B / Esc skips"
+	onboarding_progress_label.text = "D-pad / arrows or Tab move · %s confirms · %s skips" % [_confirm_shortcut(), _cancel_shortcut()]
 	onboarding_progress_label.add_theme_color_override("font_color", Color("#8fa3a7"))
 	content.add_child(onboarding_progress_label)
 	var actions := HBoxContainer.new()
@@ -1309,7 +1337,7 @@ func _refresh_onboarding() -> void:
 	onboarding_title_label.text = String(step.title)
 	onboarding_body_label.text = String(step.body)
 	onboarding_action_label.text = String(step.action)
-	onboarding_progress_label.text = "%s briefing %d of %d  ·  D-pad / arrows or Tab move  ·  A / Enter confirms  ·  B / Esc %s" % ["Veyru" if state.campaign_region_id == "flooded_veyru" else "Ashgate", onboarding_step + 1, steps.size(), "closes" if onboarding_reopened else "closes for this run"]
+	onboarding_progress_label.text = "%s briefing %d of %d  ·  D-pad / arrows or Tab move  ·  %s confirms  ·  %s %s" % ["Veyru" if state.campaign_region_id == "flooded_veyru" else "Ashgate", onboarding_step + 1, steps.size(), _confirm_shortcut(), _cancel_shortcut(), "closes" if onboarding_reopened else "closes for this run"]
 	for index in range(onboarding_step_panels.size()):
 		var panel := onboarding_step_panels[index]
 		var label := onboarding_step_labels[index]
@@ -1603,7 +1631,7 @@ func _on_campaign_node_selected(node_id: String) -> void:
 		return
 	selected_campaign_node_id = node_id
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
-	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready. B/Esc cancels selection." % String(preview.get("name", node_id)))
+	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready. %s cancels selection." % [String(preview.get("name", node_id)), _cancel_shortcut(false)])
 	_refresh_ui()
 	if not _focus_control(campaign_commit_button):
 		_focus_control(campaign_cancel_button)
@@ -1779,7 +1807,7 @@ func _refresh_pause_action_hint() -> void:
 		pause_button.text = "PAUSE · ROUTE REVIEW"
 		pause_button.tooltip_text = "Pause with this button. B or Escape clears the selected route first."
 	else:
-		pause_button.text = "PAUSE · ESC / B"
+		pause_button.text = "PAUSE · ESC / %s" % _controller_cancel_label()
 		pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
 
 func _scroll_chassis_into_view() -> void:
@@ -2765,7 +2793,7 @@ func _refresh_ui() -> void:
 	var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 	var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
 	var selected_review := "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else ("Final commitment: failure ends the run; there is no retreat. Review costs and doctrine, then commit when ready." if selected_campaign_node_id == state.campaign_final_node_id() else "Review its costs and doctrine, then commit when ready.")
-	var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, selected_review]
+	var selected_instruction := "%s selected · %s %s cancels selection." % [selected_node_name, selected_review, _cancel_shortcut(false)]
 	if state.phase == "results":
 		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, _active_contract_status().replace("_", " ").capitalize(), int(dependencies.offline)]
 		encounter_label.add_theme_color_override("font_color", Color("#f0d29d"))
@@ -2854,10 +2882,10 @@ func _current_guidance() -> String:
 		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
 		var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 		if not block_reason.is_empty():
-			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again. B/Esc cancels selection." % block_reason
+			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again. %s cancels selection." % [block_reason, _cancel_shortcut(false)]
 		if selected_campaign_node_id == state.campaign_final_node_id():
-			return "FINAL COMMITMENT · %s is selected. Failure ends the run; there is no retreat. Review costs and doctrine, then press Commit. B/Esc cancels selection." % node_name
-		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit. B/Esc cancels selection." % node_name
+			return "FINAL COMMITMENT · %s is selected. Failure ends the run; there is no retreat. Review costs and doctrine, then press Commit. %s cancels selection." % [node_name, _cancel_shortcut(false)]
+		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit. %s cancels selection." % [node_name, _cancel_shortcut(false)]
 	if state.encounter_outcome == "forced_retreat":
 		if state.phase == "settlement":
 			return "RETREAT TO %s · %s. Review the after-action losses, recover, and refit before choosing another road." % [_recovery_location_name().to_upper(), _service_action_status_text()]
@@ -3134,6 +3162,8 @@ class FortressPanel extends Control:
 	var cursor_cell := Vector2i(0, 0)
 	var combat_target_ids: Array[String] = []
 	var hull_under_threat: bool = false
+	var controller_confirm_label: String = "A"
+	var controller_cancel_label: String = "B"
 	var family_colors := {
 		"engine": Color("#b86f4b"),
 		"weapon": Color("#b44949"),
@@ -3149,9 +3179,18 @@ class FortressPanel extends Control:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		focus_mode = Control.FOCUS_ALL
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		tooltip_text = "Click a module to select it, or click an empty cell to place or move. With keyboard or controller focus, use arrows and A or Enter; B or Escape returns to the desk."
+		_refresh_controller_tooltip()
 		focus_entered.connect(queue_redraw)
 		focus_exited.connect(queue_redraw)
+
+	func set_controller_labels(confirm_label: String, cancel_label: String) -> void:
+		controller_confirm_label = confirm_label
+		controller_cancel_label = cancel_label
+		_refresh_controller_tooltip()
+		queue_redraw()
+
+	func _refresh_controller_tooltip() -> void:
+		tooltip_text = "Click a module to select it, or click an empty cell to place or move. With keyboard or controller focus, use arrows and %s or Enter; %s or Escape returns to the desk." % [controller_confirm_label, controller_cancel_label]
 
 	func _grid_rect() -> Rect2:
 		return Rect2(ORIGIN, Vector2(LongMarchState.GRID_WIDTH * CELL, LongMarchState.GRID_HEIGHT * CELL))
@@ -3178,10 +3217,10 @@ class FortressPanel extends Control:
 				var hovered_name := String(state.module_definition(String(hovered.get("id", ""))).get("name", "module")).to_upper()
 				if selected_cell in state.occupied_cells(hovered):
 					return "SELECTED · %s · MOVE TO AN EMPTY CELL" % hovered_name
-				return "SELECT %s · A / ENTER TO INSPECT" % hovered_name
+				return "SELECT %s · %s / ENTER TO INSPECT" % [hovered_name, controller_confirm_label]
 		var validation := _placement_validation()
 		if bool(validation.get("ok", false)):
-			return "PLACEMENT READY · A / ENTER TO APPLY"
+			return "PLACEMENT READY · %s / ENTER TO APPLY" % controller_confirm_label
 		return "BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
 
 	func exterior_mount_count() -> int:
@@ -3198,8 +3237,8 @@ class FortressPanel extends Control:
 		if not has_focus():
 			return "CHASSIS GRID · %s — exterior mounts use a bright edge" % mount_status
 		if state != null and state.can_refit():
-			return "CHASSIS EDIT MODE · %s — arrows move · A acts · B returns" % mount_status
-		return "CHASSIS INSPECTION · %s — arrows move · A selects · B returns" % mount_status
+			return "CHASSIS EDIT MODE · %s — arrows move · %s acts · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
+		return "CHASSIS INSPECTION · %s — arrows move · %s selects · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
 
 	func locked_mode_help_text() -> String:
 		if state == null:
@@ -3342,7 +3381,7 @@ class FortressPanel extends Control:
 			var placement_validation := _placement_validation()
 			var status_color := Color("#f0cf96") if not hovered.is_empty() else (Color("#73c99b") if bool(placement_validation.get("ok", false)) else Color("#ef8375"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), placement_status_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, status_color)
-			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · A confirms · B returns", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · %s confirms · %s returns" % [controller_confirm_label, controller_cancel_label], HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 
