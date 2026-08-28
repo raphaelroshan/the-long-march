@@ -466,13 +466,17 @@ func _run() -> void:
 	_expect(not game.fortress_panel.hull_under_threat, "the whole-chassis threat treatment should clear when the enemy resumes a module target")
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
-	var resolved_step_text := "%d step%s" % [game.state.encounter_step, "" if game.state.encounter_step == 1 else "s"]
-	_expect(game.encounter_label.text.contains("resolved in %s" % resolved_step_text) and not game.encounter_label.text.contains("step(s)"), "after-action summaries should use the actual natural singular or plural step count")
-	_expect(game.encounter_label.text.contains("Choose the next available route") and not game.encounter_label.text.contains("visible node"), "after-action guidance should distinguish selectable routes from every node shown on the regional chart")
+	_expect(game.state.campaign_event_pending == "lift_chain_sings" and game.encounter_label.text.begins_with("DECISION REQUIRED · THE LIFT CHAIN SINGS"), "the first eligible seeded occurrence should replace the generic after-action prompt with one primary road decision")
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
 	_expect(game.campaign_map.status_for("soot_orchard") == "bypassed" and game.campaign_map.button_for("soot_orchard").text.contains("BYPASSED") and game.campaign_map.detail_for("soot_orchard").contains("cannot be revisited"), "the unchosen opening branch should be marked bypassed rather than presented as a future destination")
+	await process_frame
+	await process_frame
+	_expect(game.campaign_event_title.text == "THE LIFT CHAIN SINGS" and game.campaign_event_buttons[0].text.contains("Ashmarks -6") and game.campaign_event_buttons[0].text.contains("Future route risk -2%") and game.campaign_event_buttons[1].text.contains("Ammunition Lift -1 durability"), "the seeded occurrence card should disclose both dependency tradeoffs before commitment")
+	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_event_title.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "the complete occurrence card should stay visible at the reference viewport")
+	await _press_campaign_event("brace_lift_chain")
+	_expect(game.state.occurrence_history.size() == 1 and game.event_label.text.contains("future route risk falls by 2%"), "resolving an occurrence should immediately expose its consequence and retain one audit record")
 	_expect(game.campaign_map.button_for("red_wheel_toll_bridge").text.contains("UNSCOUTED · UNKNOWN"), "an available unscouted node should advertise uncertainty without exposing its hidden risk")
 	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
 	await process_frame
@@ -489,6 +493,7 @@ func _run() -> void:
 	game.state.fuel = 0
 	var retreat_result: Dictionary = game.state._campaign_recover_from_failure()
 	game._refresh_ui()
+	game.focus_current_action()
 	await process_frame
 	_expect(bool(retreat_result.get("ok", false)) and game.state.phase == "map", "a non-final loss should return the campaign to its last safe planning node")
 	_expect(game.guidance_label.text.begins_with("RETREAT RECOVERED") and game.guidance_label.text.contains("patched movement chain"), "post-retreat guidance should acknowledge recovery before asking for another road")
@@ -692,7 +697,7 @@ func _run() -> void:
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
 	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
-	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Key decisions: Broken Relay — moved silently") and game.results_record_label.text.contains("Mara Flint — rebuilt Field Workshop") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, Mara's causal outcome, authored decisions, unused recovery, doctrine, and named operating condition needed to interpret the run")
+	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Key decisions: Broken Relay — moved silently") and game.results_record_label.text.contains("Mara Flint — rebuilt Field Workshop") and game.results_record_label.text.contains("Road occurrence — The Lift Chain Sings: Brace Lift Chain") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, Mara's causal outcome, occurrence record, authored decisions, unused recovery, doctrine, and named operating condition needed to interpret the run")
 	_expect(game.results_replay_label.text.begins_with("NEXT RUN") and game.results_replay_label.text.contains("1 Morrowline service action went unused") and game.results_replay_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
 	var completed_path: Array[String] = game.state.campaign_path.duplicate()
 	var completed_encounters: int = game.state.campaign_encounters_completed

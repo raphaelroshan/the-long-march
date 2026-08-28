@@ -13,16 +13,17 @@ This is an internal, testable alpha chapter for The Long March. It proves a five
 5. Accept or decline the **Morrowline Parts Guard**, then compare the known/forecast/unscouted information for **Rill Crossing** and **The Soot Orchard**.
 6. Select a doctrine—protect cargo, protect crew, or run hot—and begin the first encounter. Refit controls lock during travel and battle.
 7. Advance the battle one step at a time. Compare each active contact's **Next Hit** value with the result. Use **Inspect Chassis** to select a Seal Compartment target without a mouse, or use **Shift power to weapons** once if the weapon system needs priority, then read the causal report.
-8. Choose **Broken Relay** or **Red Wheel Toll Bridge** for the second encounter. Resolve the node decision and verify its money, trust, risk, or pressure consequence.
-9. If the relay was restored, inspect Iven Pell's crew-space and supply requirements; recruit him when the build permits and confirm exact threat names replace broad forecasts.
-10. Complete the Morrowline approach as encounter three. If the guard contract was accepted, confirm its extra endurance and the 30-Ashmark/two-trust payment.
-11. At Morrowline, inspect Mara Flint's requirements. Recruit or decline her; if recruited, spend the one forge core on delayed machine repair or Refugee Bunk bracing and verify both costs are visible before choosing.
-12. Spend up to two service actions on module repair, hull repair, or fuel. With Mara aboard, confirm a three-point module repair still costs the two-point price. Refit and compare **Lower Ash Road**, the condenser-gated **Dry Cistern Cut**, and **Signal Causeway**.
-13. Complete the fourth encounter, resolve Mara's **What Held** callback if active, then depart for **Meridian Pass** and resolve the fifth encounter against the Siege Beast.
-14. Verify a **Decisive March**, **Scarred March**, or **March Failed** result and confirm the debrief card includes path, pressure, contract, specialist, Mara's causal result when applicable, surviving systems, missed thresholds, and a concrete replay goal.
-15. On another attempt, allow a non-final encounter to disable the engine or hull. Confirm the fortress retreats to the last secured node with stated time, money, and pressure costs instead of ending the run.
-16. Save and load during a map decision, active Mara event, or Morrowline recovery and confirm the graph position, phase, resources, module state, contract, specialist, pressure, damage, and reports are preserved.
-17. Open **Playtest feedback** after the result, confirm the modal cleanly separates the form from the debrief beneath it, answer the two short prompts, and save the local JSON bundle if the tester agrees to share it.
+8. If a seeded road occurrence appears, verify that its complete cost is visible, resolve it, and confirm the debrief later records the chosen response. A quiet phase is also a valid deterministic result.
+9. Choose **Broken Relay** or **Red Wheel Toll Bridge** for the second encounter. Resolve the node decision and verify its money, trust, risk, or pressure consequence.
+10. If the relay was restored, inspect Iven Pell's crew-space and supply requirements; recruit him when the build permits and confirm exact threat names replace broad forecasts.
+11. Complete the Morrowline approach as encounter three. If the guard contract was accepted, confirm its extra endurance and the 30-Ashmark/two-trust payment.
+12. At Morrowline, inspect Mara Flint's requirements. Recruit or decline her; if recruited, spend the one forge core on delayed machine repair or Refugee Bunk bracing and verify both costs are visible before choosing.
+13. Spend up to two service actions on module repair, hull repair, or fuel. With Mara aboard, confirm a three-point module repair still costs the two-point price. Refit and compare **Lower Ash Road**, the condenser-gated **Dry Cistern Cut**, and **Signal Causeway**.
+14. Complete the fourth encounter, resolve Mara's **What Held** callback if active, then depart for **Meridian Pass** and resolve the fifth encounter against the Siege Beast.
+15. Verify a **Decisive March**, **Scarred March**, or **March Failed** result and confirm the debrief card includes path, pressure, contract, specialist, road occurrences, Mara's causal result when applicable, surviving systems, missed thresholds, and a concrete replay goal.
+16. On another attempt, allow a non-final encounter to disable the engine or hull. Confirm the fortress retreats to the last secured node with stated time, money, and pressure costs instead of ending the run.
+17. Save and load during a map decision, active occurrence, active Mara event, or Morrowline recovery and confirm the graph position, phase, resources, module state, event stream, pressure, damage, and reports are preserved.
+18. Open **Playtest feedback** after the result, confirm the modal cleanly separates the form from the debrief beneath it, answer the two short prompts, and save the local JSON bundle if the tester agrees to share it.
 
 The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 
@@ -43,4 +44,4 @@ The integrated kit includes a Long March visual reference, Ashgate journey backg
 
 ## Scope boundaries
 
-This release includes one authored FTL-like regional graph and two mutually exclusive recruitable specialists. It does not include later regions, procedural map generation, a complete cargo economy, final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. The chapter is intentionally deterministic and inspectable so agents and testers can tune the map loop before adding campaign breadth.
+This release includes one authored FTL-like regional graph, two mutually exclusive recruitable specialists, and a bounded scheduler for four authored occurrences. It does not include later regions, procedural prose or maps, a complete cargo economy, final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. The chapter is intentionally deterministic and inspectable so agents and testers can tune the map loop before adding campaign breadth.

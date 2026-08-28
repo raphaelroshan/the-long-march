@@ -1289,6 +1289,7 @@ func _state_journal_summary() -> Dictionary:
 		"unused_recovery_actions": state.settlement_actions_remaining,
 		"specialist": state.specialist_id,
 		"mara_result": state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else "",
+		"occurrence_history": state.occurrence_history.duplicate(true),
 		"ready_systems": int(dependencies.get("ready", 0)),
 		"strained_systems": int(dependencies.get("strained", 0)),
 		"offline_systems": int(dependencies.get("offline", 0))
@@ -2715,7 +2716,9 @@ func _result_record_text() -> String:
 	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
 	var mara_line := "\n%s" % state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else ""
-	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nKey decisions: %s%s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	var occurrence_lines := state.occurrence_debrief_lines()
+	var occurrence_block := "\n%s" % "\n".join(occurrence_lines) if not occurrence_lines.is_empty() else ""
+	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nKey decisions: %s%s%s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_band().capitalize(),
@@ -2724,6 +2727,7 @@ func _result_record_text() -> String:
 		specialist_name,
 		_campaign_decision_record_text(),
 		mara_line,
+		occurrence_block,
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
 		int(dependencies.get("ready", 0)),

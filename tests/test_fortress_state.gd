@@ -28,6 +28,7 @@ func _init() -> void:
 	_test_water_condenser_route_unlock()
 	_test_water_condenser_threat_and_recovery()
 	_test_mara_flint_event_chain()
+	_test_bounded_occurrence_scheduler()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -781,6 +782,113 @@ func _test_mara_flint_event_chain() -> void:
 		replay_state._finish_campaign_encounter(true)
 		replay_state.resolve_campaign_event(String(replay_state.mara_followup_preview().get("choice_id", "")))
 	_expect(first.serialize() == second.serialize(), "Mara's complete event chain should replay deterministically from the same state and choices")
+
+func _install_occurrence_loadout(state: LongMarchState) -> void:
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("parts_crate", Vector2i(4, 1))
+	state.place_module("refugee_bunk", Vector2i(4, 2))
+	state.modules[state._module_index_by_id("steam_lance_engine")]["durability"] = 2
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	state.campaign_encounters_completed = 1
+	state.current_location = "rill_crossing"
+	state.journey_node = "rill_crossing"
+	state.phase = "map"
+
+func _activate_occurrence(state: LongMarchState, event_id: String, phase_id: String) -> void:
+	state.campaign_event_pending = event_id
+	state.occurrence_active_phase = phase_id
+	state.occurrence_phase_history.append(phase_id)
+
+func _test_bounded_occurrence_scheduler() -> void:
+	var first := LongMarchState.new(1107)
+	var second := LongMarchState.new(1107)
+	for state in [first, second]:
+		_install_occurrence_loadout(state)
+		var candidates: Array[String] = state.occurrence_candidates("road_arrival", "rill_crossing")
+		_expect(candidates == ["boiler_heartbeat", "the_last_dry_room", "the_miller_with_a_broken_wheel"], "occurrence eligibility should filter the library by live systems before selection")
+		var scheduled: Dictionary = state.try_schedule_occurrence("road_arrival", "rill_crossing", "road_arrival_1_rill_crossing")
+		_expect(String(scheduled.get("event_id", "")) == "boiler_heartbeat", "the named occurrence stream should select the same authored incident for the fixed fixture")
+		var details: Dictionary = state.campaign_event_details()
+		var enabled_counter := false
+		for choice in details.get("choices", []):
+			enabled_counter = enabled_counter or bool(choice.get("enabled", false))
+		_expect(enabled_counter and String(details.get("title", "")).contains("Heartbeat"), "every scheduled occurrence should expose at least one enabled counter in the existing event card")
+	_expect(first.campaign_event_pending == second.campaign_event_pending and first.occurrence_stream_cursor == second.occurrence_stream_cursor and first.occurrence_phase_history == second.occurrence_phase_history, "identical seeds and eligible state should produce identical occurrence selection state")
+	var active_restore := LongMarchState.new(0)
+	_expect(bool(active_restore.load_serialized(first.serialize()).get("ok", false)) and active_restore.campaign_event_pending == "boiler_heartbeat" and active_restore.occurrence_active_phase == "road_arrival_1_rill_crossing" and active_restore.occurrence_stream_cursor == 1, "an active occurrence and its named-stream cursor should survive save/load")
+	var cursor_before := first.occurrence_stream_cursor
+	var pressure_before := first.campaign_pressure
+	var resolved := first.resolve_campaign_event("inspect_boiler")
+	_expect(bool(resolved.get("ok", false)) and first.day == 2 and first.campaign_pressure == pressure_before + 1 and int(first.modules[first._module_index_by_id("steam_lance_engine")].durability) == 3, "the boiler inspection should repair the named engine for its visible time and pressure cost")
+	_expect(first.occurrence_history.size() == 1 and first.occurrence_active_phase.is_empty() and String(first.occurrence_history[0].choice_id) == "inspect_boiler", "resolving an occurrence should append one typed audit record and clear active state")
+	var repeated_phase := first.try_schedule_occurrence("road_arrival", "rill_crossing", "road_arrival_1_rill_crossing")
+	_expect(String(repeated_phase.get("event_id", "")).is_empty() and first.occurrence_stream_cursor == cursor_before, "an evaluated phase should not reroll after resolution or reload")
+	_expect(not bool(first.occurrence_eligibility("boiler_heartbeat", "road_arrival", "lower_ash_road").eligible), "a repeatable occurrence should respect its encounter cooldown")
+	first.campaign_encounters_completed = 4
+	_expect(bool(first.occurrence_eligibility("boiler_heartbeat", "road_arrival", "lower_ash_road").eligible), "a repeatable occurrence should become eligible again after its cooldown")
+
+	var dry_room := LongMarchState.new(1107)
+	_install_occurrence_loadout(dry_room)
+	_activate_occurrence(dry_room, "the_last_dry_room", "manual_dry_room")
+	var parts_before := int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability)
+	_expect(bool(dry_room.resolve_campaign_event("shelter_in_dry_room").get("ok", false)) and dry_room.settlement_trust == 2 and dry_room.shelter_tendency == 1 and int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability) == parts_before - 1, "the dry-room shelter choice should exchange physical repair stock for trust and refuge capacity")
+	_expect(not bool(dry_room.occurrence_eligibility("the_last_dry_room", "road_arrival", "lower_ash_road").eligible), "a one-shot occurrence should not repeat after resolution")
+
+	var lift := LongMarchState.new(1107)
+	lift.place_module("steam_lance_engine", Vector2i(0, 0))
+	lift.place_module("coal_cell", Vector2i(0, 1))
+	lift.place_module("generator_core", Vector2i(2, 0))
+	lift.place_module("ammunition_lift", Vector2i(2, 1))
+	lift.place_module("repeater_gun", Vector2i(3, 2), true)
+	lift.start_campaign()
+	lift.choose_guard_contract(false)
+	lift.campaign_encounters_completed = 1
+	_activate_occurrence(lift, "lift_chain_sings", "manual_lift")
+	var lift_before := int(lift.modules[lift._module_index_by_id("ammunition_lift")].durability)
+	_expect(bool(lift.resolve_campaign_event("carry_lift_load").get("ok", false)) and int(lift.modules[lift._module_index_by_id("ammunition_lift")].durability) == lift_before - 1, "the lift incident should make dependency strain explicit and recoverable")
+
+	var miller := LongMarchState.new(1107)
+	_install_occurrence_loadout(miller)
+	_activate_occurrence(miller, "the_miller_with_a_broken_wheel", "manual_miller")
+	var workshop_before := int(miller.modules[miller._module_index_by_id("field_workshop")].durability)
+	_expect(bool(miller.resolve_campaign_event("lend_workshop_bench").get("ok", false)) and miller.fuel == 7 and miller.settlement_trust == 1 and int(miller.modules[miller._module_index_by_id("field_workshop")].durability) == workshop_before - 1, "the optional meeting should trade workshop condition and time for fuel and trust without creating a recruit state")
+
+	var seen_results: Dictionary = {}
+	for world_seed in range(1, 33):
+		var seeded := LongMarchState.new(world_seed)
+		_install_occurrence_loadout(seeded)
+		var seeded_result := seeded.try_schedule_occurrence("road_arrival", "rill_crossing", "seed_audit")
+		var event_id := String(seeded_result.get("event_id", ""))
+		seen_results[event_id] = true
+		if not event_id.is_empty():
+			var has_counter := false
+			for choice in seeded.campaign_event_details().get("choices", []):
+				has_counter = has_counter or bool(choice.get("enabled", false))
+			_expect(has_counter, "every tested seed that selects an occurrence should preserve one visible legal counter")
+	_expect(seen_results.size() >= 3 and seen_results.has(""), "the named stream should produce multiple authored results and intentional quiet phases across tested seeds")
+
+	var bounded := LongMarchState.new(1107)
+	for index in range(LongMarchState.OCCURRENCE_HISTORY_LIMIT + 3):
+		bounded.occurrence_active_phase = "history_%d" % index
+		bounded._record_occurrence_resolution("lift_chain_sings", "carry_lift_load")
+	_expect(bounded.occurrence_history.size() == LongMarchState.OCCURRENCE_HISTORY_LIMIT and String(bounded.occurrence_history[0].phase_id) == "history_3", "occurrence history should discard its oldest records instead of growing without bound")
+	var malformed_history := first.serialize()
+	malformed_history["occurrence_history"] = []
+	for index in range(LongMarchState.OCCURRENCE_HISTORY_LIMIT + 1):
+		malformed_history["occurrence_history"].append({"event_id": "lift_chain_sings", "choice_id": "carry_lift_load", "phase_id": "bad_%d" % index})
+	_expect(not bool(LongMarchState.new(0).load_serialized(malformed_history).get("ok", false)), "unbounded occurrence history should be rejected before mutating restored state")
+	var version_five := first.serialize()
+	version_five["save_version"] = 5
+	for key in ["occurrence_stream", "occurrence_stream_cursor", "occurrence_active_phase", "occurrence_phase_history", "occurrence_history", "occurrence_cooldowns"]:
+		version_five.erase(key)
+	var migrated := LongMarchState.new(0)
+	_expect(bool(migrated.load_serialized(version_five).get("ok", false)) and migrated.occurrence_history.is_empty() and migrated.occurrence_stream_cursor == 0, "version-five checkpoints should migrate with an empty occurrence scheduler")
+	_expect(first.occurrence_debrief_lines()[0].contains("Boiler's Second Heartbeat") and first.occurrence_debrief_lines()[0].contains("Inspect Boiler"), "resolved occurrences should produce a concise causal debrief record")
 
 func _test_water_condenser_route_unlock() -> void:
 	var locked_state := LongMarchState.new(1107)

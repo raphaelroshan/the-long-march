@@ -7,7 +7,7 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
@@ -18,7 +18,19 @@ const CAMPAIGN_DECISION_OPTIONS := {
 	"toll_decision": ["pay_toll", "break_blockade"],
 	"mara_meeting": ["recruit_mara", "decline_mara"],
 	"mara_workbench_choice": ["rebuild_weakest", "brace_refuge"],
-	"mara_followup": ["record_repair_held", "record_repair_failed", "record_refuge_held", "record_refuge_failed"]
+	"mara_followup": ["record_repair_held", "record_repair_failed", "record_refuge_held", "record_refuge_failed"],
+	"boiler_heartbeat": ["inspect_boiler", "keep_cadence"],
+	"lift_chain_sings": ["brace_lift_chain", "carry_lift_load"],
+	"the_last_dry_room": ["shelter_in_dry_room", "preserve_dry_parts"],
+	"the_miller_with_a_broken_wheel": ["lend_workshop_bench", "keep_moving"]
+}
+const OCCURRENCE_STREAM_NAME := "ashgate_operational_occurrences_v1"
+const OCCURRENCE_HISTORY_LIMIT := 8
+const OCCURRENCE_DEFS := {
+	"boiler_heartbeat": {"title": "The Boiler's Second Heartbeat", "type": "operational", "phases": ["road_arrival"], "nodes": ["rill_crossing", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "cooldown", "cooldown": 2},
+	"lift_chain_sings": {"title": "The Lift Chain Sings", "type": "operational", "phases": ["road_arrival"], "nodes": ["rill_crossing", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "cooldown", "cooldown": 2},
+	"the_last_dry_room": {"title": "The Last Dry Room", "type": "operational", "phases": ["road_arrival", "settlement_arrival"], "nodes": ["rill_crossing", "morrowline_camp", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "once", "cooldown": 0},
+	"the_miller_with_a_broken_wheel": {"title": "The Miller With a Broken Wheel", "type": "meeting", "phases": ["road_arrival", "settlement_arrival"], "nodes": ["rill_crossing", "morrowline_camp"], "repeat": "once", "cooldown": 0}
 }
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
@@ -150,6 +162,11 @@ var campaign_pressure: int = 0
 var campaign_retreats: int = 0
 var campaign_event_pending: String = ""
 var campaign_decisions: Dictionary = {}
+var occurrence_stream_cursor: int = 0
+var occurrence_active_phase: String = ""
+var occurrence_phase_history: Array[String] = []
+var occurrence_history: Array[Dictionary] = []
+var occurrence_cooldowns: Dictionary = {}
 var guard_contract_status: String = "unoffered"
 var settlement_trust: int = 0
 var mobility_tendency: int = 0
@@ -353,6 +370,11 @@ func start_campaign() -> Dictionary:
 	campaign_retreats = 0
 	campaign_event_pending = ""
 	campaign_decisions.clear()
+	occurrence_stream_cursor = 0
+	occurrence_active_phase = ""
+	occurrence_phase_history.clear()
+	occurrence_history.clear()
+	occurrence_cooldowns.clear()
 	guard_contract_status = "offered"
 	settlement_trust = 0
 	mobility_tendency = 0
@@ -600,6 +622,121 @@ func mara_debrief_line() -> String:
 		return "Mara Flint — braced the Refugee Bunk; later result unresolved"
 	return "Mara Flint — recruited; forge-core decision unresolved"
 
+func _bounded_append(target: Array, value: Variant) -> void:
+	target.append(value)
+	while target.size() > OCCURRENCE_HISTORY_LIMIT:
+		target.pop_front()
+
+func _occurrence_roll(phase_id: String, cursor: int) -> int:
+	var value := posmod(seed, 2147483647)
+	var stream_key := "%s:%s:%d" % [OCCURRENCE_STREAM_NAME, phase_id, cursor]
+	for byte in stream_key.to_utf8_buffer():
+		value = posmod(value * 1103515245 + int(byte) + 12345, 2147483647)
+	return value
+
+func _operational_module_id_with_tag(tag: String, damaged_only: bool = false) -> String:
+	var candidate_id := ""
+	var candidate_durability := 1000000
+	for instance in modules:
+		var module_id := String(instance.get("id", ""))
+		var definition := module_definition(module_id)
+		if tag not in definition.get("tags", []) or not bool(dependency_status(instance).get("operational", false)):
+			continue
+		var durability := int(instance.get("durability", 0))
+		var maximum := int(definition.get("durability", 1))
+		if damaged_only and durability >= maximum:
+			continue
+		if durability < candidate_durability or (durability == candidate_durability and module_id < candidate_id):
+			candidate_id = module_id
+			candidate_durability = durability
+	return candidate_id
+
+func _change_module_durability(module_id: String, amount: int) -> Dictionary:
+	var index := _module_index_by_id(module_id)
+	if index < 0:
+		return {"ok": false, "reason": "module not found"}
+	var maximum := int(module_definition(module_id).get("durability", 1))
+	var before := int(modules[index].get("durability", 0))
+	var after := clampi(before + amount, 0, maximum)
+	modules[index]["durability"] = after
+	_recalculate()
+	return {"ok": true, "before": before, "after": after, "maximum": maximum}
+
+func occurrence_eligibility(event_id: String, phase_kind: String, node_id: String) -> Dictionary:
+	var definition: Dictionary = OCCURRENCE_DEFS.get(event_id, {})
+	if definition.is_empty():
+		return {"eligible": false, "reason": "unknown occurrence"}
+	if phase_kind not in definition.get("phases", []):
+		return {"eligible": false, "reason": "wrong occurrence phase"}
+	if node_id not in definition.get("nodes", []):
+		return {"eligible": false, "reason": "wrong occurrence location"}
+	if String(definition.get("repeat", "once")) == "once" and campaign_decisions.has(event_id):
+		return {"eligible": false, "reason": "one-shot occurrence already resolved"}
+	if campaign_encounters_completed < int(occurrence_cooldowns.get(event_id, 0)):
+		return {"eligible": false, "reason": "occurrence is cooling down"}
+	match event_id:
+		"boiler_heartbeat":
+			if _operational_module_id_with_tag("engine", true).is_empty():
+				return {"eligible": false, "reason": "requires a damaged operational engine"}
+			if not _has_operational_tag("repair"):
+				return {"eligible": false, "reason": "requires a Ready repair system"}
+		"lift_chain_sings":
+			if not _has_operational_tag("ammunition") or not _has_operational_tag("weapon"):
+				return {"eligible": false, "reason": "requires an operational Ammunition Lift and weapon"}
+		"the_last_dry_room":
+			if not _has_operational_tag("refuge") or not _has_operational_tag("parts"):
+				return {"eligible": false, "reason": "requires operational refuge and parts space"}
+		"the_miller_with_a_broken_wheel":
+			if not _has_operational_tag("repair"):
+				return {"eligible": false, "reason": "requires a Ready Field Workshop"}
+	return {"eligible": true, "reason": ""}
+
+func occurrence_candidates(phase_kind: String, node_id: String) -> Array[String]:
+	var candidates: Array[String] = []
+	for event_id in OCCURRENCE_DEFS:
+		if bool(occurrence_eligibility(String(event_id), phase_kind, node_id).get("eligible", false)):
+			candidates.append(String(event_id))
+	candidates.sort()
+	return candidates
+
+func try_schedule_occurrence(phase_kind: String, node_id: String, phase_id: String) -> Dictionary:
+	if not campaign_event_pending.is_empty():
+		return {"ok": false, "reason": "another primary event is already active"}
+	if phase_id.is_empty():
+		return {"ok": false, "reason": "occurrence phase ID is required"}
+	if phase_id in occurrence_phase_history:
+		return {"ok": true, "event_id": "", "reason": "phase already evaluated"}
+	_bounded_append(occurrence_phase_history, phase_id)
+	var candidates := occurrence_candidates(phase_kind, node_id)
+	if candidates.is_empty():
+		return {"ok": true, "event_id": "", "reason": "no eligible occurrences"}
+	var roll := _occurrence_roll(phase_id, occurrence_stream_cursor)
+	occurrence_stream_cursor += 1
+	var selected_index := posmod(roll, candidates.size() + 2)
+	if selected_index >= candidates.size():
+		return {"ok": true, "event_id": "", "reason": "the road stayed quiet"}
+	var selected_id := candidates[selected_index]
+	campaign_event_pending = selected_id
+	occurrence_active_phase = phase_id
+	log.append("Road occurrence: %s requires a decision before departure." % String(OCCURRENCE_DEFS[selected_id].title))
+	return {"ok": true, "event_id": selected_id, "phase_id": phase_id, "candidates": candidates.duplicate()}
+
+func _record_occurrence_resolution(event_id: String, choice_id: String) -> void:
+	_bounded_append(occurrence_history, {"event_id": event_id, "choice_id": choice_id, "phase_id": occurrence_active_phase})
+	var cooldown := int(OCCURRENCE_DEFS.get(event_id, {}).get("cooldown", 0))
+	if cooldown > 0:
+		occurrence_cooldowns[event_id] = campaign_encounters_completed + cooldown + 1
+	occurrence_active_phase = ""
+
+func occurrence_debrief_lines() -> Array[String]:
+	var lines: Array[String] = []
+	for entry in occurrence_history:
+		var event_id := String(entry.get("event_id", ""))
+		var choice_id := String(entry.get("choice_id", ""))
+		var title := String(OCCURRENCE_DEFS.get(event_id, {}).get("title", event_id.replace("_", " ").capitalize()))
+		lines.append("Road occurrence — %s: %s" % [title, choice_id.replace("_", " ").capitalize()])
+	return lines
+
 func campaign_event_details() -> Dictionary:
 	match campaign_event_pending:
 		"salvage_choice":
@@ -638,6 +775,32 @@ func campaign_event_details() -> Dictionary:
 			var followup := mara_followup_preview()
 			return {"id": "mara_followup", "title": "What Held", "body": "Beyond the fourth road, Mara checks the promise made at her workbench against what the fortress actually carried through.", "choices": [
 				{"id": String(followup.get("choice_id", "record_repair_failed")), "label": "Record what held", "effect": String(followup.get("effect", "No result available")), "enabled": bool(followup.get("valid", false)), "reason": "The workbench commitment is missing" if not bool(followup.get("valid", false)) else ""}
+			]}
+		"boiler_heartbeat":
+			var engine_id := _operational_module_id_with_tag("engine", true)
+			var engine_name := String(module_definition(engine_id).get("name", "damaged engine"))
+			var engine_index := _module_index_by_id(engine_id)
+			var can_keep_cadence := engine_index >= 0 and int(modules[engine_index].get("durability", 0)) > 1
+			return {"id": "boiler_heartbeat", "title": "The Boiler's Second Heartbeat", "body": "A second rhythm answers the engine stroke. The workshop can open the casing now, or the fortress can keep cadence and let the damaged bearing carry the road.", "choices": [
+				{"id": "inspect_boiler", "label": "Stop and inspect %s" % engine_name, "effect": "Engine +1 durability · Day +1 · Pressure +1", "enabled": not engine_id.is_empty() and _has_operational_tag("repair"), "reason": "Requires a damaged operational engine and Ready workshop"},
+				{"id": "keep_cadence", "label": "Keep the marching cadence", "effect": "Pressure -1 · Engine -1 durability", "enabled": can_keep_cadence, "reason": "The damaged engine would be disabled" if not can_keep_cadence else ""}
+			]}
+		"lift_chain_sings":
+			return {"id": "lift_chain_sings", "title": "The Lift Chain Sings", "body": "The Ammunition Lift vibrates under a full road load. A paid brace will quiet it; carrying the load risks the dependency but keeps the column moving.", "choices": [
+				{"id": "brace_lift_chain", "label": "Fit a proper chain brace", "effect": "Ashmarks -6 · Future route risk -2%", "enabled": money >= 6, "reason": "Requires 6 Ashmarks" if money < 6 else ""},
+				{"id": "carry_lift_load", "label": "Carry the load to the next stop", "effect": "Pressure -1 · Ammunition Lift -1 durability", "enabled": true, "reason": ""}
+			]}
+		"the_last_dry_room":
+			var weakest_id := _weakest_damaged_module_id()
+			var weakest_name := String(module_definition(weakest_id).get("name", "damaged system"))
+			return {"id": "the_last_dry_room", "title": "The Last Dry Room", "body": "One sealed compartment can keep the repair stock dry or shelter the families riding beside it. The same floor cannot protect both.", "choices": [
+				{"id": "shelter_in_dry_room", "label": "Give the room to the families", "effect": "Trust +2 · Shelter +1 · Parts Crate -1 durability", "enabled": true, "reason": ""},
+				{"id": "preserve_dry_parts", "label": "Keep the parts dry and repair %s" % weakest_name, "effect": "Weakest system +1 durability · Trust -1", "enabled": not weakest_id.is_empty(), "reason": "No installed system is damaged" if weakest_id.is_empty() else ""}
+			]}
+		"the_miller_with_a_broken_wheel":
+			return {"id": "the_miller_with_a_broken_wheel", "title": "The Miller With a Broken Wheel", "body": "A miller offers sealed fuel tins if the fortress lends its bench and fitter. The repair is small; the stopped column is not.", "choices": [
+				{"id": "lend_workshop_bench", "label": "Lend the workshop bench", "effect": "Fuel +1 · Trust +1 · Day +1 · Pressure +1 · Workshop -1 durability", "enabled": _has_operational_tag("repair"), "reason": "Requires a Ready Field Workshop"},
+				{"id": "keep_moving", "label": "Keep the column moving", "effect": "Pressure -1 · Trust -1", "enabled": true, "reason": ""}
 			]}
 	return {}
 
@@ -734,9 +897,77 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 				result_message = "The braced Refugee Bunk remains operational. Morrowline trust and Shelter tendency each rise by 1."
 			else:
 				result_message = "The Refugee Bunk is not operational when Mara checks it. The reserved bracing earns no trust or Shelter gain."
+	elif resolved_event == "boiler_heartbeat":
+		var engine_id := _operational_module_id_with_tag("engine", true)
+		if engine_id.is_empty() or not _has_operational_tag("repair"):
+			return {"ok": false, "reason": "the boiler incident no longer has an eligible engine and workshop"}
+		var engine_name := String(module_definition(engine_id).get("name", engine_id))
+		if choice_id == "inspect_boiler":
+			var repair := _change_module_durability(engine_id, 1)
+			day += 1
+			campaign_pressure += 1
+			result_message = "The workshop opens %s and restores it from %d to %d durability. The stop costs 1 day and adds 1 blockade pressure." % [engine_name, int(repair.before), int(repair.after)]
+		elif choice_id == "keep_cadence":
+			var engine_index := _module_index_by_id(engine_id)
+			if engine_index < 0 or int(modules[engine_index].get("durability", 0)) <= 1:
+				return {"ok": false, "reason": "keeping cadence would disable the engine"}
+			var strain := _change_module_durability(engine_id, -1)
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			result_message = "%s carries the cadence and falls from %d to %d durability; blockade pressure falls by 1." % [engine_name, int(strain.before), int(strain.after)]
+		else:
+			return {"ok": false, "reason": "that boiler response is not available"}
+	elif resolved_event == "lift_chain_sings":
+		var lift_id := _operational_module_id_with_tag("ammunition")
+		if lift_id.is_empty() or not _has_operational_tag("weapon"):
+			return {"ok": false, "reason": "the ammunition dependency is no longer operational"}
+		if choice_id == "brace_lift_chain" and money >= 6:
+			money -= 6
+			route_risk_modifier = maxf(-0.12, route_risk_modifier - 0.02)
+			result_message = "A six-Ashmark brace quiets the Ammunition Lift; future route risk falls by 2%."
+		elif choice_id == "carry_lift_load":
+			var strain := _change_module_durability(lift_id, -1)
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			result_message = "The Ammunition Lift carries the load and falls from %d to %d durability; blockade pressure falls by 1." % [int(strain.before), int(strain.after)]
+		else:
+			return {"ok": false, "reason": "that lift-chain response is not available"}
+	elif resolved_event == "the_last_dry_room":
+		var parts_id := _operational_module_id_with_tag("parts")
+		if parts_id.is_empty() or not _has_operational_tag("refuge"):
+			return {"ok": false, "reason": "the dry-room conflict no longer has both refuge and parts space"}
+		if choice_id == "shelter_in_dry_room":
+			var parts_use := _change_module_durability(parts_id, -1)
+			settlement_trust += 2
+			shelter_tendency += 1
+			result_message = "The families take the dry room. Trust rises by 2 and Shelter by 1 while the Parts Crate falls from %d to %d durability." % [int(parts_use.before), int(parts_use.after)]
+		elif choice_id == "preserve_dry_parts":
+			var weakest_id := _weakest_damaged_module_id()
+			if weakest_id.is_empty():
+				return {"ok": false, "reason": "no installed system needs the dry parts"}
+			var repair := _change_module_durability(weakest_id, 1)
+			settlement_trust -= 1
+			result_message = "%s is restored from %d to %d durability with the dry stock; trust falls by 1." % [String(module_definition(weakest_id).get("name", weakest_id)), int(repair.before), int(repair.after)]
+		else:
+			return {"ok": false, "reason": "that dry-room response is not available"}
+	elif resolved_event == "the_miller_with_a_broken_wheel":
+		if choice_id == "lend_workshop_bench" and _has_operational_tag("repair"):
+			var workshop_id := _operational_module_id_with_tag("repair")
+			var workshop_use := _change_module_durability(workshop_id, -1)
+			fuel += 1
+			settlement_trust += 1
+			day += 1
+			campaign_pressure += 1
+			result_message = "The miller's wheel turns again. Fuel and trust rise by 1, the stop adds 1 day and pressure, and %s falls from %d to %d durability." % [String(module_definition(workshop_id).get("name", workshop_id)), int(workshop_use.before), int(workshop_use.after)]
+		elif choice_id == "keep_moving":
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			settlement_trust -= 1
+			result_message = "The fortress keeps moving. Blockade pressure falls by 1 and settlement trust falls by 1."
+		else:
+			return {"ok": false, "reason": "that roadside response is not available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
 	campaign_decisions[resolved_event] = choice_id
+	if resolved_event in OCCURRENCE_DEFS:
+		_record_occurrence_resolution(resolved_event, choice_id)
 	log.append(result_message)
 	campaign_event_pending = next_event
 	return {"ok": true, "event": resolved_event, "choice": choice_id, "message": result_message, "summary": summary()}
@@ -1248,6 +1479,12 @@ func summary() -> Dictionary:
 		"campaign_retreats": campaign_retreats,
 		"campaign_event_pending": campaign_event_pending,
 		"campaign_decisions": campaign_decisions.duplicate(true),
+		"occurrence_stream": OCCURRENCE_STREAM_NAME,
+		"occurrence_stream_cursor": occurrence_stream_cursor,
+		"occurrence_active_phase": occurrence_active_phase,
+		"occurrence_phase_history": occurrence_phase_history.duplicate(),
+		"occurrence_history": occurrence_history.duplicate(true),
+		"occurrence_cooldowns": occurrence_cooldowns.duplicate(true),
 		"guard_contract_status": guard_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
@@ -1306,6 +1543,12 @@ func serialize() -> Dictionary:
 		"campaign_retreats": campaign_retreats,
 		"campaign_event_pending": campaign_event_pending,
 		"campaign_decisions": campaign_decisions.duplicate(true),
+		"occurrence_stream": OCCURRENCE_STREAM_NAME,
+		"occurrence_stream_cursor": occurrence_stream_cursor,
+		"occurrence_active_phase": occurrence_active_phase,
+		"occurrence_phase_history": occurrence_phase_history.duplicate(),
+		"occurrence_history": occurrence_history.duplicate(true),
+		"occurrence_cooldowns": occurrence_cooldowns.duplicate(true),
 		"guard_contract_status": guard_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
@@ -1326,6 +1569,50 @@ func _string_array(value: Variant) -> Array[String]:
 		for item in value:
 			result.append(String(item))
 	return result
+
+func _validated_occurrence_state(data: Dictionary, pending_event: String) -> Dictionary:
+	if data.has("occurrence_stream") and String(data.get("occurrence_stream", "")) != OCCURRENCE_STREAM_NAME:
+		return {"ok": false, "reason": "checkpoint contains an unknown occurrence stream"}
+	var cursor := int(data.get("occurrence_stream_cursor", 0))
+	if cursor < 0:
+		return {"ok": false, "reason": "checkpoint contains an invalid occurrence cursor"}
+	var active_phase := String(data.get("occurrence_active_phase", ""))
+	var raw_phase_history: Variant = data.get("occurrence_phase_history", [])
+	if not raw_phase_history is Array or raw_phase_history.size() > OCCURRENCE_HISTORY_LIMIT:
+		return {"ok": false, "reason": "checkpoint occurrence phase history is malformed or unbounded"}
+	var phase_history := _string_array(raw_phase_history)
+	var unique_phases: Dictionary = {}
+	for phase_id in phase_history:
+		if phase_id.is_empty() or unique_phases.has(phase_id):
+			return {"ok": false, "reason": "checkpoint occurrence phase history contains an invalid phase"}
+		unique_phases[phase_id] = true
+	var raw_history: Variant = data.get("occurrence_history", [])
+	if not raw_history is Array or raw_history.size() > OCCURRENCE_HISTORY_LIMIT:
+		return {"ok": false, "reason": "checkpoint occurrence history is malformed or unbounded"}
+	var history: Array[Dictionary] = []
+	for raw_entry in raw_history:
+		if not raw_entry is Dictionary:
+			return {"ok": false, "reason": "checkpoint occurrence history contains a malformed entry"}
+		var event_id := String(raw_entry.get("event_id", ""))
+		var choice_id := String(raw_entry.get("choice_id", ""))
+		var phase_id := String(raw_entry.get("phase_id", ""))
+		if event_id not in OCCURRENCE_DEFS or choice_id not in CAMPAIGN_DECISION_OPTIONS.get(event_id, []) or phase_id.is_empty():
+			return {"ok": false, "reason": "checkpoint occurrence history contains an unknown result"}
+		history.append({"event_id": event_id, "choice_id": choice_id, "phase_id": phase_id})
+	var raw_cooldowns: Variant = data.get("occurrence_cooldowns", {})
+	if not raw_cooldowns is Dictionary:
+		return {"ok": false, "reason": "checkpoint occurrence cooldowns are malformed"}
+	var cooldowns: Dictionary = {}
+	for event_id in raw_cooldowns:
+		if String(event_id) not in OCCURRENCE_DEFS or int(raw_cooldowns[event_id]) < 0:
+			return {"ok": false, "reason": "checkpoint occurrence cooldowns contain an invalid entry"}
+		cooldowns[String(event_id)] = int(raw_cooldowns[event_id])
+	var pending_is_occurrence := pending_event in OCCURRENCE_DEFS
+	if pending_is_occurrence != not active_phase.is_empty():
+		return {"ok": false, "reason": "active occurrence phase conflicts with the pending campaign event"}
+	if pending_is_occurrence and active_phase not in phase_history:
+		return {"ok": false, "reason": "active occurrence phase is missing from phase history"}
+	return {"ok": true, "cursor": cursor, "active_phase": active_phase, "phase_history": phase_history, "history": history, "cooldowns": cooldowns}
 
 func _serialize_module_array(source: Array) -> Array:
 	var result: Array = []
@@ -1500,6 +1787,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "campaign decision record contains an unknown choice"}
 	if not restored_campaign_event_pending.is_empty() and restored_campaign_event_pending not in CAMPAIGN_DECISION_OPTIONS:
 		return {"ok": false, "reason": "checkpoint contains an unknown active campaign event"}
+	var restored_occurrence_state := _validated_occurrence_state(data, restored_campaign_event_pending)
+	if not bool(restored_occurrence_state.get("ok", false)):
+		return restored_occurrence_state
 	if restored_specialist_id not in VALID_SPECIALIST_IDS:
 		return {"ok": false, "reason": "checkpoint contains an unknown specialist"}
 	if not restored_mara_repaired_module_id.is_empty() and restored_mara_repaired_module_id not in MODULE_DEFS:
@@ -1575,6 +1865,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
 	campaign_event_pending = restored_campaign_event_pending
 	campaign_decisions = restored_decisions.duplicate(true)
+	occurrence_stream_cursor = int(restored_occurrence_state.get("cursor", 0))
+	occurrence_active_phase = String(restored_occurrence_state.get("active_phase", ""))
+	occurrence_phase_history = restored_occurrence_state.get("phase_history", []).duplicate()
+	occurrence_history = restored_occurrence_state.get("history", []).duplicate(true)
+	occurrence_cooldowns = restored_occurrence_state.get("cooldowns", {}).duplicate(true)
 	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))
@@ -2273,7 +2568,8 @@ func _campaign_event_for_node(node_id: String) -> String:
 			return "lost_signal"
 		"red_wheel_toll_bridge":
 			return "toll_decision"
-	return ""
+	var phase_id := "road_arrival_%d_%s" % [campaign_encounters_completed, node_id]
+	return String(try_schedule_occurrence("road_arrival", node_id, phase_id).get("event_id", ""))
 
 func _campaign_restore_limping_engine() -> Array[String]:
 	var repairs: Array[String] = []
@@ -2382,8 +2678,11 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		if specialist_id.is_empty() and not campaign_decisions.has("mara_meeting"):
 			campaign_event_pending = "mara_meeting"
 			_encounter_log("Mara Flint waits beside an open forge bench. Her offer must be answered before the fortress departs.")
+		elif campaign_event_pending.is_empty():
+			var phase_id := "settlement_arrival_%d_morrowline_camp" % campaign_encounters_completed
+			try_schedule_occurrence("settlement_arrival", arrived_node, phase_id)
 		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
-		_encounter_log("Outcome: %s at Morrowline Camp. Two service actions and a full refit window are available%s." % [encounter_outcome.replace("_", " "), " after Mara's offer is resolved" if campaign_event_pending == "mara_meeting" else ""])
+		_encounter_log("Outcome: %s at Morrowline Camp. Two service actions and a full refit window are available%s." % [encounter_outcome.replace("_", " "), " after the current decision is resolved" if not campaign_event_pending.is_empty() else ""])
 	elif arrived_node == "meridian_pass":
 		journey_complete = true
 		run_complete = true

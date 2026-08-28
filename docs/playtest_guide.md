@@ -11,12 +11,12 @@ The build opens with a seven-step Marchmaster briefing that introduces one core 
 1. At Ashgate, compare Rill Crossing and The Soot Orchard before choosing; ask what the player believes each visibility label promises.
 2. Accept or decline the guard contract without coaching, then complete one route through Broken Relay or Red Wheel Toll Bridge.
 3. During battle, stop after each step and explain aloud why an enemy chose its target. Compare the card's exact next-hit damage with the applied result. With keyboard or controller, use **Inspect Chassis** and confirm that active targets are reached without a mouse.
-4. Resolve the local event and ask whether its cost and consequence were clear before choosing.
+4. Resolve the local event or seeded road occurrence and ask whether its cost and consequence were clear before choosing. Across repeat runs, note whether quiet phases and event phases both feel intentional.
 5. At Morrowline, inspect Mara Flint's workshop and crew requirements. If she joins, compare rebuilding the named weakest system against bracing the Refugee Bunk; ask whether the immediate benefit and later obligation are both clear.
 6. Decide whether repairing, refueling, changing the layout, or preserving money is more valuable. If Mara is aboard, confirm her extra repair point is visible before paying. Compare all available roads, including Dry Cistern Cut when a maintained Water Condenser unlocks it.
 7. Complete the fourth encounter and resolve Mara's **What Held** callback if active. Ask whether the result clearly follows from the earlier physical commitment.
 8. Complete Meridian Pass. On a second attempt, change at least one dependency and take the other branch or deliberately test a recoverable retreat.
-9. At the result screen, verify that the debrief card itself retains the secured path, pressure, contract, specialist, Mara's consequence when applicable, and surviving systems, then choose **Record Playtest Notes**.
+9. At the result screen, verify that the debrief card itself retains the secured path, pressure, contract, specialist, resolved road occurrences, Mara's consequence when applicable, and surviving systems, then choose **Record Playtest Notes**.
 
 Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision.
 
@@ -48,6 +48,7 @@ Generated builds are written to `build/` and are intentionally ignored by Git. T
 - Did the single intervention feel consequential and correctly timed?
 - Were the contract, event choices, and the mutually exclusive value of Iven and Mara understandable before committing resources?
 - Did Mara's repair-versus-refuge choice feel like one scarce physical commitment rather than a dialogue answer?
+- Did each road occurrence feel connected to the installed fortress, and was at least one legal response obvious before committing?
 - At Morrowline, did recovery create a real trade-off?
 - After retreat, did the player understand both the penalty and how to continue?
 - Did the final result explain enough for them to want to change the next build?

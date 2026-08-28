@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.232`; Feeds A through C are complete, so begin new feature work with Feed D.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.233`; Feeds A through D are complete, so begin new feature work with Feed E.
 
 ### Current Feed A — fortress comprehension
 
@@ -26,11 +26,13 @@ The original prompts below describe the build-up of the prototype and are retain
 
 ### Current Feed D — bounded occurrence scheduler
 
-**Status:** Next recommended slice.
+**Status:** Complete in `0.3.0-alpha.233` with three operational incidents, one optional meeting, and a save-safe named random stream.
 
 > Implement a seeded occurrence scheduler with one primary event per phase, hard eligibility filters, cooldowns, repeat policy, bounded history, named random stream, and save-safe active state. Start with three operational events and one optional meeting. Preserve at least one visible counter for every tested seed. Do not add procedural prose generation or an unbounded event graph.
 
 ### Current Feed E — Flooded Veyru chapter
+
+**Status:** Next recommended slice.
 
 > Implement Flooded Veyru as an isolated authored chapter using the existing fortress state and map contracts. Add one new pressure, one settlement, two viable route branches, one contract, a guaranteed recovery path, an isolated teaching encounter, a combination encounter, and a final commitment. Add deterministic route, save, UI, and balance tests. Do not build the full five-region campaign.
 

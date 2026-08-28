@@ -626,11 +626,15 @@ Implement Mara Flint through one three-event authored chain: meeting, repair-ver
 
 #### Feed D — Bounded occurrence scheduler
 
+**Status:** Complete in `0.3.0-alpha.233`.
+
 ```text
 Implement a seeded occurrence scheduler with one primary event per phase, hard eligibility filters, cooldowns, repeat policy, bounded history, named random stream, and save-safe active state. Start with three operational events and one optional meeting. Preserve at least one visible counter for every tested seed. Do not add procedural prose generation or an unbounded event graph.
 ```
 
 #### Feed E — Flooded Veyru
+
+**Status:** Next recommended slice.
 
 ```text
 Implement Flooded Veyru as an isolated authored chapter using the existing fortress state and map contracts. Add one new pressure, one settlement, two viable route branches, one contract, a guaranteed recovery path, an isolated teaching encounter, a combination encounter, and a final commitment. Add deterministic route, save, UI, and balance tests. Do not build the full five-region campaign.
