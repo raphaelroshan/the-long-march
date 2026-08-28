@@ -106,6 +106,7 @@ var campaign_path_label: Label
 var campaign_map: CampaignMapView
 var campaign_node_buttons: Array[Button] = []
 var campaign_commit_button: Button
+var campaign_cancel_button: Button
 var campaign_commit_intel_label: Label
 var selected_campaign_node_id: String = ""
 var contract_title: Label
@@ -679,7 +680,21 @@ func _build_ui() -> void:
 	campaign_commit_intel_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	campaign_commit_intel_label.visible = false
 	controls.add_child(campaign_commit_intel_label)
-	controls.add_child(campaign_commit_button)
+	var campaign_action_row := HBoxContainer.new()
+	campaign_action_row.add_theme_constant_override("separation", 8)
+	controls.add_child(campaign_action_row)
+	campaign_action_row.add_child(campaign_commit_button)
+	campaign_cancel_button = Button.new()
+	campaign_cancel_button.text = "CANCEL PREVIEW\nRETURN TO MAP"
+	campaign_cancel_button.tooltip_text = "Clear this route preview without spending fuel, advancing time, or beginning the encounter."
+	campaign_cancel_button.custom_minimum_size = Vector2(132, 64)
+	campaign_cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	campaign_cancel_button.size_flags_stretch_ratio = 0.72
+	campaign_cancel_button.visible = false
+	campaign_cancel_button.pressed.connect(_on_campaign_route_cancelled)
+	campaign_action_row.add_child(campaign_cancel_button)
+	campaign_commit_button.focus_neighbor_bottom = campaign_commit_button.get_path_to(campaign_cancel_button)
+	campaign_cancel_button.focus_neighbor_top = campaign_cancel_button.get_path_to(campaign_commit_button)
 
 	route_option = OptionButton.new()
 	for route_id in LongMarchState.ROUTES.keys():
@@ -843,6 +858,7 @@ func _connect_desk_focus_scrolling() -> void:
 		contract_decline_button,
 		doctrine_option,
 		campaign_commit_button,
+		campaign_cancel_button,
 		module_option,
 		focus_chassis_button,
 		rotate_button,
@@ -1181,14 +1197,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif onboarding_overlay.visible:
 		_finish_onboarding(true)
 		get_viewport().set_input_as_handled()
-	elif not selected_campaign_node_id.is_empty():
-		var previous_selection := selected_campaign_node_id
-		selected_campaign_node_id = ""
-		_set_event("Route selection cleared. Choose another road when ready.")
-		_refresh_ui()
-		var previous_button := campaign_map.button_for(previous_selection) as Button
-		if previous_button != null and not previous_button.disabled:
-			_focus_control(previous_button)
+	elif _clear_campaign_route_selection():
 		get_viewport().set_input_as_handled()
 
 func _journal_event(event_id: String, properties: Dictionary = {}) -> void:
@@ -1332,8 +1341,24 @@ func _on_campaign_node_selected(node_id: String) -> void:
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
 	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready. B/Esc cancels selection." % String(preview.get("name", node_id)))
 	_refresh_ui()
-	_focus_control(campaign_commit_button)
+	if not _focus_control(campaign_commit_button):
+		_focus_control(campaign_cancel_button)
 	_show_selected_route_preview(node_id)
+
+func _clear_campaign_route_selection() -> bool:
+	if selected_campaign_node_id.is_empty():
+		return false
+	var previous_selection := selected_campaign_node_id
+	selected_campaign_node_id = ""
+	_set_event("Route preview cancelled. No fuel, time, or pressure was spent.")
+	_refresh_ui()
+	var previous_button := campaign_map.button_for(previous_selection) as Button
+	if previous_button != null and not previous_button.disabled:
+		_focus_control(previous_button)
+	return true
+
+func _on_campaign_route_cancelled() -> void:
+	_clear_campaign_route_selection()
 
 func _on_campaign_node_inspected(node_id: String, detail: String) -> void:
 	if not campaign_map.visible:
@@ -1963,6 +1988,7 @@ func _refresh_campaign_controls() -> void:
 		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})
+	campaign_cancel_button.visible = planning_phase and not selected_campaign_node_id.is_empty()
 	var selected_preview: Dictionary = previews.get(selected_campaign_node_id, {})
 	campaign_commit_intel_label.visible = planning_phase and not selected_preview.is_empty()
 	if not selected_preview.is_empty():

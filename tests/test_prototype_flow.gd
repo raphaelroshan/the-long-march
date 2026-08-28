@@ -202,7 +202,8 @@ func _run() -> void:
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
-	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and game.campaign_commit_button.get_index() == game.campaign_commit_intel_label.get_index() + 1, "route commitment should remain grouped directly below its map and compact intel")
+	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
+	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and campaign_action_row.get_parent() == game.campaign_map.get_parent() and campaign_action_row.get_index() == game.campaign_commit_intel_label.get_index() + 1 and game.campaign_cancel_button.get_parent() == campaign_action_row, "route commitment and its reversible exit should remain grouped in one row directly below the map and compact intel")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.contract_accept_button.pressed.emit()
@@ -232,6 +233,12 @@ func _run() -> void:
 	_expect(game.route_preview_label.text.contains("ROUTE READY · RILL CROSSING") and not game.route_preview_label.text.contains("SOOT ORCHARD"), "route selection should replace stale focus intel with the road being committed")
 	_expect(game.guidance_label.text.contains("B/Esc cancels selection"), "the route-ready current order should keep cancellation discoverable without a pointer tooltip")
 	_expect(game.pause_button.text.contains("ROUTE REVIEW") and game.pause_button.tooltip_text.contains("clears the selected route first"), "the persistent pause action should disclose that B or Escape cancels route review before pausing")
+	_expect(game.campaign_cancel_button.visible and game.campaign_cancel_button.text.contains("CANCEL PREVIEW") and game.campaign_cancel_button.tooltip_text.contains("without spending fuel"), "route review should expose a pointer-accessible reversible exit beside Commit")
+	game.campaign_cancel_button.pressed.emit()
+	await process_frame
+	_expect(game.selected_campaign_node_id.is_empty() and game.campaign_map.button_for("rill_crossing").has_focus() and game.event_label.text.contains("No fuel, time, or pressure was spent"), "the visible cancel action should return to the map and confirm that previewing had no cost")
+	game.campaign_map.button_for("rill_crossing").pressed.emit()
+	await process_frame
 	var route_cancel := InputEventJoypadButton.new()
 	route_cancel.button_index = JOY_BUTTON_B
 	route_cancel.pressed = true

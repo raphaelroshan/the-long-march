@@ -683,3 +683,7 @@ Campaign deserialization now checks every persisted event and choice against the
 ## 2026-08-28 — Saved routes must exist on the authored map
 
 Campaign deserialization now validates journey locations, destinations, route IDs, target nodes, and every secured path step before changing live state. Active campaigns must begin at Ashgate, follow real map edges, and keep their recovery node aligned with the last secured stop, preventing damaged checkpoints from loading into dead ends or inventing impossible travel history.
+
+## 2026-08-28 — Route previews have a visible reversible exit
+
+Selecting a campaign road now reveals a dedicated Cancel Route Preview action directly beneath Commit. It clears the selection, restores focus to the inspected map node, and confirms that no fuel, time, or blockade pressure was spent, giving mouse players the same explicit escape already available through B or Escape.
