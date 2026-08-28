@@ -8,6 +8,7 @@ const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
 const SAVE_VERSION := 4
+const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed"]
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
 const BASE_HEAT_LIMIT := 6
@@ -1023,6 +1024,10 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save was created by a newer version"}
 	if not data.has("modules"):
 		return {"ok": false, "reason": "save is missing fortress modules"}
+	var restored_phase := String(data.get("phase", phase))
+	var restored_final_result := String(data.get("final_result", final_result))
+	if restored_phase == "results" and restored_final_result not in FINAL_RESULTS:
+		return {"ok": false, "reason": "result checkpoint has no recognized outcome"}
 	seed = int(data.get("seed", seed))
 	day = int(data.get("day", day))
 	fuel = int(data.get("fuel", fuel))
@@ -1052,10 +1057,10 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	encounter_outcome = String(data.get("encounter_outcome", encounter_outcome))
 	encounter_intervention_used = bool(data.get("encounter_intervention_used", encounter_intervention_used))
 	encounter_target_doctrine = String(data.get("encounter_target_doctrine", encounter_target_doctrine))
-	phase = String(data.get("phase", phase))
+	phase = restored_phase
 	journey_leg = int(data.get("journey_leg", journey_leg))
 	run_complete = bool(data.get("run_complete", run_complete))
-	final_result = String(data.get("final_result", final_result))
+	final_result = restored_final_result
 	settlement_actions_remaining = int(data.get("settlement_actions_remaining", settlement_actions_remaining))
 	settlement_report = _string_array(data.get("settlement_report", []))
 	campaign_active = bool(data.get("campaign_active", campaign_active))

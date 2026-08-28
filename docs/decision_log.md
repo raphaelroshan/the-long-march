@@ -603,3 +603,7 @@ Securing a road now asks the player to choose the next available route rather th
 ## 2026-08-28 — Final-road stakes remain above the fold
 
 Selecting Meridian Pass promotes its terminal rule into both the route-review receipt and current order: failure ends the run and there is no retreat. The detailed map preview and commit control retain the same warning, but the player no longer needs the right-hand scroll position to understand the consequence of the final commitment.
+
+## 2026-08-28 — Result checkpoints require a recognized outcome
+
+Deserialization rejects a results-phase checkpoint unless its outcome is Decisive March, Scarred March, or March Failed. The title therefore routes malformed terminal saves through normal unusable-save recovery instead of presenting them as an active Continue slot, while the defensive in-stage fallback calls the state an Unclassified Debrief rather than a successful completion.

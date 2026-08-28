@@ -2410,7 +2410,7 @@ func _result_summary_text() -> String:
 			if state.hull_condition <= 0:
 				return "MARCH FAILED · The fortress hull reached zero at Meridian Pass."
 			return "MARCH FAILED · %s at Meridian Pass." % String(_movement_failure_diagnosis().get("cause", "No operational, fuel-connected engine remained"))
-	return "RUN COMPLETE · The chapter ended with an unclassified result."
+	return "UNCLASSIFIED DEBRIEF · The completed run has no recognized outcome."
 
 func _result_replay_text() -> String:
 	if state.final_result == "decisive_march":

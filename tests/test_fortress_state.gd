@@ -400,6 +400,11 @@ func _test_save_round_trip() -> void:
 	var future_save := state.serialize()
 	future_save["save_version"] = LongMarchState.SAVE_VERSION + 1
 	_expect(not bool(LongMarchState.new(0).load_serialized(future_save).get("ok", false)), "future save versions should be rejected safely")
+	var invalid_result_save := state.serialize()
+	invalid_result_save["phase"] = "results"
+	invalid_result_save["final_result"] = "unknown_result"
+	var invalid_result_load := LongMarchState.new(0).load_serialized(invalid_result_save)
+	_expect(not bool(invalid_result_load.get("ok", false)) and String(invalid_result_load.get("reason", "")).contains("recognized outcome"), "result saves with an unknown terminal outcome should be rejected safely")
 
 func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "campaign engine should install")
