@@ -751,3 +751,7 @@ When two forward roads are available, the command desk now presents their days, 
 ## 2026-08-28 — Target explanations share the targeting score
 
 Combat cards now state why an arrived threat chose its current target before showing the predicted hit. The explanation is produced by the same authoritative scoring profile used to select the target, including route tags, exposed or lower-hull placement, doctrine protection, and damaged condition. This avoids a separate UI heuristic that could disagree with simulation behavior.
+
+## 2026-08-28 — The title names the build's real boundary
+
+The title now identifies Ashgate Lowlands as the current complete test journey, names Ashgate Depot as its starting point, and states that later regions are not included. Existing encounter, recovery, finale, and duration expectations remain prominent. This replaces the ambiguous “Chapter One” framing without adding a defensive disclaimer screen or diminishing the playable chapter.

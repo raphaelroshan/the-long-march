@@ -276,23 +276,23 @@ func _build_title_menu() -> void:
 	stage_panel.add_child(stage)
 
 	var stage_eyebrow := Label.new()
-	stage_eyebrow.text = "CHAPTER ONE · 15–25 MINUTES"
+	stage_eyebrow.text = "CURRENT BUILD · COMPLETE TEST JOURNEY · 15–25 MINUTES"
 	stage_eyebrow.add_theme_font_size_override("font_size", 12)
 	stage_eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
 	stage.add_child(stage_eyebrow)
 	var stage_title := Label.new()
-	stage_title.text = "Ashgate Depot"
+	stage_title.text = "Ashgate Lowlands"
 	stage_title.add_theme_font_size_override("font_size", 30)
 	stage_title.add_theme_color_override("font_color", Color("#f0d29d"))
 	stage.add_child(stage_title)
 	var briefing := Label.new()
-	briefing.text = "The east road is closing. Refit the walking fortress, answer the convoy contract, and choose a route toward Meridian Pass."
+	briefing.text = "Begin at Ashgate Depot. Refit the walking fortress, answer the convoy contract, and reach Meridian Pass. Later regions are not included in this build."
 	briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	briefing.custom_minimum_size = Vector2(330, 72)
 	briefing.add_theme_color_override("font_color", Color("#d0d8d5"))
 	stage.add_child(briefing)
 	var scope := Label.new()
-	scope.text = "5 ENCOUNTERS TOTAL   ·   RECOVERY AFTER 3   ·   FINALE AT 5"
+	scope.text = "ONE COMPLETE CHAPTER   ·   5 ENCOUNTERS   ·   RECOVERY AFTER 3   ·   FINALE AT 5"
 	scope.add_theme_font_size_override("font_size", 11)
 	scope.add_theme_color_override("font_color", Color("#d8a650"))
 	stage.add_child(scope)
