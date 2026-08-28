@@ -30,6 +30,8 @@ func _init() -> void:
 	_test_mara_flint_event_chain()
 	_test_bounded_occurrence_scheduler()
 	_test_flooded_veyru_region_state()
+	_test_flooded_veyru_threats_and_contract()
+	_test_complete_flooded_veyru_campaign()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -943,6 +945,120 @@ func _test_flooded_veyru_region_state() -> void:
 	var declined := LongMarchState.new(2204)
 	declined.start_flooded_veyru()
 	_expect(bool(declined.choose_veyru_medicine_contract(false).get("ok", false)) and declined.veyru_contract_status == "declined" and declined.mobility_tendency == 1 and declined.veyru_medicine_carrier_id.is_empty(), "declining the Veyru contract should preserve capacity and record the mobility tradeoff")
+
+func _install_veyru_loadout(state: LongMarchState) -> void:
+	_expect(bool(state.place_module("ash_runner_engine", Vector2i(0, 0)).get("ok", false)), "Veyru engine should install")
+	_expect(bool(state.place_module("coal_cell", Vector2i(1, 0)).get("ok", false)), "Veyru fuel should install beside the engine")
+	_expect(bool(state.place_module("generator_core", Vector2i(2, 0)).get("ok", false)), "Veyru generator should install")
+	_expect(bool(state.place_module("crew_quarters", Vector2i(2, 1)).get("ok", false)), "Veyru crew quarters should install")
+	_expect(bool(state.place_module("field_workshop", Vector2i(2, 2)).get("ok", false)), "Veyru workshop should install beside crew")
+	_expect(bool(state.place_module("water_condenser", Vector2i(2, 3)).get("ok", false)), "Veyru condenser should install beside the workshop")
+	_expect(bool(state.place_module("refugee_bunk", Vector2i(4, 2)).get("ok", false)), "Veyru medicine carrier should install beside the workshop")
+	state.seed_starter_inventory()
+
+func _veyru_battle(state: LongMarchState, node_id: String, doctrine: String = "protect_cargo") -> Dictionary:
+	var begun := state.begin_campaign_route(node_id, doctrine)
+	if not bool(begun.get("ok", false)):
+		return begun
+	state.advance_encounter(1.0)
+	state.use_encounter_intervention("vent_heat")
+	return state.advance_encounter(6.0)
+
+func _test_flooded_veyru_threats_and_contract() -> void:
+	var exposed := LongMarchState.new(2204)
+	exposed.place_module("refugee_bunk", Vector2i(3, 2))
+	exposed.campaign_region_id = "flooded_veyru"
+	exposed.campaign_pressure = 3
+	exposed.encounter_target_doctrine = "protect_crew"
+	var exposed_profile := exposed._encounter_damage_profile("flood_surge", "refugee_bunk")
+	_expect(int(exposed_profile.get("damage", 0)) == 2 and String(exposed_profile.get("threat_effect", "")) == "flood_pressure", "Flood Surge should add visible damage at Flooding water against an exposed carrier")
+
+	var condensed := LongMarchState.new(2204)
+	_install_water_condenser_loadout(condensed)
+	condensed.place_module("parts_crate", Vector2i(4, 2))
+	condensed.campaign_region_id = "flooded_veyru"
+	condensed.campaign_pressure = 3
+	condensed.encounter_target_doctrine = "protect_crew"
+	var condensed_profile := condensed._encounter_damage_profile("flood_surge", "parts_crate")
+	_expect(int(condensed_profile.get("damage", 0)) == 1 and String(condensed_profile.get("water_effect", "")) == "condenser_buffer", "a Ready Water Condenser should remove one Flood Surge damage without erasing the pressure rule")
+
+	var armored := LongMarchState.new(2204)
+	armored.place_module("parts_crate", Vector2i(4, 2))
+	armored.place_module("side_armor_skirt", Vector2i(5, 2))
+	armored.campaign_region_id = "flooded_veyru"
+	armored.campaign_pressure = 3
+	armored.encounter_target_doctrine = "protect_crew"
+	var armored_profile := armored._encounter_damage_profile("flood_surge", "parts_crate")
+	_expect(int(armored_profile.get("armor_absorbed", 0)) == 1 and int(armored_profile.get("damage", 0)) == 1, "a Side Armor Skirt should intercept Flood Surge before the rising-water pressure is applied")
+
+	var teaching := LongMarchState.new(2204)
+	_install_veyru_loadout(teaching)
+	teaching.start_flooded_veyru()
+	_expect(bool(teaching.choose_veyru_medicine_contract(true).get("ok", false)) and teaching.veyru_medicine_carrier_id == "refugee_bunk", "the Veyru fixture should reserve its exact Refugee Bunk")
+	var carrier := teaching.module_at(Vector2i(4, 2))
+	var rationale := teaching.encounter_target_rationale("flood_surge", carrier)
+	_expect(String(rationale.get("reason", "")).contains("lower-deck exposure") and String(rationale.get("reason", "")).contains("sealed medicine carrier"), "Flood Surge should explain both the carrier obligation and lower-deck exposure")
+	var opening := teaching.begin_campaign_route("pump_gallery", "protect_crew")
+	_expect(bool(opening.get("ok", false)) and teaching.encounter_enemies.size() == 1 and String(teaching.encounter_enemies[0].get("id", "")) == "flood_surge", "Pump Gallery should teach Flood Surge without hiding another contact in the composition")
+	var active_restore := LongMarchState.new(0)
+	_expect(bool(active_restore.load_serialized(teaching.serialize()).get("ok", false)) and active_restore.encounter_active and String(active_restore.encounter_enemies[0].get("id", "")) == "flood_surge", "an active Veyru teaching encounter should survive save/load")
+	var cut_loose := teaching.use_encounter_intervention("cut_loose_cargo")
+	_expect(bool(cut_loose.get("ok", false)) and String(cut_loose.get("removed_module", "")) == "refugee_bunk" and teaching.veyru_contract_status == "failed" and teaching.encounter_active, "losing the reserved medicine carrier should fail the contract without ending the run")
+	var failed_restore := LongMarchState.new(0)
+	_expect(bool(failed_restore.load_serialized(teaching.serialize()).get("ok", false)) and failed_restore.veyru_contract_status == "failed" and failed_restore.veyru_medicine_carrier_id == "refugee_bunk", "a failed medicine contract should preserve its named carrier even when that carrier was cut loose")
+
+func _test_complete_flooded_veyru_campaign() -> void:
+	var state := LongMarchState.new(2204)
+	_install_veyru_loadout(state)
+	state.start_flooded_veyru()
+	_expect(bool(state.choose_veyru_medicine_contract(true).get("ok", false)), "the complete Veyru route should accept the medicine contract")
+	var first := _veyru_battle(state, "pump_gallery", "protect_cargo")
+	_expect(bool(first.get("resolved", false)) and state.campaign_event_pending == "drain_pumps", "the first Veyru encounter should secure Pump Gallery and expose its water decision")
+	_expect(bool(state.resolve_campaign_event("drain_gallery").get("ok", false)) and state.campaign_pressure == 0, "draining Pump Gallery should trade one day for two water pressure")
+	var second := _veyru_battle(state, "veyru_evacuation_camp", "protect_cargo")
+	_expect(bool(second.get("resolved", false)) and state.phase == "settlement" and state.settlement_actions_remaining == 2 and state.campaign_last_safe_node == "veyru_evacuation_camp", "an operational medicine carrier should earn two camp actions and establish Veyru's recovery anchor")
+	var camp_restore := LongMarchState.new(0)
+	_expect(bool(camp_restore.load_serialized(state.serialize()).get("ok", false)) and camp_restore.phase == "settlement" and camp_restore.campaign_last_safe_node == "veyru_evacuation_camp", "Evacuation Camp recovery state should survive save/load")
+	state.hull_condition = 8
+	_expect(bool(state.settlement_repair_hull().get("ok", false)) and state.hull_condition == 10 and state.settlement_actions_remaining == 1, "Evacuation Camp should provide the authored two-hull service for one action")
+	state.fuel = 1
+	_expect(bool(state.settlement_refuel().get("ok", false)) and state.fuel == 2 and state.settlement_actions_remaining == 0, "Evacuation Camp should provide one free emergency fuel below two fuel")
+	state.fuel = 5
+	var third := _veyru_battle(state, "archive_causeway", "protect_cargo")
+	_expect(bool(third.get("resolved", false)) and state.phase == "map", "Archive Causeway should resolve as the third Veyru encounter")
+	var fourth := _veyru_battle(state, "dry_archive_gate", "protect_cargo")
+	_expect(bool(fourth.get("resolved", false)) and state.campaign_event_pending == "archive_broadcast", "Dry Archive Gate should block departure on the archive commitment")
+	var choice_restore := LongMarchState.new(0)
+	_expect(bool(choice_restore.load_serialized(state.serialize()).get("ok", false)) and choice_restore.campaign_event_pending == "archive_broadcast", "the final archive commitment should survive save/load")
+	var broadcast_state := LongMarchState.new(0)
+	broadcast_state.load_serialized(state.serialize())
+	_expect(bool(broadcast_state.resolve_campaign_event("broadcast_archive").get("ok", false)), "broadcasting the archive should resolve the final commitment")
+	var broadcast_departure := broadcast_state.begin_campaign_route("dry_archive", "protect_cargo")
+	_expect(bool(broadcast_departure.get("ok", false)) and broadcast_state.encounter_enemies.size() == 2 and String(broadcast_state.encounter_enemies[1].get("id", "")) == "climbers", "broadcasting should add Climbers to the Civic Guardian final contact")
+
+	var pressure_before_seal := state.campaign_pressure
+	_expect(bool(state.resolve_campaign_event("seal_archive").get("ok", false)) and state.campaign_pressure == maxi(0, pressure_before_seal - 1), "sealing the archive should lower rising water before the final approach")
+	var final_preview := state.campaign_node_preview("dry_archive")
+	_expect(String(final_preview.get("visibility", "")) == "forecast" and Array(final_preview.get("threats", [])).is_empty(), "the sealed archive approach should keep exact final targeting at forecast confidence")
+	var fifth := _veyru_battle(state, "dry_archive", "protect_cargo")
+	_expect(bool(fifth.get("resolved", false)) and state.phase == "results" and state.run_complete and state.campaign_encounters_completed == 5, "the fifth Veyru encounter should end the isolated chapter")
+	_expect(state.final_result == "archive_kept" and state.veyru_contract_status == "completed" and state.settlement_trust == 2, "an operational medicine carrier and sound hull should produce Archive Kept and complete the delivery")
+	var result_restore := LongMarchState.new(0)
+	_expect(bool(result_restore.load_serialized(state.serialize()).get("ok", false)) and result_restore.final_result == "archive_kept" and result_restore.veyru_contract_status == "completed", "the Veyru result and completed medicine contract should survive save/load")
+
+	var retreat := LongMarchState.new(2204)
+	_install_veyru_loadout(retreat)
+	retreat.start_flooded_veyru()
+	retreat.choose_veyru_medicine_contract(false)
+	retreat.campaign_path = ["lantern_quay", "pump_gallery", "veyru_evacuation_camp", "archive_causeway"]
+	retreat.campaign_last_safe_node = "veyru_evacuation_camp"
+	retreat.current_location = "dry_archive_gate"
+	retreat.journey_node = "dry_archive_gate"
+	retreat.campaign_target_node = "dry_archive_gate"
+	retreat.phase = "battle"
+	retreat.encounter_active = true
+	var recovered := retreat._finish_campaign_encounter(false)
+	_expect(bool(recovered.get("resolved", false)) and retreat.current_location == "veyru_evacuation_camp" and retreat.phase == "settlement" and retreat.campaign_retreats == 1 and retreat.campaign_edges()["veyru_evacuation_camp"].has("pilgrim_gantry"), "a non-final Veyru failure should retreat to Evacuation Camp and permanently expose Pilgrim Gantry")
 func _test_water_condenser_route_unlock() -> void:
 	var locked_state := LongMarchState.new(1107)
 	locked_state.start_campaign()
