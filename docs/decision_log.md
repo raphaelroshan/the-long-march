@@ -851,3 +851,7 @@ Settings offers a bounded 100%/110% text-size preference rather than scaling the
 ## 2026-08-28 — Clean playtests preserve deliberate exports
 
 Title Settings can return all managed runtime state to a genuine first-launch baseline in one confirmed action. Continue and backup, March Charter state, briefing completion, preferences, and the current journal are removed together and their in-memory counterparts are rebuilt immediately. Exported feedback files are excluded because they are deliberate tester-owned artifacts, not hidden runtime state. The reset is unavailable during a live run, while narrower category resets remain for targeted testing.
+
+## 2026-08-28 — Exported feedback has an input-neutral handoff
+
+A successful local feedback export exposes Copy Report Path as a visible action in the modal rather than hiding the complete location in a pointer tooltip. The action copies only the path and never uploads or opens the file. It joins the controller focus row only while the report exists; a moved or deleted report removes the stale action and returns focus to Save Again. This keeps consent explicit while making the intended handoff practical for every supported input method.

@@ -816,7 +816,7 @@ func _run() -> void:
 	_expect(feedback_panel != null and feedback_surface != null and feedback_surface.bg_color.a > 0.95 and feedback_surface.border_width_left == 2, "the feedback form should use an opaque bordered modal surface over the completed run")
 	await process_frame
 	_expect(game.feedback_overlay.visible, "the final screen should provide an accessible feedback form")
-	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY", "the feedback form should expose clear local-only actions")
+	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY" and not game.feedback_path_button.visible, "the unsaved feedback form should expose clear local-only actions without promising a report path yet")
 	_expect(game.feedback_context_label.text.contains("ASHGATE LOWLANDS") and game.feedback_context_label.text.contains("Results"), "result notes should retain the completed run context")
 	_expect(game.feedback_status_label.text == "Nothing is sent automatically. Save a local copy when you are ready.", "the untouched feedback form should use a first-save prompt rather than implying that notes were already saved")
 	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_close_button, "the feedback actions should have explicit horizontal controller navigation")
@@ -831,10 +831,19 @@ func _run() -> void:
 	var feedback_final_state: Dictionary = feedback_bundle.get("final_state", {}) if feedback_bundle is Dictionary else {}
 	_expect(feedback_final_state.get("campaign_path", []).size() == 6 and String(feedback_final_state.get("campaign_decisions", {}).get("lost_signal", "")) == "move_silent" and int(feedback_final_state.get("unused_recovery_actions", -1)) == completed_services, "local feedback should retain the path, authored decisions, and unused recovery behind the tester's notes")
 	_expect(game.feedback_status_label.text.begins_with("SAVED LOCALLY") and game.feedback_status_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_save_button.has_focus(), "saved feedback should provide a clear versioned receipt and repeat action")
+	_expect(game.feedback_path_button.visible and not game.feedback_path_button.disabled and game.feedback_path_button.tooltip_text == game.last_feedback_path, "a saved report should expose its complete path through a controller-accessible receipt action")
+	_expect(game.feedback_close_button.get_node_or_null(game.feedback_close_button.focus_neighbor_right) == game.feedback_path_button and game.feedback_path_button.get_node_or_null(game.feedback_path_button.focus_neighbor_right) == game.feedback_save_button and game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_path_button, "the saved-report action row should follow its visible controller order")
+	game.feedback_path_button.pressed.emit()
+	await process_frame
+	_expect(game.feedback_status_label.text.begins_with("REPORT PATH COPIED") and game.feedback_status_label.text.contains(game.last_feedback_path.get_file()) and game.feedback_path_button.has_focus(), "copying the report path should produce a visible receipt and preserve action focus")
 	game._hide_feedback()
 	game.feedback_button.pressed.emit()
 	await process_frame
-	_expect(game.feedback_status_label.text.begins_with("LAST SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN", "reopening feedback should preserve the previous local-save receipt")
+	_expect(game.feedback_status_label.text.begins_with("LAST SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_path_button.visible, "reopening feedback should preserve the previous local-save receipt and path action")
+	DirAccess.remove_absolute(game.last_feedback_path)
+	game.feedback_path_button.pressed.emit()
+	await process_frame
+	_expect(game.last_feedback_path.is_empty() and not game.feedback_path_button.visible and game.feedback_save_button.has_focus() and game.feedback_status_label.text.contains("no longer available"), "a missing exported report should remove the stale path action and direct the tester to save again")
 	var controller_cancel := InputEventJoypadButton.new()
 	controller_cancel.button_index = JOY_BUTTON_B
 	controller_cancel.pressed = true

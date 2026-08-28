@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.242`; Feeds A through M are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.243`; Feeds A through N are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -83,6 +83,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.242` through the title-only local-state reset.
 
 > Add one confirmed title action that returns the build to a genuine first-launch test state: remove Continue and backup, Charter/developments, briefing completion, device preferences, and the current journal; restore defaults immediately; preserve exported feedback; and reject the action during a live run. Keep the narrower reset actions.
+
+### Current Feed N — feedback export handoff
+
+**Status:** Complete in `0.3.0-alpha.243` through the copyable local report path.
+
+> After a successful local feedback export, expose its complete path through a controller-accessible action and visible copy receipt. Restore it while the file exists, remove stale actions safely, and preserve the explicit no-upload boundary. Do not open external applications or add automatic sharing.
 
 ## Historical prototype feed sequence
 

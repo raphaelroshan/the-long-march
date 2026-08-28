@@ -219,6 +219,7 @@ var feedback_confusing_text: TextEdit
 var feedback_score_option: OptionButton
 var feedback_status_label: Label
 var feedback_save_button: Button
+var feedback_path_button: Button
 var feedback_close_button: Button
 var last_feedback_path: String = ""
 var feedback_return_context: String = "results"
@@ -1220,14 +1221,27 @@ func _build_feedback_overlay() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(spacer)
+	feedback_path_button = Button.new()
+	feedback_path_button.text = "COPY REPORT PATH"
+	feedback_path_button.tooltip_text = "Save a report first."
+	feedback_path_button.visible = false
+	feedback_path_button.pressed.connect(_copy_feedback_path)
+	actions.add_child(feedback_path_button)
 	feedback_save_button = Button.new()
 	feedback_save_button.text = "SAVE NOTES LOCALLY"
 	feedback_save_button.pressed.connect(_save_feedback)
 	actions.add_child(feedback_save_button)
 	content.add_child(actions)
+	_configure_feedback_focus()
+
+func _configure_feedback_focus() -> void:
+	var has_report := feedback_path_button.visible and not feedback_path_button.disabled
+	var action_before_save: Control = feedback_path_button if has_report else feedback_close_button
 	feedback_close_button.focus_neighbor_left = feedback_close_button.get_path_to(feedback_save_button)
-	feedback_close_button.focus_neighbor_right = feedback_close_button.get_path_to(feedback_save_button)
-	feedback_save_button.focus_neighbor_left = feedback_save_button.get_path_to(feedback_close_button)
+	feedback_close_button.focus_neighbor_right = feedback_close_button.get_path_to(feedback_path_button if has_report else feedback_save_button)
+	feedback_path_button.focus_neighbor_left = feedback_path_button.get_path_to(feedback_close_button)
+	feedback_path_button.focus_neighbor_right = feedback_path_button.get_path_to(feedback_save_button)
+	feedback_save_button.focus_neighbor_left = feedback_save_button.get_path_to(action_before_save)
 	feedback_save_button.focus_neighbor_right = feedback_save_button.get_path_to(feedback_close_button)
 	feedback_clear_text.focus_neighbor_top = feedback_clear_text.get_path_to(feedback_save_button)
 	feedback_clear_text.focus_neighbor_bottom = feedback_clear_text.get_path_to(feedback_confusing_text)
@@ -1237,9 +1251,15 @@ func _build_feedback_overlay() -> void:
 	feedback_score_option.focus_neighbor_bottom = feedback_score_option.get_path_to(feedback_close_button)
 	feedback_close_button.focus_neighbor_top = feedback_close_button.get_path_to(feedback_score_option)
 	feedback_close_button.focus_neighbor_bottom = feedback_close_button.get_path_to(feedback_clear_text)
+	feedback_path_button.focus_neighbor_top = feedback_path_button.get_path_to(feedback_score_option)
+	feedback_path_button.focus_neighbor_bottom = feedback_path_button.get_path_to(feedback_clear_text)
 	feedback_save_button.focus_neighbor_top = feedback_save_button.get_path_to(feedback_score_option)
 	feedback_save_button.focus_neighbor_bottom = feedback_save_button.get_path_to(feedback_clear_text)
-	_configure_focus_cycle([feedback_clear_text, feedback_confusing_text, feedback_score_option, feedback_close_button, feedback_save_button])
+	var focus_controls: Array = [feedback_clear_text, feedback_confusing_text, feedback_score_option, feedback_close_button]
+	if has_report:
+		focus_controls.append(feedback_path_button)
+	focus_controls.append(feedback_save_button)
+	_configure_focus_cycle(focus_controls)
 
 func _show_onboarding(reopened: bool = false) -> void:
 	onboarding_reopened = reopened
@@ -1329,11 +1349,18 @@ func _show_feedback() -> void:
 		feedback_status_label.text = "LAST SAVED LOCALLY · %s\nEdits can be saved as a fresh report." % last_feedback_path.get_file()
 		feedback_status_label.tooltip_text = last_feedback_path
 		feedback_save_button.text = "SAVE AGAIN"
+		feedback_path_button.visible = true
+		feedback_path_button.disabled = false
+		feedback_path_button.tooltip_text = last_feedback_path
 	else:
 		last_feedback_path = ""
 		feedback_status_label.text = "Nothing is sent automatically. Save a local copy when you are ready."
 		feedback_status_label.tooltip_text = ""
 		feedback_save_button.text = "SAVE NOTES LOCALLY"
+		feedback_path_button.visible = false
+		feedback_path_button.disabled = true
+		feedback_path_button.tooltip_text = "Save a report first."
+	_configure_feedback_focus()
 	feedback_overlay.visible = true
 	feedback_clear_text.grab_focus()
 	_journal_event("feedback_opened", {"phase": state.phase, "opened_from": feedback_return_context})
@@ -1360,11 +1387,36 @@ func _save_feedback() -> void:
 		feedback_status_label.text = "SAVED LOCALLY · %s\nBuild %s is included in the report." % [last_feedback_path.get_file(), String(ProjectSettings.get_setting("application/config/version", "unknown"))]
 		feedback_status_label.tooltip_text = last_feedback_path
 		feedback_save_button.text = "SAVE AGAIN"
+		feedback_path_button.visible = true
+		feedback_path_button.disabled = false
+		feedback_path_button.tooltip_text = last_feedback_path
+		_configure_feedback_focus()
 		feedback_save_button.grab_focus()
 	else:
 		last_feedback_path = ""
 		feedback_status_label.tooltip_text = ""
 		feedback_status_label.text = "Could not save feedback: %s" % String(result.get("reason", "unknown error"))
+		feedback_path_button.visible = false
+		feedback_path_button.disabled = true
+		feedback_path_button.tooltip_text = "Save a report first."
+		_configure_feedback_focus()
+
+func _copy_feedback_path() -> void:
+	if last_feedback_path.is_empty() or not FileAccess.file_exists(last_feedback_path):
+		last_feedback_path = ""
+		feedback_status_label.text = "The saved report is no longer available. Save notes again to create a new file."
+		feedback_status_label.tooltip_text = ""
+		feedback_path_button.visible = false
+		feedback_path_button.disabled = true
+		feedback_path_button.tooltip_text = "Save a report first."
+		_configure_feedback_focus()
+		feedback_save_button.grab_focus()
+		return
+	DisplayServer.clipboard_set(last_feedback_path)
+	feedback_status_label.text = "REPORT PATH COPIED · %s\nPaste it into your file browser or message when you choose to share the report." % last_feedback_path.get_file()
+	feedback_status_label.tooltip_text = last_feedback_path
+	feedback_path_button.grab_focus()
+	_journal_event("feedback_path_copied", {"phase": state.phase})
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):

@@ -44,6 +44,7 @@ This is a testable two-chapter alpha for The Long March. It proves separate five
 15. Pause at a live route, event, recovery, or battle decision and open **Record Playtest Notes**. Confirm the form names the current chapter/day/location/phase, keeps unsaved text during the stage, and returns to the still-paused run without changing state.
 16. In Settings, switch **Text Size** to 110%. Confirm the title, Field Guide, live stage, Pause, and Settings remain readable at 1280×720; keyboard/controller focus must scroll lower preference rows into view. Relaunch once to confirm the preference persists, then restore 100% if desired.
 17. Save one feedback report, then choose **Reset Playtest Data** from title Settings. Cancel once and verify all state remains; confirm once and verify Continue, backup, Charter, briefing completion, preferences, and the current journal are gone while the exported report remains.
+18. Save Playtest Notes, choose **Copy Report Path**, and confirm the visible copied receipt. Reopen the form and verify the action remains while the report exists; move or delete the file and confirm the stale action disappears safely.
 
 The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 
