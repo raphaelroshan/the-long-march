@@ -31,6 +31,7 @@ func _init() -> void:
 	_test_bounded_occurrence_scheduler()
 	_test_flooded_veyru_region_state()
 	_test_flooded_veyru_threats_and_contract()
+	_test_veyru_public_archive_signal()
 	_test_complete_flooded_veyru_campaign()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
@@ -1036,6 +1037,35 @@ func _test_flooded_veyru_threats_and_contract() -> void:
 		replay_state.choose_veyru_medicine_contract(true)
 		_veyru_battle(replay_state, "pump_gallery", "protect_cargo")
 	_expect(replay_a.encounter_report == replay_b.encounter_report and replay_a.modules == replay_b.modules and replay_a.hull_condition == replay_b.hull_condition and replay_a.campaign_pressure == replay_b.campaign_pressure, "the Veyru teaching route should replay deterministically from the same seed, layout, contract, doctrine, and order")
+
+func _test_veyru_public_archive_signal() -> void:
+	var state := LongMarchState.new(2204)
+	state.start_flooded_veyru()
+	var before := state.campaign_node_preview("drowned_registry")
+	_expect(String(before.get("visibility", "")) == "unscouted" and String(before.get("regional_development", "")).is_empty(), "Drowned Registry should begin unscouted without a prior regional development")
+	var applied := state.set_regional_developments(["veyru_public_archive_signal"])
+	var after := state.campaign_node_preview("drowned_registry")
+	_expect(bool(applied.get("ok", false)) and String(after.get("visibility", "")) == "known" and String(after.get("regional_development", "")) == "Public Archive Signal", "Public Archive Signal should reveal the Registry's exact contacts without requiring a live signal module")
+	_expect(after.get("threats", []) == ["Flood Surge", "Climber"] and not Array(after.get("risk_factors", [])).has("forecasting -8pt"), "the development should reveal information without granting the live forecasting risk discount")
+	_expect(float(after.get("risk", 0.0)) == float(before.get("risk", 0.0)) and int(after.get("pressure_gain", 0)) == int(before.get("pressure_gain", 0)) and int(after.get("fuel", 0)) == int(before.get("fuel", 0)) and int(after.get("days", 0)) == int(before.get("days", 0)), "the information development should not alter Registry risk, pressure, fuel, or time")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.has_regional_development("veyru_public_archive_signal"), "active regional developments should survive the run save envelope")
+	var legacy_payload := state.serialize()
+	legacy_payload["save_version"] = 7
+	legacy_payload.erase("regional_developments")
+	var legacy_restore := LongMarchState.new(0)
+	_expect(bool(legacy_restore.load_serialized(legacy_payload).get("ok", false)) and legacy_restore.regional_developments.is_empty(), "schema-7 saves should migrate with no invented regional development")
+	var invalid_payload := state.serialize()
+	invalid_payload["regional_developments"] = ["perfect_forecast"]
+	_expect(not bool(LongMarchState.new(0).load_serialized(invalid_payload).get("ok", false)), "unknown regional developments should be rejected before mutating restored state")
+	state.phase = "results"
+	state.final_result = "archive_scarred"
+	state.run_complete = true
+	state.journey_complete = true
+	state.campaign_decisions["archive_broadcast"] = "broadcast_archive"
+	_expect(state.earned_regional_development() == "veyru_public_archive_signal", "surviving after the public archive broadcast should earn its named regional development")
+	state.campaign_decisions["archive_broadcast"] = "seal_archive"
+	_expect(state.earned_regional_development().is_empty(), "sealing the archive should not silently earn the public signal development")
 
 func _test_complete_flooded_veyru_campaign() -> void:
 	var state := LongMarchState.new(2204)

@@ -36,6 +36,7 @@ This is a testable two-chapter alpha for The Long March. It proves separate five
 7. At Dry Archive Gate, verify both Broadcast and Seal show their complete mechanical consequences before selection.
 8. Resolve the Civic Guardian final contact and confirm Archive Kept, Archive Scarred, or Veyru Lost names the carrier, water, final commitment, and decisive system state.
 9. Save and Continue at a route choice, battle, camp, or final decision. Confirm the title, pause menu, restart warning, and replay warning all identify Flooded Veyru rather than Ashgate.
+10. Complete a run after choosing **Broadcast the archive**. Confirm the debrief earns **Public Archive Signal**, then start another Veyru run and verify Drowned Registry is Known while its risk remains unchanged.
 
 The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 
@@ -56,4 +57,4 @@ The integrated kit includes a Long March visual reference, Ashgate journey backg
 
 ## Scope boundaries
 
-This release includes two authored FTL-like regional graphs, two mutually exclusive recruitable Ashgate specialists, one Veyru medicine obligation, and a bounded scheduler for four authored Ashgate occurrences. It does not connect the chapters into a campaign, add procedural prose or maps, implement a complete cargo economy, or include final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. Both chapters remain deterministic and inspectable so agents and testers can tune their distinct preparation and route decisions before adding campaign breadth.
+This release includes two authored FTL-like regional graphs, two mutually exclusive recruitable Ashgate specialists, one Veyru medicine obligation, one information-only regional development, and a bounded scheduler for four authored Ashgate occurrences. It does not connect the chapters into a campaign, add procedural prose or maps, implement a complete cargo economy, or include final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. Both chapters remain deterministic and inspectable so agents and testers can tune their distinct preparation and route decisions before adding campaign breadth.

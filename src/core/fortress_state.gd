@@ -7,8 +7,10 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
+const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru"]
+const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal"]
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
@@ -216,6 +218,7 @@ var specialist_id: String = ""
 var mara_repaired_module_id: String = ""
 var relay_repaired: bool = false
 var workers_rescued: bool = false
+var regional_developments: Array[String] = []
 
 func _init(world_seed: int = 1107) -> void:
 	seed = world_seed
@@ -485,6 +488,26 @@ func start_flooded_veyru() -> Dictionary:
 func campaign_region_name() -> String:
 	return "Flooded Veyru" if campaign_region_id == "flooded_veyru" else "Ashgate Lowlands"
 
+func set_regional_developments(developments: Array) -> Dictionary:
+	var validated: Array[String] = []
+	for raw_id in developments:
+		var development_id := String(raw_id)
+		if development_id not in VALID_REGIONAL_DEVELOPMENTS:
+			return {"ok": false, "reason": "unknown regional development"}
+		if development_id not in validated:
+			validated.append(development_id)
+	validated.sort()
+	regional_developments = validated
+	return {"ok": true, "developments": regional_developments.duplicate()}
+
+func has_regional_development(development_id: String) -> bool:
+	return development_id in regional_developments
+
+func earned_regional_development() -> String:
+	if phase == "results" and final_result in ["archive_kept", "archive_scarred"] and String(campaign_decisions.get("archive_broadcast", "")) == "broadcast_archive":
+		return "veyru_public_archive_signal"
+	return ""
+
 func campaign_pressure_name() -> String:
 	return "Rising water" if campaign_region_id == "flooded_veyru" else "Blockade"
 
@@ -546,7 +569,10 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount)
 	var predicted_heat := maxi(0, total_heat() + (2 if doctrine == "run_hot" else 0))
 	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
+	var development_reveal := campaign_region_id == "flooded_veyru" and node_id == "drowned_registry" and has_regional_development("veyru_public_archive_signal")
 	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
+	if development_reveal:
+		visibility = "known"
 	if campaign_region_id == "flooded_veyru" and node_id == "dry_archive" and String(campaign_decisions.get("archive_broadcast", "")) == "seal_archive":
 		visibility = "forecast"
 	var signal_discount := 0.08 if informed else 0.0
@@ -608,6 +634,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"threats": threat_names,
 		"counter_hints": counter_hints,
 		"ready_counter_names": ready_counter_names,
+		"regional_development": "Public Archive Signal" if development_reveal else "",
 		"closed": campaign_node_closed(node_id),
 		"locked_reason": campaign_node_lock_reason(node_id)
 	}
@@ -636,6 +663,7 @@ func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dict
 			"pressure_gain": int(preview.get("pressure_gain", 0)),
 			"threat_hint": String(preview.get("threat_hint", "uncertain pressure")),
 			"threats": preview.get("threats", []).duplicate(),
+			"regional_development": String(preview.get("regional_development", "")),
 			"next_stops": next_names,
 			"settlement_follows": settlement_follows
 		})
@@ -1707,7 +1735,8 @@ func summary() -> Dictionary:
 		"specialist_id": specialist_id,
 		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
-		"workers_rescued": workers_rescued
+		"workers_rescued": workers_rescued,
+		"regional_developments": regional_developments.duplicate()
 	}
 
 func serialize() -> Dictionary:
@@ -1775,6 +1804,7 @@ func serialize() -> Dictionary:
 		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued,
+		"regional_developments": regional_developments.duplicate(),
 		"modules": _serialized_modules(),
 		"stored_modules": _serialized_stored_modules(),
 		"log": log.duplicate()
@@ -1941,6 +1971,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var save_version := int(data.get("save_version", 1))
 	if save_version > SAVE_VERSION:
 		return {"ok": false, "reason": "save was created by a newer version"}
+	if save_version < MIN_SUPPORTED_SAVE_VERSION:
+		return {"ok": false, "reason": "save uses an unsupported older version"}
 	if not data.has("modules"):
 		return {"ok": false, "reason": "save is missing fortress modules"}
 	var restored_modules_result := _validated_module_records(data.get("modules", []), true)
@@ -1976,9 +2008,21 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_mara_repaired_module_id := String(data.get("mara_repaired_module_id", ""))
 	var restored_veyru_contract_status := String(data.get("veyru_contract_status", "unoffered"))
 	var restored_veyru_medicine_carrier_id := String(data.get("veyru_medicine_carrier_id", ""))
+	var raw_regional_developments: Variant = data.get("regional_developments", [])
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
 	if restored_campaign_region_id not in VALID_CAMPAIGN_REGIONS:
 		return {"ok": false, "reason": "checkpoint contains an unknown campaign region"}
+	if not raw_regional_developments is Array or raw_regional_developments.size() > VALID_REGIONAL_DEVELOPMENTS.size():
+		return {"ok": false, "reason": "checkpoint regional development list is malformed"}
+	var restored_regional_developments: Array[String] = []
+	for raw_id in raw_regional_developments:
+		var development_id := String(raw_id)
+		if development_id not in VALID_REGIONAL_DEVELOPMENTS:
+			return {"ok": false, "reason": "checkpoint contains an unknown regional development"}
+		if development_id in restored_regional_developments:
+			return {"ok": false, "reason": "checkpoint contains a duplicate regional development"}
+		restored_regional_developments.append(development_id)
+	restored_regional_developments.sort()
 	if restored_current_location not in JOURNEY_NODES or restored_journey_node not in JOURNEY_NODES:
 		return {"ok": false, "reason": "checkpoint contains an unknown journey location"}
 	if not restored_journey_destination.is_empty() and restored_journey_destination not in JOURNEY_NODES:
@@ -2127,6 +2171,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	mara_repaired_module_id = restored_mara_repaired_module_id
 	relay_repaired = bool(data.get("relay_repaired", relay_repaired))
 	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
+	regional_developments = restored_regional_developments
 	modules = restored_modules_result.get("modules", []).duplicate(true)
 	stored_modules = restored_stored_modules_result.get("modules", []).duplicate(true)
 	if not data.has("stored_modules"):

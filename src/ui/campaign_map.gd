@@ -235,6 +235,8 @@ func _apply_button_style(button: Button, status: String) -> void:
 
 func _preview_tooltip(preview: Dictionary, include_intel_upgrade: bool = true) -> String:
 	var visibility := String(preview.get("visibility", "forecast"))
+	var development_name := String(preview.get("regional_development", ""))
+	var development_detail := "\nRegional development: %s reveals these contacts from an earlier march." % development_name if not development_name.is_empty() else ""
 	var days := int(preview.get("days", 0))
 	var day_text := "%d day%s" % [days, "" if days == 1 else "s"]
 	var risk := float(preview.get("risk", 0.0))
@@ -251,7 +253,7 @@ func _preview_tooltip(preview: Dictionary, include_intel_upgrade: bool = true) -
 		var counter_detail := "\nPrepare: %s." % " or ".join(counters) if not counters.is_empty() else ""
 		var ready_counters: Array = preview.get("ready_counter_names", [])
 		var readiness_detail := "\nReady now: %s." % ", ".join(ready_counters) if not ready_counters.is_empty() else "\nReady now: no listed module counter."
-		return "Known route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s%s%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", [])), counter_detail, readiness_detail, sustain_effect, risk_detail]
+		return "Known route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s%s%s%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", [])), counter_detail, readiness_detail, sustain_effect, risk_detail, development_detail]
 	if visibility == "forecast":
 		return "Forecast route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain.%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure")), sustain_effect, risk_detail, intel_upgrade]
 	return "Unscouted route · %s · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown.%s%s%s" % [day_text, int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure")), sustain_effect, risk_detail, intel_upgrade]

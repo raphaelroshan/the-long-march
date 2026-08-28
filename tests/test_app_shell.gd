@@ -4,6 +4,7 @@ const SAVE_PATH := "user://the_long_march_prototype.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
+const PROGRESS_PATH := "user://the_long_march_progress.json"
 
 var app: Control
 var failures: Array[String] = []
@@ -13,7 +14,7 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _remove_local_test_files() -> void:
-	for path in [SAVE_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH]:
+	for path in [SAVE_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)
@@ -148,19 +149,37 @@ func _run() -> void:
 	app.game_view.state.run_complete = true
 	app.game_view.state.journey_complete = true
 	app.game_view.state.final_result = "archive_scarred"
+	app.game_view.state.campaign_decisions["archive_broadcast"] = "broadcast_archive"
 	app.game_view._refresh_ui()
+	_expect(app.game_view.results_record_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.game_view.results_record_label.text.contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief should state the regional development and its later route effect")
+	app._on_checkpoint_reached("encounter_advanced")
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.has_development("veyru_public_archive_signal"), "surviving after the public broadcast should persist the regional development outside the replaceable Continue slot")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
-	_expect(app.confirmation_title_label.text == "Replay Flooded Veyru?" and app.confirmation_body_label.text.contains("fresh Flooded Veyru run"), "Veyru replay should not describe the replacement run as Ashgate")
+	_expect(app.confirmation_title_label.text == "Replay Flooded Veyru?" and app.confirmation_body_label.text.contains("fresh Flooded Veyru"), "Veyru replay should not describe the replacement run as Ashgate")
 	app.confirmation_confirm_button.pressed.emit()
 	await process_frame
 	await process_frame
+	var developed_registry: Dictionary = app.game_view.state.campaign_node_preview("drowned_registry")
 	_expect(app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay" and app.game_view.state.veyru_contract_status == "offered", "confirming Veyru replay should create another Veyru run at Lantern Quay")
+	_expect(app.game_view.state.has_regional_development("veyru_public_archive_signal") and String(developed_registry.get("visibility", "")) == "known" and developed_registry.get("threats", []) == ["Flood Surge", "Climber"], "the replay should apply the earned Public Archive Signal and reveal Drowned Registry's combination contact")
+	app.game_view.state.choose_veyru_medicine_contract(false)
+	app.game_view.state.current_location = "veyru_evacuation_camp"
+	app.game_view.state.journey_node = "veyru_evacuation_camp"
+	app.game_view.state.phase = "settlement"
+	app.game_view.state.campaign_encounters_completed = 2
+	var developed_path: Array[String] = ["lantern_quay", "pump_gallery", "veyru_evacuation_camp"]
+	app.game_view.state.campaign_path = developed_path
+	app.game_view.state.campaign_last_safe_node = "veyru_evacuation_camp"
+	app.game_view._refresh_ui()
+	_expect(app.game_view.campaign_map.button_for("drowned_registry").text.contains("KNOWN") and app.game_view.campaign_map.detail_for("drowned_registry").contains("Regional development: Public Archive Signal") and app.game_view.campaign_comparison_label.text.contains("KNOWN · PUBLIC ARCHIVE SIGNAL"), "the later Veyru map should visibly attribute the Registry's exact contact intel to the prior public broadcast")
+	_expect(app.game_view.campaign_path_label.text.contains("Public Archive Signal") and app.game_view.campaign_path_label.text.contains("Drowned Registry contacts known"), "the active run status should keep the regional development visible before route selection")
 	app._return_to_title()
 	await process_frame
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "returning from an unsaved Veyru inspection should restore the shared title menu")
 	_expect(app.continue_button.text.contains("VEYRU") and app.save_status_label.text.contains("Flooded Veyru") and app.continue_button.tooltip_text.contains("Flooded Veyru"), "a Veyru checkpoint should identify its chapter in the title action, summary, and tooltip")
+	_expect(app.title_region_briefing_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.title_region_briefing_label.text.contains("Drowned Registry contacts are Known") and app.veyru_start_button.tooltip_text.contains("Public Archive Signal is active"), "the title should explain the unlocked regional development before the next Veyru run")
 	_expect(not app.quick_start_button.visible, "a returning-player title should collapse the redundant Ashgate quick-start action while the Field Guide retains that path")
 	if FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
@@ -342,6 +361,17 @@ func _run() -> void:
 	var saved_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(saved_payload is Dictionary and String(saved_payload.get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version")), "campaign saves should record their exact application build")
 	_expect(saved_payload is Dictionary and int(saved_payload.get("saved_at_unix", 0)) > 0, "campaign saves should record when the checkpoint was created")
+	var legacy_title_payload: Dictionary = saved_payload.duplicate(true)
+	legacy_title_payload["save_version"] = 7
+	legacy_title_payload.erase("regional_developments")
+	var legacy_title_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	legacy_title_save.store_string(JSON.stringify(legacy_title_payload))
+	legacy_title_save.close()
+	var legacy_title_info: Dictionary = app._saved_run_info()
+	_expect(bool(legacy_title_info.get("valid", false)) and String(legacy_title_info.get("action", "")).contains("ASHGATE"), "the title should continue to load schema-7 checkpoints while migrating an empty development snapshot")
+	var current_title_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	current_title_save.store_string(JSON.stringify(saved_payload))
+	current_title_save.close()
 	var completed_payload: Dictionary = saved_payload.duplicate(true)
 	completed_payload["phase"] = "results"
 	completed_payload["final_result"] = "scarred_march"

@@ -819,3 +819,7 @@ Continue now names Ashgate or Veyru on the action, summary, and tooltip. Pause s
 ## 2026-08-28 — Help follows the active region
 
 The title Field Guide now explains the shared loop through both implemented chapters instead of presenting Ashgate as the only road. Reopening the in-run briefing derives seven labels and lessons from the active region: Ashgate retains its engine, ammunition, signal, blockade, and Morrowline teaching, while Veyru teaches the condenser, named medicine carrier, water thresholds, Pilgrim Gantry guarantee, and archive commitment. Veyru still starts directly at its contract; the tailored briefing is available on demand and never marks the Ashgate first-run lesson complete.
+
+## 2026-08-28 — Public information creates information, not power
+
+Surviving Flooded Veyru after broadcasting the Dry Archive establishes `veyru_public_archive_signal` in a small local progression record. Later Veyru runs copy that stable ID into their save-safe simulation state and reveal Drowned Registry's Flood Surge and Climber composition as Known. The development does not reduce route risk, pressure, damage, fuel, or time, preserving the value of live signal equipment and avoiding a permanent-stat treadmill. The earning debrief, title overview, active run status, route comparison, and map detail all name the prior decision that changed the later option.

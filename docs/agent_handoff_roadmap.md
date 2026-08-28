@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.234`
+**Current code baseline:** `0.3.0-alpha.235`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -506,6 +506,8 @@ Implement one authored map graph, one settlement, one new pressure, four or five
 
 ### Long Road 6 — Regional consequences
 
+**Status:** Complete for the first bounded development in `0.3.0-alpha.235`.
+
 **Objective:** Connect one completed journey to one regional development.
 
 A settlement, route, or faction should change because of a previous contract, rescue, warning, or abandonment. Show the cause in the map and report. Keep the state small and migration-safe.
@@ -644,7 +646,7 @@ Implement Flooded Veyru as an isolated authored chapter using the existing fortr
 
 #### Feed F — Regional consequence
 
-**Status:** Next recommended slice.
+**Status:** Complete in `0.3.0-alpha.235` through Public Archive Signal.
 
 ```text
 Connect one completed Ashgate or Flooded Veyru decision to one visible regional development. Persist one small migration-safe consequence, show its cause on the map and in the debrief, and make it change a later option rather than grant a flat permanent stat bonus. Do not build the full campaign layer in the same change.

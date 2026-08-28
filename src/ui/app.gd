@@ -3,10 +3,12 @@ extends Control
 
 const GAME_SCENE = preload("res://scenes/Main.tscn")
 const LongMarchState = preload("res://src/core/fortress_state.gd")
+const CampaignProgress = preload("res://src/support/campaign_progress.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
+const PROGRESS_PATH := "user://the_long_march_progress.json"
 const CHECKPOINT_LABELS := {
 	"contract_answered": "Contract decision",
 	"route_started": "Route committed",
@@ -70,6 +72,7 @@ var confirmation_body_label: Label
 var confirmation_confirm_button: Button
 var confirmation_cancel_button: Button
 var save_status_label: Label
+var title_region_briefing_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
 var fullscreen_enabled: bool = false
@@ -78,6 +81,8 @@ var autosave_enabled: bool = true
 var settings_opened_from_pause: bool = false
 var last_checkpoint_reason: String = ""
 var checkpoint_toast_tween: Tween
+var campaign_progress: CampaignProgress
+var campaign_progress_error: String = ""
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -110,6 +115,10 @@ func _create_menu_theme() -> Theme:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_load_preferences()
+	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
+	var progress_result := campaign_progress.load_progress()
+	if not bool(progress_result.get("ok", false)):
+		campaign_progress_error = String(progress_result.get("reason", "regional record could not be read"))
 	_apply_display_mode()
 	theme = _create_menu_theme()
 	_build_title_menu()
@@ -294,12 +303,11 @@ func _build_title_menu() -> void:
 	stage_title.add_theme_font_size_override("font_size", 30)
 	stage_title.add_theme_color_override("font_color", Color("#f0d29d"))
 	stage.add_child(stage_title)
-	var briefing := Label.new()
-	briefing.text = "Ashgate teaches route pressure, signal, and convoy recovery. Flooded Veyru tests lower-hull condition, rising water, and a medicine carrier bound for the Dry Archive."
-	briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	briefing.custom_minimum_size = Vector2(330, 72)
-	briefing.add_theme_color_override("font_color", Color("#d0d8d5"))
-	stage.add_child(briefing)
+	title_region_briefing_label = Label.new()
+	title_region_briefing_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_region_briefing_label.custom_minimum_size = Vector2(330, 72)
+	title_region_briefing_label.add_theme_color_override("font_color", Color("#d0d8d5"))
+	stage.add_child(title_region_briefing_label)
 	var scope := Label.new()
 	scope.text = "TWO PLAYABLE CHAPTERS   ·   5 ENCOUNTERS EACH   ·   RECOVERY MID-RUN   ·   FINALE AT 5"
 	scope.add_theme_font_size_override("font_size", 11)
@@ -917,6 +925,12 @@ func _refresh_title_state() -> void:
 	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
 	var has_completed_save := has_valid_save and bool(save_info.get("completed", false))
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
+	if not campaign_progress_error.is_empty():
+		title_region_briefing_label.text = "Ashgate and Flooded Veyru remain playable. Regional record unavailable: %s. Completing a qualifying run can rebuild it." % campaign_progress_error
+	elif campaign_progress.has_development("veyru_public_archive_signal"):
+		title_region_briefing_label.text = "Ashgate teaches route pressure and convoy recovery. Flooded Veyru now carries the PUBLIC ARCHIVE SIGNAL: Drowned Registry contacts are Known on later runs."
+	else:
+		title_region_briefing_label.text = "Ashgate teaches route pressure, signal, and convoy recovery. Flooded Veyru tests lower-hull condition, rising water, and a medicine carrier bound for the Dry Archive."
 	if briefing_complete:
 		start_button.text = "PLAY AGAIN · ASHGATE DEPOT" if has_completed_save else ("NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT")
 		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
@@ -926,6 +940,7 @@ func _refresh_title_state() -> void:
 	quick_start_button.visible = not briefing_complete and not has_valid_save
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
 	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
+	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay.%s" % (" Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else "")
 	guide_quick_start_button.text = "QUICK REPLAY ASHGATE" if has_completed_save else ("START NEW ASHGATE RUN" if has_valid_save else "QUICK START ASHGATE")
 	guide_quick_start_button.tooltip_text = "Begin a fresh Ashgate run without opening the introductory briefing."
 	continue_button.visible = has_valid_save
@@ -981,7 +996,7 @@ func _saved_run_info() -> Dictionary:
 	if not parsed is Dictionary:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · Invalid data. Start a new run to replace it."}
 	var schema_version := int(parsed.get("save_version", -1))
-	if schema_version != LongMarchState.SAVE_VERSION:
+	if schema_version < LongMarchState.MIN_SUPPORTED_SAVE_VERSION or schema_version > LongMarchState.SAVE_VERSION:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · This checkpoint uses an incompatible save format. Remove it or start a new run."}
 	if not parsed.has("phase") or not parsed.has("current_location") or not parsed.has("modules"):
 		return {"exists": true, "valid": false, "summary": "Save unavailable · Required campaign state is missing."}
@@ -1106,6 +1121,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view = GAME_SCENE.instantiate()
 	game_view.set("show_onboarding_on_ready", show_briefing)
 	game_view.set("starting_region_id", region_id)
+	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
 	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))
@@ -1129,6 +1145,8 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 		_refresh_title_state()
 		(save_recovery_button if save_recovery_button.visible else start_button).grab_focus()
 		return
+	if load_saved:
+		_record_regional_development()
 	last_checkpoint_reason = "loaded save" if load_saved else ""
 	game_view.call_deferred("focus_current_action")
 	if not reduced_motion:
@@ -1242,11 +1260,29 @@ func _save_from_pause() -> bool:
 	return saved
 
 func _on_checkpoint_reached(reason: String) -> void:
-	if game_view == null or not autosave_enabled:
+	if game_view == null:
+		return
+	_record_regional_development()
+	if not autosave_enabled:
 		return
 	if bool(game_view.call("save_run", true)):
 		last_checkpoint_reason = reason
 		_show_checkpoint_toast(reason)
+
+func _record_regional_development() -> void:
+	if game_view == null:
+		return
+	var run_state = game_view.get("state")
+	var development_id := String(run_state.call("earned_regional_development"))
+	if development_id.is_empty():
+		return
+	var result := campaign_progress.unlock(development_id)
+	if not bool(result.get("ok", false)):
+		campaign_progress_error = String(result.get("reason", "regional record could not be saved"))
+		return
+	campaign_progress_error = ""
+	run_state.call("set_regional_developments", campaign_progress.developments)
+	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 
 func _show_checkpoint_toast(reason: String) -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():

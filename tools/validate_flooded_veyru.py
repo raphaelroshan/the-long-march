@@ -21,6 +21,7 @@ EXPECTED_NODES = {
 }
 EXPECTED_DECISIONS = {"drain_pumps", "registry_salvage", "archive_broadcast"}
 EXPECTED_RESULTS = {"archive_kept", "archive_scarred", "veyru_lost"}
+EXPECTED_DEVELOPMENTS = {"veyru_public_archive_signal"}
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -119,6 +120,16 @@ def main() -> int:
     for threat in data.get("regional_threats", []):
         if isinstance(threat, dict) and len(threat.get("counters", [])) < 2:
             errors.append(f"regional threat {threat.get('id')} needs at least two counters")
+
+    development_ids = item_ids(data.get("regional_developments"), "regional_developments", errors)
+    if development_ids != EXPECTED_DEVELOPMENTS:
+        errors.append("regional developments must contain the public archive signal")
+    developments = {item["id"]: item for item in data.get("regional_developments", []) if isinstance(item, dict) and item.get("id")}
+    public_signal = developments.get("veyru_public_archive_signal", {})
+    if public_signal.get("trigger") != {"decision": "broadcast_archive", "results": ["archive_kept", "archive_scarred"]}:
+        errors.append("Public Archive Signal must require a surviving public broadcast result")
+    if public_signal.get("future_effect") != {"node": "drowned_registry", "visibility": "known", "risk_discount": 0}:
+        errors.append("Public Archive Signal must reveal Drowned Registry without granting a risk discount")
 
     loadout = data.get("prepared_loadout", {})
     module_ids = [entry.get("id") for entry in loadout.get("modules", []) if isinstance(entry, dict)]

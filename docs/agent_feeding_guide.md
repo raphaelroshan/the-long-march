@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.234`; Feeds A through E are complete, so begin new feature work with Feed F.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.235`; Feeds A through F are complete, so begin new feature work with a bounded campaign/replay slice after reviewing playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -38,7 +38,7 @@ The original prompts below describe the build-up of the prototype and are retain
 
 ### Current Feed F — one regional consequence
 
-**Status:** Next recommended slice.
+**Status:** Complete in `0.3.0-alpha.235` through Public Archive Signal.
 
 > Connect one completed Ashgate or Flooded Veyru decision to one visible regional development. Persist one small migration-safe consequence, show its cause on the map and in the debrief, and make it change a later option rather than grant a flat permanent stat bonus. Do not build the full campaign layer in the same change.
 

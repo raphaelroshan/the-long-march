@@ -225,6 +225,7 @@ var placement_rotated: bool = false
 var last_synced_combat_target_id: String = ""
 var show_onboarding_on_ready: bool = true
 var starting_region_id: String = "ashgate_lowlands"
+var starting_regional_developments: Array[String] = []
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -430,6 +431,7 @@ func _reset_state() -> void:
 		state.start_flooded_veyru()
 	else:
 		state.start_campaign()
+	state.set_regional_developments(starting_regional_developments)
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
@@ -2137,6 +2139,8 @@ func _refresh_campaign_controls() -> void:
 	if state.campaign_region_id == "flooded_veyru":
 		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if not state.veyru_medicine_carrier_id.is_empty() else "none"
 		campaign_path_label.text = "Medicine contract: %s · Carrier: %s" % [active_contract_status.replace("_", " ").capitalize(), carrier_name]
+		if state.has_regional_development("veyru_public_archive_signal"):
+			campaign_path_label.text += "\nRegional development: Public Archive Signal · Drowned Registry contacts known"
 	else:
 		campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [active_contract_status.replace("_", " ").capitalize(), state.specialist_name()]
 
@@ -2183,7 +2187,8 @@ func _refresh_campaign_controls() -> void:
 	var comparison_lines: Array[String] = ["COMPARE AVAILABLE ROADS · CONTRACT %s" % active_contract_status.replace("_", " ").to_upper()]
 	for route in state.campaign_route_comparison(_selected_id(doctrine_option)):
 		var visibility := String(route.get("visibility", "unscouted"))
-		var confidence_text := visibility.to_upper()
+		var development_name := String(route.get("regional_development", ""))
+		var confidence_text := "%s · %s" % [visibility.to_upper(), development_name.to_upper()] if not development_name.is_empty() else visibility.to_upper()
 		var risk_text := "RISK UNKNOWN" if visibility == "unscouted" else "%s %.0f%% RISK" % [String(route.get("risk_band", "high")).to_upper(), float(route.get("risk", 0.0)) * 100.0]
 		var fuel_text := "%d FUEL" % int(route.get("fuel", 0))
 		if int(route.get("fuel_discount", 0)) > 0:
@@ -2879,7 +2884,8 @@ func _result_record_text() -> String:
 	var occurrence_lines := state.occurrence_debrief_lines()
 	var occurrence_block := "\n%s" % "\n".join(occurrence_lines) if not occurrence_lines.is_empty() else ""
 	var carrier_record := " · Carrier: %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty() else ""
-	return "RUN RECORD · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	var development_record := "\nRegional development: PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts" if state.earned_regional_development() == "veyru_public_archive_signal" else ""
+	return "RUN RECORD · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_name(),
@@ -2891,6 +2897,7 @@ func _result_record_text() -> String:
 		_campaign_decision_record_text(),
 		mara_line,
 		occurrence_block,
+		development_record,
 		_recovery_location_name(),
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
