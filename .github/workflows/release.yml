@@ -48,6 +48,7 @@ jobs:
         run: bash scripts/export_playtest.sh "${{ matrix.target }}"
       - name: Create release manifest
         run: |
+          mkdir -p artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           python -c "import json, os; m=json.load(open('tools/ci_manifest.json')); m.update({'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2)"
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .

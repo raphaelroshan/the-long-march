@@ -639,3 +639,7 @@ Module-directed attacks retain their red target outline, while a hull-directed c
 ## 2026-08-28 — CI and local exports share one checked path
 
 Runnable Windows and macOS packaging now goes through `scripts/export_playtest.sh` in both developer and GitHub Actions environments. The script reports its engine version, deletes stale target files before export, verifies a non-empty artifact, and gives a specific matching-template error, preventing an old executable from being mistaken for the current build after a failed export.
+
+## 2026-08-28 — Release metadata creates its own destination
+
+The tagged release workflow now creates the artifact directory immediately before writing its manifest. Export setup no longer owns that unrelated side effect, so refactoring or replacing the build script cannot leave an otherwise successful desktop package without its provenance metadata.
