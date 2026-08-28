@@ -480,6 +480,7 @@ func _test_campaign_contract_and_specialist() -> void:
 	var restored := LongMarchState.new(0)
 	restored.load_serialized(state.serialize())
 	_expect(restored.specialist_id == "iven_pell" and restored.guard_contract_status == "accepted", "save/load should preserve the specialist and contract")
+	_expect(String(restored.campaign_decisions.get("lost_signal", "")) == "restore_relay", "save/load should preserve the exact authored route decision")
 	_expect(restored.campaign_path == state.campaign_path and restored.campaign_pressure == state.campaign_pressure, "save/load should preserve the campaign map state")
 
 func _test_campaign_events_and_closure() -> void:
@@ -569,6 +570,7 @@ func _test_alternate_five_encounter_campaign() -> void:
 	var second := _campaign_battle(state, "red_wheel_toll_bridge", "protect_cargo")
 	_expect(bool(second.get("resolved", false)) and state.phase == "map", "the Red Wheel branch should survive as part of a complete route")
 	_expect(bool(state.resolve_campaign_event("pay_toll").get("ok", false)), "the alternate route should be able to reduce pressure at the toll")
+	_expect(String(state.campaign_decisions.get("salvage_choice", "")) == "take_fuel" and String(state.campaign_decisions.get("toll_decision", "")) == "pay_toll", "the alternate route should retain both authored decisions for its eventual debrief")
 	var third := _campaign_battle(state, "morrowline_camp", "protect_cargo")
 	_expect(bool(third.get("resolved", false)) and state.phase == "settlement", "the alternate first half should reach Morrowline recovery")
 	_expect(bool(state.settlement_repair("wall_lamp").get("ok", false)), "the alternate route should restore its storm counter at Morrowline")

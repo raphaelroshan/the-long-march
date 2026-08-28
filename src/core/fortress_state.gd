@@ -135,6 +135,7 @@ var campaign_last_safe_node: String = "ashgate_depot"
 var campaign_pressure: int = 0
 var campaign_retreats: int = 0
 var campaign_event_pending: String = ""
+var campaign_decisions: Dictionary = {}
 var guard_contract_status: String = "unoffered"
 var settlement_trust: int = 0
 var mobility_tendency: int = 0
@@ -333,6 +334,7 @@ func start_campaign() -> Dictionary:
 	campaign_pressure = 0
 	campaign_retreats = 0
 	campaign_event_pending = ""
+	campaign_decisions.clear()
 	guard_contract_status = "offered"
 	settlement_trust = 0
 	mobility_tendency = 0
@@ -521,6 +523,7 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			return {"ok": false, "reason": "that toll choice is not currently available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
+	campaign_decisions[resolved_event] = choice_id
 	log.append(result_message)
 	campaign_event_pending = ""
 	return {"ok": true, "event": resolved_event, "choice": choice_id, "message": result_message, "summary": summary()}
@@ -912,6 +915,7 @@ func summary() -> Dictionary:
 		"campaign_pressure_band": campaign_pressure_band(),
 		"campaign_retreats": campaign_retreats,
 		"campaign_event_pending": campaign_event_pending,
+		"campaign_decisions": campaign_decisions.duplicate(true),
 		"guard_contract_status": guard_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
@@ -968,6 +972,7 @@ func serialize() -> Dictionary:
 		"campaign_pressure": campaign_pressure,
 		"campaign_retreats": campaign_retreats,
 		"campaign_event_pending": campaign_event_pending,
+		"campaign_decisions": campaign_decisions.duplicate(true),
 		"guard_contract_status": guard_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
@@ -1090,6 +1095,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	campaign_pressure = int(data.get("campaign_pressure", campaign_pressure))
 	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
 	campaign_event_pending = String(data.get("campaign_event_pending", campaign_event_pending))
+	var restored_decisions = data.get("campaign_decisions", {})
+	campaign_decisions = restored_decisions.duplicate(true) if restored_decisions is Dictionary else {}
 	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))

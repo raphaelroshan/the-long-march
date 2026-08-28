@@ -2552,13 +2552,14 @@ func _result_record_text() -> String:
 	var stopping_line := ""
 	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
-	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nKey decisions: %s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_band().capitalize(),
 		state.campaign_pressure,
 		state.guard_contract_status.replace("_", " ").capitalize(),
 		specialist_name,
+		_campaign_decision_record_text(),
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
 		int(dependencies.get("ready", 0)),
@@ -2566,6 +2567,20 @@ func _result_record_text() -> String:
 		int(dependencies.get("offline", 0)),
 		_result_system_condition_text()
 	]
+
+func _campaign_decision_record_text() -> String:
+	var decisions: Array[String] = []
+	var recorded: Dictionary = state.campaign_decisions
+	if "soot_orchard" in state.campaign_path:
+		var orchard_choice := String(recorded.get("salvage_choice", "rescue_workers" if state.workers_rescued else "take_fuel"))
+		decisions.append("Soot Orchard — %s" % ("rescued workers" if orchard_choice == "rescue_workers" else "recovered fuel"))
+	if "broken_relay" in state.campaign_path:
+		var relay_choice := String(recorded.get("lost_signal", "restore_relay" if state.relay_repaired else "move_silent"))
+		decisions.append("Broken Relay — %s" % ("restored broadcast" if relay_choice == "restore_relay" else "moved silently"))
+	if "red_wheel_toll_bridge" in state.campaign_path:
+		var toll_choice := String(recorded.get("toll_decision", ""))
+		decisions.append("Red Wheel — %s" % ("paid toll" if toll_choice == "pay_toll" else ("broke blockade" if toll_choice == "break_blockade" else "decision not recorded")))
+	return "; ".join(decisions) if not decisions.is_empty() else "no route events on this path"
 
 func _unused_recovery_text() -> String:
 	var count := state.settlement_actions_remaining

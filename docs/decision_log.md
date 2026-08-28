@@ -659,3 +659,7 @@ The run record now states whether Morrowline's service actions were fully spent 
 ## 2026-08-28 — The alternate first half is proven finishable
 
 Deterministic coverage now completes a second full campaign through Soot Orchard, Red Wheel Toll Bridge, Morrowline, Signal Causeway, and Meridian Pass without the Broken Relay or Iven Pell. This guards the alpha's route-choice promise against balance changes that leave an alternate branch technically selectable but unable to finish.
+
+## 2026-08-28 — Debriefs retain authored route decisions
+
+Resolved Soot Orchard, Broken Relay, and Red Wheel choices are now stored explicitly in campaign state and survive save/load. The run record names the decisions actually made on the travelled path, while older compatible checkpoints derive the choices that can be known safely and mark an unrecorded toll decision honestly.
