@@ -15,6 +15,7 @@ const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const CombatPanel = preload("res://src/ui/combat_panel.gd")
 const SettlementHubScene = preload("res://scenes/settlement/SettlementHub.tscn")
 const JourneyTransitionScene = preload("res://scenes/journey/JourneyTransition.tscn")
+const JourneyPlannerScene = preload("res://scenes/journey/JourneyPlanner.tscn")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -127,6 +128,8 @@ var settlement_hub_return_button: Button
 var journey_transition: JourneyTransitionView
 var journey_transition_active: bool = false
 var journey_transition_view: Dictionary = {}
+var journey_planner: JourneyPlannerView
+var journey_planner_active: bool = false
 var metric_labels: Dictionary = {}
 var subtitle_label: Label
 var pause_button: Button
@@ -185,6 +188,7 @@ var campaign_node_buttons: Array[Button] = []
 var campaign_commit_button: Button
 var campaign_cancel_button: Button
 var campaign_commit_intel_label: Label
+var campaign_action_row: HBoxContainer
 var selected_campaign_node_id: String = ""
 var contract_title: Label
 var contract_label: Label
@@ -455,6 +459,7 @@ func _ready() -> void:
 	settlement_hub.set_high_contrast(high_contrast_enabled)
 	journey_transition.set_high_contrast(high_contrast_enabled)
 	journey_transition.set_reduced_motion(reduced_motion_enabled)
+	journey_planner.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
@@ -474,6 +479,8 @@ func set_high_contrast(enabled: bool) -> void:
 		settlement_hub.set_high_contrast(high_contrast_enabled)
 	if journey_transition != null:
 		journey_transition.set_high_contrast(high_contrast_enabled)
+	if journey_planner != null:
+		journey_planner.set_high_contrast(high_contrast_enabled)
 	for button_data in [
 		[contract_accept_button, Color("#285348"), Color("#73c99b")],
 		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
@@ -515,6 +522,8 @@ func _refresh_controller_copy() -> void:
 		settlement_hub.set_controller_cancel_label(_controller_cancel_label())
 	if journey_transition != null:
 		journey_transition.set_controller_cancel_label(_controller_cancel_label())
+	if journey_planner != null:
+		journey_planner.set_controller_cancel_label(_controller_cancel_label())
 
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
@@ -556,6 +565,7 @@ func _reset_state() -> void:
 	settlement_detail_mode = "hub"
 	journey_transition_active = false
 	journey_transition_view = {}
+	journey_planner_active = false
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -921,7 +931,7 @@ func _build_ui() -> void:
 	campaign_commit_intel_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	campaign_commit_intel_label.visible = false
 	controls.add_child(campaign_commit_intel_label)
-	var campaign_action_row := HBoxContainer.new()
+	campaign_action_row = HBoxContainer.new()
 	campaign_action_row.add_theme_constant_override("separation", 8)
 	controls.add_child(campaign_action_row)
 	campaign_action_row.add_child(campaign_commit_button)
@@ -1121,6 +1131,11 @@ func _build_ui() -> void:
 	journey_transition.pause_requested.connect(func() -> void: pause_requested.emit())
 	journey_transition.continue_requested.connect(_on_journey_transition_continued)
 	margin.add_child(journey_transition)
+	journey_planner = JourneyPlannerScene.instantiate()
+	journey_planner.pause_requested.connect(func() -> void: pause_requested.emit())
+	journey_planner.return_requested.connect(_on_journey_planner_returned)
+	margin.add_child(journey_planner)
+	journey_planner.attach_route_controls(campaign_map, campaign_comparison_panel, route_preview_label, doctrine_group, doctrine_detail_label, campaign_commit_intel_label, campaign_action_row)
 
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
@@ -1721,6 +1736,11 @@ func focus_current_action() -> void:
 	if journey_transition != null and journey_transition.visible:
 		journey_transition.focus_default()
 		return
+	if journey_planner != null and journey_planner.visible:
+		if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
+			return
+		journey_planner.focus_default()
+		return
 	if settlement_hub != null and settlement_hub.visible:
 		settlement_hub.focus_default()
 		return
@@ -1805,6 +1825,7 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 				return
 			settlement_hub_active = false
 			settlement_detail_mode = "journey"
+			journey_planner_active = true
 			_set_event("The departure gate opens the route table. Inspect a highlighted destination, then confirm the journey separately.")
 			_refresh_ui()
 			focus_current_action.call_deferred()
@@ -1815,6 +1836,7 @@ func _on_return_to_settlement_hub() -> void:
 	selected_campaign_node_id = ""
 	settlement_hub_active = true
 	settlement_detail_mode = "hub"
+	journey_planner_active = false
 	_set_event("Returned to the settlement bazaar. No route, fuel, or time was committed.")
 	_refresh_ui()
 	settlement_hub.focus_default.call_deferred()
@@ -1835,6 +1857,8 @@ func _on_campaign_node_selected(node_id: String) -> void:
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
 	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready. %s cancels selection." % [String(preview.get("name", node_id)), _cancel_shortcut(false)])
 	_refresh_ui()
+	if journey_planner != null and journey_planner.visible:
+		journey_planner.reveal_commit_context()
 	if not _focus_control(campaign_commit_button):
 		_focus_control(campaign_cancel_button)
 	_show_selected_route_preview(node_id)
@@ -1846,6 +1870,8 @@ func _clear_campaign_route_selection() -> bool:
 	selected_campaign_node_id = ""
 	_set_event("Route preview cancelled. No fuel, time, or pressure was spent.")
 	_refresh_ui()
+	if journey_planner != null and journey_planner.visible:
+		journey_planner.show_route_overview()
 	var previous_button := campaign_map.button_for(previous_selection) as Button
 	if previous_button != null and not previous_button.disabled:
 		_focus_control(previous_button)
@@ -1872,6 +1898,11 @@ func _show_selected_route_preview(node_id: String) -> void:
 	var selected_detail := campaign_map.detail_for(node_id)
 	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)).to_upper()
 	var final_warning := "\nFINAL COMMITMENT · Failure ends the run; there is no retreat." if node_id == state.campaign_final_node_id() else ""
+	if journey_planner != null and journey_planner.visible:
+		var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+		var concise_detail := "%d day%s · %d fuel · %s risk" % [int(preview.get("days", 0)), "" if int(preview.get("days", 0)) == 1 else "s", int(preview.get("fuel", 0)), String(preview.get("risk_band", "unknown")).to_upper()]
+		_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, concise_detail, "\nBLOCKED · %s" % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
+		return
 	_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
 
 func _on_campaign_route_committed(node_id: String) -> void:
@@ -1890,6 +1921,7 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		settlement_hub_active = true
 		settlement_detail_mode = "hub"
 		journey_transition_active = true
+		journey_planner_active = false
 		journey_transition_view = _build_journey_transition_view(origin_id, node_id, route_preview, day_before, fuel_before, pressure_before)
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
@@ -1936,6 +1968,16 @@ func _on_journey_transition_continued() -> void:
 	_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
 	_refresh_ui()
 	_focus_control.call_deferred(advance_encounter_button)
+
+func _on_journey_planner_returned() -> void:
+	selected_campaign_node_id = ""
+	journey_planner_active = false
+	if _settlement_hub_available():
+		_on_return_to_settlement_hub()
+		return
+	_refresh_ui()
+	if state.phase == "settlement":
+		_focus_control.call_deferred(settlement_routes_button)
 
 func _on_campaign_event_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_event_buttons.size():
@@ -2346,7 +2388,45 @@ func _refresh_journey_transition() -> void:
 		journey_transition_view = _restore_journey_transition_view()
 	settlement_hub.visible = false
 	main_columns.visible = false
+	journey_planner.visible = false
 	journey_transition.configure(journey_transition_view)
+
+func _journey_planner_should_show() -> bool:
+	if not state.campaign_active or not state.campaign_event_pending.is_empty():
+		return false
+	if _settlement_hub_available():
+		return not settlement_hub_active and settlement_detail_mode == "journey"
+	if state.phase == "map":
+		return true
+	return state.phase == "settlement" and journey_planner_active
+
+func _refresh_journey_planner(snapshot: Dictionary) -> void:
+	if journey_planner == null:
+		return
+	var show_planner := _journey_planner_should_show()
+	journey_planner.visible = show_planner
+	if not show_planner:
+		return
+	main_columns.visible = false
+	settlement_hub.visible = false
+	var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+	journey_planner.configure({
+		"region_name": state.campaign_region_name(),
+		"location_name": location_name,
+		"order": _current_guidance(),
+		"route_selected": not selected_campaign_node_id.is_empty(),
+		"can_return": _settlement_hub_available() or state.phase == "settlement",
+		"return_label": "RETURN TO %s BAZAAR" % location_name.to_upper() if _settlement_hub_available() else "RETURN TO RECOVERY",
+		"values": {
+			"day": str(snapshot.get("day", state.day)),
+			"fuel": str(snapshot.get("fuel", state.fuel)),
+			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
+			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
+			"heat": "%d/%d" % [int(snapshot.get("heat", 0)), int(snapshot.get("heat_limit", LongMarchState.BASE_HEAT_LIMIT))],
+			"mass": "%d/%d" % [int(snapshot.get("mass", 0)), int(snapshot.get("mass_limit", LongMarchState.BASE_MASS_LIMIT))],
+			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]
+		}
+	})
 
 func _apply_start_detail_visibility() -> void:
 	if not _settlement_hub_available() or settlement_hub_active:
@@ -2547,6 +2627,8 @@ func _on_settlement_hull_pressed() -> void:
 func _on_settlement_routes_pressed() -> void:
 	if state.phase != "settlement" or not state.campaign_active:
 		return
+	journey_planner_active = true
+	_refresh_ui()
 	for raw_node_id in state.campaign_available_nodes():
 		var node_id := String(raw_node_id)
 		var node_button := campaign_map.button_for(node_id) as Button
@@ -2656,6 +2738,7 @@ func load_saved_run() -> bool:
 	settlement_detail_mode = "hub"
 	journey_transition_active = state.phase in ["battle", "final_battle"] and state.encounter_active and state.encounter_step == 0
 	journey_transition_view = _restore_journey_transition_view() if journey_transition_active else {}
+	journey_planner_active = false
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
@@ -3280,6 +3363,7 @@ func _refresh_ui() -> void:
 	fortress_panel.queue_redraw()
 	_apply_start_detail_visibility()
 	_refresh_settlement_hub(snapshot)
+	_refresh_journey_planner(snapshot)
 	_refresh_journey_transition()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)

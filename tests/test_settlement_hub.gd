@@ -54,13 +54,15 @@ func _run() -> void:
 	_expect(hub.primary_action_button.text == "PLAN JOURNEY" and not hub.primary_action_button.disabled, "the departure station should require an explicit plan action")
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui()
-	_expect(not hub.visible and game.main_columns.visible and game.campaign_map.visible, "planning a journey should open the existing regional map without moving the fortress")
+	_expect(not hub.visible and not game.main_columns.visible and game.journey_planner.visible and game.campaign_map.visible, "planning a journey should open the dedicated regional map without moving the fortress")
 	_expect(game.state.current_location == "ashgate_depot" and game.state.phase == "refit" and game.selected_campaign_node_id.is_empty(), "opening the map should not spend fuel, time, or commit a destination")
-	_expect(game.settlement_hub_return_button.visible, "route planning should retain a visible return to the settlement bazaar")
+	_expect(game.journey_planner.return_button.visible, "route planning should retain a visible return to the settlement bazaar")
+	var planner_map_rect: Rect2 = game.campaign_map.get_global_rect()
+	_expect(game.journey_planner.value_labels["fuel"].global_position.x < planner_map_rect.position.x and game.route_preview_label.global_position.x > planner_map_rect.end.x, "the route planner should keep readiness left, the map centered, and the road dossier right")
 
 	game.set_high_contrast(true)
 	await _settle_ui(2)
-	game.settlement_hub_return_button.pressed.emit()
+	game.journey_planner.return_button.pressed.emit()
 	await _settle_ui(2)
 	_expect(hub.high_contrast_enabled and hub.bazaar_canvas.high_contrast_enabled, "the settlement presentation should inherit the stage's high-contrast setting")
 

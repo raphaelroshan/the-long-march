@@ -7,7 +7,7 @@
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Next build target:** Expand the implemented bazaar and road bridge into the dedicated full-frame Plan Journey map, encounter approach, roadside-event, and arrival-tableau slices described in [`design/journey_presentation_vertical_slice.md`](../design/journey_presentation_vertical_slice.md)
+**Next build target:** Expand the implemented bazaar, full-frame Plan Journey map, and road bridge into encounter approach, roadside-event, and arrival-tableau slices described in [`design/journey_presentation_vertical_slice.md`](../design/journey_presentation_vertical_slice.md)
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -35,12 +35,12 @@ The implemented slice includes the following capabilities:
 | Character | Iven Pell changes forecasting and route safety; Mara Flint changes workshop recovery and a later route consequence. Other specialists remain designed extension points. |
 | Recovery | Non-final defeats retreat to a valid regional anchor with explicit time, money, pressure, and limping-state costs. Meridian Pass and the Dry Archive are declared final commitments. |
 | Persistence | Versioned saves, backup recovery, incompatible-save handling, isolated profiles, local playtest notes, and explicit Continue/New Run behavior exist. |
-| Presentation | Ashgate Depot and Lantern Quay now open as fortress-centered bazaars with six stable stations and focused workshop/route workspaces. Route commitment enters a mandatory side-on moving-fortress road screen with exact cost receipts before combat. The UI also shows modules, dependencies, threat forecasts, encounter progress, services, and debrief information. |
+| Presentation | Ashgate Depot and Lantern Quay now open as fortress-centered bazaars with six stable stations. Plan Journey has a full-frame readiness/map/dossier layout, and route commitment enters a mandatory side-on moving-fortress road screen with exact cost receipts before combat. The UI also shows modules, dependencies, threat forecasts, encounter progress, services, and debrief information. |
 | Packaging | Local and CI verification includes Godot tests, policy/content checks, Windows/macOS export scripts, packaged smoke coverage, offline boundaries, input, scaling, pause, save path, and teardown checks. |
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
 
-The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, focused workshop/route modes, atomic route-commit boundary, and mandatory side-on road bridge are implemented. Next, promote the route table into the shared full-frame left-rail/center-map/right-dossier layout, show threat approach against fortress anchors, keep roadside choices in the road scene, and add arrival tableaux. The fortress now remains at its last secured location while a campaign encounter is unresolved. The simulation must continue to decide offers, costs, schedules, targets, damage, and consequences; animation consumes structured events and cannot advance or randomize the run.
+The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, full-frame route planner, focused workshop mode, atomic route-commit boundary, and mandatory side-on road bridge are implemented. Next, show threat approach against fortress anchors, keep roadside choices in the road scene, and add arrival tableaux. The fortress now remains at its last secured location while a campaign encounter is unresolved. The simulation must continue to decide offers, costs, schedules, targets, damage, and consequences; animation consumes structured events and cannot advance or randomize the run.
 
 ---
 
@@ -530,7 +530,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, focused workshop/route modes, mandatory road presentation, reduced-motion travel behavior, and last-secured-location travel semantics are complete through `0.3.0-alpha.268`.
+**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, reduced-motion travel behavior, and last-secured-location travel semantics are complete through `0.3.0-alpha.268`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 

@@ -422,9 +422,9 @@ func _run() -> void:
 	await process_frame
 	app.game_view.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
-	_expect(app.game_view.pause_button.text.contains("ROUTE REVIEW"), "the toast-clearance regression should exercise the widest contextual Pause label")
+	_expect(app.game_view.journey_planner.pause_button.text.contains("ROUTE REVIEW"), "the toast-clearance regression should exercise the widest contextual Pause label")
 	var toast_rect: Rect2 = app.checkpoint_toast.get_global_rect()
-	var stage_pause_rect: Rect2 = app.game_view.pause_button.get_global_rect()
+	var stage_pause_rect: Rect2 = app.game_view.journey_planner.pause_button.get_global_rect()
 	_expect(not toast_rect.intersects(stage_pause_rect) and toast_rect.end.x <= stage_pause_rect.position.x - 8.0, "checkpoint notices should retain a visible gap before the persistent Pause control at 110% text")
 	app.game_view.campaign_cancel_button.pressed.emit()
 	await process_frame

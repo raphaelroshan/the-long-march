@@ -87,7 +87,7 @@ func _run() -> void:
 	game.settlement_hub.primary_action_button.pressed.emit()
 	await _settle_ui()
 	var opening_focus := game.get_viewport().gui_get_focus_owner()
-	_expect(opening_focus in game.campaign_node_buttons and game.right_scroll.get_global_rect().encloses(opening_focus.get_global_rect()), "opening the Veyru route table should focus a visible opening road")
+	_expect(opening_focus in game.campaign_node_buttons and game.journey_planner.map_host.get_global_rect().encloses(opening_focus.get_global_rect()), "opening the Veyru route table should focus a visible opening road")
 
 	await _press_route("pump_gallery")
 	_expect(game.state.phase == "battle" and game.combat_panel.visible and _combat_names_include("Flood Surge") and not _combat_names_include("Climber"), "Pump Gallery should show Flood Surge alone in the combat UI")
@@ -116,6 +116,8 @@ func _run() -> void:
 	game.state.fuel = 5
 	game._refresh_ui()
 
+	game.settlement_routes_button.pressed.emit()
+	await _settle_ui()
 	await _press_route("archive_causeway")
 	await _finish_battle()
 	await _press_route("dry_archive_gate")

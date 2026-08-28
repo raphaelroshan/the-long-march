@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-`0.3.0-alpha.268` implements the first two presentation checkpoints: Ashgate Depot and Lantern Quay open as six-station bazaars, workshop and route planning no longer share one undifferentiated control stack, route commitment shows a mandatory side-on moving-fortress road bridge, and `current_location` remains the last secured node until contact resolution. The full-frame Plan Journey composition, purchasable information, marketplace inventory, threat-to-module approach animation, roadside event tableau, and arrival tableau remain follow-up slices.
+`0.3.0-alpha.268` implements the first three presentation checkpoints: Ashgate Depot and Lantern Quay open as six-station bazaars; route planning uses a dedicated full-frame readiness/map/dossier composition instead of the narrow command desk; route commitment shows a mandatory side-on moving-fortress road bridge; and `current_location` remains the last secured node until contact resolution. Purchasable information, marketplace inventory, threat-to-module approach animation, roadside event tableau, and arrival tableau remain follow-up slices.
 
 ## Purpose
 

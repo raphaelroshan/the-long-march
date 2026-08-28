@@ -40,7 +40,7 @@ func _press_campaign_node(node_id: String) -> void:
 			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
 			_expect(game.campaign_map.commit_button.has_focus(), "route selection should move keyboard or controller focus to confirmation")
-			_expect(game.right_scroll.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action visible together")
+			_expect(game.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action fully on screen")
 			game.campaign_map.commit_button.pressed.emit()
 			await process_frame
 			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "committing a route should present the road before exposing combat controls")
@@ -285,7 +285,7 @@ func _run() -> void:
 	var condenser_picker_index := _module_picker_index("water_condenser")
 	_expect(condenser_picker_index >= 0 and game.module_option.get_item_text(condenser_picker_index).contains("STORED"), "the Water Condenser should appear as a finite stored module in the refit picker")
 	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
-	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and campaign_action_row.get_parent() == game.campaign_map.get_parent() and campaign_action_row.get_index() == game.campaign_commit_intel_label.get_index() + 1 and game.campaign_cancel_button.get_parent() == campaign_action_row, "route commitment and its reversible exit should remain grouped in one row directly below the map and compact intel")
+	_expect(game.campaign_map.get_parent() == game.journey_planner.map_host and game.campaign_commit_intel_label.get_parent() == game.journey_planner.detail_stack and campaign_action_row.get_parent() == game.journey_planner.action_host and game.campaign_cancel_button.get_parent() == campaign_action_row, "the route map, dossier, and reversible commit actions should occupy their dedicated planner regions")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.settlement_hub_return_button.pressed.emit()
@@ -323,12 +323,8 @@ func _run() -> void:
 	_expect(game.campaign_pressure_label.text.contains("Closing begins at 3") and game.campaign_pressure_label.text.contains("Break at 5"), "Watch pressure should explain both upcoming closure thresholds before route choice")
 	_expect(game.campaign_map.button_for("rill_crossing").text.contains("KNOWN · LOW") and game.campaign_map.button_for("soot_orchard").text.contains("FORECAST · GUARDED"), "available map nodes should expose compact scouting and risk comparisons before focus")
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "opening the departure table should hand controller focus to the first route")
-	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
-	var route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
-	var route_asset_rect: Rect2 = game.asset_row.get_global_rect()
-	_expect(not route_asset_rect.intersects(route_viewport_rect) or route_viewport_rect.encloses(route_asset_rect), "route focus should not leave the command-desk icon row partially clipped")
-	var route_doctrine_rect: Rect2 = game.doctrine_detail_label.get_global_rect()
-	_expect(not route_doctrine_rect.intersects(route_viewport_rect) or route_viewport_rect.encloses(route_doctrine_rect), "route focus should not begin midway through the preceding doctrine explanation")
+	_expect(game.journey_planner.map_host.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should remain fully visible inside the centered regional map")
+	_expect(game.doctrine_detail_label.get_parent() == game.journey_planner.detail_stack, "the route planner should keep doctrine context inside its right detail dock")
 	_expect(game._desk_context_anchor_for(game.campaign_map.button_for("rill_crossing")) == game.campaign_title, "route focus should anchor scrolling at the map heading instead of the generic desk guidance")
 	game.doctrine_option.select(2)
 	game.doctrine_option.item_selected.emit(2)
@@ -698,7 +694,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.get_viewport().gui_get_focus_owner() in [game.settlement_repair_button, game.settlement_refuel_button, game.settlement_hull_button], "Go to Recovery should focus the first legal service without spending an action")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
-	_expect(game.settlement_group.get_index() < game.doctrine_group.get_index(), "Morrowline should place its primary recovery actions before optional doctrine and chassis controls")
+	_expect(game.settlement_group.visible and not game.journey_planner.visible, "Morrowline should keep recovery services in focus until the player explicitly opens the route planner")
 	_expect(game.settlement_refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.settlement_refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
 	if game.state.hull_condition < 10:
 		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
@@ -724,14 +720,16 @@ func _run() -> void:
 	await process_frame
 	_expect(game.get_viewport().gui_get_focus_owner() in game.campaign_node_buttons and game.selected_campaign_node_id.is_empty(), "Review Next Roads should move focus to route selection without choosing a road for the player")
 	var focused_route_rect: Rect2 = game.get_viewport().gui_get_focus_owner().get_global_rect()
-	var recovery_route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
-	_expect(focused_route_rect.position.y >= recovery_route_viewport_rect.position.y and focused_route_rect.end.y <= recovery_route_viewport_rect.end.y, "the recovery handoff should scroll its focused route fully into the visible command desk")
+	var recovery_route_viewport_rect: Rect2 = game.journey_planner.map_host.get_global_rect()
+	_expect(focused_route_rect.position.y >= recovery_route_viewport_rect.position.y and focused_route_rect.end.y <= recovery_route_viewport_rect.end.y, "the recovery handoff should keep its focused route fully inside the dedicated map")
 	_expect(game.state.money == handoff_money and game.state.settlement_actions_remaining == handoff_actions and game.event_label.text.contains("no service action has been spent"), "the recovery handoff should preserve resources and explicitly state its no-cost semantics")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY · 2 service actions remain") and game.campaign_commit_intel_label.text.contains("Departing ends access"), "route commitment should warn before both unused Morrowline services become inaccessible")
 	game.selected_campaign_node_id = ""
 	game._refresh_ui()
+	game.journey_planner.return_button.pressed.emit()
+	await process_frame
 	game.settlement_refuel_button.grab_focus()
 	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
 	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
