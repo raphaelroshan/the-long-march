@@ -43,9 +43,51 @@ const SHORT_NAMES := {
 	"signal_causeway": "Signal Causeway",
 	"meridian_pass": "Meridian Pass"
 }
+const REGION_LAYOUTS := {
+	"ashgate_lowlands": {
+		"node_order": NODE_ORDER,
+		"node_positions": NODE_POSITIONS,
+		"short_names": SHORT_NAMES,
+		"final_nodes": ["meridian_pass"],
+		"closed_reason": "Closed by Break pressure. Ready forecasting gear or Iven Pell can reopen this road."
+	},
+	"flooded_veyru": {
+		"node_order": ["lantern_quay", "pump_gallery", "sunken_tramworks", "veyru_evacuation_camp", "archive_causeway", "drowned_registry", "pilgrim_gantry", "dry_archive_gate", "dry_archive"],
+		"node_positions": {
+			"lantern_quay": Vector2(94, 8),
+			"pump_gallery": Vector2(4, 56),
+			"sunken_tramworks": Vector2(184, 56),
+			"veyru_evacuation_camp": Vector2(94, 104),
+			"archive_causeway": Vector2(4, 152),
+			"drowned_registry": Vector2(184, 152),
+			"pilgrim_gantry": Vector2(94, 200),
+			"dry_archive_gate": Vector2(94, 248),
+			"dry_archive": Vector2(94, 296)
+		},
+		"short_names": {
+			"lantern_quay": "Lantern Quay",
+			"pump_gallery": "Pump Gallery",
+			"sunken_tramworks": "Sunken Tramworks",
+			"veyru_evacuation_camp": "Evacuation Camp",
+			"archive_causeway": "Archive Causeway",
+			"drowned_registry": "Drowned Registry",
+			"pilgrim_gantry": "Pilgrim Gantry",
+			"dry_archive_gate": "Dry Archive Gate",
+			"dry_archive": "Dry Archive"
+		},
+		"final_nodes": ["dry_archive"],
+		"closed_reason": "Closed by rising water. Pilgrim Gantry remains available as the recovery road."
+	}
+}
 
 var node_buttons: Array[Button] = []
 var buttons_by_id: Dictionary = {}
+var region_id: String = "ashgate_lowlands"
+var node_order: Array[String] = []
+var node_positions: Dictionary = {}
+var short_names: Dictionary = {}
+var final_nodes: Array[String] = []
+var closed_reason: String = ""
 var node_statuses: Dictionary = {}
 var campaign_edges: Dictionary = {}
 var current_node: String = ""
@@ -66,6 +108,7 @@ func _init() -> void:
 	custom_minimum_size = MAP_SIZE
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	_apply_region_layout(region_id)
 	_build_node_buttons()
 	commit_button = Button.new()
 	commit_button.custom_minimum_size = Vector2(0, 64)
@@ -81,10 +124,10 @@ func _init() -> void:
 	add_child(commit_button)
 
 func _build_node_buttons() -> void:
-	for node_id in NODE_ORDER:
+	for node_id in node_order:
 		var button := Button.new()
 		button.name = "MapNode_" + String(node_id)
-		button.position = NODE_POSITIONS[node_id]
+		button.position = node_positions[node_id]
 		button.size = NODE_SIZE
 		button.focus_mode = Control.FOCUS_ALL
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -96,6 +139,29 @@ func _build_node_buttons() -> void:
 		node_buttons.append(button)
 		buttons_by_id[node_id] = button
 		add_child(button)
+
+func _apply_region_layout(next_region_id: String) -> void:
+	var layout: Dictionary = REGION_LAYOUTS.get(next_region_id, REGION_LAYOUTS["ashgate_lowlands"])
+	region_id = next_region_id if REGION_LAYOUTS.has(next_region_id) else "ashgate_lowlands"
+	node_order = _to_string_array(layout.get("node_order", NODE_ORDER))
+	node_positions = layout.get("node_positions", NODE_POSITIONS).duplicate(true)
+	short_names = layout.get("short_names", SHORT_NAMES).duplicate(true)
+	final_nodes = _to_string_array(layout.get("final_nodes", ["meridian_pass"]))
+	closed_reason = String(layout.get("closed_reason", "This road is closed by regional pressure."))
+
+func set_region_layout(next_region_id: String) -> void:
+	var resolved_region := next_region_id if REGION_LAYOUTS.has(next_region_id) else "ashgate_lowlands"
+	if resolved_region == region_id and not node_buttons.is_empty():
+		return
+	for button in node_buttons:
+		if is_instance_valid(button):
+			button.queue_free()
+	node_buttons.clear()
+	buttons_by_id.clear()
+	node_statuses.clear()
+	_apply_region_layout(resolved_region)
+	_build_node_buttons()
+	queue_redraw()
 
 func _on_node_pressed(node_id: String) -> void:
 	var button: Button = buttons_by_id.get(node_id)
@@ -258,20 +324,21 @@ func detail_for(node_id: String) -> String:
 	if status == "selected":
 		return "SELECTED — " + _preview_tooltip(current_previews.get(node_id, {}), false)
 	if status == "closed":
-		return "%s is closed at Break pressure. Ready forecasting gear or Iven Pell can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
+		return "%s is closed. %s" % [String(short_names.get(node_id, node_id)), closed_reason]
 	if status == "locked":
 		return String(locked_reasons.get(node_id, "A required fortress system is not Ready."))
 	if status == "blocked":
 		return "Resolve the current contract or local decision before taking this road."
 	if status == "current":
-		return "%s is the fortress's current position." % String(SHORT_NAMES.get(node_id, node_id))
+		return "%s is the fortress's current position." % String(short_names.get(node_id, node_id))
 	if status == "secured":
-		return "%s is secured behind the fortress." % String(SHORT_NAMES.get(node_id, node_id))
+		return "%s is secured behind the fortress." % String(short_names.get(node_id, node_id))
 	if status == "bypassed":
-		return "%s was bypassed and cannot be revisited in this run." % String(SHORT_NAMES.get(node_id, node_id))
-	return "%s is charted but not yet reachable." % String(SHORT_NAMES.get(node_id, node_id))
+		return "%s was bypassed and cannot be revisited in this run." % String(short_names.get(node_id, node_id))
+	return "%s is charted but not yet reachable." % String(short_names.get(node_id, node_id))
 
 func configure(view: Dictionary) -> void:
+	set_region_layout(String(view.get("region_id", "ashgate_lowlands")))
 	campaign_edges = view.get("edges", {}).duplicate(true)
 	current_node = String(view.get("current_node", ""))
 	secured_path = _to_string_array(view.get("secured_path", []))
@@ -290,7 +357,7 @@ func configure(view: Dictionary) -> void:
 	var show_commit := bool(view.get("show_commit", true))
 	interaction_is_blocked = bool(view.get("interaction_blocked", false))
 	node_statuses.clear()
-	for node_id in NODE_ORDER:
+	for node_id in node_order:
 		var button: Button = buttons_by_id[node_id]
 		var status := "future" if _is_reachable_from_current(node_id) else "bypassed"
 		if node_id == current_node:
@@ -309,12 +376,12 @@ func configure(view: Dictionary) -> void:
 			status = "available"
 		node_statuses[node_id] = status
 		var state_text := _node_state_text(node_id, status)
-		button.text = "%s\n%s" % [String(SHORT_NAMES.get(node_id, node_id)), state_text]
+		button.text = "%s\n%s" % [String(short_names.get(node_id, node_id)), state_text]
 		button.disabled = status not in ["available", "selected"] or interaction_is_blocked
 		if status in ["available", "selected"]:
 			button.tooltip_text = _preview_tooltip(current_previews.get(node_id, {}))
 		elif status == "closed":
-			button.tooltip_text = "Closed by Break pressure. Ready forecasting gear or Iven Pell can reopen this road."
+			button.tooltip_text = closed_reason
 		elif status == "locked":
 			button.tooltip_text = String(locked_reasons.get(node_id, "A required fortress system is not Ready."))
 		elif status == "blocked":
@@ -339,7 +406,7 @@ func configure(view: Dictionary) -> void:
 		var fuel_after := maxi(0, current_fuel - fuel_cost)
 		var day_after := current_day + int(selected_preview.get("days", 0))
 		var pressure_after := current_pressure + int(selected_preview.get("pressure_gain", 0))
-		var commit_prefix := "FINAL COMMIT" if selected_node == "meridian_pass" else "COMMIT"
+		var commit_prefix := "FINAL COMMIT" if selected_node in final_nodes else "COMMIT"
 		var overheated := predicted_heat > heat_limit
 		var departure_blocked := not departure_block_reason.is_empty() or not can_depart
 		var commit_fill := Color("#285348")
@@ -364,12 +431,12 @@ func configure(view: Dictionary) -> void:
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
 		elif visibility == "unscouted":
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\nRISK UNKNOWN · HEAT %d/%d · PRESSURE UNKNOWN" % [commit_prefix, String(SHORT_NAMES.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, predicted_heat, heat_limit]
-			commit_button.tooltip_text = "Pay %d fuel and advance %d day%s into an unscouted encounter.%s" % [fuel_cost, days, "" if days == 1 else "s", " Failure ends the run; there is no retreat." if selected_node == "meridian_pass" else ""]
+			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\nRISK UNKNOWN · HEAT %d/%d · PRESSURE UNKNOWN" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, predicted_heat, heat_limit]
+			commit_button.tooltip_text = "Pay %d fuel and advance %d day%s into an unscouted encounter.%s" % [fuel_cost, days, "" if days == 1 else "s", " Failure ends the run; there is no retreat." if selected_node in final_nodes else ""]
 		else:
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\n%s RISK (%.0f%%) · HEAT %d/%d · PRESSURE %d→%d" % [commit_prefix, String(SHORT_NAMES.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, current_pressure, pressure_after]
-			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter.%s" % [" Failure ends the run; there is no retreat." if selected_node == "meridian_pass" else ""]
+			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\n%s RISK (%.0f%%) · HEAT %d/%d · PRESSURE %d→%d" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, current_pressure, pressure_after]
+			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter.%s" % [" Failure ends the run; there is no retreat." if selected_node in final_nodes else ""]
 	elif not available_nodes.is_empty():
 		commit_button.text = "Select a route to continue"
 		commit_button.tooltip_text = "Choose one of the cyan route nodes before committing."
@@ -391,7 +458,7 @@ func button_for(node_id: String) -> Button:
 	return buttons_by_id.get(node_id)
 
 func _node_center(node_id: String) -> Vector2:
-	return Vector2(NODE_POSITIONS.get(node_id, Vector2.ZERO)) + NODE_SIZE * 0.5
+	return Vector2(node_positions.get(node_id, Vector2.ZERO)) + NODE_SIZE * 0.5
 
 func _path_contains_edge(from_id: String, to_id: String) -> bool:
 	for index in range(secured_path.size() - 1):

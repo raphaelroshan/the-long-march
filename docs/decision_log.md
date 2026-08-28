@@ -783,3 +783,7 @@ Mara appears at Morrowline only while the current specialist berth is free. Recr
 ## 2026-08-28 — Road occurrences are bounded authored state
 
 The Ashgate campaign now evaluates otherwise-empty arrival phases through the named `ashgate_operational_occurrences_v1` stream. Hard eligibility checks use the live chassis before a sorted candidate set can select one authored event or an intentional quiet result. Milestone events retain priority, no phase rolls twice, repeatable incidents use encounter cooldowns, one-shot meetings consult durable decisions, and both phase and result histories are capped at eight records. Active phase, cursor, cooldowns, and history are validated in save schema 6. This rejects procedural prose, unbounded graphs, reroll-on-load behavior, and UI-owned event rules while allowing repeat runs to respond to the fortress the player actually built.
+
+## 2026-08-28 — Regional maps share one configurable view
+
+The campaign map now owns named layout data for Ashgate Lowlands and Flooded Veyru rather than assuming every chapter uses Ashgate's ten node IDs. Region configuration rebuilds the same buttons, status colors, route lines, focus behavior, and commit surface from a bounded authored layout. The simulation will still own reachability and route rules; this presentation change only makes a second isolated chapter possible without duplicating the map widget or creating a second game flow.

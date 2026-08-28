@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CampaignMapView = preload("res://src/ui/campaign_map.gd")
+
 var game: Control
 var failures: Array[String] = []
 var return_to_title_requested: bool = false
@@ -83,6 +85,43 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	await process_frame
+	var veyru_map := CampaignMapView.new()
+	root.add_child(veyru_map)
+	veyru_map.configure({
+		"region_id": "flooded_veyru",
+		"edges": {"lantern_quay": ["pump_gallery", "sunken_tramworks"], "pump_gallery": ["veyru_evacuation_camp"], "sunken_tramworks": ["veyru_evacuation_camp"], "veyru_evacuation_camp": ["archive_causeway", "drowned_registry", "pilgrim_gantry"], "archive_causeway": ["dry_archive_gate"], "drowned_registry": ["dry_archive_gate"], "pilgrim_gantry": ["dry_archive_gate"], "dry_archive_gate": ["dry_archive"]},
+		"current_node": "lantern_quay",
+		"secured_path": ["lantern_quay"],
+		"available_nodes": ["pump_gallery", "sunken_tramworks"],
+		"closed_nodes": [],
+		"locked_reasons": {},
+		"outgoing_nodes": ["pump_gallery", "sunken_tramworks"],
+		"previews": {"pump_gallery": {"visibility": "known", "days": 2, "fuel": 1, "risk": 0.22, "pressure_gain": 2, "reward": 12, "threats": ["Flood Surge"]}, "sunken_tramworks": {"visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.34, "pressure_gain": 1, "reward": 18, "threat_hint": "submerged rail movement"}},
+		"current_fuel": 6,
+		"current_day": 1,
+		"current_pressure": 0,
+		"can_depart": true,
+		"show_commit": true,
+		"interaction_blocked": false
+	})
+	_expect(veyru_map.region_id == "flooded_veyru" and veyru_map.node_buttons.size() == 9 and veyru_map.button_for("lantern_quay") != null and veyru_map.button_for("ashgate_depot") == null, "the campaign map should rebuild from the isolated Flooded Veyru layout without retaining Ashgate nodes")
+	_expect(veyru_map.status_for("pump_gallery") == "available" and veyru_map.status_for("sunken_tramworks") == "available" and veyru_map.button_for("pump_gallery").text.contains("KNOWN · GUARDED"), "the Veyru layout should preserve route status and intel rendering contracts")
+	veyru_map.configure({
+		"region_id": "flooded_veyru",
+		"edges": {"veyru_evacuation_camp": ["pilgrim_gantry"]},
+		"current_node": "veyru_evacuation_camp",
+		"secured_path": ["lantern_quay", "veyru_evacuation_camp"],
+		"available_nodes": ["pilgrim_gantry"],
+		"closed_nodes": ["drowned_registry"],
+		"outgoing_nodes": ["pilgrim_gantry", "drowned_registry"],
+		"previews": {"pilgrim_gantry": {"visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure_gain": -1, "reward": 0, "threats": ["Flood Surge"]}},
+		"current_fuel": 3,
+		"current_day": 4,
+		"current_pressure": 5,
+		"can_depart": true
+	})
+	_expect(veyru_map.status_for("pilgrim_gantry") == "available" and veyru_map.detail_for("drowned_registry").contains("Pilgrim Gantry remains available"), "Veyru map copy should explain the guaranteed recovery road when rising water closes an optional branch")
+	veyru_map.queue_free()
 	var combat_receipt: String = game.combat_panel._latest_causal_lines([
 		"Step 3: the road pressure advances.",
 		"Shell Cannon fires a burst into the Burrower.",
