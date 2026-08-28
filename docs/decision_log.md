@@ -563,3 +563,7 @@ The title now says that autosave begins after the first committed decision. This
 ## 2026-08-28 — Continue identifies the loaded checkpoint cleanly
 
 Pausing immediately after Continue now says that the current decision matches the loaded checkpoint. If that restored state later diverges without another checkpoint, the same branch reports unsaved changes since loading instead of producing the awkward “Current decision saved · Loaded save” construction.
+
+## 2026-08-28 — Manual save receipts hide serialization internals
+
+Saving from Pause now leaves “March saved locally” in the stage receipt instead of exposing the prototype label and schema version. Schema metadata remains in the file and validation path where it is useful; the player sees only where the march was saved and what Continue will do.

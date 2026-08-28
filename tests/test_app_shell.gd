@@ -229,6 +229,7 @@ func _run() -> void:
 	await process_frame
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "Save March should create the local save from the pause menu")
 	_expect(app.pause_save_status_label.text.begins_with("Saved."), "the pause menu should confirm a successful save")
+	_expect(app.game_view.event_label.text.contains("March saved locally") and not app.game_view.event_label.text.contains("schema version"), "resuming after a manual save should show a player-facing receipt rather than serialization internals")
 	_expect(app.title_button.text == "RETURN TO TITLE", "saving should make the safe return action explicit")
 	_expect(not app.title_button.has_theme_stylebox_override("normal"), "saving should remove the destructive warning treatment from Return to Title")
 	app.autosave_enabled = false

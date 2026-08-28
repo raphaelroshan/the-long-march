@@ -1794,7 +1794,7 @@ func save_run(silent: bool = false) -> bool:
 	payload["saved_at_unix"] = int(Time.get_unix_time_from_system())
 	file.store_string(JSON.stringify(payload))
 	if not silent:
-		_set_event("Prototype state saved with schema version %d." % LongMarchState.SAVE_VERSION)
+		_set_event("March saved locally. Continue will resume from this decision.")
 		_journal_event("run_saved", {"phase": state.phase, "day": state.day})
 		_refresh_ui()
 	return true
