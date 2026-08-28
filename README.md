@@ -46,6 +46,7 @@ The repository contains an agent-first Godot project with:
 - Player-facing persistence and restart actions live in the pause menu instead of being duplicated among the campaign controls.
 - Combat cards showing live enemy arrival countdowns, health or storm pressure, named targets, exact next-hit damage, counters, an explicit six-step timeline, and recent cause-and-effect.
 - A controller-accessible battle inspection action that enters the chassis, jumps to active targets, and returns a selected system directly to the Seal Compartment order.
+- Phase-aware chassis guidance plus a controller-accessible final-chassis review that lets debrief players inspect the surviving machine without implying that refit is still available.
 - Visible Watch, Closing, and Break pressure that can close an optional road without removing the only recovery path.
 - Authored event choices that show unmet chassis or resource prerequisites directly on locked options.
 - Specialist recruitment that names its unmet relay, crew-space, or supply requirement directly in the action.

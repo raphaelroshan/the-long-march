@@ -399,6 +399,7 @@ func _run() -> void:
 	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("Focus or hover"), "leaving the emergency orders before contact should restore the timing-aware comparison prompt")
 	_expect(game.intervention_buttons[3].text.contains("Coal Cell") and game.intervention_buttons[3].text.contains("fuel feed"), "cutting loose cargo should disclose the exact module and dependency cost before use")
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
+	_expect(game.fortress_panel.interaction_heading().contains("Inspect Chassis chooses a seal target") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive battle chassis should describe the action that is actually available in this phase")
 	game.combat_inspect_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS INSPECTION") and not game.fortress_panel.interaction_heading().contains("EDIT MODE"), "the combat inspection action should enter a clearly named non-refit chassis mode")
@@ -784,9 +785,25 @@ func _run() -> void:
 	await _advance_until_phase("results")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
-	_expect(game.results_group.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose onward, replay, and return-to-title actions")
+	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose final chassis review, onward, replay, and return-to-title actions")
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
-	_expect(game.current_order_button.text == "GO TO FEEDBACK ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.feedback_button, "the completed run should retarget the jump action and controller path to feedback")
+	_expect(game.current_order_button.text == "GO TO FEEDBACK ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.results_inspect_button, "the completed run should retain its feedback jump while exposing final chassis review in the visible controller path")
+	_expect(game.fortress_panel.interaction_heading().contains("Inspect Final Chassis reviews survivors") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive result chassis should describe debrief review instead of an unavailable refit action")
+	game.results_inspect_button.pressed.emit()
+	await process_frame
+	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.tooltip_text.contains("returns to the debrief"), "Inspect Final Chassis should enter a phase-specific keyboard and controller review mode")
+	var result_chassis_select := InputEventAction.new()
+	result_chassis_select.action = "ui_accept"
+	result_chassis_select.pressed = true
+	game.fortress_panel._gui_input(result_chassis_select)
+	await process_frame
+	_expect(game.fortress_panel.has_focus() and game.event_label.text.contains("in the final chassis"), "selecting a result system should update its inspection context without leaving chassis review")
+	var result_chassis_cancel := InputEventAction.new()
+	result_chassis_cancel.action = "ui_cancel"
+	result_chassis_cancel.pressed = true
+	game.fortress_panel._gui_input(result_chassis_cancel)
+	await process_frame
+	_expect(game.results_inspect_button.has_focus(), "B or Escape should return final chassis review to its visible debrief action")
 	game.current_order_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_button.has_focus(), "Go to Feedback should focus the debrief's primary follow-up without opening it")
@@ -857,7 +874,7 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")
 	_expect(game.feedback_button.get_node_or_null(game.feedback_button.focus_neighbor_bottom) == game.march_on_button and game.march_on_button.get_node_or_null(game.march_on_button.focus_neighbor_bottom) == game.play_again_button and game.play_again_button.get_node_or_null(game.play_again_button.focus_neighbor_right) == game.results_title_button, "the result actions should follow their visible controller layout")
-	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.current_order_button and game.current_order_button.get_node_or_null(game.current_order_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.current_order_button, "the result actions should form a closed Tab cycle through the order jump")
+	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.current_order_button and game.current_order_button.get_node_or_null(game.current_order_button.focus_next) == game.results_inspect_button and game.results_inspect_button.get_node_or_null(game.results_inspect_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.results_inspect_button, "the result actions should form a closed Tab cycle through the order jump and final chassis review")
 	game.march_on_button.grab_focus()
 	await process_frame
 	await process_frame

@@ -911,3 +911,7 @@ The preparation screen still selects one installed module so its dependency card
 ## 2026-08-28 — Checkpoint feedback owns a safe header slot
 
 The non-modal checkpoint toast now uses compact `Saved · reason` copy in a 250-pixel header slot capped at x=330 and positioned with a twelve-pixel gap before the live Pause control. The cap reserves space for the widest contextual Pause label before that label expands, preventing an existing toast from being covered during Route Review. This keeps save feedback, the title, and session control simultaneously legible at 1280×720 with 110% text. The toast still carries no focus, dismisses when Pause opens, and changes no autosave timing, state, or audio behavior.
+
+## 2026-08-28 — Chassis guidance follows the available phase action
+
+The passive chassis heading now points to Edit Chassis only where refit is actually available, to battle inspection during contact, and to final-chassis review during debrief. Results expose a dedicated Inspect Final Chassis action between the outcome summary and follow-up actions; controller or keyboard selection remains in review, while cancel returns to that visible action. This closes the previous pointer-only debrief path and removes refit language from locked phases without changing placement, damage, targeting, results, or serialized state.

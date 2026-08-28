@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.257`; Feeds A through AB are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.258`; Feeds A through AC are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -173,6 +173,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.257` through a reserved collision-safe header slot.
 
 > Keep automatic checkpoint feedback visible and non-modal at 110% text without covering the game title or any contextual Pause label. Shorten the receipt without losing its reason, position it against the live Pause control with a stable reserved maximum, preserve immediate Pause dismissal, and add a route-review overlap regression.
+
+### Current Feed AC — phase-aware chassis review
+
+**Status:** Complete in `0.3.0-alpha.258` through truthful battle and debrief inspection handoffs.
+
+> Make passive chassis guidance name the inspection action available in the current phase. Add a keyboard/controller-accessible final-chassis review to the debrief, keep system selection inside that review, return cancel to its visible action, and preserve every authoritative placement and simulation rule.
 
 ## Historical prototype feed sequence
 

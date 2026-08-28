@@ -200,6 +200,7 @@ var results_heading: Label
 var results_summary_label: Label
 var results_record_label: Label
 var results_replay_label: Label
+var results_inspect_button: Button
 var march_on_button: Button
 var play_again_button: Button
 var results_title_button: Button
@@ -482,6 +483,8 @@ func _refresh_controller_copy() -> void:
 		focus_chassis_button.tooltip_text = "Move keyboard or controller focus to the chassis. Use arrows to move, %s to select or place, and %s to return." % [_confirm_shortcut(), _cancel_shortcut()]
 	if combat_inspect_button != null:
 		combat_inspect_button.tooltip_text = "Move keyboard or controller focus to the chassis. Choose a system with %s to return directly to Seal Compartment." % _confirm_shortcut()
+	if results_inspect_button != null:
+		results_inspect_button.tooltip_text = "Move keyboard or controller focus to the final chassis. Use arrows to review systems, %s to inspect one, and %s to return to the debrief." % [_confirm_shortcut(), _cancel_shortcut()]
 	if fortress_panel != null:
 		fortress_panel.set_controller_labels(_controller_confirm_label(), _controller_cancel_label())
 
@@ -995,6 +998,12 @@ func _build_ui() -> void:
 	results_replay_label.add_theme_font_size_override("font_size", 12)
 	results_replay_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	results_summary_stack.add_child(results_replay_label)
+	results_inspect_button = Button.new()
+	results_inspect_button.text = "INSPECT FINAL CHASSIS"
+	results_inspect_button.custom_minimum_size = Vector2(0, 44)
+	results_inspect_button.tooltip_text = "Move keyboard or controller focus to the final chassis. Use arrows to review systems, A or Enter to inspect one, and B or Escape to return to the debrief."
+	results_inspect_button.pressed.connect(_focus_chassis_for_results)
+	results_group.add_child(results_inspect_button)
 	feedback_button = Button.new()
 	feedback_button.text = "RECORD PLAYTEST NOTES"
 	feedback_button.custom_minimum_size = Vector2(0, 50)
@@ -1023,8 +1032,10 @@ func _build_ui() -> void:
 	results_title_button.pressed.connect(_on_results_title_pressed)
 	results_actions.add_child(results_title_button)
 	current_order_button.focus_neighbor_top = current_order_button.get_path_to(results_title_button)
-	current_order_button.focus_neighbor_bottom = current_order_button.get_path_to(feedback_button)
-	feedback_button.focus_neighbor_top = feedback_button.get_path_to(current_order_button)
+	current_order_button.focus_neighbor_bottom = current_order_button.get_path_to(results_inspect_button)
+	results_inspect_button.focus_neighbor_top = results_inspect_button.get_path_to(current_order_button)
+	results_inspect_button.focus_neighbor_bottom = results_inspect_button.get_path_to(feedback_button)
+	feedback_button.focus_neighbor_top = feedback_button.get_path_to(results_inspect_button)
 	feedback_button.focus_neighbor_bottom = feedback_button.get_path_to(march_on_button)
 	march_on_button.focus_neighbor_top = march_on_button.get_path_to(feedback_button)
 	march_on_button.focus_neighbor_bottom = march_on_button.get_path_to(play_again_button)
@@ -1034,7 +1045,7 @@ func _build_ui() -> void:
 	results_title_button.focus_neighbor_top = results_title_button.get_path_to(march_on_button)
 	results_title_button.focus_neighbor_left = results_title_button.get_path_to(play_again_button)
 	results_title_button.focus_neighbor_bottom = results_title_button.get_path_to(current_order_button)
-	_configure_focus_cycle([current_order_button, feedback_button, march_on_button, play_again_button, results_title_button])
+	_configure_focus_cycle([current_order_button, results_inspect_button, feedback_button, march_on_button, play_again_button, results_title_button])
 	controls.move_child(results_group, guidance_label.get_index() + 1)
 
 	how_to_play_button = Button.new()
@@ -1068,6 +1079,7 @@ func _connect_desk_focus_scrolling() -> void:
 		travel_button,
 		advance_encounter_button,
 		combat_inspect_button,
+		results_inspect_button,
 		feedback_button,
 		march_on_button,
 		play_again_button,
@@ -1822,6 +1834,16 @@ func _focus_chassis_for_combat() -> void:
 	fortress_panel.queue_redraw()
 	fortress_panel.grab_focus()
 
+func _focus_chassis_for_results() -> void:
+	if state.phase != "results":
+		return
+	if selected_module_cell.x >= 0:
+		fortress_panel.cursor_cell = selected_module_cell
+	elif not state.modules.is_empty():
+		fortress_panel.cursor_cell = Vector2i(state.modules[0].get("position", Vector2i.ZERO))
+	fortress_panel.queue_redraw()
+	fortress_panel.grab_focus()
+
 func _active_combat_target_id() -> String:
 	for enemy in state.encounter_enemies:
 		var target_id := String(enemy.get("target", ""))
@@ -1853,6 +1875,8 @@ func _sync_new_active_combat_target() -> void:
 func _on_fortress_focus_exit_requested() -> void:
 	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(combat_inspect_button):
 		_focus_control(combat_inspect_button)
+	elif state.phase == "results" and _control_can_receive_focus(results_inspect_button):
+		_focus_control(results_inspect_button)
 	elif _control_can_receive_focus(focus_chassis_button):
 		_focus_control(focus_chassis_button)
 
@@ -2025,10 +2049,13 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		selected_module_cell = Vector2i(clicked.get("position", cell))
 		placement_rotated = bool(clicked.get("rotated", false))
 		_select_module_option(selected_module_id)
-		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), " and refitting" if state.can_refit() else " or an encounter order"])
+		var selection_context := " and refitting" if state.can_refit() else (" or an encounter order" if state.phase in ["battle", "final_battle"] else (" in the final chassis" if state.phase == "results" else ""))
+		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), selection_context])
 		_refresh_ui()
 		if state.phase in ["battle", "final_battle"]:
 			_focus_control(intervention_buttons[1] if not intervention_buttons[1].disabled else advance_encounter_button)
+		elif state.phase == "results":
+			fortress_panel.grab_focus()
 		return
 	if not state.can_refit():
 		_set_event("Refit is locked while the fortress is on the road. Select an installed module to inspect or seal it.")
@@ -2590,7 +2617,7 @@ func _refresh_ui() -> void:
 		results_summary_label.text = _result_summary_text()
 		results_record_label.text = _result_record_text()
 		results_replay_label.text = _result_replay_text()
-		_configure_vertical_focus_cycle([current_order_button, feedback_button, march_on_button, play_again_button, results_title_button])
+		_configure_vertical_focus_cycle([current_order_button, results_inspect_button, feedback_button, march_on_button, play_again_button, results_title_button])
 		var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
 		var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
 		var next_region_result := String(starting_region_results.get(next_region_id, ""))
@@ -2652,6 +2679,9 @@ func _refresh_ui() -> void:
 		combat_inspect_button.text = "INSPECT CHASSIS · HULL EXPOSED"
 	else:
 		combat_inspect_button.text = "INSPECT CHASSIS · %s" % ("REVIEW DAMAGE" if state.encounter_intervention_used else "CHOOSE SEAL TARGET")
+	results_inspect_button.visible = state.phase == "results"
+	results_inspect_button.disabled = state.modules.is_empty()
+	fortress_panel.refresh_interaction_copy()
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
 	intervention_title.text = "ENCOUNTER ORDER · %s" % ("SPENT" if state.encounter_intervention_used else "1 AVAILABLE")
@@ -3330,8 +3360,19 @@ class FortressPanel extends Control:
 		_refresh_controller_tooltip()
 		queue_redraw()
 
+	func refresh_interaction_copy() -> void:
+		_refresh_controller_tooltip()
+		queue_redraw()
+
 	func _refresh_controller_tooltip() -> void:
-		tooltip_text = "Click a module to select it, or click an empty cell to place or move. With keyboard or controller focus, use arrows and %s or Enter; %s or Escape returns to the desk." % [controller_confirm_label, controller_cancel_label]
+		if state != null and state.phase in ["battle", "final_battle"]:
+			tooltip_text = "Click a system to inspect it or choose a seal target. With keyboard or controller focus, use arrows and %s or Enter; %s or Escape returns to the encounter orders." % [controller_confirm_label, controller_cancel_label]
+		elif state != null and state.phase == "results":
+			tooltip_text = "Click a surviving system to inspect the final fortress. With keyboard or controller focus, use arrows and %s or Enter; %s or Escape returns to the debrief." % [controller_confirm_label, controller_cancel_label]
+		elif state != null and not state.can_refit():
+			tooltip_text = "Click a system to inspect its condition. Refit becomes available at a road stop."
+		else:
+			tooltip_text = "Click a module to select it, or click an empty cell to place or move. With keyboard or controller focus, use arrows and %s or Enter; %s or Escape returns to the desk." % [controller_confirm_label, controller_cancel_label]
 
 	func _grid_rect() -> Rect2:
 		return Rect2(ORIGIN, Vector2(LongMarchState.GRID_WIDTH * CELL, LongMarchState.GRID_HEIGHT * CELL))
@@ -3392,9 +3433,17 @@ class FortressPanel extends Control:
 	func interaction_heading() -> String:
 		var mount_status := "MOUNTS %d/%d" % [exterior_mount_count(), LongMarchState.MAX_EXTERIOR_MOUNTS]
 		if not has_focus():
+			if state != null and state.phase in ["battle", "final_battle"]:
+				return "CHASSIS OVERVIEW · %s — Inspect Chassis chooses a seal target" % mount_status
+			if state != null and state.phase == "results":
+				return "CHASSIS OVERVIEW · %s — Inspect Final Chassis reviews survivors" % mount_status
+			if state != null and not state.can_refit():
+				return "CHASSIS OVERVIEW · %s — inspection only between road stops" % mount_status
 			return "CHASSIS OVERVIEW · %s — read-only until Edit Chassis" % mount_status
 		if state != null and state.can_refit():
 			return "CHASSIS EDIT MODE · %s — arrows move · %s acts · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
+		if state != null and state.phase == "results":
+			return "CHASSIS REVIEW · %s — arrows move · %s inspects · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
 		return "CHASSIS INSPECTION · %s — arrows move · %s selects · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
 
 	func locked_mode_help_text() -> String:
