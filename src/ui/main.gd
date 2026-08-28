@@ -561,6 +561,7 @@ func _build_ui() -> void:
 	pause_button = Button.new()
 	pause_button.text = "PAUSE · ESC / %s" % _controller_cancel_label()
 	pause_button.custom_minimum_size = Vector2(190, 42)
+	pause_button.focus_mode = Control.FOCUS_NONE
 	pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
 	header.add_child(pause_button)

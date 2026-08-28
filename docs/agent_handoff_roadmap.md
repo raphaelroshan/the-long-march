@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.261`
+**Current code baseline:** `0.3.0-alpha.262`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -526,7 +526,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; save-aware close, explicit Charter reset, validated Continue backup recovery, pause-accessible contextual playtest notes, bounded large-text support, clean first-launch reset, a controller-accessible feedback export handoff, persistent interface-audio feedback, a bounded high-contrast mode, a controller confirm/cancel convention preference, in-game build/local-data transparency, action-aware title journey previews, a pause-accessible March Record, current-order focus recovery, phase-aware Field Briefing navigation, separate pause return/reorientation paths, a grouped focus-aware Settings hierarchy, direct two-chapter Field Guide launches, explicit saved-versus-discarded title return receipts, distinct passive chassis inspection versus active edit presentation, collision-safe checkpoint receipts, phase-aware battle/debrief chassis review, an inspect-first debrief handoff, fitted phase-labelled chassis detail copy, and a fixed pointer-accessible stage header are complete through `0.3.0-alpha.261`.
+**Status:** In progress; save-aware close, explicit Charter reset, validated Continue backup recovery, pause-accessible contextual playtest notes, bounded large-text support, clean first-launch reset, a controller-accessible feedback export handoff, persistent interface-audio feedback, a bounded high-contrast mode, a controller confirm/cancel convention preference, in-game build/local-data transparency, action-aware title journey previews, a pause-accessible March Record, current-order focus recovery, phase-aware Field Briefing navigation, separate pause return/reorientation paths, a grouped focus-aware Settings hierarchy, direct two-chapter Field Guide launches, explicit saved-versus-discarded title return receipts, distinct passive chassis inspection versus active edit presentation, collision-safe checkpoint receipts, phase-aware battle/debrief chassis review, an inspect-first debrief handoff, fitted phase-labelled chassis detail copy, a fixed pointer-accessible stage header, and exact pointer-Pause resume restoration are complete through `0.3.0-alpha.262`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 

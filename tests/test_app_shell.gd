@@ -368,13 +368,19 @@ func _run() -> void:
 	_expect(not app.game_view.onboarding_overlay.visible, "Quick Start should skip the briefing for repeated flow tests")
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "Quick Start should not permanently mark the briefing complete")
 	_expect(app.game_view.contract_accept_button.has_focus(), "Quick Start should focus the first required Ashgate decision")
-	_expect(app.game_view.pause_button.visible and app.game_view.pause_button.text.contains("ESC / A"), "the live stage should expose the remapped controller pause action")
+	_expect(app.game_view.pause_button.visible and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.pause_button.focus_mode == Control.FOCUS_NONE, "the live stage should expose a pointer-active Pause action without inserting it into keyboard or controller focus")
 	app.game_view.contract_decline_button.grab_focus()
 	app.game_view.pause_button.pressed.emit()
 	await process_frame
 	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the visible stage pause action should open and suspend the march")
+	_expect(app.paused_stage_focus == app.game_view.contract_decline_button, "opening Pause through its pointer action should retain the actual stage control as the Resume Here target")
 	_expect(app.pause_save_status_label.text.contains("No decision checkpoint yet") and app.pause_save_status_label.text.contains("Save March"), "pause should explain how a fresh run receives its first checkpoint instead of only reporting that it is unsaved")
 	_expect(app.resume_button.text == "RESUME HERE" and app.resume_button.tooltip_text.contains("exact stage control") and app.pause_order_button.text == "GO TO CONTRACT" and app.pause_order_button.tooltip_text.contains("without activating it"), "Pause should separate exact focus restoration from returning to the required contract")
+	app.resume_button.pressed.emit()
+	await process_frame
+	_expect(not app.pause_view.visible and app.game_view.contract_decline_button.has_focus(), "Resume Here should restore the stage control retained across pointer-opened Pause")
+	app.game_view.pause_button.pressed.emit()
+	await process_frame
 	var pause_order_state: Dictionary = app.game_view.state.serialize()
 	app.pause_order_button.pressed.emit()
 	await process_frame

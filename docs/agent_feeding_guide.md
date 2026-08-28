@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.261`; Feeds A through AF are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.262`; Feeds A through AG are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -197,6 +197,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.261` through a fixed title and Pause row above stage evidence.
 
 > Keep the contextual Pause action pointer-accessible while chassis focus scrolls the evidence column. Move the stage header outside the left scroll, preserve complete chassis visibility at 110% text, retire the decorative journey banner on results, and verify refit, battle, and debrief inspection states.
+
+### Current Feed AG — pointer Pause resume context
+
+**Status:** Complete in `0.3.0-alpha.262` through focus-neutral pointer activation.
+
+> Keep the fixed Pause action clickable without allowing it to replace the player's active stage focus. Verify pointer-opened Pause retains the exact Resume Here target, while Go to Order still selects the authoritative required action and controller/keyboard pause shortcuts remain unchanged.
 
 ## Historical prototype feed sequence
 

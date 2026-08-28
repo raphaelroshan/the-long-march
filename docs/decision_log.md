@@ -927,3 +927,7 @@ Locked-phase chassis help now uses compact labelled instructions sized for the e
 ## 2026-08-28 — Session controls stay above stage scrolling
 
 The stage title and contextual Pause action now sit in a fixed left-column header, while metrics, route evidence, combat, chassis, and reports scroll beneath them. Chassis focus can still reveal the complete inspector at 110% text without moving Pause out of pointer reach. Results also hide the decorative journey banner because the completed path, result, and machine are the relevant evidence. Shortcut priority and simulation state are unchanged.
+
+## 2026-08-28 — Pointer Pause does not become the resume target
+
+The persistent Pause button is pointer-active but focus-neutral. Keyboard and controller users already open Pause through Escape or the configured cancel button, so adding the visible button to their focus loop would duplicate the same command. More importantly, a pointer click no longer replaces the active stage control before the overlay records it; Resume Here restores that exact context, while Go to Order retains its separate authoritative destination.
