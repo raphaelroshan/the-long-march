@@ -38,6 +38,7 @@ var title_veil: ColorRect
 var guide_view: Control
 var settings_view: Control
 var settings_scroll: ScrollContainer
+var data_info_view: Control
 var pause_view: Control
 var confirmation_view: Control
 var checkpoint_toast: PanelContainer
@@ -62,11 +63,18 @@ var controller_layout_button: Button
 var motion_button: Button
 var interface_audio_button: Button
 var autosave_button: Button
+var data_info_button: Button
 var reset_briefing_button: Button
 var reset_charter_button: Button
 var clear_save_button: Button
 var reset_playtest_button: Button
 var settings_status_label: Label
+var data_info_context_label: Label
+var data_info_summary_label: Label
+var data_info_path_label: Label
+var data_info_status_label: Label
+var data_info_copy_button: Button
+var data_info_close_button: Button
 var resume_button: Button
 var pause_summary_label: Label
 var pause_save_status_label: Label
@@ -158,6 +166,7 @@ func _ready() -> void:
 	_build_title_menu()
 	_build_guide_overlay()
 	_build_settings_overlay()
+	_build_data_info_overlay()
 	_build_pause_menu()
 	_build_confirmation_overlay()
 	_build_checkpoint_toast()
@@ -416,6 +425,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 
 func _configure_overlay_focus() -> void:
 	_configure_focus_pair(guide_close_button, guide_quick_start_button)
+	_configure_focus_pair(data_info_close_button, data_info_copy_button)
 	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
 	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(text_scale_button)
 	text_scale_button.focus_neighbor_top = text_scale_button.get_path_to(display_mode_button)
@@ -429,6 +439,8 @@ func _configure_overlay_focus() -> void:
 	interface_audio_button.focus_neighbor_top = interface_audio_button.get_path_to(motion_button)
 	interface_audio_button.focus_neighbor_bottom = interface_audio_button.get_path_to(autosave_button)
 	autosave_button.focus_neighbor_top = autosave_button.get_path_to(interface_audio_button)
+	autosave_button.focus_neighbor_bottom = autosave_button.get_path_to(data_info_button)
+	data_info_button.focus_neighbor_top = data_info_button.get_path_to(autosave_button)
 	resume_button.focus_neighbor_bottom = resume_button.get_path_to(pause_save_button)
 	pause_save_button.focus_neighbor_top = pause_save_button.get_path_to(resume_button)
 	pause_save_button.focus_neighbor_right = pause_save_button.get_path_to(save_return_button)
@@ -681,6 +693,7 @@ func _build_settings_overlay() -> void:
 	interface_audio_button = _settings_action(settings_actions, "INTERFACE AUDIO", "Cycle restrained focus, confirmation, warning, and checkpoint cue volume.", _cycle_interface_audio)
 	interface_audio_button.set_meta("long_march_audio_manual_press", true)
 	autosave_button = _settings_action(settings_actions, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
+	data_info_button = _settings_action(settings_actions, "BUILD & LOCAL DATA", "Review build identity, offline boundaries, local-file presence, and the exact storage folder.", _show_data_info)
 	reset_briefing_button = _settings_action(settings_actions, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
 	reset_charter_button = _settings_action(settings_actions, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
 	clear_save_button = _settings_action(settings_actions, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
@@ -721,6 +734,81 @@ func _ensure_settings_control_visible(control: Control) -> void:
 	if settings_scroll == null or control == null or not is_instance_valid(control):
 		return
 	settings_scroll.ensure_control_visible(control)
+
+func _build_data_info_overlay() -> void:
+	data_info_view = Control.new()
+	data_info_view.name = "BuildAndLocalData"
+	data_info_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	data_info_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	data_info_view.visible = false
+	add_child(data_info_view)
+	var shade := ColorRect.new()
+	shade.color = Color(0.015, 0.02, 0.024, 0.92)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	data_info_view.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	data_info_view.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(650, 610)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191dfb"), Color("#688587"), 2, 8, 22))
+	center.add_child(panel)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 7)
+	panel.add_child(content)
+	data_info_context_label = Label.new()
+	data_info_context_label.add_theme_font_size_override("font_size", 12)
+	data_info_context_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(data_info_context_label)
+	var title := Label.new()
+	title.text = "Build & Local Data"
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color("#f0d29d"))
+	content.add_child(title)
+	var intro := Label.new()
+	intro.text = "Everything listed here stays on this device unless you deliberately copy and share an exported report."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.custom_minimum_size = Vector2(590, 36)
+	intro.add_theme_font_size_override("font_size", 14)
+	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
+	content.add_child(intro)
+	var summary_panel := PanelContainer.new()
+	summary_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	summary_panel.add_theme_stylebox_override("panel", _flat_style(Color("#0b1216f5"), Color("#455a60"), 1, 6, 14))
+	content.add_child(summary_panel)
+	data_info_summary_label = Label.new()
+	data_info_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	data_info_summary_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	data_info_summary_label.add_theme_font_size_override("font_size", 13)
+	data_info_summary_label.add_theme_color_override("font_color", Color("#d7dfdd"))
+	summary_panel.add_child(data_info_summary_label)
+	data_info_path_label = Label.new()
+	data_info_path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	data_info_path_label.add_theme_font_size_override("font_size", 12)
+	data_info_path_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(data_info_path_label)
+	data_info_status_label = Label.new()
+	data_info_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	data_info_status_label.custom_minimum_size = Vector2(590, 26)
+	data_info_status_label.add_theme_font_size_override("font_size", 11)
+	data_info_status_label.add_theme_color_override("font_color", Color("#d8c389"))
+	content.add_child(data_info_status_label)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	content.add_child(actions)
+	data_info_close_button = Button.new()
+	data_info_close_button.text = "BACK TO SETTINGS"
+	data_info_close_button.custom_minimum_size = Vector2(0, 46)
+	data_info_close_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	data_info_close_button.pressed.connect(_hide_data_info)
+	actions.add_child(data_info_close_button)
+	data_info_copy_button = Button.new()
+	data_info_copy_button.text = "COPY DATA FOLDER PATH"
+	data_info_copy_button.custom_minimum_size = Vector2(0, 46)
+	data_info_copy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	data_info_copy_button.pressed.connect(_copy_data_folder_path)
+	_accent_button(data_info_copy_button)
+	actions.add_child(data_info_copy_button)
 
 func _build_pause_menu() -> void:
 	pause_view = Control.new()
@@ -960,6 +1048,7 @@ func _show_settings() -> void:
 	settings_opened_from_pause = game_view != null and pause_view.visible
 	if settings_opened_from_pause:
 		pause_view.visible = false
+	data_info_view.visible = false
 	settings_view.visible = true
 	_refresh_settings()
 	display_mode_button.grab_focus()
@@ -984,6 +1073,7 @@ func _refresh_settings(message: String = "") -> void:
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
 	interface_audio_button.text = "INTERFACE AUDIO · MUTED" if interface_audio_percent == 0 else "INTERFACE AUDIO · %d%%" % interface_audio_percent
 	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
+	data_info_button.text = "BUILD & LOCAL DATA · %s" % _build_version()
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
 	reset_briefing_button.text = "RESET COMPLETED BRIEFING" if briefing_complete else "BRIEFING · ENABLED FOR NEXT RUN"
 	reset_briefing_button.disabled = not briefing_complete
@@ -998,7 +1088,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
-	var active_controls: Array = [display_mode_button, text_scale_button, contrast_button, controller_layout_button, motion_button, interface_audio_button, autosave_button]
+	var active_controls: Array = [display_mode_button, text_scale_button, contrast_button, controller_layout_button, motion_button, interface_audio_button, autosave_button, data_info_button]
 	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button, reset_playtest_button]:
 		if not optional_button.disabled:
 			active_controls.append(optional_button)
@@ -1065,12 +1155,69 @@ func _apply_visual_contrast() -> void:
 	_refresh_contrast_button_styles()
 
 func _refresh_contrast_button_styles() -> void:
-	for button in [guide_quick_start_button, settings_close_button, resume_button, confirmation_cancel_button]:
+	for button in [guide_quick_start_button, settings_close_button, data_info_copy_button, resume_button, confirmation_cancel_button]:
 		if button != null:
 			_accent_button(button)
 	for button in [reset_playtest_button, restart_button, title_button]:
 		if button != null:
 			_warning_button(button)
+
+func _show_data_info() -> void:
+	settings_view.visible = false
+	data_info_view.visible = true
+	_refresh_data_info()
+	data_info_close_button.grab_focus()
+
+func _hide_data_info() -> void:
+	data_info_view.visible = false
+	settings_view.visible = true
+	_refresh_settings()
+	data_info_button.grab_focus()
+	call_deferred("_ensure_settings_control_visible", data_info_button)
+
+func _refresh_data_info(message: String = "") -> void:
+	var data_folder := ProjectSettings.globalize_path("user://")
+	var feedback_count := _feedback_export_count()
+	data_info_context_label.text = "PAUSED MARCH · BUILD & LOCAL DATA" if settings_opened_from_pause else "TITLE MENU · BUILD & LOCAL DATA"
+	data_info_summary_label.text = "BUILD IDENTITY\n%s · %s desktop playtest\n\nOFFLINE BOUNDARY\nNo account login, telemetry SDK, or automatic upload is included. Feedback moves only when you explicitly share an exported JSON report.\n\nLOCAL FILES\nContinue: %s   ·   Recovery backup: %s\nMarch Charter: %s   ·   Preferences: %s\nBriefing record: %s   ·   Playtest journal: %s\nExported feedback reports: %d tester-owned file%s" % [
+		_build_version(),
+		OS.get_name(),
+		_file_presence(SAVE_PATH),
+		_file_presence(SAVE_BACKUP_PATH),
+		_file_presence(PROGRESS_PATH),
+		_file_presence(SETTINGS_PATH),
+		_file_presence(ONBOARDING_PATH),
+		_file_presence(PLAYTEST_JOURNAL_PATH),
+		feedback_count,
+		"" if feedback_count == 1 else "s"
+	]
+	data_info_path_label.text = "LOCAL DATA FOLDER\n%s" % data_folder
+	data_info_path_label.tooltip_text = data_folder
+	data_info_copy_button.tooltip_text = "Copy this exact local folder path. No file browser or external application will open."
+	data_info_status_label.text = message if not message.is_empty() else "Copying places only the folder path on the clipboard. Nothing is opened or sent."
+
+func _copy_data_folder_path() -> void:
+	var data_folder := ProjectSettings.globalize_path("user://")
+	DisplayServer.clipboard_set(data_folder)
+	_refresh_data_info("DATA FOLDER PATH COPIED · Paste it into your file browser when you choose. Nothing was opened or sent.")
+	data_info_copy_button.grab_focus()
+
+func _file_presence(path: String) -> String:
+	return "AVAILABLE" if FileAccess.file_exists(path) else "NOT CREATED"
+
+func _feedback_export_count() -> int:
+	var directory := DirAccess.open("user://")
+	if directory == null:
+		return 0
+	var count := 0
+	directory.list_dir_begin()
+	var filename := directory.get_next()
+	while not filename.is_empty():
+		if not directory.current_is_dir() and filename.begins_with("the_long_march_feedback_") and filename.ends_with(".json"):
+			count += 1
+		filename = directory.get_next()
+	directory.list_dir_end()
+	return count
 
 func _toggle_controller_layout() -> void:
 	controller_layout_id = ControllerLayout.EAST_CONFIRM if controller_layout_id == ControllerLayout.SOUTH_CONFIRM else ControllerLayout.SOUTH_CONFIRM
@@ -1929,6 +2076,7 @@ func _return_to_title() -> void:
 	pause_view.visible = false
 	guide_view.visible = false
 	settings_view.visible = false
+	data_info_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
 	paused_stage_focus = null
@@ -1995,6 +2143,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if confirmation_view.visible:
 		_cancel_confirmation()
+		get_viewport().set_input_as_handled()
+		return
+	if data_info_view.visible:
+		_hide_data_info()
 		get_viewport().set_input_as_handled()
 		return
 	if settings_view.visible:

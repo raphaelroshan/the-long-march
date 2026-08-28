@@ -36,6 +36,8 @@ Settings also includes **Interface Audio** at Muted, 40%, 70%, or 100%. These sh
 
 **Controller Confirm** can use A or B. The paired face button becomes Cancel, while Enter and Escape never change. After switching, check the title legend, Pause shortcut, briefing, route review, and chassis instructions; report any place whose hint disagrees with the button that actually acts.
 
+**Build & Local Data** identifies the running artifact and every managed local-data category without opening the filesystem. Use **Copy Data Folder Path** when collecting a save or exported report from a tester. The panel is informational: its copy action moves only the folder path to the clipboard, and its Back/cancel action returns to Settings without resuming a paused run.
+
 ## Building locally
 
 Install Godot 4.4.1 with export templates, then run:

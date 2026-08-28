@@ -119,8 +119,24 @@ func _run() -> void:
 	_expect(app.interface_audio_percent == 70 and app.interface_audio_button.text == "INTERFACE AUDIO · 70%", "Settings should safely normalize an unsupported stored audio level to the comfortable default")
 	_expect(app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_bottom) == app.text_scale_button and app.text_scale_button.get_node_or_null(app.text_scale_button.focus_neighbor_bottom) == app.contrast_button and app.contrast_button.get_node_or_null(app.contrast_button.focus_neighbor_bottom) == app.controller_layout_button and app.controller_layout_button.get_node_or_null(app.controller_layout_button.focus_neighbor_bottom) == app.motion_button, "controller navigation should place controller layout between visual contrast and motion")
 	_expect(app.motion_button.get_node_or_null(app.motion_button.focus_neighbor_bottom) == app.interface_audio_button and app.interface_audio_button.get_node_or_null(app.interface_audio_button.focus_neighbor_bottom) == app.autosave_button, "controller navigation should place interface audio between motion and save behavior")
-	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "Settings navigation should retain the available clean-start action while skipping unavailable category resets")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.data_info_button and app.data_info_button.get_node_or_null(app.data_info_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "Settings navigation should retain build information and the available clean-start action while skipping unavailable category resets")
 	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
+	_expect(app.data_info_button.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "Settings should expose the exact running build before opening local-data details")
+	app.data_info_button.pressed.emit()
+	await process_frame
+	_expect(app.data_info_view.visible and not app.settings_view.visible and app.data_info_close_button.has_focus(), "Build & Local Data should open as a focused modal above Settings")
+	_expect(app.data_info_context_label.text.begins_with("TITLE MENU") and app.data_info_summary_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and app.data_info_summary_label.text.contains(OS.get_name()) and app.data_info_summary_label.text.contains("No account login, telemetry SDK, or automatic upload"), "the data panel should identify the build, platform, and offline boundary in visible copy")
+	_expect(app.data_info_summary_label.text.contains("Continue: NOT CREATED") and app.data_info_summary_label.text.contains("Preferences: AVAILABLE") and app.data_info_summary_label.text.contains("Exported feedback reports:"), "the data panel should report each local state category without claiming every file exists")
+	_expect(app.data_info_path_label.text.contains(ProjectSettings.globalize_path("user://")) and app.data_info_close_button.get_node_or_null(app.data_info_close_button.focus_neighbor_right) == app.data_info_copy_button, "the data panel should expose the exact local folder and a closed controller action pair")
+	app.data_info_copy_button.pressed.emit()
+	await process_frame
+	_expect(app.data_info_status_label.text.begins_with("DATA FOLDER PATH COPIED") and app.data_info_status_label.text.contains("Nothing was opened or sent") and app.data_info_copy_button.has_focus(), "copying the data-folder path should produce a visible local-only receipt")
+	var data_cancel := InputEventJoypadButton.new()
+	data_cancel.button_index = JOY_BUTTON_B
+	data_cancel.pressed = true
+	app._unhandled_input(data_cancel)
+	await process_frame
+	_expect(not app.data_info_view.visible and app.settings_view.visible and app.data_info_button.has_focus(), "controller cancel should return from build information to the same Settings action")
 	app.text_scale_button.pressed.emit()
 	await process_frame
 	await process_frame
@@ -447,7 +463,16 @@ func _run() -> void:
 	_expect(app.reset_charter_button.disabled and app.reset_charter_button.text.contains("RETURN TO TITLE"), "paused Settings should not erase persistent history beneath an active run snapshot")
 	_expect(app.reset_playtest_button.disabled and app.reset_playtest_button.text.contains("RETURN TO TITLE"), "paused Settings should not reset local playtest data beneath an active run")
 	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
-	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include available one-shot actions in order")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.data_info_button and app.data_info_button.get_node_or_null(app.data_info_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include build information and available one-shot actions in order")
+	app.data_info_button.pressed.emit()
+	await process_frame
+	_expect(app.data_info_view.visible and app.data_info_context_label.text.begins_with("PAUSED MARCH") and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "build information opened during a run should retain paused context and keep the stage suspended")
+	var paused_data_cancel := InputEventJoypadButton.new()
+	paused_data_cancel.button_index = JOY_BUTTON_A
+	paused_data_cancel.pressed = true
+	app._unhandled_input(paused_data_cancel)
+	await process_frame
+	_expect(not app.data_info_view.visible and app.settings_view.visible and app.data_info_button.has_focus() and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the remapped cancel button should return from build information to paused Settings without resuming play")
 	app.text_scale_button.pressed.emit()
 	await process_frame
 	await process_frame
@@ -468,7 +493,7 @@ func _run() -> void:
 	app.reset_briefing_button.pressed.emit()
 	await process_frame
 	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
-	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.clear_save_button and app.clear_save_button.get_node_or_null(app.clear_save_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should reroute immediately after a one-shot action becomes unavailable")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.data_info_button and app.data_info_button.get_node_or_null(app.data_info_button.focus_neighbor_bottom) == app.clear_save_button and app.clear_save_button.get_node_or_null(app.clear_save_button.focus_neighbor_top) == app.data_info_button, "Settings navigation should reroute immediately after a one-shot action becomes unavailable")
 	var cancel_input := InputEventJoypadButton.new()
 	cancel_input.button_index = JOY_BUTTON_A
 	cancel_input.pressed = true
@@ -704,7 +729,7 @@ func _run() -> void:
 		await process_frame
 		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_BACKUP_PATH)) and not app.continue_button.visible and app.continue_button.disabled, "confirmed save clearing should remove Continue and its recovery backup from the title action stack")
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
-		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_charter_button and app.reset_charter_button.get_node_or_null(app.reset_charter_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "clearing Continue should leave the independent Charter and clean-start resets in the Settings focus path")
+		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.data_info_button and app.data_info_button.get_node_or_null(app.data_info_button.focus_neighbor_bottom) == app.reset_charter_button and app.reset_charter_button.get_node_or_null(app.reset_charter_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "clearing Continue should leave build information and the independent Charter and clean-start resets in the Settings focus path")
 
 	app._open_stage(false, false)
 	await process_frame

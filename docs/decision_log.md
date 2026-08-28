@@ -867,3 +867,7 @@ Settings can darken image-backed surfaces, brighten reviewed text colors, and st
 ## 2026-08-28 — Controller convention changes bindings and copy together
 
 Settings can swap the south/east face buttons assigned to `ui_accept` and `ui_cancel` while preserving Enter, Escape, navigation, and pointer input. The shell applies the mapping before initial focus and passes the preference into each stage before it enters the tree. Title, Pause, briefing, route, and chassis hints derive from the same layout identifier, preventing instructions from drifting away from runtime behavior. The preference deliberately stops short of a complete binding editor, which would require conflict handling, device-specific glyphs, and an inaccessible-binding recovery path.
+
+## 2026-08-28 — Build and storage support stays inside the consent boundary
+
+Settings exposes one read-only panel that identifies the exact build/platform, states the no-account/no-telemetry/no-automatic-upload boundary, reports managed local-file presence, counts exported feedback, and shows the absolute Godot data folder. Its only side effect is copying that folder path; it never opens a browser, reads report contents into the UI, or sends data. The panel preserves title versus paused context and returns focus to Settings without resuming the stage, making support handoff practical without weakening the local-only playtest contract.

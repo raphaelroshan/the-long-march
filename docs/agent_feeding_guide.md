@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.246`; Feeds A through Q are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.247`; Feeds A through R are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -107,6 +107,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.246` through the persistent A-confirm/B-confirm controller layout.
 
 > Let a tester swap the south/east face buttons used for confirm and cancel. Apply the real `ui_accept`/`ui_cancel` bindings, preserve Enter/Escape, update every visible controller hint, pass the layout into newly opened stages, and provide a safe default through clean reset. Do not describe this bounded convention switch as a complete binding editor.
+
+### Current Feed R — build and local-data transparency
+
+**Status:** Complete in `0.3.0-alpha.247` through the read-only Build & Local Data panel.
+
+> Give testers one title/paused Settings panel that names the exact build and platform, states the current offline boundary, reports each managed local-data category, counts exported reports, and exposes a copyable `user://` folder path. Preserve pause and focus context. Do not open external applications, inspect report contents, or add upload behavior.
 
 ## Historical prototype feed sequence
 
