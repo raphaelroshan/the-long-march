@@ -535,3 +535,7 @@ The result frame and current order use March Debrief and Debrief rather than the
 ## 2026-08-28 — Recovery copy retains the live service budget
 
 The persistent Morrowline recovery receipt now derives its action count from the current settlement state. After a service or any later interface refresh, it says zero, one, or two actions remain instead of reverting to the original “up to two” allowance.
+
+## 2026-08-28 — Route review supersedes the previous encounter
+
+An after-action receipt remains above the fold while the player is deciding what to do next, including after a forced retreat. Once a new route is deliberately selected, the visible receipt switches to that route’s review and cancellation instructions; cancelling the preview restores the prior after-action. This keeps history available without letting it mask the current irreversible decision.

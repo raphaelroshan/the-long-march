@@ -449,11 +449,21 @@ func _run() -> void:
 	_expect(game.guidance_label.text.begins_with("RETREAT RECOVERED") and game.guidance_label.text.contains("patched movement chain"), "post-retreat guidance should acknowledge recovery before asking for another road")
 	_expect(game.encounter_label.text.begins_with("AFTER-ACTION — FORCED RETREAT") and game.encounter_label.text.contains("Crew repair:"), "the retreat receipt should remain above the fold beside its next action")
 	var retreat_focus_is_route := false
+	var retreat_route_button: Button
 	for route_button in game.campaign_node_buttons:
 		if route_button.has_focus() and not route_button.disabled:
 			retreat_focus_is_route = true
+			retreat_route_button = route_button
 			break
 	_expect(retreat_focus_is_route, "forced-retreat recovery should hand controller focus to an available route")
+	retreat_route_button.pressed.emit()
+	await process_frame
+	var retreat_route_id := String(retreat_route_button.get_meta("node_id", ""))
+	var retreat_route_name := String(game.state.CAMPAIGN_NODES.get(retreat_route_id, {}).get("name", retreat_route_id))
+	_expect(game.encounter_label.text.begins_with("ROUTE READY FOR REVIEW") and game.encounter_label.text.contains("%s selected" % retreat_route_name), "selecting a new road after retreat should replace the recovered after-action receipt with the current route review")
+	game._unhandled_input(route_cancel)
+	await process_frame
+	_expect(game.encounter_label.text.begins_with("AFTER-ACTION — FORCED RETREAT"), "cancelling post-retreat route review should restore the unresolved recovery receipt")
 	game.state.load_serialized(before_retreat)
 	game._refresh_ui()
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()

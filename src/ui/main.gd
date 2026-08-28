@@ -2229,9 +2229,15 @@ func _refresh_ui() -> void:
 		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | %s" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), progress_text]
 	else:
 		journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
+	var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
+	var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
+	var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review its costs and doctrine, then commit when ready."]
 	if state.phase == "results":
 		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
 		encounter_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	elif not selected_campaign_node_id.is_empty():
+		encounter_label.text = "ROUTE READY FOR REVIEW\n%s" % selected_instruction
+		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
 	elif state.phase == "settlement" and state.encounter_outcome != "forced_retreat":
 		encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
@@ -2240,19 +2246,14 @@ func _refresh_ui() -> void:
 		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step%s\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, "" if state.encounter_step == 1 else "s", String(last_consequence)]
 		encounter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
-		var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
-		var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
-		var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review its costs and doctrine, then commit when ready."]
 		if state.guard_contract_status == "offered":
 			encounter_label.text = "ASHGATE PREPARATION\nAnswer the convoy contract to open the first roads."
 		elif not state.campaign_event_pending.is_empty():
 			encounter_label.text = "LOCAL DECISION\nResolve the current situation before choosing the next road."
 		elif state.phase == "settlement":
 			encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
-		elif selected_campaign_node_id.is_empty():
-			encounter_label.text = "ROUTE PLANNING\nSelect a cyan route and review its costs."
 		else:
-			encounter_label.text = "ROUTE READY FOR REVIEW\n%s" % selected_instruction
+			encounter_label.text = "ROUTE PLANNING\nSelect a cyan route and review its costs."
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
 	var recent: Array[String] = []
 	var start := maxi(0, state.log.size() - 4)
