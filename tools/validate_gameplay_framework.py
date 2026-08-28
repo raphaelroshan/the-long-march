@@ -65,8 +65,8 @@ def main() -> int:
     required_families = {"engine", "weapon", "workshop", "crew_room", "armor", "cargo", "signal"}
     if not required_families.issubset(family_ids):
         errors.append("module families are incomplete")
-    if len(module_ids) < 16:
-        errors.append("vertical slice requires at least 16 modules")
+    if len(module_ids) < 17:
+        errors.append("vertical slice requires at least 17 modules")
     if len(intervention_ids) != 4:
         errors.append("vertical slice requires exactly four interventions")
     if len(threat_ids) != 5:
@@ -110,7 +110,7 @@ def main() -> int:
             errors.append(f"progression track {track.get('id')} needs at least three nodes")
 
     slice_data = data.get("vertical_slice", {})
-    expected = {"chassis_dimensions": [6, 4], "exterior_mounts": 2, "module_count": 16, "enemy_count": 5, "intervention_count": 4, "settlement_count": 2, "route_count": 3, "encounter_count": 5}
+    expected = {"chassis_dimensions": [6, 4], "exterior_mounts": 2, "module_count": 17, "enemy_count": 5, "intervention_count": 4, "settlement_count": 2, "route_count": 3, "encounter_count": 5}
     for key, value in expected.items():
         if slice_data.get(key) != value:
             errors.append(f"vertical_slice.{key} must be {value}")

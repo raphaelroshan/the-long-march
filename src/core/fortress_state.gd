@@ -91,7 +91,8 @@ const MODULE_DEFS := {
 	"crew_quarters": {"name": "Crew Quarters", "family": "crew_room", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 4, "tags": ["crew", "life_support"], "capability": "Staffs adjacent workshops and provides the crew space Iven Pell requires."},
 	"parts_crate": {"name": "Parts Crate", "family": "cargo", "shape": Vector2i(1, 1), "mass": 1, "power_draw": 0, "power_output": 0, "heat": 0, "durability": 2, "tags": ["parts", "cargo"], "capability": "Lets an adjacent Field Workshop restore 2 durability instead of 1."},
 	"refugee_bunk": {"name": "Refugee Bunk", "family": "cargo", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["refuge", "cargo", "life_support"], "capability": "Unlocks shelter and rescue choices, but remains valuable cargo to Raiders."},
-	"signal_mast": {"name": "Signal Mast", "family": "signal", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["signal", "exterior", "long_range"], "capability": "Reveals exact contacts and cuts 2 Storm Front pressure while Ready."}
+	"signal_mast": {"name": "Signal Mast", "family": "signal", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["signal", "exterior", "long_range"], "capability": "Reveals exact contacts and cuts 2 Storm Front pressure while Ready."},
+	"water_condenser": {"name": "Water Condenser", "family": "sustain", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 2, "durability": 3, "tags": ["sustain", "water", "storm_target"], "capability": "Unlocks the Dry Cistern Cut and saves 1 fuel there while powered beside an operational Field Workshop."}
 }
 
 var seed: int = 1107
@@ -670,6 +671,14 @@ func _has_adjacent_tag(instance: Dictionary, tag: String) -> bool:
 			return true
 	return false
 
+func _has_adjacent_operational_module(instance: Dictionary, module_id: String) -> bool:
+	for neighbor in adjacent_modules(instance):
+		if String(neighbor.get("id", "")) != module_id:
+			continue
+		if bool(dependency_status(neighbor).get("operational", false)):
+			return true
+	return false
+
 func dependency_status(instance: Dictionary) -> Dictionary:
 	var module_id := String(instance.get("id", ""))
 	var definition := module_definition(module_id)
@@ -739,6 +748,14 @@ func dependency_status(instance: Dictionary) -> Dictionary:
 		elif is_operational:
 			state_name = "strained"
 			reasons.append("signal has no exterior visibility source")
+	if "water" in tags:
+		var maintenance_ready := _has_adjacent_operational_module(instance, "field_workshop")
+		connections.append({"id": "maintenance_to_condenser", "satisfied": maintenance_ready, "benefit": "dry-road recovery cycle available", "failure": "condenser cannot sustain the dry-road benefit"})
+		if maintenance_ready:
+			benefits.append("Field Workshop maintenance connected")
+		elif is_operational:
+			state_name = "strained"
+			reasons.append("no adjacent operational Field Workshop; dry-road benefit unavailable")
 	return {"module_id": module_id, "state": state_name, "operational": is_operational, "connections": connections, "reasons": reasons, "benefits": benefits}
 
 func dependency_status_at(cell: Vector2i) -> Dictionary:
@@ -760,7 +777,8 @@ func module_dependency_card(instance: Dictionary) -> Dictionary:
 		"ammunition_to_weapon": "adjacent Ammunition Lift",
 		"crew_to_workshop": "adjacent Crew Quarters",
 		"parts_to_workshop": "adjacent Parts Crate",
-		"visibility_to_signal": "exterior signal visibility"
+		"visibility_to_signal": "exterior signal visibility",
+		"maintenance_to_condenser": "adjacent operational Field Workshop"
 	}
 	var failure_texts := {
 		"power_to_module": "Power demand can force this module offline.",
@@ -768,7 +786,8 @@ func module_dependency_card(instance: Dictionary) -> Dictionary:
 		"ammunition_to_weapon": "Losing the Ammunition Lift strains this weapon and reduces its damage.",
 		"crew_to_workshop": "Losing Crew Quarters takes the workshop offline and stops field repairs.",
 		"parts_to_workshop": "Losing the Parts Crate limits each workshop repair.",
-		"visibility_to_signal": "Losing exterior visibility broadens route and target forecasts."
+		"visibility_to_signal": "Losing exterior visibility broadens route and target forecasts.",
+		"maintenance_to_condenser": "Losing workshop access removes the Dry Cistern Cut fuel saving and route access."
 	}
 	var counter_texts := {
 		"power_to_module": "Keep total draw at or below output, or restore a Generator Core.",
@@ -776,7 +795,8 @@ func module_dependency_card(instance: Dictionary) -> Dictionary:
 		"ammunition_to_weapon": "Place a working Ammunition Lift adjacent, or accept emergency ammunition.",
 		"crew_to_workshop": "Place working Crew Quarters adjacent before relying on field repair.",
 		"parts_to_workshop": "Place a working Parts Crate adjacent to restore full repair output.",
-		"visibility_to_signal": "Use an exterior signal module or place this beside one."
+		"visibility_to_signal": "Use an exterior signal module or place this beside one.",
+		"maintenance_to_condenser": "Keep an operational Field Workshop adjacent, or refit before choosing the dry road."
 	}
 	var dependency_names: Array[String] = []
 	var focus_connection: Dictionary = {}

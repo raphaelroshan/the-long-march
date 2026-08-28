@@ -15,7 +15,8 @@
     {"id": "crew_room", "name": "Crew Rooms", "purpose": "Staffing, command points, and emergency actions", "primary_dependency": "life_support"},
     {"id": "armor", "name": "Armor", "purpose": "Delay and damage absorption", "primary_dependency": "mass_budget"},
     {"id": "cargo", "name": "Cargo", "purpose": "Contracts, salvage, and settlement value", "primary_dependency": "space_and_access"},
-    {"id": "signal", "name": "Signals", "purpose": "Forecasts, route information, and settlement contact", "primary_dependency": "visibility"}
+    {"id": "signal", "name": "Signals", "purpose": "Forecasts, route information, and settlement contact", "primary_dependency": "visibility"},
+    {"id": "sustain", "name": "Sustain", "purpose": "Supply efficiency and access to hostile environments", "primary_dependency": "maintenance"}
   ],
   "modules": [
     {"id": "steam_lance_engine", "family": "engine", "shape": [2, 1], "mass": 3, "power_draw": -2, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"], "connections": ["fuel", "shaft"]},
@@ -33,7 +34,8 @@
     {"id": "crew_quarters", "family": "crew_room", "shape": [2, 1], "mass": 2, "power_draw": 1, "heat": 0, "durability": 4, "tags": ["crew", "life_support"], "connections": ["power", "life_support"]},
     {"id": "parts_crate", "family": "cargo", "shape": [1, 1], "mass": 1, "power_draw": 0, "heat": 0, "durability": 2, "tags": ["parts", "cargo"], "connections": ["cargo"]},
     {"id": "refugee_bunk", "family": "cargo", "shape": [2, 1], "mass": 2, "power_draw": 1, "heat": 0, "durability": 3, "tags": ["refuge", "cargo", "life_support"], "connections": ["crew", "cargo"]},
-    {"id": "signal_mast", "family": "signal", "shape": [1, 2], "mass": 2, "power_draw": 1, "heat": 0, "durability": 3, "tags": ["signal", "long_range", "exterior"], "connections": ["power", "visibility", "mount"]}
+    {"id": "signal_mast", "family": "signal", "shape": [1, 2], "mass": 2, "power_draw": 1, "heat": 0, "durability": 3, "tags": ["signal", "long_range", "exterior"], "connections": ["power", "visibility", "mount"]},
+    {"id": "water_condenser", "family": "sustain", "shape": [2, 1], "mass": 2, "power_draw": 1, "heat": 2, "durability": 3, "tags": ["sustain", "water", "storm_target"], "connections": ["power", "maintenance"]}
   ],
   "connection_rules": [
     {"id": "fuel_to_engine", "source_tag": "fuel", "target_tag": "engine", "benefit": "movement_operational", "failure": "engine_stalls"},
@@ -41,7 +43,8 @@
     {"id": "ammunition_to_weapon", "source_tag": "ammunition", "target_tag": "weapon", "benefit": "reload_rate", "failure": "weapon_uses_emergency_ammo"},
     {"id": "crew_to_workshop", "source_tag": "crew", "target_tag": "repair", "benefit": "repair_available", "failure": "repair_unavailable"},
     {"id": "visibility_to_signal", "source_tag": "visibility", "target_tag": "signal", "benefit": "forecast_confidence", "failure": "route_uncertain"},
-    {"id": "parts_to_workshop", "source_tag": "parts", "target_tag": "repair", "benefit": "repair_amount", "failure": "temporary_patch_only"}
+    {"id": "parts_to_workshop", "source_tag": "parts", "target_tag": "repair", "benefit": "repair_amount", "failure": "temporary_patch_only"},
+    {"id": "maintenance_to_condenser", "source_tag": "repair", "target_tag": "water", "benefit": "dry_route_access_and_fuel_saving", "failure": "dry_route_locked"}
   ],
   "interventions": [
     {"id": "shift_power", "name": "Shift Power", "timing": "approach_or_contact", "cost": "command_point", "benefit": "temporarily prioritize one system", "risk": "another system receives less power"},
@@ -130,7 +133,7 @@
   "vertical_slice": {
     "chassis_dimensions": [6, 4],
     "exterior_mounts": 2,
-    "module_count": 16,
+    "module_count": 17,
     "enemy_count": 5,
     "intervention_count": 4,
     "settlement_count": 2,

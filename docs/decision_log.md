@@ -763,3 +763,7 @@ The Marchmaster briefing now separates engine fuel, weapon ammunition, workshop 
 ## 2026-08-28 — Route comparison states confidence and risk bands
 
 Each available-road summary now pairs its numeric risk with the same low, guarded, or high planning band and explicitly labels information as known, forecast, or unscouted. The comparison updates when doctrine changes and still hides exact risk for unscouted roads. This keeps uncertainty meaningful while removing the need to cross-reference map-node shorthand.
+
+## 2026-08-28 — Water Condenser is a maintained sustain system
+
+The first post-alpha module is a rotatable two-cell interior system with two heat, one power draw, and three durability. Shared power keeps the hardware operational, while an adjacent operational Field Workshop is the soft maintenance dependency that moves it from Strained to Ready. Only Ready state may unlock and discount the Dry Cistern Cut, so layout, workshop staffing, power, damage, and sealing can all remove the benefit through the existing dependency model. The module uses a stable `water_condenser` ID and the existing finite inventory and save schema rather than adding a separate resource or persistence path.

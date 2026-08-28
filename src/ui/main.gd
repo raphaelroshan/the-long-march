@@ -2770,7 +2770,8 @@ class FortressPanel extends Control:
 		"crew_room": Color("#557fa1"),
 		"armor": Color("#6f7b84"),
 		"cargo": Color("#8e6d4f"),
-		"signal": Color("#5e9b91")
+		"signal": Color("#5e9b91"),
+		"sustain": Color("#4f8790")
 	}
 
 	func _ready() -> void:

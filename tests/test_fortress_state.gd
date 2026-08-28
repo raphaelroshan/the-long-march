@@ -10,6 +10,7 @@ func _init() -> void:
 	_test_rotation_reposition_and_removal()
 	_test_exterior_mount_rules()
 	_test_dependency_graph()
+	_test_water_condenser_foundation()
 	_test_mass_and_power()
 	_test_travel_and_deterministic_threat()
 	_test_intervention_and_recovery()
@@ -124,6 +125,42 @@ func _test_dependency_graph() -> void:
 	_expect(signal_state.dependency_status_at(Vector2i(2, 1)).state == "strained", "interior signal without exterior visibility should have a broad forecast")
 	signal_state.place_module("wall_lamp", Vector2i(2, 2), true)
 	_expect(signal_state.dependency_status_at(Vector2i(2, 1)).state == "ready", "adjacent exterior signal should provide visibility")
+
+func _test_water_condenser_foundation() -> void:
+	var state := LongMarchState.new(1107)
+	var placed := state.place_module("water_condenser", Vector2i(4, 1))
+	_expect(placed.ok, "Water Condenser should fit as a two-cell interior sustain module")
+	_expect(Vector2i(5, 1) in state.occupied_cells(state.modules[0]), "unrotated Water Condenser should occupy two horizontal cells")
+	var rotated := state.reposition_module_at(Vector2i(4, 1), Vector2i(5, 1), true)
+	_expect(rotated.ok and Vector2i(5, 2) in state.occupied_cells(state.modules[0]), "Water Condenser should rotate into a vertical footprint")
+	state.reposition_module_at(Vector2i(5, 1), Vector2i(4, 1), false)
+	_expect(state.dependency_status_at(Vector2i(4, 1)).state == "strained", "a powered Water Condenser without workshop access should be strained")
+	state.place_module("generator_core", Vector2i(0, 0))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("crew_quarters", Vector2i(2, 0))
+	_expect(state.dependency_status_at(Vector2i(4, 1)).state == "ready", "an adjacent operational Field Workshop should ready the Water Condenser")
+	var before_card: Dictionary = state.serialize()
+	var card := state.module_dependency_card(state.module_at(Vector2i(4, 1)))
+	_expect(String(card.get("direct_dependency", "")).contains("Field Workshop") and String(card.get("next_failure", "")).contains("Dry Cistern Cut") and String(card.get("legal_counter", "")).contains("Field Workshop"), "Water Condenser dependency card should explain maintenance, route loss, and recovery")
+	_expect(state.serialize() == before_card, "reading the Water Condenser dependency card must not mutate fortress state")
+	state.seed_starter_inventory()
+	_expect(state.stored_module_count("water_condenser") == 0, "starter inventory should not duplicate an installed Water Condenser")
+	var stored_state := LongMarchState.new(1107)
+	stored_state.seed_starter_inventory()
+	_expect(stored_state.stored_module_count("water_condenser") == 1, "starter inventory should include one Water Condenser")
+	for stored in stored_state.stored_modules:
+		if String(stored.get("id", "")) == "water_condenser":
+			stored["durability"] = 2
+			stored["rotated"] = true
+	var restored := LongMarchState.new(0)
+	var load_result := restored.load_serialized(stored_state.serialize())
+	_expect(bool(load_result.get("ok", false)), "a checkpoint containing the Water Condenser should load")
+	var restored_condenser: Dictionary = {}
+	for stored in restored.stored_modules:
+		if String(stored.get("id", "")) == "water_condenser":
+			restored_condenser = stored
+			break
+	_expect(int(restored_condenser.get("durability", 0)) == 2 and bool(restored_condenser.get("rotated", false)), "Water Condenser identity, damage, and rotation should survive save/load")
 
 func _test_mass_and_power() -> void:
 	var state := LongMarchState.new(1107)
