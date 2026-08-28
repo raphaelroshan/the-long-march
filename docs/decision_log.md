@@ -663,3 +663,7 @@ Deterministic coverage now completes a second full campaign through Soot Orchard
 ## 2026-08-28 — Debriefs retain authored route decisions
 
 Resolved Soot Orchard, Broken Relay, and Red Wheel choices are now stored explicitly in campaign state and survive save/load. The run record names the decisions actually made on the travelled path, while older compatible checkpoints derive the choices that can be known safely and mark an unrecorded toll decision honestly.
+
+## 2026-08-28 — Feedback bundles preserve campaign context
+
+The local-only feedback export now includes the secured campaign path, exact authored route decisions, and unused Morrowline recovery actions in its final-state summary. A tester's comments can therefore be interpreted against the choices and missed resources that produced them without collecting identity, device, or network data.
