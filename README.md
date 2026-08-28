@@ -32,6 +32,7 @@ The repository contains an agent-first Godot project with:
 - Contextual title-menu priority: Start is primary for a new player, while a valid Continue save becomes the highlighted default.
 - Confirmation before a new autosaved run can supersede an existing saved march.
 - Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, autosave, briefing reset, and confirmed save clearing.
+- Settings grouped into Display & Readability, Controls & Feedback, and Runs & Local Data, with a fixed section breadcrumb that follows keyboard/controller focus.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
 - A seven-step guided briefing that teaches command, engine/fuel, weapon/ammunition, workshop staffing/parts, signal visibility, routes, and contact response one relationship at a time.
 - A directly navigable Field Briefing that reopens at the live contract, route, battle, recovery, or finale topic and preserves the run while players browse.

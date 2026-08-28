@@ -891,3 +891,7 @@ Reopening Field Briefing now selects the topic implied by the live contract, roa
 ## 2026-08-28 — Pause separates continuity from reorientation
 
 The primary Pause row now distinguishes Resume Here, which restores the exact valid pre-pause control, from a phase-labelled Go to action, which delegates to the authoritative current-order resolver. Cancel remains Resume Here. Sharing one row preserves the 1280×720 layout and makes the choice explicit without adding another overlay. The resolver now prioritizes phase and pending-decision state before testing visible controls, so stale presentation cannot redirect a debrief or battle order. Neither path activates a control or changes serialized state.
+
+## 2026-08-28 — Settings exposes its hierarchy while scrolling
+
+Settings now groups its existing controls under Display & Readability, Controls & Feedback, and Runs & Local Data. Compact headings make pointer scanning easier, while the fixed context line follows keyboard/controller focus so the category remains visible after scrolling. Opening Settings resets to the first heading, and Build & Local Data returns to its original section. Headings remain non-interactive, avoiding extra focus stops or a second settings state model; preferences, defaults, storage, and confirmation behavior are unchanged.

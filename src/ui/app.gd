@@ -38,6 +38,8 @@ var title_veil: ColorRect
 var guide_view: Control
 var settings_view: Control
 var settings_scroll: ScrollContainer
+var settings_section_headers: Dictionary = {}
+var settings_active_section: String = "DISPLAY & READABILITY"
 var data_info_view: Control
 var run_record_view: Control
 var pause_view: Control
@@ -744,19 +746,22 @@ func _build_settings_overlay() -> void:
 	settings_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings_actions.add_theme_constant_override("separation", 6)
 	settings_scroll.add_child(settings_actions)
-	display_mode_button = _settings_action(settings_actions, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
-	text_scale_button = _settings_action(settings_actions, "TEXT SIZE", "Increase interface text while preserving the complete 1280×720 decision layout.", _toggle_text_scale)
-	contrast_button = _settings_action(settings_actions, "VISUAL CONTRAST", "Darken backdrops, brighten muted copy, and strengthen interactive outlines without hiding status text.", _toggle_high_contrast)
-	controller_layout_button = _settings_action(settings_actions, "CONTROLLER BUTTONS", "Swap the A/B confirm and cancel buttons while Enter and Escape stay fixed.", _toggle_controller_layout)
-	motion_button = _settings_action(settings_actions, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
-	interface_audio_button = _settings_action(settings_actions, "INTERFACE AUDIO", "Cycle restrained focus, confirmation, warning, and checkpoint cue volume.", _cycle_interface_audio)
+	_settings_section(settings_actions, "DISPLAY & READABILITY", "Window · text size · contrast")
+	display_mode_button = _settings_action(settings_actions, "DISPLAY & READABILITY", "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
+	text_scale_button = _settings_action(settings_actions, "DISPLAY & READABILITY", "TEXT SIZE", "Increase interface text while preserving the complete 1280×720 decision layout.", _toggle_text_scale)
+	contrast_button = _settings_action(settings_actions, "DISPLAY & READABILITY", "VISUAL CONTRAST", "Darken backdrops, brighten muted copy, and strengthen interactive outlines without hiding status text.", _toggle_high_contrast)
+	_settings_section(settings_actions, "CONTROLS & FEEDBACK", "Controller · motion · interface audio")
+	controller_layout_button = _settings_action(settings_actions, "CONTROLS & FEEDBACK", "CONTROLLER BUTTONS", "Swap the A/B confirm and cancel buttons while Enter and Escape stay fixed.", _toggle_controller_layout)
+	motion_button = _settings_action(settings_actions, "CONTROLS & FEEDBACK", "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
+	interface_audio_button = _settings_action(settings_actions, "CONTROLS & FEEDBACK", "INTERFACE AUDIO", "Cycle restrained focus, confirmation, warning, and checkpoint cue volume.", _cycle_interface_audio)
 	interface_audio_button.set_meta("long_march_audio_manual_press", true)
-	autosave_button = _settings_action(settings_actions, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
-	data_info_button = _settings_action(settings_actions, "BUILD & LOCAL DATA", "Review build identity, offline boundaries, local-file presence, and the exact storage folder.", _show_data_info)
-	reset_briefing_button = _settings_action(settings_actions, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
-	reset_charter_button = _settings_action(settings_actions, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
-	clear_save_button = _settings_action(settings_actions, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
-	reset_playtest_button = _settings_action(settings_actions, "CLEAN PLAYTEST START", "Remove local run, Charter, briefing, preferences, and journal data while preserving exported feedback reports.", _request_confirmation.bind("reset_playtest_data"))
+	_settings_section(settings_actions, "RUNS & LOCAL DATA", "Checkpoints · support info · resets")
+	autosave_button = _settings_action(settings_actions, "RUNS & LOCAL DATA", "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
+	data_info_button = _settings_action(settings_actions, "RUNS & LOCAL DATA", "BUILD & LOCAL DATA", "Review build identity, offline boundaries, local-file presence, and the exact storage folder.", _show_data_info)
+	reset_briefing_button = _settings_action(settings_actions, "RUNS & LOCAL DATA", "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
+	reset_charter_button = _settings_action(settings_actions, "RUNS & LOCAL DATA", "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
+	clear_save_button = _settings_action(settings_actions, "RUNS & LOCAL DATA", "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
+	reset_playtest_button = _settings_action(settings_actions, "RUNS & LOCAL DATA", "CLEAN PLAYTEST START", "Remove local run, Charter, briefing, preferences, and journal data while preserving exported feedback reports.", _request_confirmation.bind("reset_playtest_data"))
 	_warning_button(reset_playtest_button)
 	settings_status_label = Label.new()
 	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -771,7 +776,19 @@ func _build_settings_overlay() -> void:
 	_accent_button(settings_close_button)
 	content.add_child(settings_close_button)
 
-func _settings_action(parent: VBoxContainer, title: String, detail: String, callback: Callable) -> Button:
+func _settings_section(parent: VBoxContainer, title: String, detail: String) -> void:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 30)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 7))
+	parent.add_child(panel)
+	var label := Label.new()
+	label.text = "%s  ·  %s" % [title, detail]
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color("#d8c389"))
+	panel.add_child(label)
+	settings_section_headers[title] = label
+
+func _settings_action(parent: VBoxContainer, section: String, title: String, detail: String, callback: Callable) -> Button:
 	var group := VBoxContainer.new()
 	group.add_theme_constant_override("separation", 3)
 	parent.add_child(group)
@@ -784,10 +801,20 @@ func _settings_action(parent: VBoxContainer, title: String, detail: String, call
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(0, 38)
 	button.tooltip_text = detail
+	button.set_meta("long_march_settings_section", section)
+	button.pressed.connect(_on_settings_action_focused.bind(button))
 	button.pressed.connect(callback)
-	button.focus_entered.connect(_ensure_settings_control_visible.bind(button))
+	button.focus_entered.connect(_on_settings_action_focused.bind(button))
 	group.add_child(button)
 	return button
+
+func _on_settings_action_focused(control: Control) -> void:
+	settings_active_section = String(control.get_meta("long_march_settings_section", settings_active_section))
+	_refresh_settings_context()
+	_ensure_settings_control_visible(control)
+
+func _refresh_settings_context() -> void:
+	settings_context_label.text = "%s · SETTINGS · %s" % ["PAUSED MARCH" if settings_opened_from_pause else "TITLE MENU", settings_active_section]
 
 func _ensure_settings_control_visible(control: Control) -> void:
 	if settings_scroll == null or control == null or not is_instance_valid(control):
@@ -1200,12 +1227,18 @@ func _save_preferences() -> void:
 
 func _show_settings() -> void:
 	settings_opened_from_pause = game_view != null and pause_view.visible
+	settings_active_section = "DISPLAY & READABILITY"
 	if settings_opened_from_pause:
 		pause_view.visible = false
 	data_info_view.visible = false
 	settings_view.visible = true
 	_refresh_settings()
 	display_mode_button.grab_focus()
+	call_deferred("_reset_settings_scroll")
+
+func _reset_settings_scroll() -> void:
+	if settings_scroll != null:
+		settings_scroll.scroll_vertical = 0
 
 func _hide_settings() -> void:
 	settings_view.visible = false
@@ -1218,7 +1251,7 @@ func _hide_settings() -> void:
 	settings_opened_from_pause = false
 
 func _refresh_settings(message: String = "") -> void:
-	settings_context_label.text = "PAUSED MARCH · SETTINGS" if settings_opened_from_pause else "TITLE MENU · SETTINGS"
+	_refresh_settings_context()
 	settings_close_button.text = "BACK TO PAUSE" if settings_opened_from_pause else "BACK TO TITLE"
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen_enabled else "FULLSCREEN · OFF"
 	text_scale_button.text = "TEXT SIZE · %d%%" % text_scale_percent

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.252`; Feeds A through W are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.253`; Feeds A through X are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -143,6 +143,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.252` through distinct Resume Here and Go to Order actions.
 
 > Preserve exact pre-pause focus through Resume Here, while offering a second phase-labelled action that returns directly to the authoritative contract, route, event, battle, recovery, or feedback control. Keep both actions in one row at 110% text, maintain a closed controller focus graph, and never activate or mutate the destination.
+
+### Current Feed X — settings information hierarchy
+
+**Status:** Complete in `0.3.0-alpha.253` through visible sections and a focus-aware breadcrumb.
+
+> Group the existing Settings actions into Display & Readability, Controls & Feedback, and Runs & Local Data without changing preference behavior. Keep section identity visible as controller focus scrolls, preserve dynamic disabled-action routing, and return the initial view to the first heading at 110% text.
 
 ## Historical prototype feed sequence
 

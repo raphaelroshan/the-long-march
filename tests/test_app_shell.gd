@@ -123,7 +123,9 @@ func _run() -> void:
 	app.settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
-	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
+	_expect(app.settings_context_label.text == "TITLE MENU · SETTINGS · DISPLAY & READABILITY" and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify its origin and active section while preserving the title return")
+	_expect(app.settings_section_headers.size() == 3 and String(app.settings_section_headers["DISPLAY & READABILITY"].text).contains("Window") and String(app.settings_section_headers["CONTROLS & FEEDBACK"].text).contains("Controller") and String(app.settings_section_headers["RUNS & LOCAL DATA"].text).contains("Checkpoints"), "Settings should visibly group display, control, and local-run concerns")
+	_expect(app.settings_section_headers["DISPLAY & READABILITY"].get_parent().get_index() < app.display_mode_button.get_parent().get_index() and app.settings_section_headers["CONTROLS & FEEDBACK"].get_parent().get_index() < app.controller_layout_button.get_parent().get_index() and app.settings_section_headers["RUNS & LOCAL DATA"].get_parent().get_index() < app.autosave_button.get_parent().get_index(), "each settings section heading should precede its first action")
 	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Darken backdrops") and _tree_contains_text(app.settings_view, "Swap the A/B") and _tree_contains_text(app.settings_view, "Cycle restrained focus") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, contrast, controller, audio, and save consequences without requiring mouse-only tooltips")
 	_expect(app.text_scale_button.text == "TEXT SIZE · 100%" and app.theme.default_font_size == 16, "Settings should safely normalize an unsupported stored text size to the standard interface size")
 	_expect(not app.high_contrast_enabled and app.contrast_button.text == "VISUAL CONTRAST · STANDARD", "Settings should default to the authored standard palette when no contrast preference is stored")
@@ -134,6 +136,9 @@ func _run() -> void:
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.data_info_button and app.data_info_button.get_node_or_null(app.data_info_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "Settings navigation should retain build information and the available clean-start action while skipping unavailable category resets")
 	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
 	_expect(app.data_info_button.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "Settings should expose the exact running build before opening local-data details")
+	app.controller_layout_button.grab_focus()
+	await process_frame
+	_expect(app.settings_context_label.text.ends_with("CONTROLS & FEEDBACK"), "controller focus should keep the active Settings section visible outside the scroll area")
 	app.data_info_button.pressed.emit()
 	await process_frame
 	_expect(app.data_info_view.visible and not app.settings_view.visible and app.data_info_close_button.has_focus(), "Build & Local Data should open as a focused modal above Settings")
@@ -148,7 +153,7 @@ func _run() -> void:
 	data_cancel.pressed = true
 	app._unhandled_input(data_cancel)
 	await process_frame
-	_expect(not app.data_info_view.visible and app.settings_view.visible and app.data_info_button.has_focus(), "controller cancel should return from build information to the same Settings action")
+	_expect(not app.data_info_view.visible and app.settings_view.visible and app.data_info_button.has_focus() and app.settings_context_label.text.ends_with("RUNS & LOCAL DATA"), "controller cancel should return from build information to the same action and preserve its section context")
 	app.text_scale_button.pressed.emit()
 	await process_frame
 	await process_frame
