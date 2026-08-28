@@ -835,3 +835,7 @@ The shell disables automatic acceptance of operating-system close requests. A sa
 ## 2026-08-28 — Persistent data resets stay separate
 
 Title Settings exposes March Charter reset independently from Continue clearing and briefing reset. Its confirmation explicitly names regional results and Public Archive Signal as the deleted data, and names Continue, settings, and briefing progress as preserved. The action is disabled during a live run because that stage holds a deterministic regional-development snapshot; reset therefore cannot make active state disagree with its profile mid-journey.
+
+## 2026-08-28 — Continue keeps one validated predecessor
+
+Before a valid primary checkpoint is overwritten, the stage preserves and validates its complete previous serialized state as a local recovery backup. The title never loads that file silently: when the primary is missing or invalid it disables Continue, names the recoverable chapter/day/location, and requires an explicit Restore Backup confirmation. Invalid primary bytes cannot replace a valid predecessor, and Clear Local Save removes both files while preserving the March Charter and other local data categories.

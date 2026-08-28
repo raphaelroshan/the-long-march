@@ -52,6 +52,7 @@ The repository contains an agent-first Godot project with:
 - A local two-chapter March Charter records each region's best terminal result and lets a debrief continue directly into the other playable chapter without conflating durable history with the Continue slot.
 - Save-aware window closing: an unsaved live march pauses for a local Save & Quit decision, while a safe title or fully checkpointed run closes immediately.
 - Separate title-only controls for resetting the March Charter, clearing Continue, and resetting the briefing without silently deleting unrelated local data.
+- A validated predecessor backup for Continue, with explicit title recovery when the primary checkpoint is missing or corrupt.
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
 - An Ashgate guard contract, three local route decisions, recruitable signal officer Iven Pell, and persistent settlement trust.
 - Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.

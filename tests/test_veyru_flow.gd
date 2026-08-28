@@ -60,7 +60,7 @@ func _finish_battle() -> void:
 
 
 func _run() -> void:
-	for relative_path in ["user://the_long_march_prototype.save", "user://the_long_march_onboarding_v1.complete", "user://the_long_march_playtest_journal.json"]:
+	for relative_path in ["user://the_long_march_prototype.save", "user://the_long_march_prototype.backup.save", "user://the_long_march_onboarding_v1.complete", "user://the_long_march_playtest_journal.json"]:
 		var path := ProjectSettings.globalize_path(relative_path)
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)

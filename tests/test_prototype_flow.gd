@@ -74,9 +74,10 @@ func _advance_until_phase(expected_phase: String) -> void:
 
 func _run() -> void:
 	var save_path := ProjectSettings.globalize_path("user://the_long_march_prototype.save")
+	var backup_path := ProjectSettings.globalize_path("user://the_long_march_prototype.backup.save")
 	var onboarding_path := ProjectSettings.globalize_path("user://the_long_march_onboarding_v1.complete")
 	var journal_path := ProjectSettings.globalize_path("user://the_long_march_playtest_journal.json")
-	for path in [save_path, onboarding_path, journal_path]:
+	for path in [save_path, backup_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	game = load("res://scenes/Main.tscn").instantiate()
@@ -845,11 +846,17 @@ func _run() -> void:
 	_expect(return_to_title_requested, "the completed stage should be able to request the application title")
 	var result_save = JSON.parse_string(FileAccess.get_file_as_string(save_path))
 	_expect(result_save is Dictionary and String(result_save.get("phase", "")) == "results" and String(result_save.get("final_result", "")) == completed_result, "returning from results should first persist the completed run even when shell autosave is unavailable")
+	_expect(game.save_run(true) and FileAccess.file_exists(backup_path), "overwriting the completed result should create a predecessor backup")
+	var protected_backup_text := FileAccess.get_file_as_string(backup_path)
+	var corrupt_primary := FileAccess.open(save_path, FileAccess.WRITE)
+	corrupt_primary.store_string("{invalid primary")
+	corrupt_primary.close()
+	_expect(game.save_run(true) and FileAccess.get_file_as_string(backup_path) == protected_backup_text, "saving over an invalid primary should preserve the last validated backup instead of promoting corrupt bytes")
 	game.play_again_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.contract_accept_button.has_focus(), "Play Again should create a fresh focused Ashgate stage")
 	_expect(last_checkpoint_reason == "new_run_started", "Play Again should request a fresh checkpoint instead of leaving Continue on the completed result")
-	for path in [save_path, onboarding_path, journal_path]:
+	for path in [save_path, backup_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if not game.last_feedback_path.is_empty() and FileAccess.file_exists(game.last_feedback_path):

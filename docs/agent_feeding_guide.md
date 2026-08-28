@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.238`; Feeds A through I are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.239`; Feeds A through J are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -59,6 +59,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.238` through title-only March Charter reset.
 
 > Give testers an explicit way to clear persistent chapter results and regional developments without touching Continue, settings, briefing progress, or exported feedback. Require exact confirmation copy, disable the action during an active run, restore focus on cancel, and refresh the title immediately on success.
+
+### Current Feed J — local save backup recovery
+
+**Status:** Complete in `0.3.0-alpha.239` through validated predecessor recovery.
+
+> Before overwriting a valid Continue checkpoint, preserve and validate its predecessor. When the primary is missing or corrupt, offer an explicit title recovery instead of only deletion; identify the backup chapter, day, and location, preserve unrelated local data, and keep normal Continue bound to the primary file. Do not add multiple selectable save slots or cloud sync.
 
 ## Historical prototype feed sequence
 

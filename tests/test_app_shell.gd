@@ -1,6 +1,8 @@
 extends SceneTree
 
+const LongMarchState = preload("res://src/core/fortress_state.gd")
 const SAVE_PATH := "user://the_long_march_prototype.save"
+const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
@@ -14,7 +16,7 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _remove_local_test_files() -> void:
-	for path in [SAVE_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)
@@ -66,7 +68,7 @@ func _run() -> void:
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "invalid save data should never expose Continue as an actionable choice")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
 	_expect(app.save_recovery_button.visible and app.save_recovery_button.text == "REMOVE UNUSABLE SAVE" and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose an accurately named recovery action after both new-run choices")
-	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save Tab navigation should include the Veyru and recovery actions")
+	_expect(not app.quick_start_button.visible and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save navigation should collapse redundant Quick Start while retaining both regions and recovery")
 	app._continue_game()
 	await process_frame
 	_expect(app.save_recovery_button.has_focus(), "a failed Continue attempt should focus the newly available recovery action")
@@ -398,6 +400,37 @@ func _run() -> void:
 	var saved_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(saved_payload is Dictionary and String(saved_payload.get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version")), "campaign saves should record their exact application build")
 	_expect(saved_payload is Dictionary and int(saved_payload.get("saved_at_unix", 0)) > 0, "campaign saves should record when the checkpoint was created")
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_BACKUP_PATH)), "overwriting a valid checkpoint should preserve its predecessor as a local recovery backup")
+	var backup_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_BACKUP_PATH))
+	_expect(backup_payload is Dictionary and bool(LongMarchState.new(0).load_serialized(backup_payload).get("ok", false)), "the recovery backup should contain a fully validated campaign state")
+	var corrupt_primary := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	corrupt_primary.store_string("{broken primary checkpoint")
+	corrupt_primary.close()
+	app._refresh_title_state()
+	_expect(app.save_recovery_button.visible and app.save_recovery_button.text.begins_with("RESTORE BACKUP") and app.save_status_label.text.contains("Valid backup available"), "a corrupt primary save should offer its valid backup instead of only deletion")
+	app.save_recovery_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_title_label.text == "Restore the backup?" and app.confirmation_body_label.text.contains("broken file will be discarded") and app.confirmation_cancel_button.text == "KEEP FILES", "backup recovery should require a precise replacement confirmation")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.save_recovery_button.has_focus() and FileAccess.get_file_as_string(SAVE_PATH).begins_with("{broken"), "cancelling backup recovery should preserve both files and restore focus")
+	app.save_recovery_button.pressed.emit()
+	await process_frame
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	var restored_backup_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	_expect(restored_backup_payload == backup_payload and app.continue_button.visible and app.continue_button.has_focus(), "confirmed backup recovery should restore the exact validated predecessor and re-enable Continue")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	app._refresh_title_state()
+	_expect(app.save_recovery_button.visible and app.save_recovery_button.text.begins_with("RESTORE BACKUP") and not app.continue_button.visible, "a missing primary should also expose the validated backup without silently enabling Continue")
+	app.save_recovery_button.pressed.emit()
+	await process_frame
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and app.continue_button.visible, "backup recovery should rebuild a missing primary checkpoint after confirmation")
+	var current_after_recovery := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	current_after_recovery.store_string(JSON.stringify(saved_payload))
+	current_after_recovery.close()
 	var legacy_title_payload: Dictionary = saved_payload.duplicate(true)
 	legacy_title_payload["save_version"] = 7
 	legacy_title_payload.erase("regional_developments")
@@ -529,7 +562,7 @@ func _run() -> void:
 		_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "CLEAR SAVE", "clearing a save should require explicit confirmation")
 		app.confirmation_confirm_button.pressed.emit()
 		await process_frame
-		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.continue_button.visible and app.continue_button.disabled, "confirmed save clearing should remove Continue from the title action stack")
+		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_BACKUP_PATH)) and not app.continue_button.visible and app.continue_button.disabled, "confirmed save clearing should remove Continue and its recovery backup from the title action stack")
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
 		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_charter_button and app.reset_charter_button.get_node_or_null(app.reset_charter_button.focus_neighbor_bottom) == app.settings_close_button, "clearing Continue should leave the independent March Charter reset in the Settings focus path")
 

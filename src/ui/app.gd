@@ -8,6 +8,7 @@ const LongMarchState = preload("res://src/core/fortress_state.gd")
 const CampaignProgress = preload("res://src/support/campaign_progress.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
+const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const PROGRESS_PATH := "user://the_long_march_progress.json"
@@ -251,7 +252,7 @@ func _build_title_menu() -> void:
 	save_recovery_button.custom_minimum_size = Vector2(0, 44)
 	save_recovery_button.tooltip_text = "Remove the local save that cannot be loaded."
 	save_recovery_button.visible = false
-	save_recovery_button.pressed.connect(_request_confirmation.bind("clear_invalid_save"))
+	save_recovery_button.pressed.connect(_on_save_recovery_pressed)
 	actions.add_child(save_recovery_button)
 
 	var utility_actions := HBoxContainer.new()
@@ -895,8 +896,8 @@ func _refresh_settings(message: String = "") -> void:
 	var progress_exists := FileAccess.file_exists(PROGRESS_PATH)
 	reset_charter_button.text = "RESET MARCH CHARTER · " + ("RETURN TO TITLE" if settings_opened_from_pause else ("AVAILABLE" if progress_exists else "NO RECORD"))
 	reset_charter_button.disabled = settings_opened_from_pause or not progress_exists
-	clear_save_button.text = "CLEAR LOCAL SAVE · " + ("AVAILABLE" if FileAccess.file_exists(SAVE_PATH) else "NO SAVE")
-	clear_save_button.disabled = not FileAccess.file_exists(SAVE_PATH)
+	clear_save_button.text = "CLEAR LOCAL SAVE · " + ("AVAILABLE" if _has_local_save_files() else "NO SAVE")
+	clear_save_button.disabled = not _has_local_save_files()
 	_refresh_settings_focus()
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
@@ -957,7 +958,7 @@ func _refresh_title_state() -> void:
 	else:
 		start_button.text = "PLAY ASHGATE · GUIDED BRIEFING" if has_completed_save else ("NEW ASHGATE · GUIDED BRIEFING" if has_valid_save else "START ASHGATE  ·  GUIDED FIRST RUN")
 		start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
-	quick_start_button.visible = not briefing_complete and not has_valid_save
+	quick_start_button.visible = not briefing_complete and not has_valid_save and not has_invalid_save
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
 	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
 	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay.%s" % (" Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else "")
@@ -966,6 +967,12 @@ func _refresh_title_state() -> void:
 	continue_button.visible = has_valid_save
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save
+	if has_invalid_save and bool(save_info.get("backup_valid", false)):
+		save_recovery_button.text = String(save_info.get("backup_action", "RESTORE VALID BACKUP"))
+		save_recovery_button.tooltip_text = String(save_info.get("backup_tooltip", "Restore the previous valid local checkpoint."))
+	else:
+		save_recovery_button.text = "REMOVE UNUSABLE SAVE"
+		save_recovery_button.tooltip_text = "Remove the local save data that cannot be loaded."
 	var actions := start_button.get_parent()
 	if has_valid_save:
 		actions.move_child(continue_button, 0)
@@ -1024,9 +1031,25 @@ func _focus_title_primary() -> void:
 		start_button.grab_focus()
 
 func _saved_run_info() -> Dictionary:
-	if not FileAccess.file_exists(SAVE_PATH):
+	var primary := _saved_run_info_at(SAVE_PATH)
+	var backup := _saved_run_info_at(SAVE_BACKUP_PATH)
+	primary["backup_exists"] = bool(backup.get("exists", false))
+	primary["backup_valid"] = bool(backup.get("valid", false))
+	if bool(backup.get("valid", false)):
+		primary["backup_region"] = String(backup.get("region", "Campaign"))
+		primary["backup_location"] = String(backup.get("location", "previous decision"))
+		primary["backup_day"] = int(backup.get("day", 1))
+		primary["backup_action"] = "RESTORE BACKUP · %s · DAY %d" % [_region_menu_name(String(backup.get("region_id", "ashgate_lowlands"))), int(backup.get("day", 1))]
+		primary["backup_tooltip"] = "Restore the valid %s checkpoint at %s from %s." % [String(backup.get("region", "campaign")), String(backup.get("location", "the previous decision")), String(backup.get("saved_build", "an earlier build"))]
+		if not bool(primary.get("valid", false)):
+			primary["exists"] = true
+			primary["summary"] = "%s\nRecovery · Valid backup available · %s · Day %d · %s" % [String(primary.get("summary", "Primary save unavailable.")), String(backup.get("region", "Campaign")), int(backup.get("day", 1)), String(backup.get("location", "previous decision"))]
+	return primary
+
+func _saved_run_info_at(save_path: String) -> Dictionary:
+	if not FileAccess.file_exists(save_path):
 		return {"exists": false, "valid": false, "summary": _empty_save_summary()}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · The local file could not be opened. Start a new run to replace it."}
 	var parser := JSON.new()
@@ -1055,7 +1078,7 @@ func _saved_run_info() -> Dictionary:
 	var hull := int(parsed.get("hull_condition", 0))
 	var heat := int(parsed.get("heat", 0))
 	var saved_build := String(parsed.get("build_version", "earlier build"))
-	var saved_at_unix := int(parsed.get("saved_at_unix", FileAccess.get_modified_time(SAVE_PATH)))
+	var saved_at_unix := int(parsed.get("saved_at_unix", FileAccess.get_modified_time(save_path)))
 	var save_age := _save_age_label(saved_at_unix)
 	var current_build := String(ProjectSettings.get_setting("application/config/version", "development"))
 	var build_note := "" if saved_build == current_build else "\nCompatible checkpoint from %s" % saved_build
@@ -1079,6 +1102,7 @@ func _saved_run_info() -> Dictionary:
 		"result": result_name,
 		"region_id": region_id,
 		"region": region_name,
+		"saved_build": saved_build,
 		"action": "VIEW RESULT · %s · %s" % [result_name.to_upper(), region_menu_name] if completed else "CONTINUE · %s · DAY %d · %s" % [region_menu_name, day, location.to_upper()],
 		"tooltip": "Review the saved %s debrief from %s in %s. Saved by %s." % [result_name, location, region_name, saved_build] if completed else "Resume %s at %s during %s with %d of 5 encounters secured. Saved by %s." % [region_name, location, phase, encounters, saved_build],
 		"summary": "Completed run · %s · %d/5 · %s · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, region_name, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [region_name, condition.capitalize(), phase, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
@@ -1154,6 +1178,37 @@ func _continue_game() -> void:
 		(save_recovery_button if save_recovery_button.visible else start_button).grab_focus()
 		return
 	_open_stage(true, false)
+
+func _on_save_recovery_pressed() -> void:
+	var save_info := _saved_run_info()
+	_request_confirmation("restore_backup" if bool(save_info.get("backup_valid", false)) else "clear_invalid_save")
+
+func _has_local_save_files() -> bool:
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH)
+
+func _restore_save_backup() -> Dictionary:
+	var backup_info := _saved_run_info_at(SAVE_BACKUP_PATH)
+	if not bool(backup_info.get("valid", false)):
+		return {"ok": false, "reason": "no valid backup is available"}
+	var backup_text := FileAccess.get_file_as_string(SAVE_BACKUP_PATH)
+	var primary_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if primary_file == null:
+		return {"ok": false, "reason": error_string(FileAccess.get_open_error())}
+	primary_file.store_string(backup_text)
+	primary_file.close()
+	if not bool(_saved_run_info_at(SAVE_PATH).get("valid", false)):
+		return {"ok": false, "reason": "restored checkpoint failed validation"}
+	return {"ok": true}
+
+func _clear_local_save_files() -> Dictionary:
+	var errors: Array[String] = []
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH]:
+		var absolute_path := ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(absolute_path):
+			var removal_error := DirAccess.remove_absolute(absolute_path)
+			if removal_error != OK:
+				errors.append("%s: %s" % [path.get_file(), error_string(removal_error)])
+	return {"ok": errors.is_empty(), "reason": "; ".join(errors)}
 
 func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
 	if game_view != null:
@@ -1402,7 +1457,7 @@ func _request_march_on_confirmation(region_id: String) -> void:
 	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else "march_on_veyru")
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "clear_progress", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
 		return
 	if action == "clear_progress" and game_view != null:
 		return
@@ -1458,9 +1513,14 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Reset the March Charter?"
 		confirmation_body_label.text = "Regional results and Public Archive Signal will be permanently removed. Continue, settings, and briefing progress remain unchanged."
 		confirmation_confirm_button.text = "RESET CHARTER"
+	elif action == "restore_backup":
+		var save_info := _saved_run_info()
+		confirmation_title_label.text = "Restore the backup?"
+		confirmation_body_label.text = "Replace the unusable Continue file with the valid %s checkpoint from Day %d at %s. The broken file will be discarded; March Charter, settings, and briefing progress remain unchanged." % [String(save_info.get("backup_region", "campaign")), int(save_info.get("backup_day", 1)), String(save_info.get("backup_location", "the previous decision"))]
+		confirmation_confirm_button.text = "RESTORE BACKUP"
 	elif action in ["clear_save", "clear_invalid_save"]:
 		confirmation_title_label.text = "Clear the local save?"
-		confirmation_body_label.text = "This local checkpoint cannot be loaded by this build and will be permanently removed. Your March Charter, settings, and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress on this device will be permanently removed. Your March Charter, settings, and briefing preference remain unchanged."
+		confirmation_body_label.text = "This local checkpoint cannot be loaded by this build. It and any local recovery backup will be permanently removed; your March Charter, settings, and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress and its local recovery backup will be permanently removed. Your March Charter, settings, and briefing preference remain unchanged."
 		confirmation_confirm_button.text = "REMOVE SAVE" if action == "clear_invalid_save" else "CLEAR SAVE"
 	else:
 		var save_info := _saved_run_info()
@@ -1476,6 +1536,8 @@ func _request_confirmation(action: String) -> void:
 			confirmation_confirm_button.text = "START NEW"
 	if action == "clear_invalid_save":
 		confirmation_cancel_button.text = "KEEP FILE"
+	elif action == "restore_backup":
+		confirmation_cancel_button.text = "KEEP FILES"
 	elif action in ["new_guided", "new_quick", "new_veyru"]:
 		confirmation_cancel_button.text = "KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE"
 	elif action == "clear_save":
@@ -1529,6 +1591,8 @@ func _cancel_confirmation() -> void:
 		reset_charter_button.grab_focus()
 	elif previous_action == "clear_invalid_save":
 		save_recovery_button.grab_focus()
+	elif previous_action == "restore_backup":
+		save_recovery_button.grab_focus()
 	elif previous_action == "new_quick":
 		(guide_quick_start_button if guide_view.visible else quick_start_button).grab_focus()
 	elif previous_action == "new_guided":
@@ -1568,15 +1632,28 @@ func _confirm_pending_action() -> void:
 		else:
 			_refresh_settings("Could not reset the March Charter: %s" % String(clear_result.get("reason", "unknown error")))
 			reset_charter_button.grab_focus()
-	elif action in ["clear_save", "clear_invalid_save"]:
-		var absolute_path := ProjectSettings.globalize_path(SAVE_PATH)
-		if FileAccess.file_exists(absolute_path):
-			DirAccess.remove_absolute(absolute_path)
+	elif action == "restore_backup":
+		var restore_result := _restore_save_backup()
 		_refresh_title_state()
-		if action == "clear_invalid_save":
+		if bool(restore_result.get("ok", false)):
+			continue_button.grab_focus()
+		else:
+			save_status_label.text = "Backup restore failed · %s" % String(restore_result.get("reason", "unknown error"))
+			save_recovery_button.grab_focus()
+	elif action in ["clear_save", "clear_invalid_save"]:
+		var clear_result := _clear_local_save_files()
+		_refresh_title_state()
+		if not bool(clear_result.get("ok", false)):
+			if settings_view.visible:
+				_refresh_settings("Could not clear all local save files: %s" % String(clear_result.get("reason", "unknown error")))
+				clear_save_button.grab_focus()
+			else:
+				save_status_label.text = "Save removal incomplete · %s" % String(clear_result.get("reason", "unknown error"))
+				save_recovery_button.grab_focus()
+		elif action == "clear_invalid_save":
 			start_button.grab_focus()
 		else:
-			_refresh_settings("Local save cleared. Start Game begins a fresh march.")
+			_refresh_settings("Continue and its recovery backup were cleared. Start Game begins a fresh march.")
 			settings_close_button.grab_focus()
 	elif action == "new_guided":
 		_open_stage(false, true)

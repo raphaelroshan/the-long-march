@@ -33,11 +33,11 @@ Content files are authored source data. They are not executable scripts. New mod
 
 ## Local saves and playtest notes
 
-The UI writes a versioned prototype save to `user://the_long_march_prototype.save`. The playtest journal and explicitly exported feedback bundles also remain under Godot's local `user://` directory. They are never uploaded by the game. Do not commit local saves or tester feedback.
+The UI writes a versioned prototype save to `user://the_long_march_prototype.save`. Before overwriting a valid checkpoint it preserves a validated predecessor at `user://the_long_march_prototype.backup.save`. If the primary becomes unusable, the title offers explicit backup restoration; normal Continue never silently chooses the backup. The playtest journal and explicitly exported feedback bundles also remain under Godot's local `user://` directory. They are never uploaded by the game. Do not commit local saves or tester feedback.
 
 The application intercepts operating-system close requests. A title screen or fully checkpointed march closes immediately; an unsaved live march offers **Save & Quit** and writes the existing Continue save before exit. If that write fails, the application remains open.
 
-Title Settings treats local data categories separately: **Clear Local Save** removes only Continue, **Reset March Charter** removes regional results and developments, and **Reset Completed Briefing** restores first-run guidance. Charter reset is unavailable while a run is active so its deterministic snapshot cannot diverge from the profile underneath it.
+Title Settings treats local data categories separately: **Clear Local Save** removes Continue and its recovery backup, **Reset March Charter** removes regional results and developments, and **Reset Completed Briefing** restores first-run guidance. Charter reset is unavailable while a run is active so its deterministic snapshot cannot diverge from the profile underneath it.
 
 ## Release staging
 

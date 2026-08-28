@@ -16,6 +16,7 @@ const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
 const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
 const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
+const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
 const DOCTRINE_DESCRIPTIONS := {
@@ -2030,6 +2031,10 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 	_refresh_ui()
 
 func save_run(silent: bool = false) -> bool:
+	var backup_result := _preserve_valid_save_backup()
+	if not bool(backup_result.get("ok", false)):
+		_set_event("Save failed before overwrite: %s." % String(backup_result.get("reason", "backup could not be written")))
+		return false
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
@@ -2044,6 +2049,36 @@ func save_run(silent: bool = false) -> bool:
 		_journal_event("run_saved", {"phase": state.phase, "day": state.day})
 		_refresh_ui()
 	return true
+
+func _preserve_valid_save_backup() -> Dictionary:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return {"ok": true, "backed_up": false}
+	var existing_text := FileAccess.get_file_as_string(SAVE_PATH)
+	if not _serialized_save_text_is_valid(existing_text):
+		return {"ok": true, "backed_up": false}
+	var previous_backup := FileAccess.get_file_as_string(SAVE_BACKUP_PATH) if FileAccess.file_exists(SAVE_BACKUP_PATH) else ""
+	var backup_file := FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+	if backup_file == null:
+		return {"ok": false, "reason": "backup could not be opened: %s" % error_string(FileAccess.get_open_error())}
+	backup_file.store_string(existing_text)
+	backup_file.close()
+	if _serialized_save_text_is_valid(FileAccess.get_file_as_string(SAVE_BACKUP_PATH)):
+		return {"ok": true, "backed_up": true}
+	if not previous_backup.is_empty():
+		var restore_file := FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+		if restore_file != null:
+			restore_file.store_string(previous_backup)
+			restore_file.close()
+	return {"ok": false, "reason": "backup validation failed"}
+
+func _serialized_save_text_is_valid(serialized_text: String) -> bool:
+	var parser := JSON.new()
+	if parser.parse(serialized_text) != OK:
+		return false
+	var parsed = parser.data
+	if not parsed is Dictionary:
+		return false
+	return bool(LongMarchState.new(0).load_serialized(parsed).get("ok", false))
 
 func _on_save_pressed() -> void:
 	save_run()
