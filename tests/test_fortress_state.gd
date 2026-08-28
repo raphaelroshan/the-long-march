@@ -455,7 +455,7 @@ func _test_campaign_graph_and_visibility() -> void:
 	_expect(state.guard_contract_status == "offered", "Ashgate should present the first guard contract")
 	_expect(state.campaign_available_nodes() == ["rill_crossing", "soot_orchard"], "the authored map should begin with two forward nodes")
 	var preview := state.campaign_node_preview("red_wheel_toll_bridge", "protect_cargo")
-	_expect(String(preview.visibility) == "unscouted" and preview.get("threats", []).is_empty() and preview.get("counter_hints", []).is_empty(), "a strained signal should leave an unscouted branch's exact threats and counters hidden")
+	_expect(String(preview.visibility) == "unscouted" and preview.get("threats", []).is_empty() and preview.get("counter_hints", []).is_empty() and preview.get("ready_counter_names", []).is_empty(), "a strained signal should leave an unscouted branch's exact threats, counters, and counter readiness hidden")
 	_expect("baseline 36%" not in preview.get("risk_factors", []) and "heavy fortress +5pt, +1 fuel" not in preview.get("risk_factors", []), "an unscouted route should not leak its baseline risk and should only expose modifiers that actually apply")
 	state.choose_guard_contract(false)
 	var first := _campaign_battle(state, "rill_crossing")

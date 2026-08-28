@@ -43,11 +43,11 @@ const JOURNEY_ENCOUNTERS := {
 	"salvage_detour": ["burrowers"]
 }
 const ENCOUNTER_ENEMIES := {
-	"road_raiders": {"name": "Road Raider", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["cargo", "exterior"], "route": "road flank", "counter": "shell cannon or repeater gun"},
-	"climbers": {"name": "Climber", "health": 4, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "exterior", "crew"], "route": "fortress flank", "counter": "wall lamp or repeater gun"},
-	"burrowers": {"name": "Burrower", "health": 7, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "workshop", "lower_hull"], "route": "under-road", "counter": "lower-hull armor, shifted weapons, or a spare engine"},
-	"storm_front": {"name": "Storm Front", "health": 7, "damage": 1, "arrival_step": 1, "target_tags": ["signal", "exterior"], "route": "weather line", "counter": "signal coverage, armor, or vent heat"},
-	"siege_beast": {"name": "Siege Beast", "health": 10, "damage": 3, "arrival_step": 4, "target_tags": ["armor", "crew"], "route": "direct road", "counter": "shell cannon and front armor"}
+	"road_raiders": {"name": "Road Raider", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["cargo", "exterior"], "route": "road flank", "counter": "shell cannon or repeater gun", "counter_modules": ["shell_cannon", "repeater_gun"]},
+	"climbers": {"name": "Climber", "health": 4, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "exterior", "crew"], "route": "fortress flank", "counter": "wall lamp or repeater gun", "counter_modules": ["wall_lamp", "repeater_gun"]},
+	"burrowers": {"name": "Burrower", "health": 7, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "workshop", "lower_hull"], "route": "under-road", "counter": "lower-hull armor, shifted weapons, or a spare engine", "counter_modules": ["side_armor_skirt", "shell_cannon", "repeater_gun"]},
+	"storm_front": {"name": "Storm Front", "health": 7, "damage": 1, "arrival_step": 1, "target_tags": ["signal", "exterior"], "route": "weather line", "counter": "signal coverage, armor, or vent heat", "counter_modules": ["signal_coil", "signal_mast", "front_armor_plate"]},
+	"siege_beast": {"name": "Siege Beast", "health": 10, "damage": 3, "arrival_step": 4, "target_tags": ["armor", "crew"], "route": "direct road", "counter": "shell cannon and front armor", "counter_modules": ["shell_cannon", "front_armor_plate"]}
 }
 const CAMPAIGN_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "type": "settlement", "visibility": "known", "description": "Refit, choose the first guard contract, and leave before the blockade closes."},
@@ -400,6 +400,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		encounter_difficulty += 1
 	var threat_names: Array[String] = []
 	var counter_hints: Array[String] = []
+	var ready_counter_names: Array[String] = []
 	if visibility == "known":
 		for enemy_id in node.get("encounter", []):
 			var enemy_definition: Dictionary = ENCOUNTER_ENEMIES.get(String(enemy_id), {})
@@ -407,6 +408,12 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 			var counter_hint := String(enemy_definition.get("counter", ""))
 			if not counter_hint.is_empty() and counter_hint not in counter_hints:
 				counter_hints.append(counter_hint)
+			for counter_module_id in enemy_definition.get("counter_modules", []):
+				var module_id := String(counter_module_id)
+				if operational(module_id):
+					var module_name := String(module_definition(module_id).get("name", module_id))
+					if module_name not in ready_counter_names:
+						ready_counter_names.append(module_name)
 	var risk_factors: Array[String] = []
 	if visibility != "unscouted":
 		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
@@ -437,6 +444,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"threat_hint": String(node.get("threat_hint", "uncertain road pressure")),
 		"threats": threat_names,
 		"counter_hints": counter_hints,
+		"ready_counter_names": ready_counter_names,
 		"closed": campaign_node_closed(node_id)
 	}
 

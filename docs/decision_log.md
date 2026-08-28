@@ -671,3 +671,7 @@ The local-only feedback export now includes the secured campaign path, exact aut
 ## 2026-08-28 — Route teaching matches the live decision
 
 The first-run briefing and persistent Field Guide now explain that known routes reveal both contacts and counters, and that closure pressure enters Closing at 3 and Break at 5. Their action text asks the player to compare those facts with the current chassis before Commit, matching the information and vocabulary on the live command desk.
+
+## 2026-08-28 — Known-route intel checks the current chassis
+
+Threat definitions now carry explicit counter-module IDs in addition to player-facing advice. Known route previews use those IDs to name which counters are operational in the current build, or state that no listed module counter is ready. Forecast and unscouted routes do not expose this derived information, preserving the value of signal readiness and Iven Pell.
