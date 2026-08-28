@@ -248,6 +248,7 @@ func _build_title_menu() -> void:
 	utility_actions.add_child(quit_button)
 
 	save_status_label = Label.new()
+	save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	save_status_label.add_theme_font_size_override("font_size", 12)
 	save_status_label.add_theme_color_override("font_color", Color("#9aa8aa"))
 	actions.add_child(save_status_label)

@@ -587,3 +587,7 @@ Completed-run options now distinguish an unsaved result, a result already stored
 ## 2026-08-28 — Debrief replay uses one lifecycle path
 
 The session-options Restart action becomes Play Again after a completed run and opens the same result-aware confirmation as the main debrief action. Cancelling returns to the options overlay with focus intact; confirming closes that overlay and creates the same fresh Ashgate replay checkpoint. Active-run Restart retains its existing behavior.
+
+## 2026-08-28 — Title recovery explanations wrap safely
+
+The title’s save-status region now word-wraps inside its action card. Longer malformed, incomplete, or incompatible-checkpoint explanations remain readable alongside the recovery action instead of depending on a single line wide enough for the shortest no-save message.

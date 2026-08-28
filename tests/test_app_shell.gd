@@ -71,7 +71,7 @@ func _run() -> void:
 	incompatible_save.store_string(JSON.stringify({"save_version": 999}))
 	incompatible_save.close()
 	app._refresh_title_state()
-	_expect(app.save_status_label.text.contains("incompatible save format") and not app.save_status_label.text.contains("schema"), "an incompatible checkpoint should use player-facing recovery language rather than raw schema numbers")
+	_expect(app.save_status_label.text.contains("incompatible save format") and not app.save_status_label.text.contains("schema") and app.save_status_label.autowrap_mode != TextServer.AUTOWRAP_OFF, "an incompatible checkpoint should use wrapped player-facing recovery language rather than raw schema numbers")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	app._refresh_title_state()
 	app.settings_button.pressed.emit()
