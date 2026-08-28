@@ -27,6 +27,7 @@ func _init() -> void:
 	_test_campaign_events_and_closure()
 	_test_water_condenser_route_unlock()
 	_test_water_condenser_threat_and_recovery()
+	_test_mara_flint_event_chain()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -475,6 +476,24 @@ func _test_save_round_trip() -> void:
 	unknown_phase_save["phase"] = "lost_between_roads"
 	var unknown_phase_load := LongMarchState.new(0).load_serialized(unknown_phase_save)
 	_expect(not bool(unknown_phase_load.get("ok", false)) and String(unknown_phase_load.get("reason", "")).contains("unknown campaign phase"), "unknown campaign phases should be rejected before state mutation")
+	var unknown_event_save := state.serialize()
+	unknown_event_save["campaign_event_pending"] = "invented_meeting"
+	var unknown_event_load := LongMarchState.new(0).load_serialized(unknown_event_save)
+	_expect(not bool(unknown_event_load.get("ok", false)) and String(unknown_event_load.get("reason", "")).contains("unknown active campaign event"), "unknown active campaign events should be rejected safely")
+	var unknown_specialist_save := state.serialize()
+	unknown_specialist_save["specialist_id"] = "miracle_mechanic"
+	var unknown_specialist_load := LongMarchState.new(0).load_serialized(unknown_specialist_save)
+	_expect(not bool(unknown_specialist_load.get("ok", false)) and String(unknown_specialist_load.get("reason", "")).contains("unknown specialist"), "unknown specialist IDs should be rejected safely")
+	var version_four_save := state.serialize()
+	version_four_save["save_version"] = 4
+	version_four_save.erase("mara_repaired_module_id")
+	var version_four_restore := LongMarchState.new(0)
+	_expect(bool(version_four_restore.load_serialized(version_four_save).get("ok", false)) and version_four_restore.mara_repaired_module_id.is_empty(), "version-four checkpoints should migrate with no Mara repair target")
+	var missing_mara_target_save := state.serialize()
+	missing_mara_target_save["specialist_id"] = "mara_flint"
+	missing_mara_target_save["campaign_decisions"] = {"mara_meeting": "recruit_mara", "mara_workbench_choice": "rebuild_weakest"}
+	var missing_mara_target_load := LongMarchState.new(0).load_serialized(missing_mara_target_save)
+	_expect(not bool(missing_mara_target_load.get("ok", false)) and String(missing_mara_target_load.get("reason", "")).contains("missing its system target"), "Mara repair checkpoints should reject a missing repaired-system reference")
 	var inactive_battle_save := state.serialize()
 	inactive_battle_save["phase"] = "battle"
 	var inactive_battle_load := LongMarchState.new(0).load_serialized(inactive_battle_save)
@@ -614,6 +633,7 @@ func _test_campaign_events_and_closure() -> void:
 	_expect(state.money == money_before + 8 and state.campaign_pressure == pressure_before + 1, "breaking the toll should recover coin and increase closure pressure")
 	var morrowline_result := _campaign_battle(state, "morrowline_camp")
 	_expect(bool(morrowline_result.get("resolved", false)) and state.phase == "settlement", "the Soot Orchard and Red Wheel path should reach Morrowline after three encounters")
+	_expect(state.campaign_event_pending == "mara_meeting" and bool(state.resolve_campaign_event("decline_mara").get("ok", false)), "a free specialist berth should surface Mara's offer at Morrowline and allow a clean decline")
 
 	var refuge_state := LongMarchState.new(1107)
 	refuge_state.place_module("refugee_bunk", Vector2i(0, 0))
@@ -642,6 +662,125 @@ func _test_campaign_events_and_closure() -> void:
 	state.specialist_id = "iven_pell"
 	_expect(not state.campaign_node_closed("signal_causeway"), "Iven should keep the Signal Causeway readable at Break pressure")
 	_expect(state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "reliable forecasting should restore both Morrowline departures")
+
+func _install_mara_loadout(state: LongMarchState, include_refuge: bool = true) -> void:
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("parts_crate", Vector2i(4, 1))
+	if include_refuge:
+		state.place_module("refugee_bunk", Vector2i(4, 2))
+	state.seed_starter_inventory()
+
+func _arrive_at_morrowline_for_mara(state: LongMarchState) -> void:
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	state.campaign_path = ["ashgate_depot", "rill_crossing", "broken_relay"]
+	state.campaign_last_safe_node = "broken_relay"
+	state.current_location = "broken_relay"
+	state.journey_node = "broken_relay"
+	state.campaign_encounters_completed = 2
+	state.campaign_target_node = "morrowline_camp"
+	state.current_location = "morrowline_camp"
+	state.journey_node = "morrowline_camp"
+	state._finish_campaign_encounter(true)
+
+func _test_mara_flint_event_chain() -> void:
+	var unqualified := LongMarchState.new(1107)
+	unqualified.campaign_active = true
+	unqualified.current_location = "morrowline_camp"
+	unqualified.journey_node = "morrowline_camp"
+	unqualified.phase = "settlement"
+	unqualified.campaign_event_pending = "mara_meeting"
+	var locked_offer := unqualified.campaign_event_details()
+	_expect(not bool(locked_offer.choices[0].enabled) and String(locked_offer.choices[0].reason).contains("Field Workshop"), "Mara's offer should name the missing operational workshop requirement")
+	_expect(bool(unqualified.resolve_campaign_event("decline_mara").get("ok", false)) and unqualified.specialist_id.is_empty() and unqualified.campaign_event_pending.is_empty(), "declining Mara should keep the specialist berth open and end her chain")
+
+	var repair_state := LongMarchState.new(1107)
+	_install_mara_loadout(repair_state)
+	repair_state.modules[repair_state._module_index_by_id("steam_lance_engine")]["durability"] = 2
+	_arrive_at_morrowline_for_mara(repair_state)
+	_expect(repair_state.campaign_event_pending == "mara_meeting", "Mara's meeting should trigger after the third encounter at Morrowline")
+	var meeting_restore := LongMarchState.new(0)
+	_expect(bool(meeting_restore.load_serialized(repair_state.serialize()).get("ok", false)) and meeting_restore.campaign_event_pending == "mara_meeting", "an active Mara meeting should survive save/load")
+	var recruited := repair_state.resolve_campaign_event("recruit_mara")
+	_expect(bool(recruited.get("ok", false)) and repair_state.specialist_id == "mara_flint" and repair_state.campaign_event_pending == "mara_workbench_choice", "accepting Mara should fill the specialist berth and advance to the forge-core choice")
+	var workbench_restore := LongMarchState.new(0)
+	_expect(bool(workbench_restore.load_serialized(repair_state.serialize()).get("ok", false)) and workbench_restore.campaign_event_pending == "mara_workbench_choice" and workbench_restore.specialist_id == "mara_flint", "the active Mara workbench choice should survive save/load")
+	var workbench := repair_state.campaign_event_details()
+	_expect(String(workbench.choices[0].label).contains("Steam Lance Engine") and String(workbench.choices[0].effect).contains("Day +1") and String(workbench.choices[1].effect).contains("damage -1"), "the forge-core event should preview its exact repair target, delay, and refuge alternative")
+	var day_before := repair_state.day
+	var pressure_before := repair_state.campaign_pressure
+	var rebuilt := repair_state.resolve_campaign_event("rebuild_weakest")
+	_expect(bool(rebuilt.get("ok", false)) and int(repair_state.module_at(Vector2i(0, 0)).durability) == 4 and repair_state.day == day_before + 1 and repair_state.campaign_pressure == pressure_before + 1, "Mara should rebuild the deterministic weakest system for a visible day and pressure cost")
+	_expect(repair_state.mara_repaired_module_id == "steam_lance_engine" and not bool(repair_state.resolve_campaign_event("brace_refuge").get("ok", false)), "resolving the one-core choice should record its target and make the alternative unavailable")
+	_expect(repair_state._workshop_repair_amount() == 3, "Mara plus connected parts should raise field repair from two durability to three")
+	repair_state.modules[repair_state._module_index_by_id("crew_quarters")]["durability"] = 1
+	var service_preview := repair_state.settlement_repair_preview("crew_quarters")
+	_expect(int(service_preview.restored) == 3 and int(service_preview.cost) == 8 and int(service_preview.mara_bonus) == 1, "Mara's settlement preview should add one free durability without increasing the two-point price")
+	var service_result := repair_state.settlement_repair("crew_quarters")
+	_expect(bool(service_result.get("ok", false)) and int(repair_state.module_at(Vector2i(2, 2)).durability) == 4 and String(service_result.get("message", "")).contains("Mara Flint"), "Morrowline service should apply and explain Mara's extra repair point")
+	repair_state.campaign_target_node = "lower_ash_road"
+	repair_state.current_location = "lower_ash_road"
+	repair_state.journey_node = "lower_ash_road"
+	repair_state._finish_campaign_encounter(true)
+	_expect(repair_state.campaign_event_pending == "mara_followup", "Mara's later callback should block departure after the fourth road")
+	var followup_restore := LongMarchState.new(0)
+	_expect(bool(followup_restore.load_serialized(repair_state.serialize()).get("ok", false)) and followup_restore.campaign_event_pending == "mara_followup" and followup_restore.mara_repaired_module_id == "steam_lance_engine", "the active Mara callback and repaired system should survive save/load")
+	var callback_pressure := repair_state.campaign_pressure
+	var callback := repair_state.resolve_campaign_event(String(repair_state.mara_followup_preview().get("choice_id", "")))
+	_expect(bool(callback.get("ok", false)) and repair_state.campaign_pressure == maxi(0, callback_pressure - 1) and String(callback.get("message", "")).contains("repair held"), "an operational repaired system should pay off in the later callback by recovering one pressure")
+	_expect(repair_state.mara_debrief_line().contains("Steam Lance Engine") and repair_state.mara_debrief_line().contains("recovered 1 pressure"), "Mara's repair debrief should preserve the chosen system and later consequence")
+
+	var refuge_state := LongMarchState.new(1107)
+	_install_mara_loadout(refuge_state)
+	_arrive_at_morrowline_for_mara(refuge_state)
+	refuge_state.resolve_campaign_event("recruit_mara")
+	var braced := refuge_state.resolve_campaign_event("brace_refuge")
+	_expect(bool(braced.get("ok", false)) and refuge_state.mara_refuge_bracing_active(), "the forge core should be spendable on persistent Refugee Bunk bracing")
+	refuge_state.encounter_target_doctrine = "run_hot"
+	var bunk_preview := refuge_state.encounter_enemy_impact_preview({"id": "road_raiders", "arrived": true, "defeated": false, "target": "refugee_bunk", "damage_bonus": 0})
+	_expect(int(bunk_preview.get("damage", -1)) == 0 and String(bunk_preview.get("mara_effect", "")) == "refuge_bracing", "Mara's bracing should reduce each Refugee Bunk hit by one and expose that mitigation in the preview")
+	refuge_state.campaign_target_node = "signal_causeway"
+	refuge_state.current_location = "signal_causeway"
+	refuge_state.journey_node = "signal_causeway"
+	refuge_state._finish_campaign_encounter(true)
+	var trust_before := refuge_state.settlement_trust
+	var shelter_before := refuge_state.shelter_tendency
+	var refuge_callback := refuge_state.resolve_campaign_event(String(refuge_state.mara_followup_preview().get("choice_id", "")))
+	_expect(bool(refuge_callback.get("ok", false)) and refuge_state.settlement_trust == trust_before + 1 and refuge_state.shelter_tendency == shelter_before + 1, "an operational braced bunk should earn the promised trust and Shelter callback")
+	_expect(refuge_state.mara_debrief_line().contains("Refugee Bunk") and refuge_state.mara_debrief_line().contains("1 trust"), "Mara's refuge debrief should preserve the physical commitment and earned trust")
+	var failed_refuge := LongMarchState.new(1107)
+	_install_mara_loadout(failed_refuge)
+	_arrive_at_morrowline_for_mara(failed_refuge)
+	failed_refuge.resolve_campaign_event("recruit_mara")
+	failed_refuge.resolve_campaign_event("brace_refuge")
+	failed_refuge.modules[failed_refuge._module_index_by_id("refugee_bunk")]["durability"] = 0
+	failed_refuge.campaign_target_node = "dry_cistern_cut"
+	failed_refuge.current_location = "dry_cistern_cut"
+	failed_refuge.journey_node = "dry_cistern_cut"
+	failed_refuge._finish_campaign_encounter(true)
+	var failed_followup := failed_refuge.mara_followup_preview()
+	var failed_trust := failed_refuge.settlement_trust
+	_expect(String(failed_followup.get("choice_id", "")) == "record_refuge_failed" and String(failed_followup.get("effect", "")).contains("not operational"), "the later callback should preview failure when the braced bunk did not remain operational")
+	_expect(bool(failed_refuge.resolve_campaign_event("record_refuge_failed").get("ok", false)) and failed_refuge.settlement_trust == failed_trust and failed_refuge.mara_debrief_line().contains("not operational"), "a failed refuge commitment should grant no hidden trust and remain explicit in the debrief")
+
+	var first := LongMarchState.new(1107)
+	var second := LongMarchState.new(1107)
+	for replay_state in [first, second]:
+		_install_mara_loadout(replay_state)
+		replay_state.modules[replay_state._module_index_by_id("steam_lance_engine")]["durability"] = 2
+		_arrive_at_morrowline_for_mara(replay_state)
+		replay_state.resolve_campaign_event("recruit_mara")
+		replay_state.resolve_campaign_event("rebuild_weakest")
+		replay_state.campaign_target_node = "lower_ash_road"
+		replay_state.current_location = "lower_ash_road"
+		replay_state.journey_node = "lower_ash_road"
+		replay_state._finish_campaign_encounter(true)
+		replay_state.resolve_campaign_event(String(replay_state.mara_followup_preview().get("choice_id", "")))
+	_expect(first.serialize() == second.serialize(), "Mara's complete event chain should replay deterministically from the same state and choices")
 
 func _test_water_condenser_route_unlock() -> void:
 	var locked_state := LongMarchState.new(1107)
@@ -777,6 +916,7 @@ func _test_alternate_five_encounter_campaign() -> void:
 	_expect(String(state.campaign_decisions.get("salvage_choice", "")) == "take_fuel" and String(state.campaign_decisions.get("toll_decision", "")) == "pay_toll", "the alternate route should retain both authored decisions for its eventual debrief")
 	var third := _campaign_battle(state, "morrowline_camp", "protect_cargo")
 	_expect(bool(third.get("resolved", false)) and state.phase == "settlement", "the alternate first half should reach Morrowline recovery")
+	_expect(bool(state.resolve_campaign_event("decline_mara").get("ok", false)), "the alternate route should be able to decline Mara and preserve its existing recovery plan")
 	_expect(bool(state.settlement_repair("wall_lamp").get("ok", false)), "the alternate route should restore its storm counter at Morrowline")
 	state.settlement_refuel()
 	var fourth := _campaign_battle(state, "signal_causeway", "protect_crew")

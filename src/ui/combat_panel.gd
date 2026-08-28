@@ -217,6 +217,8 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 				var armor_after := int(impact.get("armor_remaining_durability", maxi(0, armor_before - armor_absorbed)))
 				var armor_warning := " · BREAKS" if armor_after <= 0 else ""
 				target_text += "\nARMOR · %s · %d→%d%s" % [armor_name.to_upper(), armor_before, armor_after, armor_warning]
+			if String(impact.get("mara_effect", "")) == "refuge_bracing":
+				target_text += "\nMARA · FORGE-CORE BRACING ABSORBS 1"
 			var dependency_changes: Array = impact.get("dependency_changes", [])
 			if not dependency_changes.is_empty():
 				var cascade_labels: Array[String] = []

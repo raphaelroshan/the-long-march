@@ -775,3 +775,7 @@ Dry Cistern Cut is a one-day Storm Front road from Morrowline to Meridian Pass. 
 ## 2026-08-28 — Storms pressure the system that enabled the shortcut
 
 Storm Front targeting now includes sustain systems and strongly prefers the Water Condenser that enabled Dry Cistern Cut. A sustain hit deals one additional damage, making an unprotected condenser deteriorate faster than a basic workshop patch can restore it. Adjacent armor absorbs one point, while Seal Compartment removes the condenser from targeting at the explicit cost of taking it offline until the encounter ends. The target rationale, impact preview, and causal report all use the same rule, and both field repair and Morrowline service can restore the resulting damage.
+
+## 2026-08-28 — Mara Flint enters through a recovery decision
+
+Mara appears at Morrowline only while the current specialist berth is free. Recruiting her requires an operational Field Workshop and Crew Quarters, then immediately presents one scarce forge core: rebuild the weakest installed system for one day and one blockade pressure, or brace the Refugee Bunk against one damage per hit. Mara adds one durability to operational workshop repairs and to paid Morrowline module service without increasing the service price. After the fourth encounter, a blocking callback evaluates the actual committed system and grants only the visible consequence that survived. The chain reuses validated event decisions, adds one stable repaired-module reference, and does not introduce affinity, dialogue, or faction-reputation state.

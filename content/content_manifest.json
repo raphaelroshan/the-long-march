@@ -203,7 +203,9 @@
       ],
       "available_events": [
         "convoy_request",
-        "morrowline_parts_guard"
+        "morrowline_parts_guard",
+        "mara_meeting",
+        "mara_workbench_choice"
       ]
     },
     {
@@ -231,7 +233,24 @@
         "heavy-build fuel cost"
       ],
       "available_events": [
-        "lower_hull_breach"
+        "lower_hull_breach",
+        "mara_followup"
+      ]
+    },
+    {
+      "id": "dry_cistern_cut",
+      "name": "Dry Cistern Cut",
+      "role": "condenser-gated dry-road hazard",
+      "story_function": "Tests whether a maintained sustain system earns and survives its shorter road.",
+      "visual_motif": "Collapsed cistern mouths, chalk-white channels, and strips of storm cloth tied to buried pipes.",
+      "problems": [
+        "storm front",
+        "water scarcity",
+        "sustain-system exposure"
+      ],
+      "available_events": [
+        "weather_front",
+        "mara_followup"
       ]
     },
     {
@@ -246,7 +265,8 @@
         "route closure"
       ],
       "available_events": [
-        "weather_front"
+        "weather_front",
+        "mara_followup"
       ]
     },
     {
@@ -378,7 +398,7 @@
         "temporary_patch",
         "workshop_event_option"
       ],
-      "recruit_location": "ashgate_depot"
+      "recruit_location": "morrowline_camp"
     },
     {
       "id": "iven_pell",
@@ -924,6 +944,141 @@
           "visible_result": "The next crossing is quieter, but other settlements remain uninformed."
         }
       ]
+    },
+    {
+      "id": "mara_meeting",
+      "title": "The Forge Without a Roof",
+      "type": "specialist",
+      "chapter": "chapter_1_the_road_out",
+      "locations": [
+        "morrowline_camp"
+      ],
+      "trigger": "morrowline_arrival and specialist_berth_empty",
+      "setup": "Mara Flint has kept the convoy's axles moving from an open repair bench and asks for a staffed workshop aboard the fortress.",
+      "choices": [
+        {
+          "id": "recruit_mara",
+          "label": "Bring Mara aboard.",
+          "requirements": [
+            "field_workshop_operational",
+            "crew_quarters_operational",
+            "specialist_berth_empty"
+          ],
+          "effects": [
+            "specialist:mara_flint",
+            "workshop_repair:+1"
+          ],
+          "visible_result": "Mara occupies the specialist berth and every operational workshop repair restores one additional durability."
+        },
+        {
+          "id": "decline_mara",
+          "label": "Leave Mara with Morrowline.",
+          "requirements": [],
+          "effects": [
+            "specialist_berth:preserved"
+          ],
+          "visible_result": "The berth remains open, but the fortress gains no repair bonus or forge-core decision."
+        }
+      ],
+      "follow_up": "mara_workbench_choice"
+    },
+    {
+      "id": "mara_workbench_choice",
+      "title": "One Sound Core",
+      "type": "specialist",
+      "chapter": "chapter_1_the_road_out",
+      "locations": [
+        "morrowline_camp"
+      ],
+      "trigger": "mara_recruited",
+      "setup": "One intact forge core can rebuild the weakest installed system or become permanent bracing for refugee space.",
+      "choices": [
+        {
+          "id": "rebuild_weakest",
+          "label": "Rebuild the weakest installed system.",
+          "requirements": [
+            "damaged_module_installed"
+          ],
+          "effects": [
+            "weakest_module_condition:+2",
+            "day:+1",
+            "campaign_pressure:+1"
+          ],
+          "visible_result": "The named system is restored immediately, but the blockade advances during the careful repair."
+        },
+        {
+          "id": "brace_refuge",
+          "label": "Brace the Refugee Bunk.",
+          "requirements": [
+            "refugee_bunk_recoverable"
+          ],
+          "effects": [
+            "refugee_bunk_damage:-1_per_hit"
+          ],
+          "visible_result": "The bunk gains persistent protection, but no damaged system is restored at Morrowline."
+        }
+      ],
+      "follow_up": "mara_followup"
+    },
+    {
+      "id": "mara_followup",
+      "title": "What Held",
+      "type": "specialist",
+      "chapter": "chapter_1_the_road_out",
+      "locations": [
+        "lower_ash_road",
+        "dry_cistern_cut",
+        "signal_causeway"
+      ],
+      "trigger": "fourth_encounter_secured and mara_workbench_choice_resolved",
+      "setup": "Mara checks the earlier workbench commitment against the system or shelter space that actually survived the road.",
+      "choices": [
+        {
+          "id": "record_repair_held",
+          "label": "Record that the repair held.",
+          "requirements": [
+            "repair_path",
+            "repaired_system_operational"
+          ],
+          "effects": [
+            "campaign_pressure:-1"
+          ],
+          "visible_result": "The repaired system held through the fourth road, avoiding another roadside delay."
+        },
+        {
+          "id": "record_repair_failed",
+          "label": "Record that the repair failed.",
+          "requirements": [
+            "repair_path",
+            "repaired_system_not_operational"
+          ],
+          "effects": [],
+          "visible_result": "The repaired system failed before the check and grants no hidden pressure recovery."
+        },
+        {
+          "id": "record_refuge_held",
+          "label": "Record that the berth held.",
+          "requirements": [
+            "refuge_path",
+            "refugee_bunk_operational"
+          ],
+          "effects": [
+            "settlement_trust:+1",
+            "shelter_tendency:+1"
+          ],
+          "visible_result": "The braced Refugee Bunk remained usable and proves the fortress kept space for people."
+        },
+        {
+          "id": "record_refuge_failed",
+          "label": "Record that the berth failed.",
+          "requirements": [
+            "refuge_path",
+            "refugee_bunk_not_operational"
+          ],
+          "effects": [],
+          "visible_result": "The bunk was not operational at the later check and grants no hidden trust or Shelter gain."
+        }
+      ]
     }
   ],
   "progression": {
@@ -1257,7 +1412,7 @@
     "encounter_id": "ashgate_lowlands_campaign",
     "encounter_count": 5,
     "contract_id": "morrowline_parts_guard",
-    "specialist_id": "iven_pell",
+    "specialist_ids": ["iven_pell", "mara_flint"],
     "player_question": "Can the fortress keep a contract, read a closing map, recover at Morrowline, and survive five linked encounters?",
     "outcomes": ["protected_arrival", "damaged_arrival", "forced_retreat", "decisive_march", "scarred_march", "march_failed"]
   },

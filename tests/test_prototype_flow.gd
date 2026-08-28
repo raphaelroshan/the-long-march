@@ -443,6 +443,12 @@ func _run() -> void:
 	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
 	_expect(game.combat_panel.title_label.text.begins_with("ACTIVE CONTACT"), "the battle heading should change when an undefeated enemy reaches the fortress")
 	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("WHY · MATCHES CARGO") and game.combat_panel.enemy_states[0].text.contains("VALUABLE CARGO") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR · FRONT ARMOR PLATE · 1→0 · BREAKS") and game.combat_panel.enemy_states[0].text.contains("CASCADE · STEAM LANCE ENGINE → OFFLINE") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose target rationale, damage, armor, and downstream dependency consequences")
+	target_enemy["target"] = "refugee_bunk"
+	target_enemy["impact"] = {"damage": 0, "current_durability": 3, "remaining_durability": 3, "target_reason": "matches cargo, valuable cargo", "mara_effect": "refuge_bracing", "dependency_changes": []}
+	target_card_preview.enemies[0] = target_enemy
+	target_card_preview["target_names"] = {"hull": "Hull", "refugee_bunk": "Refugee Bunk"}
+	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
+	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · REFUGEE BUNK") and game.combat_panel.enemy_states[0].text.contains("MARA · FORGE-CORE BRACING ABSORBS 1"), "the combat card should explain Mara's refuge mitigation before the hit lands")
 	var pre_hull_preview_enemy: Dictionary = game.state.encounter_enemies[0].duplicate(true)
 	var pre_hull_preview_condition: int = game.state.hull_condition
 	game.state.encounter_enemies[0]["arrived"] = true
@@ -535,6 +541,18 @@ func _run() -> void:
 	_expect(game.state.phase == "settlement" and game.state.campaign_encounters_completed == 3, "the third encounter should open Morrowline services")
 	_expect(game.current_run_flow_step == 2 and game.run_flow_labels[2].text.contains("RECOVER"), "reaching Morrowline should advance the tracker to recovery")
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
+	var mara_workshop_index: int = game.state._module_index_by_id("field_workshop")
+	game.state.modules[mara_workshop_index]["durability"] = 1
+	game.state._recalculate()
+	game._refresh_ui()
+	await process_frame
+	_expect(game.state.campaign_event_pending == "mara_meeting" and game.campaign_event_title.text == "THE FORGE WITHOUT A ROOF", "Mara's meeting should interrupt Morrowline departure through the existing event card")
+	_expect(game.campaign_event_buttons[0].text.contains("Workshop repairs +1") and game.campaign_event_buttons[1].text.contains("Keep specialist berth open"), "Mara's recruitment choice should expose both its mechanical benefit and opportunity cost")
+	await _press_campaign_event("recruit_mara")
+	_expect(game.state.specialist_id == "mara_flint" and game.state.campaign_event_pending == "mara_workbench_choice", "recruiting Mara should visibly advance to her one-core decision")
+	_expect(game.encounter_label.text.begins_with("DECISION CONTINUES · ONE SOUND CORE") and game.campaign_event_buttons[0].text.contains("Rebuild Field Workshop") and game.campaign_event_buttons[0].text.contains("Day +1") and game.campaign_event_buttons[1].text.contains("damage -1 per hit"), "the workbench card should identify the deterministic repair target and complete tradeoffs")
+	await _press_campaign_event("rebuild_weakest")
+	_expect(game.state.campaign_event_pending.is_empty() and int(game.state.modules[mara_workshop_index].durability) == 3 and game.campaign_path_label.text.contains("Specialist: Mara Flint"), "choosing machine recovery should repair the workshop, clear the blocking event, and retain Mara in the campaign status")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
 	_expect(game.settlement_group.get_index() < game.doctrine_group.get_index(), "Morrowline should place its primary recovery actions before optional doctrine and chassis controls")
@@ -543,6 +561,19 @@ func _run() -> void:
 		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
 	else:
 		_expect(game.settlement_hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
+	var mara_crew_index: int = game.state._module_index_by_id("crew_quarters")
+	var mara_crew_before: int = int(game.state.modules[mara_crew_index].get("durability", 0))
+	game.state.modules[mara_crew_index]["durability"] = 1
+	game.selected_module_id = "crew_quarters"
+	game._select_module_option("crew_quarters")
+	game._sync_selected_module_context()
+	game._refresh_ui()
+	_expect(game.settlement_repair_button.text.contains("REPAIR CREW QUARTERS +3") and game.settlement_repair_button.text.contains("8 ASHMARKS · MARA +1") and game.settlement_repair_button.text.contains("DURABILITY 1→4"), "Mara's settlement service preview should show the extra free durability and unchanged price before commitment")
+	game.state.modules[mara_crew_index]["durability"] = mara_crew_before
+	game.selected_module_id = "steam_lance_engine"
+	game._select_module_option("steam_lance_engine")
+	game._sync_selected_module_context()
+	game._refresh_ui()
 	var handoff_money: int = game.state.money
 	var handoff_actions: int = game.state.settlement_actions_remaining
 	game.settlement_routes_button.pressed.emit()
@@ -638,6 +669,11 @@ func _run() -> void:
 	_expect(game.current_run_flow_step == 3 and game.run_flow_labels[3].text.contains("FINAL"), "leaving Morrowline should advance the tracker to the final approach")
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_encounters_completed == 4, "the lower-hull route should become the fourth encounter")
+	_expect(game.state.campaign_event_pending == "mara_followup" and game.campaign_event_title.text == "WHAT HELD", "the fourth road should surface Mara's later callback before Meridian Pass")
+	var mara_followup_choice := String(game.campaign_event_buttons[0].get_meta("choice_id", ""))
+	_expect(mara_followup_choice in ["record_repair_held", "record_repair_failed"] and game.campaign_event_buttons[0].text.to_upper().contains("PRESSURE"), "Mara's callback should preview whether the repaired system earned pressure recovery")
+	await _press_campaign_event(mara_followup_choice)
+	_expect(game.state.campaign_event_pending.is_empty(), "acknowledging Mara's callback should reopen final route selection")
 	game.campaign_map.button_for("meridian_pass").pressed.emit()
 	await process_frame
 	await process_frame
@@ -653,7 +689,7 @@ func _run() -> void:
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
 	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
-	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Key decisions: Broken Relay — moved silently") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, authored decisions, unused recovery, doctrine, and named operating condition needed to interpret the run")
+	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Key decisions: Broken Relay — moved silently") and game.results_record_label.text.contains("Mara Flint — rebuilt Field Workshop") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, Mara's causal outcome, authored decisions, unused recovery, doctrine, and named operating condition needed to interpret the run")
 	_expect(game.results_replay_label.text.begins_with("NEXT RUN") and game.results_replay_label.text.contains("1 Morrowline service action went unused") and game.results_replay_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
 	var completed_path: Array[String] = game.state.campaign_path.duplicate()
 	var completed_encounters: int = game.state.campaign_encounters_completed

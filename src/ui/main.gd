@@ -1288,6 +1288,7 @@ func _state_journal_summary() -> Dictionary:
 		"settlement_trust": state.settlement_trust,
 		"unused_recovery_actions": state.settlement_actions_remaining,
 		"specialist": state.specialist_id,
+		"mara_result": state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else "",
 		"ready_systems": int(dependencies.get("ready", 0)),
 		"strained_systems": int(dependencies.get("strained", 0)),
 		"offline_systems": int(dependencies.get("offline", 0))
@@ -1472,7 +1473,12 @@ func _on_campaign_event_pressed(index: int) -> void:
 		_set_event("Decision blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 	if bool(result.get("ok", false)):
-		encounter_label.text = "DECISION CONSEQUENCE\n%s" % String(result.get("message", "Decision recorded."))
+		if state.campaign_event_pending.is_empty():
+			encounter_label.text = "DECISION CONSEQUENCE\n%s" % String(result.get("message", "Decision recorded."))
+		else:
+			var next_event := state.campaign_event_details()
+			encounter_label.text = "DECISION CONTINUES · %s\n%s" % [String(next_event.get("title", "Local event")).to_upper(), String(result.get("message", "Decision recorded."))]
+			focus_current_action.call_deferred()
 
 func _on_recruit_iven_pressed() -> void:
 	var result := state.recruit_iven_pell()
@@ -2014,7 +2020,7 @@ func _refresh_campaign_controls() -> void:
 		pressure_color = Color("#ef8375")
 	campaign_pressure_label.text = "Blockade — %s · pressure %d · secured %d/5\n%s" % [pressure_band.capitalize(), state.campaign_pressure, state.campaign_encounters_completed, pressure_effect]
 	campaign_pressure_label.add_theme_color_override("font_color", pressure_color)
-	campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [state.guard_contract_status.replace("_", " ").capitalize(), "Iven Pell" if state.specialist_id == "iven_pell" else "none"]
+	campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [state.guard_contract_status.replace("_", " ").capitalize(), state.specialist_name()]
 
 	var contract_offered := state.campaign_active and state.guard_contract_status == "offered" and state.current_location == "ashgate_depot"
 	contract_title.visible = contract_offered
@@ -2328,9 +2334,9 @@ func _refresh_ui() -> void:
 	var repair_cost := 0
 	var repair_candidate := _most_damaged_installed_module()
 	if not selected_installed.is_empty():
-		var repair_maximum := int(selected_definition.get("durability", 1))
-		repair_missing = maxi(0, repair_maximum - int(selected_installed.get("durability", 0)))
-		repair_cost = mini(2, repair_missing) * 4
+		var repair_preview := state.settlement_repair_preview(selected_module_id)
+		repair_missing = maxi(0, int(repair_preview.get("after", 0)) - int(repair_preview.get("before", 0)))
+		repair_cost = int(repair_preview.get("cost", 0))
 	var services_open := state.phase == "settlement" and state.settlement_actions_remaining > 0
 	settlement_repair_button.disabled = not services_open
 	if not services_open:
@@ -2347,10 +2353,12 @@ func _refresh_ui() -> void:
 			settlement_repair_button.text = "REVIEW %s · %d/%d\nNO COST · PRESS AGAIN TO REPAIR" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
 			settlement_repair_button.tooltip_text = "Select and inspect %s without spending a service action; press again to confirm its repair." % candidate_name
 	else:
-		var repair_amount := mini(2, repair_missing)
+		var repair_preview := state.settlement_repair_preview(selected_module_id)
+		var repair_amount := int(repair_preview.get("restored", 0))
+		var mara_bonus := int(repair_preview.get("mara_bonus", 0))
 		var durability_before := int(selected_installed.get("durability", 0))
-		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS\nDURABILITY %d→%d · ACTIONS %d→%d" % [String(selected_definition.get("name", "module")).to_upper(), repair_amount, repair_cost, durability_before, durability_before + repair_amount, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
-		settlement_repair_button.tooltip_text = "Restore %d durability to %s for %d Ashmarks." % [mini(2, repair_missing), String(selected_definition.get("name", "the selected module")), repair_cost]
+		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS%s\nDURABILITY %d→%d · ACTIONS %d→%d" % [String(selected_definition.get("name", "module")).to_upper(), repair_amount, repair_cost, " · MARA +%d" % mara_bonus if mara_bonus > 0 else "", durability_before, int(repair_preview.get("after", durability_before)), state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
+		settlement_repair_button.tooltip_text = "Restore %d durability to %s for %d Ashmarks.%s" % [repair_amount, String(selected_definition.get("name", "the selected module")), repair_cost, " Mara supplies the final point." if mara_bonus > 0 else ""]
 		if state.money < repair_cost:
 			settlement_repair_button.disabled = true
 			settlement_repair_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
@@ -2691,15 +2699,12 @@ func _result_record_text() -> String:
 	for node_id in state.campaign_path:
 		path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
 	var dependencies: Dictionary = state.dependency_summary()
-	var specialist_name := "None"
-	if state.specialist_id == "iven_pell":
-		specialist_name = "Iven Pell"
-	elif not state.specialist_id.is_empty():
-		specialist_name = state.specialist_id.replace("_", " ").capitalize()
+	var specialist_name := state.specialist_name()
 	var stopping_line := ""
 	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
-	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nKey decisions: %s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	var mara_line := "\n%s" % state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else ""
+	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nKey decisions: %s%s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_band().capitalize(),
@@ -2707,6 +2712,7 @@ func _result_record_text() -> String:
 		state.guard_contract_status.replace("_", " ").capitalize(),
 		specialist_name,
 		_campaign_decision_record_text(),
+		mara_line,
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
 		int(dependencies.get("ready", 0)),

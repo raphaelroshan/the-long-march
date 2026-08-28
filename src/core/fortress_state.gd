@@ -7,13 +7,18 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
+const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
+const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint"}
 const CAMPAIGN_DECISION_OPTIONS := {
 	"salvage_choice": ["take_fuel", "rescue_workers"],
 	"lost_signal": ["restore_relay", "move_silent"],
-	"toll_decision": ["pay_toll", "break_blockade"]
+	"toll_decision": ["pay_toll", "break_blockade"],
+	"mara_meeting": ["recruit_mara", "decline_mara"],
+	"mara_workbench_choice": ["rebuild_weakest", "brace_refuge"],
+	"mara_followup": ["record_repair_held", "record_repair_failed", "record_refuge_held", "record_refuge_failed"]
 }
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
@@ -151,6 +156,7 @@ var mobility_tendency: int = 0
 var shelter_tendency: int = 0
 var knowledge_tendency: int = 0
 var specialist_id: String = ""
+var mara_repaired_module_id: String = ""
 var relay_repaired: bool = false
 var workers_rescued: bool = false
 
@@ -159,6 +165,9 @@ func _init(world_seed: int = 1107) -> void:
 
 func module_definition(module_id: String) -> Dictionary:
 	return MODULE_DEFS.get(module_id, {})
+
+func specialist_name() -> String:
+	return String(SPECIALIST_NAMES.get(specialist_id, "None" if specialist_id.is_empty() else specialist_id.replace("_", " ").capitalize()))
 
 func module_shape(module_id: String, rotated: bool = false) -> Vector2i:
 	var definition := module_definition(module_id)
@@ -350,6 +359,7 @@ func start_campaign() -> Dictionary:
 	shelter_tendency = 0
 	knowledge_tendency = 0
 	specialist_id = ""
+	mara_repaired_module_id = ""
 	relay_repaired = false
 	workers_rescued = false
 	journey_node = "ashgate_depot"
@@ -510,6 +520,86 @@ func choose_guard_contract(accept: bool) -> Dictionary:
 	log.append(message)
 	return {"ok": true, "status": guard_contract_status, "message": message, "summary": summary()}
 
+func mara_recruitment_status() -> Dictionary:
+	if not campaign_active or current_location != "morrowline_camp" or phase != "settlement" or campaign_event_pending != "mara_meeting":
+		return {"available": false, "reason": "Mara Flint is only considering the fortress at Morrowline Camp"}
+	if not specialist_id.is_empty():
+		return {"available": false, "reason": "the specialist berth is already occupied"}
+	if not operational("field_workshop"):
+		return {"available": false, "reason": "requires an operational crew-connected Field Workshop"}
+	if not _has_operational_tag("crew"):
+		return {"available": false, "reason": "requires operational Crew Quarters"}
+	return {"available": true, "reason": "Mara can staff the Field Workshop"}
+
+func _weakest_damaged_module_id() -> String:
+	var weakest_id := ""
+	var weakest_durability := 999
+	for instance in modules:
+		var module_id := String(instance.get("id", ""))
+		var maximum := int(module_definition(module_id).get("durability", 1))
+		var current := int(instance.get("durability", maximum))
+		if current >= maximum:
+			continue
+		if current < weakest_durability:
+			weakest_id = module_id
+			weakest_durability = current
+	return weakest_id
+
+func _has_recoverable_refuge_bunk() -> bool:
+	return module_count("refugee_bunk") + stored_module_count("refugee_bunk") > 0
+
+func mara_repair_bonus() -> int:
+	return 1 if specialist_id == "mara_flint" else 0
+
+func mara_refuge_bracing_active() -> bool:
+	return String(campaign_decisions.get("mara_workbench_choice", "")) == "brace_refuge"
+
+func mara_followup_preview() -> Dictionary:
+	var workbench_choice := String(campaign_decisions.get("mara_workbench_choice", ""))
+	if specialist_id != "mara_flint" or workbench_choice.is_empty():
+		return {"valid": false, "effect": "Mara's workbench commitment is not active."}
+	if workbench_choice == "rebuild_weakest":
+		var held := operational(mara_repaired_module_id)
+		var module_name := String(module_definition(mara_repaired_module_id).get("name", "the repaired system"))
+		return {
+			"valid": true,
+			"path": "repair",
+			"held": held,
+			"choice_id": "record_repair_held" if held else "record_repair_failed",
+			"effect": "Pressure -1 · %s remained operational" % module_name if held else "No pressure recovery · %s failed after Mara's repair" % module_name
+		}
+	var bunk_ready := operational("refugee_bunk")
+	return {
+		"valid": true,
+		"path": "refuge",
+		"held": bunk_ready,
+		"choice_id": "record_refuge_held" if bunk_ready else "record_refuge_failed",
+		"effect": "Trust +1 · Shelter +1 · Refugee Bunk operational" if bunk_ready else "No trust or Shelter gain · Refugee Bunk is not operational"
+	}
+
+func mara_debrief_line() -> String:
+	var meeting := String(campaign_decisions.get("mara_meeting", ""))
+	if meeting.is_empty():
+		return "Mara Flint — not encountered"
+	if meeting == "decline_mara":
+		return "Mara Flint — remained at Morrowline; specialist berth preserved"
+	var workbench := String(campaign_decisions.get("mara_workbench_choice", ""))
+	var followup := String(campaign_decisions.get("mara_followup", ""))
+	if workbench == "rebuild_weakest":
+		var module_name := String(module_definition(mara_repaired_module_id).get("name", "damaged system"))
+		if followup == "record_repair_held":
+			return "Mara Flint — rebuilt %s; it held through the fourth road and recovered 1 pressure" % module_name
+		if followup == "record_repair_failed":
+			return "Mara Flint — rebuilt %s; it failed before the fourth-road check" % module_name
+		return "Mara Flint — rebuilt %s; later result unresolved" % module_name
+	if workbench == "brace_refuge":
+		if followup == "record_refuge_held":
+			return "Mara Flint — braced the Refugee Bunk; it earned 1 trust and 1 Shelter"
+		if followup == "record_refuge_failed":
+			return "Mara Flint — braced the Refugee Bunk; it was not operational at the later check"
+		return "Mara Flint — braced the Refugee Bunk; later result unresolved"
+	return "Mara Flint — recruited; forge-core decision unresolved"
+
 func campaign_event_details() -> Dictionary:
 	match campaign_event_pending:
 		"salvage_choice":
@@ -530,6 +620,25 @@ func campaign_event_details() -> Dictionary:
 				{"id": "pay_toll", "label": "Pay the toll", "effect": "Ashmarks -10 · Pressure -1", "enabled": can_pay_toll, "reason": "Requires 10 Ashmarks" if not can_pay_toll else ""},
 				{"id": "break_blockade", "label": "Break the toll post", "effect": "Ashmarks +8 · Trust +1 · Pressure +1", "enabled": true, "reason": ""}
 			]}
+		"mara_meeting":
+			var recruitment := mara_recruitment_status()
+			return {"id": "mara_meeting", "title": "The Forge Without a Roof", "body": "Mara Flint has kept the convoy's axles moving from an open repair bench. She will join a fortress that can give the work a staffed room.", "choices": [
+				{"id": "recruit_mara", "label": "Bring Mara aboard", "effect": "Specialist berth filled · Workshop repairs +1", "enabled": bool(recruitment.get("available", false)), "reason": String(recruitment.get("reason", "")) if not bool(recruitment.get("available", false)) else ""},
+				{"id": "decline_mara", "label": "Leave Mara with Morrowline", "effect": "Keep specialist berth open · No repair bonus", "enabled": true, "reason": ""}
+			]}
+		"mara_workbench_choice":
+			var weakest_id := _weakest_damaged_module_id()
+			var weakest_name := String(module_definition(weakest_id).get("name", "damaged system"))
+			var refuge_available := _has_recoverable_refuge_bunk()
+			return {"id": "mara_workbench_choice", "title": "One Sound Core", "body": "Mara recovers one intact forge core from the convoy wreckage. It can serve the machine or the people, but not both.", "choices": [
+				{"id": "rebuild_weakest", "label": "Rebuild %s" % weakest_name, "effect": "Restore up to 2 durability · Day +1 · Pressure +1", "enabled": not weakest_id.is_empty(), "reason": "No installed system is damaged" if weakest_id.is_empty() else ""},
+				{"id": "brace_refuge", "label": "Brace the Refugee Bunk", "effect": "Refugee Bunk damage -1 per hit · No immediate repair", "enabled": refuge_available, "reason": "No recoverable Refugee Bunk remains" if not refuge_available else ""}
+			]}
+		"mara_followup":
+			var followup := mara_followup_preview()
+			return {"id": "mara_followup", "title": "What Held", "body": "Beyond the fourth road, Mara checks the promise made at her workbench against what the fortress actually carried through.", "choices": [
+				{"id": String(followup.get("choice_id", "record_repair_failed")), "label": "Record what held", "effect": String(followup.get("effect", "No result available")), "enabled": bool(followup.get("valid", false)), "reason": "The workbench commitment is missing" if not bool(followup.get("valid", false)) else ""}
+			]}
 	return {}
 
 func resolve_campaign_event(choice_id: String) -> Dictionary:
@@ -537,6 +646,7 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 		return {"ok": false, "reason": "no campaign decision is pending"}
 	var resolved_event := campaign_event_pending
 	var result_message := ""
+	var next_event := ""
 	if resolved_event == "salvage_choice":
 		if choice_id == "take_fuel":
 			fuel += 2
@@ -576,11 +686,59 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			result_message = "The fortress breaks the toll post, recovering 8 Ashmarks and 1 trust while blockade pressure rises by 1."
 		else:
 			return {"ok": false, "reason": "that toll choice is not currently available"}
+	elif resolved_event == "mara_meeting":
+		if choice_id == "recruit_mara" and bool(mara_recruitment_status().get("available", false)):
+			specialist_id = "mara_flint"
+			next_event = "mara_workbench_choice"
+			result_message = "Mara Flint takes the specialist berth and staffs the Field Workshop; workshop repairs now restore 1 additional durability. One recovered forge core still needs a purpose."
+		elif choice_id == "decline_mara":
+			result_message = "Mara remains with Morrowline's repair crews. The specialist berth stays open and the fortress gains no workshop repair bonus."
+		else:
+			return {"ok": false, "reason": "Mara cannot join the fortress in its current condition"}
+	elif resolved_event == "mara_workbench_choice":
+		if specialist_id != "mara_flint":
+			return {"ok": false, "reason": "Mara is not assigned to the fortress"}
+		if choice_id == "rebuild_weakest":
+			var weakest_id := _weakest_damaged_module_id()
+			if weakest_id.is_empty():
+				return {"ok": false, "reason": "no installed system is damaged"}
+			var target_index := _module_index_by_id(weakest_id)
+			var maximum := int(module_definition(weakest_id).get("durability", 1))
+			var before := int(modules[target_index].get("durability", 0))
+			var after := mini(maximum, before + 2)
+			modules[target_index]["durability"] = after
+			mara_repaired_module_id = weakest_id
+			day += 1
+			campaign_pressure += 1
+			_recalculate()
+			result_message = "Mara rebuilds %s from %d/%d to %d/%d durability. The careful work costs 1 day and adds 1 blockade pressure." % [module_definition(weakest_id).name, before, maximum, after, maximum]
+		elif choice_id == "brace_refuge" and _has_recoverable_refuge_bunk():
+			mara_repaired_module_id = ""
+			result_message = "Mara turns the forge core into Refugee Bunk bracing. Each hit against the bunk loses 1 damage, but no system is repaired now."
+		else:
+			return {"ok": false, "reason": "that forge-core choice is not currently available"}
+	elif resolved_event == "mara_followup":
+		var followup := mara_followup_preview()
+		if not bool(followup.get("valid", false)) or choice_id != String(followup.get("choice_id", "")):
+			return {"ok": false, "reason": "Mara's workbench commitment is missing"}
+		if String(followup.get("path", "")) == "repair":
+			if bool(followup.get("held", false)):
+				campaign_pressure = maxi(0, campaign_pressure - 1)
+				result_message = "%s Mara's repair held through the fourth road, avoiding another roadside delay; blockade pressure falls by 1." % String(module_definition(mara_repaired_module_id).get("name", "The repaired system"))
+			else:
+				result_message = "%s failed after Mara's work. No blockade pressure is recovered." % String(module_definition(mara_repaired_module_id).get("name", "The repaired system"))
+		else:
+			if bool(followup.get("held", false)):
+				settlement_trust += 1
+				shelter_tendency += 1
+				result_message = "The braced Refugee Bunk remains operational. Morrowline trust and Shelter tendency each rise by 1."
+			else:
+				result_message = "The Refugee Bunk is not operational when Mara checks it. The reserved bracing earns no trust or Shelter gain."
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
 	campaign_decisions[resolved_event] = choice_id
 	log.append(result_message)
-	campaign_event_pending = ""
+	campaign_event_pending = next_event
 	return {"ok": true, "event": resolved_event, "choice": choice_id, "message": result_message, "summary": summary()}
 
 func iven_recruitment_status() -> Dictionary:
@@ -1096,6 +1254,7 @@ func summary() -> Dictionary:
 		"shelter_tendency": shelter_tendency,
 		"knowledge_tendency": knowledge_tendency,
 		"specialist_id": specialist_id,
+		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued
 	}
@@ -1153,6 +1312,7 @@ func serialize() -> Dictionary:
 		"shelter_tendency": shelter_tendency,
 		"knowledge_tendency": knowledge_tendency,
 		"specialist_id": specialist_id,
+		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued,
 		"modules": _serialized_modules(),
@@ -1304,6 +1464,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_journey_route := String(data.get("journey_route", journey_route))
 	var restored_campaign_target_node := String(data.get("campaign_target_node", campaign_target_node))
 	var restored_campaign_last_safe_node := String(data.get("campaign_last_safe_node", campaign_last_safe_node))
+	var restored_campaign_event_pending := String(data.get("campaign_event_pending", campaign_event_pending))
+	var restored_specialist_id := String(data.get("specialist_id", specialist_id))
+	var restored_mara_repaired_module_id := String(data.get("mara_repaired_module_id", ""))
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
 	if restored_current_location not in JOURNEY_NODES or restored_journey_node not in JOURNEY_NODES:
 		return {"ok": false, "reason": "checkpoint contains an unknown journey location"}
@@ -1335,6 +1498,24 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	for event_id in restored_decisions:
 		if event_id not in CAMPAIGN_DECISION_OPTIONS or String(restored_decisions[event_id]) not in CAMPAIGN_DECISION_OPTIONS[event_id]:
 			return {"ok": false, "reason": "campaign decision record contains an unknown choice"}
+	if not restored_campaign_event_pending.is_empty() and restored_campaign_event_pending not in CAMPAIGN_DECISION_OPTIONS:
+		return {"ok": false, "reason": "checkpoint contains an unknown active campaign event"}
+	if restored_specialist_id not in VALID_SPECIALIST_IDS:
+		return {"ok": false, "reason": "checkpoint contains an unknown specialist"}
+	if not restored_mara_repaired_module_id.is_empty() and restored_mara_repaired_module_id not in MODULE_DEFS:
+		return {"ok": false, "reason": "checkpoint contains an unknown Mara repair target"}
+	var mara_meeting_choice := String(restored_decisions.get("mara_meeting", ""))
+	var mara_workbench_choice := String(restored_decisions.get("mara_workbench_choice", ""))
+	if restored_specialist_id == "mara_flint" and mara_meeting_choice != "recruit_mara":
+		return {"ok": false, "reason": "Mara specialist state conflicts with the meeting decision"}
+	if mara_workbench_choice == "rebuild_weakest" and restored_mara_repaired_module_id.is_empty():
+		return {"ok": false, "reason": "Mara repair decision is missing its system target"}
+	if mara_workbench_choice != "rebuild_weakest" and not restored_mara_repaired_module_id.is_empty():
+		return {"ok": false, "reason": "Mara repair target conflicts with the workbench decision"}
+	if restored_campaign_event_pending == "mara_workbench_choice" and (restored_specialist_id != "mara_flint" or mara_meeting_choice != "recruit_mara"):
+		return {"ok": false, "reason": "active Mara workbench event conflicts with recruitment state"}
+	if restored_campaign_event_pending == "mara_followup" and (restored_specialist_id != "mara_flint" or mara_workbench_choice.is_empty()):
+		return {"ok": false, "reason": "active Mara follow-up conflicts with workbench state"}
 	if restored_phase not in VALID_PHASES:
 		return {"ok": false, "reason": "checkpoint has an unknown campaign phase"}
 	var restored_battle_phase := restored_phase in ["battle", "final_battle"]
@@ -1392,14 +1573,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	campaign_last_safe_node = restored_campaign_last_safe_node
 	campaign_pressure = int(data.get("campaign_pressure", campaign_pressure))
 	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
-	campaign_event_pending = String(data.get("campaign_event_pending", campaign_event_pending))
+	campaign_event_pending = restored_campaign_event_pending
 	campaign_decisions = restored_decisions.duplicate(true)
 	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))
 	shelter_tendency = int(data.get("shelter_tendency", shelter_tendency))
 	knowledge_tendency = int(data.get("knowledge_tendency", knowledge_tendency))
-	specialist_id = String(data.get("specialist_id", specialist_id))
+	specialist_id = restored_specialist_id
+	mara_repaired_module_id = restored_mara_repaired_module_id
 	relay_repaired = bool(data.get("relay_repaired", relay_repaired))
 	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
 	modules = restored_modules_result.get("modules", []).duplicate(true)
@@ -1444,6 +1626,20 @@ func _configure_encounter(composition: Array, route_name: String, location_text:
 	_encounter_log("Forecast: %s from %s. Doctrine: %s." % [_encounter_names(), route_name, encounter_target_doctrine.replace("_", " ")])
 	_encounter_log("Route: %s. %s" % [String(JOURNEY_NODES[journey_node].name), location_text])
 
+func settlement_repair_preview(module_id: String) -> Dictionary:
+	var target_index := _module_index_by_id(module_id)
+	if target_index < 0:
+		return {"available": false, "reason": "selected module was not found"}
+	var maximum := int(module_definition(module_id).get("durability", 1))
+	var current := int(modules[target_index].get("durability", 0))
+	if current >= maximum:
+		return {"available": false, "reason": "selected module is already fully repaired", "before": current, "after": current, "restored": 0, "cost": 0, "mara_bonus": 0}
+	var missing := maximum - current
+	var base_restored := mini(2, missing)
+	var mara_bonus := mini(mara_repair_bonus(), missing - base_restored)
+	var restored := base_restored + mara_bonus
+	return {"available": true, "before": current, "after": current + restored, "restored": restored, "cost": base_restored * 4, "mara_bonus": mara_bonus}
+
 func settlement_repair(module_id: String) -> Dictionary:
 	if phase != "settlement":
 		return {"ok": false, "reason": "repairs are only available at Morrowline Camp"}
@@ -1453,12 +1649,11 @@ func settlement_repair(module_id: String) -> Dictionary:
 		var instance: Dictionary = modules[index]
 		if String(instance.get("id", "")) != module_id:
 			continue
-		var maximum := int(module_definition(module_id).get("durability", 1))
-		if int(instance.get("durability", 0)) >= maximum:
-			return {"ok": false, "reason": "selected module is already fully repaired"}
-		var missing := maximum - int(instance.get("durability", 0))
-		var restored := mini(2, missing)
-		var cost := restored * 4
+		var preview := settlement_repair_preview(module_id)
+		if not bool(preview.get("available", false)):
+			return {"ok": false, "reason": String(preview.get("reason", "repair unavailable"))}
+		var restored := int(preview.get("restored", 0))
+		var cost := int(preview.get("cost", 0))
 		if money < cost:
 			return {"ok": false, "reason": "not enough Ashmarks"}
 		money -= cost
@@ -1466,10 +1661,11 @@ func settlement_repair(module_id: String) -> Dictionary:
 		instance["durability"] = int(instance.get("durability", 0)) + restored
 		modules[index] = instance
 		_recalculate()
-		var message := "Morrowline repaired %s by %d for %d Ashmarks." % [module_definition(module_id).name, restored, cost]
+		var mara_text := " Mara Flint adds 1 durability without increasing the price." if int(preview.get("mara_bonus", 0)) > 0 else ""
+		var message := "Morrowline repaired %s by %d for %d Ashmarks.%s" % [module_definition(module_id).name, restored, cost, mara_text]
 		settlement_report.append(message)
 		log.append(message)
-		return {"ok": true, "restored": restored, "cost": cost, "summary": summary()}
+		return {"ok": true, "restored": restored, "cost": cost, "mara_bonus": int(preview.get("mara_bonus", 0)), "message": message, "summary": summary()}
 	return {"ok": false, "reason": "selected module was not found"}
 
 func settlement_refuel() -> Dictionary:
@@ -1872,6 +2068,7 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 		"armor_absorbed": 0,
 		"doctrine_effect": "",
 		"threat_effect": "",
+		"mara_effect": "",
 		"vent_exposed": false
 	}
 	if target_id == "hull":
@@ -1912,6 +2109,9 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 	elif encounter_target_doctrine == "run_hot" and heat > BASE_HEAT_LIMIT:
 		damage += 1
 		profile["doctrine_effect"] = "run_hot"
+	if target_id == "refugee_bunk" and mara_refuge_bracing_active():
+		damage = maxi(0, damage - 1)
+		profile["mara_effect"] = "refuge_bracing"
 	if vent_exposure and bool(instance.get("exterior", false)):
 		damage += 1
 		profile["vent_exposed"] = true
@@ -2014,6 +2214,8 @@ func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure
 			_encounter_log("Run Hot instability increases the impact on %s." % module_def.name)
 		if String(profile.get("threat_effect", "")) == "sustain_exposure":
 			_encounter_log("Dry-system exposure adds 1 Storm Front damage to %s." % module_def.name)
+		if String(profile.get("mara_effect", "")) == "refuge_bracing":
+			_encounter_log("Mara Flint's forge-core bracing absorbs 1 damage intended for Refugee Bunk.")
 		if bool(profile.get("vent_exposed", false)):
 			vent_exposure = false
 			_encounter_log("Open heat vents expose %s to one additional damage." % module_def.name)
@@ -2043,16 +2245,27 @@ func _encounter_repair() -> void:
 		var repair_amount := _workshop_repair_amount()
 		var result: Dictionary = repair_module(weakest_id, repair_amount)
 		if bool(result.get("ok", false)):
-			_encounter_log("Field Workshop restores %s by %d durability%s." % [module_definition(weakest_id).name, repair_amount, " with connected parts" if repair_amount > 1 else ""])
+			var repair_sources: Array[String] = []
+			for instance in modules:
+				var definition := module_definition(String(instance.get("id", "")))
+				if "repair" in definition.get("tags", []) and bool(dependency_status(instance).get("operational", false)) and _has_adjacent_tag(instance, "parts"):
+					repair_sources.append("connected parts")
+					break
+			if mara_repair_bonus() > 0:
+				repair_sources.append("Mara Flint")
+			var source_text := " with %s" % " and ".join(repair_sources) if not repair_sources.is_empty() else ""
+			_encounter_log("Field Workshop restores %s by %d durability%s." % [module_definition(weakest_id).name, repair_amount, source_text])
 
 func _workshop_repair_amount() -> int:
 	for instance in modules:
 		var definition := module_definition(String(instance.get("id", "")))
 		if "repair" in definition.get("tags", []) and bool(dependency_status(instance).get("operational", false)):
-			return 2 if _has_adjacent_tag(instance, "parts") else 1
+			return (2 if _has_adjacent_tag(instance, "parts") else 1) + mara_repair_bonus()
 	return 0
 
 func _campaign_event_for_node(node_id: String) -> String:
+	if node_id in ["lower_ash_road", "dry_cistern_cut", "signal_causeway"] and specialist_id == "mara_flint" and campaign_decisions.has("mara_workbench_choice") and not campaign_decisions.has("mara_followup"):
+		return "mara_followup"
 	match node_id:
 		"soot_orchard":
 			return "salvage_choice"
@@ -2166,8 +2379,11 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		if workers_rescued:
 			settlement_trust += 1
 			_encounter_log("The rescued orchard workers reach Morrowline and add one settlement trust.")
+		if specialist_id.is_empty() and not campaign_decisions.has("mara_meeting"):
+			campaign_event_pending = "mara_meeting"
+			_encounter_log("Mara Flint waits beside an open forge bench. Her offer must be answered before the fortress departs.")
 		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
-		_encounter_log("Outcome: %s at Morrowline Camp. Two service actions and a full refit window are available." % encounter_outcome.replace("_", " "))
+		_encounter_log("Outcome: %s at Morrowline Camp. Two service actions and a full refit window are available%s." % [encounter_outcome.replace("_", " "), " after Mara's offer is resolved" if campaign_event_pending == "mara_meeting" else ""])
 	elif arrived_node == "meridian_pass":
 		journey_complete = true
 		run_complete = true
