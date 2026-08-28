@@ -428,12 +428,12 @@ func _run() -> void:
 	target_enemy["arrived"] = true
 	target_enemy["defeated"] = false
 	target_enemy["target"] = "coal_cell"
-	target_enemy["impact"] = {"damage": 1, "current_durability": 1, "remaining_durability": 0, "armor_absorbed": 1, "armor_id": "front_armor_plate", "armor_current_durability": 1, "armor_remaining_durability": 0, "dependency_changes": [{"module_id": "steam_lance_engine", "name": "Steam Lance Engine", "from": "ready", "to": "offline"}]}
+	target_enemy["impact"] = {"damage": 1, "current_durability": 1, "remaining_durability": 0, "target_reason": "matches cargo, valuable cargo, damaged condition", "armor_absorbed": 1, "armor_id": "front_armor_plate", "armor_current_durability": 1, "armor_remaining_durability": 0, "dependency_changes": [{"module_id": "steam_lance_engine", "name": "Steam Lance Engine", "from": "ready", "to": "offline"}]}
 	target_card_preview.enemies[0] = target_enemy
 	target_card_preview["target_names"] = {"hull": "Hull", "coal_cell": "Coal Cell", "front_armor_plate": "Front Armor Plate"}
 	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
 	_expect(game.combat_panel.title_label.text.begins_with("ACTIVE CONTACT"), "the battle heading should change when an undefeated enemy reaches the fortress")
-	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR · FRONT ARMOR PLATE · 1→0 · BREAKS") and game.combat_panel.enemy_states[0].text.contains("CASCADE · STEAM LANCE ENGINE → OFFLINE") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose target, armor, and downstream dependency consequences")
+	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("WHY · MATCHES CARGO") and game.combat_panel.enemy_states[0].text.contains("VALUABLE CARGO") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR · FRONT ARMOR PLATE · 1→0 · BREAKS") and game.combat_panel.enemy_states[0].text.contains("CASCADE · STEAM LANCE ENGINE → OFFLINE") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose target rationale, damage, armor, and downstream dependency consequences")
 	var pre_hull_preview_enemy: Dictionary = game.state.encounter_enemies[0].duplicate(true)
 	var pre_hull_preview_condition: int = game.state.hull_condition
 	game.state.encounter_enemies[0]["arrived"] = true

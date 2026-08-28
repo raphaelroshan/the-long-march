@@ -208,7 +208,7 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 			var current_durability := int(impact.get("current_durability", 0))
 			var remaining_durability := int(impact.get("remaining_durability", maxi(0, current_durability - damage)))
 			var terminal_warning := " · HULL COLLAPSE" if target == "hull" and remaining_durability <= 0 else (" · DISABLES SYSTEM" if remaining_durability <= 0 else "")
-			target_text = "\nTARGET · %s\nNEXT · %d DAMAGE · %d→%d%s" % [target_name.to_upper(), damage, current_durability, remaining_durability, terminal_warning]
+			target_text = "\nTARGET · %s\nWHY · %s\nNEXT · %d DAMAGE · %d→%d%s" % [target_name.to_upper(), String(impact.get("target_reason", "target route matched")).to_upper(), damage, current_durability, remaining_durability, terminal_warning]
 			var armor_absorbed := int(impact.get("armor_absorbed", 0))
 			if armor_absorbed > 0:
 				var armor_id := String(impact.get("armor_id", "armor"))

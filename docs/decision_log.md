@@ -747,3 +747,7 @@ The selected installed module now exposes one compact dependency card: direct in
 ## 2026-08-28 — Available roads are compared before selection
 
 When two forward roads are available, the command desk now presents their days, current fuel cost, known or unknown risk, pressure gain, threat clue, next stops, and whether a settlement follows. The comparison is an authoritative non-mutating read model and disappears during final route confirmation, preserving the existing preview-and-commit boundary instead of turning comparison into automatic choice.
+
+## 2026-08-28 — Target explanations share the targeting score
+
+Combat cards now state why an arrived threat chose its current target before showing the predicted hit. The explanation is produced by the same authoritative scoring profile used to select the target, including route tags, exposed or lower-hull placement, doctrine protection, and damaged condition. This avoids a separate UI heuristic that could disagree with simulation behavior.

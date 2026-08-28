@@ -1618,8 +1618,6 @@ func _encounter_module_damage(enemy_id: String, priority_override: String = "") 
 	return {"damage": total_damage, "attackers": attackers, "lines": behavior_lines}
 
 func _encounter_choose_target(enemy_id: String, excluded_module_id: String = "") -> String:
-	var definition: Dictionary = ENCOUNTER_ENEMIES[enemy_id]
-	var target_tags: Array = definition.get("target_tags", [])
 	var best_index: int = -1
 	var best_score: int = -999
 	for index in range(modules.size()):
@@ -1628,45 +1626,69 @@ func _encounter_choose_target(enemy_id: String, excluded_module_id: String = "")
 			continue
 		if int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
 			continue
-		var module_def: Dictionary = module_definition(String(instance.get("id", "")))
-		var module_tags: Array = module_def.get("tags", [])
-		var score := 0
-		var matches_target := false
-		for tag in target_tags:
-			if tag in module_tags:
-				score += 10
-				matches_target = true
-		if not matches_target:
+		var target_profile := encounter_target_rationale(enemy_id, instance)
+		if not bool(target_profile.get("eligible", false)):
 			continue
-		var position: Vector2i = instance.get("position", Vector2i.ZERO)
-		if enemy_id == "road_raiders":
-			if "cargo" in module_tags:
-				score += 6
-			if bool(instance.get("exterior", false)):
-				score += 4
-		if enemy_id == "climbers":
-			if bool(instance.get("exterior", false)):
-				score += 6
-			if position.y == 0:
-				score += 3
-		if enemy_id == "burrowers":
-			if position.y >= 2:
-				score += 6
-			if "engine" in module_tags or "workshop" in module_tags:
-				score += 4
-		if enemy_id == "siege_beast" and ("armor" in module_tags or "crew" in module_tags):
-			score += 6
-		if encounter_target_doctrine == "protect_cargo" and "cargo" in module_tags:
-			score -= 4
-		elif encounter_target_doctrine == "protect_crew" and "crew" in module_tags:
-			score -= 4
-		score += maxi(0, 6 - int(instance.get("durability", 0)))
+		var score := int(target_profile.get("score", -999))
 		if score > best_score:
 			best_index = index
 			best_score = score
 	if best_index >= 0:
 		return String(modules[best_index].get("id", ""))
 	return "hull"
+
+func encounter_target_rationale(enemy_id: String, instance: Dictionary) -> Dictionary:
+	var definition: Dictionary = ENCOUNTER_ENEMIES.get(enemy_id, {})
+	var module_def := module_definition(String(instance.get("id", "")))
+	if definition.is_empty() or module_def.is_empty() or int(instance.get("durability", 0)) <= 0 or bool(instance.get("sealed", false)):
+		return {"eligible": false, "score": -999, "reason": "target is unavailable"}
+	var module_tags: Array = module_def.get("tags", [])
+	var matched_tags: Array[String] = []
+	var score := 0
+	for raw_tag in definition.get("target_tags", []):
+		var tag := String(raw_tag)
+		if tag in module_tags:
+			score += 10
+			matched_tags.append(tag.replace("_", " "))
+	if matched_tags.is_empty():
+		return {"eligible": false, "score": -999, "reason": "outside this threat's target route"}
+	var reasons: Array[String] = ["matches %s" % " / ".join(matched_tags)]
+	var position: Vector2i = instance.get("position", Vector2i.ZERO)
+	if enemy_id == "road_raiders":
+		if "cargo" in module_tags:
+			score += 6
+			reasons.append("valuable cargo")
+		if bool(instance.get("exterior", false)):
+			score += 4
+			reasons.append("exposed mount")
+	elif enemy_id == "climbers":
+		if bool(instance.get("exterior", false)):
+			score += 6
+			reasons.append("exposed mount")
+		if position.y == 0:
+			score += 3
+			reasons.append("upper deck access")
+	elif enemy_id == "burrowers":
+		if position.y >= 2:
+			score += 6
+			reasons.append("lower-hull position")
+		if "engine" in module_tags or "workshop" in module_tags:
+			score += 4
+			reasons.append("mobility or repair role")
+	elif enemy_id == "siege_beast" and ("armor" in module_tags or "crew" in module_tags):
+		score += 6
+		reasons.append("frontline or occupied role")
+	if encounter_target_doctrine == "protect_cargo" and "cargo" in module_tags:
+		score -= 4
+		reasons.append("priority reduced by Protect Cargo")
+	elif encounter_target_doctrine == "protect_crew" and "crew" in module_tags:
+		score -= 4
+		reasons.append("priority reduced by Protect Crew")
+	var damage_priority := maxi(0, 6 - int(instance.get("durability", 0)))
+	score += damage_priority
+	if damage_priority > 0:
+		reasons.append("damaged condition")
+	return {"eligible": true, "score": score, "reason": ", ".join(reasons)}
 
 func _encounter_target_redirect_preview(target_module: String) -> Array[Dictionary]:
 	var retargets: Array[Dictionary] = []
@@ -1866,6 +1888,7 @@ func encounter_enemy_impact_preview(enemy: Dictionary) -> Dictionary:
 			return {}
 		current_durability = int(modules[target_index].get("durability", 0))
 	profile["target"] = target_id
+	profile["target_reason"] = "No eligible preferred system remains; the hull is exposed." if target_id == "hull" else String(encounter_target_rationale(String(enemy.get("id", "")), modules[int(profile.get("target_index", -1))]).get("reason", "target route matched"))
 	profile["current_durability"] = current_durability
 	profile["remaining_durability"] = maxi(0, current_durability - int(profile.get("damage", 0)))
 	profile["dependency_changes"] = _encounter_dependency_impact_preview(profile)
