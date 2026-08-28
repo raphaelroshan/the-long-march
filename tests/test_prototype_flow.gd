@@ -221,7 +221,7 @@ func _run() -> void:
 	game.doctrine_option.item_selected.emit(2)
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
-	_expect(game.campaign_commit_intel_label.visible and game.campaign_commit_intel_label.text.contains("KNOWN CONTACTS") and game.campaign_commit_intel_label.text.contains("Road Raider"), "route commitment should keep known contacts adjacent to the final action")
+	_expect(game.campaign_commit_intel_label.visible and game.campaign_commit_intel_label.text.contains("KNOWN CONTACTS") and game.campaign_commit_intel_label.text.contains("Road Raider") and game.campaign_commit_intel_label.text.contains("PREPARE") and game.campaign_commit_intel_label.text.contains("repeater gun"), "route commitment should keep known contacts and their actionable counters adjacent to the final action")
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
 	_expect(game.encounter_label.text.contains("Rill Crossing selected") and game.encounter_label.text.contains("B/Esc cancels selection"), "the route-review status should name the road being considered and expose its controller-safe exit")
 	_expect(game.route_preview_label.text.contains("ROUTE READY · RILL CROSSING") and not game.route_preview_label.text.contains("SOOT ORCHARD"), "route selection should replace stale focus intel with the road being committed")
@@ -258,7 +258,7 @@ func _run() -> void:
 	game._refresh_ui()
 	game.campaign_map.button_for("rill_crossing").grab_focus()
 	await process_frame
-	_expect(game.route_preview_label.text.contains("ROUTE INTEL · RILL CROSSING") and game.route_preview_label.text.contains("Known route") and game.route_preview_label.text.contains("1 day") and not game.route_preview_label.text.contains("day(s)") and game.route_preview_label.text.contains("LOW risk"), "keyboard or controller focus should expose naturally phrased route intel above the map")
+	_expect(game.route_preview_label.text.contains("ROUTE INTEL · RILL CROSSING") and game.route_preview_label.text.contains("Known route") and game.route_preview_label.text.contains("1 day") and not game.route_preview_label.text.contains("day(s)") and game.route_preview_label.text.contains("LOW risk") and game.route_preview_label.text.contains("Prepare:") and game.route_preview_label.text.contains("repeater gun"), "keyboard or controller focus should expose naturally phrased route intel and known counters above the map")
 	_expect(game.route_preview_label.text.contains("Current risk factors: baseline 14%."), "known route intel should expose the baseline behind its displayed risk")
 	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#9fddbd"), "low-risk route intel should use the safe scan color while retaining its text label")
 	game.campaign_map.button_for("soot_orchard").grab_focus()

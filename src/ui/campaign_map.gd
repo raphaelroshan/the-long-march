@@ -172,7 +172,9 @@ func _preview_tooltip(preview: Dictionary, include_intel_upgrade: bool = true) -
 		var factor_text := " · ".join(risk_factors) if not risk_factors.is_empty() else "none visible"
 		risk_detail = "\n%s risk factors: %s." % ["Visible" if visibility == "unscouted" else "Current", factor_text]
 	if visibility == "known":
-		return "Known route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", [])), risk_detail]
+		var counters: Array = preview.get("counter_hints", [])
+		var counter_detail := "\nPrepare: %s." % " or ".join(counters) if not counters.is_empty() else ""
+		return "Known route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", [])), counter_detail, risk_detail]
 	if visibility == "forecast":
 		return "Forecast route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain.%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure")), risk_detail, intel_upgrade]
 	return "Unscouted route · %s · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown.%s%s" % [day_text, int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure")), risk_detail, intel_upgrade]

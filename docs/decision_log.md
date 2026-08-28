@@ -623,3 +623,7 @@ Deserialization now accepts only the six implemented campaign phases and require
 ## 2026-08-28 — Route intel remains beside commitment
 
 Selecting a road now places its known contacts, forecast hazard, or unscouted broad warning directly above the Commit action. This preserves the information boundary for uncertain roads while keeping the most important threat context visible after keyboard or controller focus scrolls past the regional map.
+
+## 2026-08-28 — Exact scouting includes preparation advice
+
+Known routes now reveal each contact's authored counter alongside its name, both in map detail and beside Commit. Forecast and unscouted routes keep those counters hidden. Signal readiness and Iven Pell therefore convert uncertainty into an actionable refit decision rather than merely replacing a generic hazard with a proper noun.

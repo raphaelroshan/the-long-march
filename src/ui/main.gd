@@ -1946,7 +1946,8 @@ func _refresh_campaign_controls() -> void:
 		var visibility := String(selected_preview.get("visibility", "unscouted"))
 		var threat_hint := String(selected_preview.get("threat_hint", "uncertain pressure"))
 		if visibility == "known":
-			campaign_commit_intel_label.text = "KNOWN CONTACTS · %s" % ", ".join(selected_preview.get("threats", []))
+			var counters: Array = selected_preview.get("counter_hints", [])
+			campaign_commit_intel_label.text = "KNOWN CONTACTS · %s%s" % [", ".join(selected_preview.get("threats", [])), "\nPREPARE · %s" % " or ".join(counters) if not counters.is_empty() else ""]
 			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#9fddbd"))
 		elif visibility == "forecast":
 			campaign_commit_intel_label.text = "EXPECTED HAZARD · %s · Exact contacts remain uncertain." % threat_hint

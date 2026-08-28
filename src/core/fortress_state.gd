@@ -397,9 +397,14 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	if predicted_heat > BASE_HEAT_LIMIT:
 		encounter_difficulty += 1
 	var threat_names: Array[String] = []
+	var counter_hints: Array[String] = []
 	if visibility == "known":
 		for enemy_id in node.get("encounter", []):
-			threat_names.append(String(ENCOUNTER_ENEMIES.get(String(enemy_id), {}).get("name", enemy_id)))
+			var enemy_definition: Dictionary = ENCOUNTER_ENEMIES.get(String(enemy_id), {})
+			threat_names.append(String(enemy_definition.get("name", enemy_id)))
+			var counter_hint := String(enemy_definition.get("counter", ""))
+			if not counter_hint.is_empty() and counter_hint not in counter_hints:
+				counter_hints.append(counter_hint)
 	var risk_factors: Array[String] = []
 	if visibility != "unscouted":
 		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
@@ -429,6 +434,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"reward": int(node.get("reward", 0)),
 		"threat_hint": String(node.get("threat_hint", "uncertain road pressure")),
 		"threats": threat_names,
+		"counter_hints": counter_hints,
 		"closed": campaign_node_closed(node_id)
 	}
 
