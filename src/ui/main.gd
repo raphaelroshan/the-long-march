@@ -1802,11 +1802,16 @@ func _on_campaign_event_pressed(index: int) -> void:
 	_refresh_ui()
 	if bool(result.get("ok", false)):
 		if state.campaign_event_pending.is_empty():
-			encounter_label.text = "DECISION CONSEQUENCE\n%s" % String(result.get("message", "Decision recorded."))
+			encounter_label.text = "DECISION CONSEQUENCE\n%s\nNEXT · %s" % [String(result.get("message", "Decision recorded.")), _current_guidance_action()]
 		else:
 			var next_event := state.campaign_event_details()
 			encounter_label.text = "DECISION CONTINUES · %s\n%s" % [String(next_event.get("title", "Local event")).to_upper(), String(result.get("message", "Decision recorded."))]
 			_focus_first_campaign_event_choice()
+
+func _current_guidance_action() -> String:
+	var guidance := _current_guidance()
+	var separator := guidance.find(" · ")
+	return guidance.substr(separator + 3) if separator >= 0 else guidance
 
 func _focus_first_campaign_event_choice() -> void:
 	for button in campaign_event_buttons:

@@ -947,3 +947,7 @@ The Marchmaster's Desk now ends with a small non-interactive margin. This gives 
 ## 2026-08-28 — Checkpoint receipts name the resumable state
 
 Encounter checkpoint reasons now distinguish an intermediate Battle Step from a Road Secured, Recovery Reached, or Run Ended transition. The save still occurs at the same successful advance boundary with the same serialized state and backup behavior; only the receipt and later pause summary use the more accurate player-facing reason. Run Ended remains neutral across decisive, scarred, and failed debriefs.
+
+## 2026-08-28 — Event consequences hand off to the next order
+
+A completed authored event now appends one Next line derived from the live Current Order guidance. The left evidence column therefore keeps the consequence and immediate route or recovery instruction together even when automatic focus scrolls the desk to lower controls. Chained events retain their existing Decision Continues treatment until the final choice resolves.

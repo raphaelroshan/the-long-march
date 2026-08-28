@@ -70,6 +70,8 @@ During battle, moving focus into an emergency order should keep the complete Cur
 
 Autosave receipts name the state that Continue now preserves. **Battle Step** means the encounter is still active; **Road Secured**, **Recovery Reached**, and **Run Ended** mark resolved transitions.
 
+Completed event receipts pair the exact consequence with one **Next** instruction. Check that this line agrees with the visible route choices or live recovery budget and never suggests that the next action was already taken.
+
 Settings uses three visible sections: **Display & Readability**, **Controls & Feedback**, and **Runs & Local Data**. The fixed breadcrumb follows focused controls even when their section heading scrolls away. Watch whether testers can predict where a preference or reset belongs before reading every row.
 
 ## Building locally

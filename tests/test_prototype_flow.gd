@@ -575,6 +575,7 @@ func _run() -> void:
 	_expect(game.campaign_event_buttons[0].has_focus(), "Go to Decision should focus the first legal event response without choosing it")
 	await _press_campaign_event("brace_lift_chain")
 	_expect(game.state.occurrence_history.size() == 1 and game.event_label.text.contains("future route risk falls by 2%"), "resolving an occurrence should immediately expose its consequence and retain one audit record")
+	_expect(game.encounter_label.text.contains("NEXT · Select one cyan route") and game.encounter_label.text.contains("Commit begins travel"), "a completed road occurrence should keep its consequence and the authoritative next route action together")
 	_expect(game.campaign_map.button_for("red_wheel_toll_bridge").text.contains("UNSCOUTED · UNKNOWN"), "an available unscouted node should advertise uncertainty without exposing its hidden risk")
 	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
 	await process_frame
@@ -666,6 +667,7 @@ func _run() -> void:
 	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_event_title.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "a chained event should scroll its title and both choices into the visible command desk")
 	await _press_campaign_event("rebuild_weakest")
 	_expect(game.state.campaign_event_pending.is_empty() and int(game.state.modules[mara_workshop_index].durability) == 3 and game.campaign_path_label.text.contains("Specialist: Mara Flint"), "choosing machine recovery should repair the workshop, clear the blocking event, and retain Mara in the campaign status")
+	_expect(game.encounter_label.text.contains("NEXT · 2 service actions remain") and game.encounter_label.text.contains("choose the next road"), "finishing Mara's chained decision should keep its consequence and the authoritative recovery action together")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.current_order_button.text == "GO TO RECOVERY ↓", "clearing the settlement event should retarget the jump action to available recovery services")
 	game.current_order_button.pressed.emit()

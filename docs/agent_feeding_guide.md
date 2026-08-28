@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.266`; Feeds A through AK are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.267`; Feeds A through AL are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -227,6 +227,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.266` through phase-aware encounter checkpoint reasons.
 
 > Keep Battle Step for intermediate encounter saves, but label resolved transitions by the state actually preserved: Road Secured, Recovery Reached, or Run Ended. Do not change checkpoint timing, payloads, backups, or deterministic state.
+
+### Current Feed AL — event consequence handoff
+
+**Status:** Complete in `0.3.0-alpha.267` through authoritative next-action copy.
+
+> Keep each completed event's exact mechanical consequence above the fold, then append the next route or recovery instruction from the same guidance source as the Marchmaster's Desk. Chained events should continue to name the next decision instead of skipping ahead.
 
 ## Historical prototype feed sequence
 
