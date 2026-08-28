@@ -719,3 +719,7 @@ The title's checkpoint summary now derives a compact next action from the valida
 ## 2026-08-28 — Recommended repairs disclose their two-stage action
 
 When the currently inspected system is healthy, Morrowline's repair action now labels the damaged recommendation as a free review and states that a second press confirms repair. The existing safety step remains intact, but players no longer have to infer from a tooltip whether the first press consumes Ashmarks or one of the two service actions.
+
+## 2026-08-28 — Recovery services preview their complete transaction
+
+Each available Morrowline purchase now shows the relevant fuel, hull, or module durability before and after service alongside the shared action budget before and after use. Affordability and exhaustion locks remain additional lines, keeping the decision's benefit, Ashmark price, and opportunity cost visible on the same control before confirmation.

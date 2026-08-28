@@ -523,6 +523,11 @@ func _run() -> void:
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
+	_expect(game.settlement_refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.settlement_refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
+	if game.state.hull_condition < 10:
+		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
+	else:
+		_expect(game.settlement_hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY · 2 service actions remain") and game.campaign_commit_intel_label.text.contains("Departing ends access"), "route commitment should warn before both unused Morrowline services become inaccessible")
@@ -547,7 +552,7 @@ func _run() -> void:
 	var actions_before_repair_selection: int = game.state.settlement_actions_remaining
 	game.settlement_repair_button.pressed.emit()
 	await process_frame
-	_expect(game.selected_module_id == "field_workshop" and game.settlement_repair_button.has_focus() and game.settlement_repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact service without spending an action")
+	_expect(game.selected_module_id == "field_workshop" and game.settlement_repair_button.has_focus() and game.settlement_repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.settlement_repair_button.text.contains("DURABILITY 1→3") and game.settlement_repair_button.text.contains("ACTIONS 2→1") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact durability and action-budget consequences without spending an action")
 	game.state.modules[damaged_workshop_index]["durability"] = workshop_before
 	game.state._recalculate()
 	game._refresh_ui()

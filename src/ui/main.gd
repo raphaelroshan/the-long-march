@@ -2238,19 +2238,21 @@ func _refresh_ui() -> void:
 			settlement_repair_button.text = "REVIEW %s · %d/%d\nNO COST · PRESS AGAIN TO REPAIR" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
 			settlement_repair_button.tooltip_text = "Select and inspect %s without spending a service action; press again to confirm its repair." % candidate_name
 	else:
-		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS" % [String(selected_definition.get("name", "module")).to_upper(), mini(2, repair_missing), repair_cost]
+		var repair_amount := mini(2, repair_missing)
+		var durability_before := int(selected_installed.get("durability", 0))
+		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS\nDURABILITY %d→%d · ACTIONS %d→%d" % [String(selected_definition.get("name", "module")).to_upper(), repair_amount, repair_cost, durability_before, durability_before + repair_amount, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
 		settlement_repair_button.tooltip_text = "Restore %d durability to %s for %d Ashmarks." % [mini(2, repair_missing), String(selected_definition.get("name", "the selected module")), repair_cost]
 		if state.money < repair_cost:
 			settlement_repair_button.disabled = true
 			settlement_repair_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
-	settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS"
+	settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS\nFUEL %d→%d · ACTIONS %d→%d" % [state.fuel, state.fuel + 2, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
 	settlement_refuel_button.disabled = not services_open or state.money < 8
 	if not services_open:
 		settlement_refuel_button.text += "\nLOCKED · NO SERVICE ACTIONS LEFT"
 	elif state.money < 8:
 		settlement_refuel_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
 	var hull_repair_amount := mini(2, 10 - state.hull_condition)
-	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +%d HULL · 10 ASHMARKS" % hull_repair_amount
+	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +%d HULL · 10 ASHMARKS\nHULL %d→%d · ACTIONS %d→%d" % [hull_repair_amount, state.hull_condition, state.hull_condition + hull_repair_amount, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
 	settlement_hull_button.disabled = not services_open or state.hull_condition >= 10 or state.money < 10
 	if state.hull_condition < 10:
 		if not services_open:
@@ -2258,7 +2260,8 @@ func _refresh_ui() -> void:
 		elif state.money < 10:
 			settlement_hull_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
 	for service_button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
-		service_button.custom_minimum_size.y = 56 if "\n" in service_button.text else 42
+		var line_breaks: int = service_button.text.count("\n")
+		service_button.custom_minimum_size.y = 72 if line_breaks >= 2 else (56 if line_breaks == 1 else 42)
 	final_journey_button.disabled = state.phase != "settlement"
 	_refresh_planning_focus()
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)
