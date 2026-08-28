@@ -223,6 +223,7 @@ func _run() -> void:
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_intel_label.visible and game.campaign_commit_intel_label.text.contains("KNOWN CONTACTS") and game.campaign_commit_intel_label.text.contains("Road Raider") and game.campaign_commit_intel_label.text.contains("PREPARE") and game.campaign_commit_intel_label.text.contains("repeater gun"), "route commitment should keep known contacts and their actionable counters adjacent to the final action")
+	_expect(game.campaign_commit_intel_label.text.contains("DOCTRINE · RUN HOT") and game.campaign_commit_intel_label.text.contains("all attacks +1") and game.campaign_commit_intel_label.text.contains("heat +2"), "route commitment should restate the selected doctrine and its core tradeoff")
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
 	_expect(game.encounter_label.text.contains("Rill Crossing selected") and game.encounter_label.text.contains("B/Esc cancels selection"), "the route-review status should name the road being considered and expose its controller-safe exit")
 	_expect(game.route_preview_label.text.contains("ROUTE READY · RILL CROSSING") and not game.route_preview_label.text.contains("SOOT ORCHARD"), "route selection should replace stale focus intel with the road being committed")

@@ -647,3 +647,7 @@ The tagged release workflow now creates the artifact directory immediately befor
 ## 2026-08-28 — Blockade pressure predicts its consequence
 
 The campaign desk now explains the Watch-to-Closing and Closing-to-Break thresholds before they are crossed. At Break it reports whether Signal Causeway is closed or being held open by forecasting, and it names both ways to reopen a closure. Color severity supports the text rather than carrying the rule alone.
+
+## 2026-08-28 — Route commitment restates doctrine
+
+The compact context beside Commit now names the selected doctrine and its central offensive and defensive tradeoff. Run Hot becomes a danger-colored summary when its predicted heat exceeds the limit. Route selection therefore confirms the road, available intelligence, and standing combat order in one final decision area.

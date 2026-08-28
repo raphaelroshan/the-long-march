@@ -22,6 +22,11 @@ const DOCTRINE_DESCRIPTIONS := {
 	"protect_crew": "Crew guard · Climbers and the Siege Beast take +1 weapon damage, while crew rooms are targeted less and take −1 damage.",
 	"run_hot": "Overdrive · All attacks gain +1 damage, but the fortress gains +2 heat; overheating raises route risk and incoming damage."
 }
+const DOCTRINE_COMMIT_SUMMARIES := {
+	"protect_cargo": "Raiders take +1 weapon damage · cargo hits −1",
+	"protect_crew": "Climbers / Siege Beast take +1 · crew hits −1",
+	"run_hot": "all attacks +1 · heat +2 · overheating raises danger"
+}
 const ONBOARDING_LABELS := ["COMMAND", "CHASSIS", "ROUTE", "SURVIVE"]
 const ROUTE_INTEL_COLORS := {
 	"neutral": Color("#d8c389"),
@@ -1960,6 +1965,7 @@ func _refresh_campaign_controls() -> void:
 	if not selected_preview.is_empty():
 		var visibility := String(selected_preview.get("visibility", "unscouted"))
 		var threat_hint := String(selected_preview.get("threat_hint", "uncertain pressure"))
+		var doctrine_id := _selected_id(doctrine_option)
 		if visibility == "known":
 			var counters: Array = selected_preview.get("counter_hints", [])
 			campaign_commit_intel_label.text = "KNOWN CONTACTS · %s%s" % [", ".join(selected_preview.get("threats", [])), "\nPREPARE · %s" % " or ".join(counters) if not counters.is_empty() else ""]
@@ -1970,11 +1976,15 @@ func _refresh_campaign_controls() -> void:
 		else:
 			campaign_commit_intel_label.text = "BROAD WARNING · %s · Risk, reward, and exact contacts are unknown." % threat_hint
 			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#cbb8e8"))
+		campaign_commit_intel_label.text += "\nDOCTRINE · %s · %s" % [doctrine_id.replace("_", " ").to_upper(), String(DOCTRINE_COMMIT_SUMMARIES.get(doctrine_id, "review its current effects above"))]
+		if doctrine_id == "run_hot" and int(selected_preview.get("predicted_heat", 0)) > LongMarchState.BASE_HEAT_LIMIT:
+			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#ef8375"))
 		if state.phase == "settlement" and state.settlement_actions_remaining > 0:
 			var service_word := "action" if state.settlement_actions_remaining == 1 else "actions"
 			var service_verb := "remains" if state.settlement_actions_remaining == 1 else "remain"
 			campaign_commit_intel_label.text += "\nUNUSED RECOVERY · %d service %s %s. Departing ends access to them." % [state.settlement_actions_remaining, service_word, service_verb]
-			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#e8c58e"))
+			if not (doctrine_id == "run_hot" and int(selected_preview.get("predicted_heat", 0)) > LongMarchState.BASE_HEAT_LIMIT):
+				campaign_commit_intel_label.add_theme_color_override("font_color", Color("#e8c58e"))
 
 	var event := state.campaign_event_details()
 	var event_pending := not event.is_empty()
