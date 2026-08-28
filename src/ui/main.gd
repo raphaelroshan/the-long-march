@@ -2231,7 +2231,8 @@ func _refresh_ui() -> void:
 		journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
 	var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 	var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
-	var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review its costs and doctrine, then commit when ready."]
+	var selected_review := "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else ("Final commitment: failure ends the run; there is no retreat. Review costs and doctrine, then commit when ready." if selected_campaign_node_id == "meridian_pass" else "Review its costs and doctrine, then commit when ready.")
+	var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, selected_review]
 	if state.phase == "results":
 		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
 		encounter_label.add_theme_color_override("font_color", Color("#f0d29d"))
@@ -2318,6 +2319,8 @@ func _current_guidance() -> String:
 		var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 		if not block_reason.is_empty():
 			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again. B/Esc cancels selection." % block_reason
+		if selected_campaign_node_id == "meridian_pass":
+			return "FINAL COMMITMENT · Meridian Pass is selected. Failure ends the run; there is no retreat. Review costs and doctrine, then press Commit. B/Esc cancels selection."
 		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit. B/Esc cancels selection." % node_name
 	if state.encounter_outcome == "forced_retreat":
 		if state.phase == "settlement":

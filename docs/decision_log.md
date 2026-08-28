@@ -599,3 +599,7 @@ The route map now derives whether an unvisited node is still reachable from the 
 ## 2026-08-28 — After-action guidance names selectable routes
 
 Securing a road now asks the player to choose the next available route rather than the next visible node. The map deliberately keeps future and bypassed locations visible for context, so the receipt now points to the same availability concept and cyan treatment used by the actual controls.
+
+## 2026-08-28 — Final-road stakes remain above the fold
+
+Selecting Meridian Pass promotes its terminal rule into both the route-review receipt and current order: failure ends the run and there is no retreat. The detailed map preview and commit control retain the same warning, but the player no longer needs the right-hand scroll position to understand the consequence of the final commitment.

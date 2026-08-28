@@ -572,6 +572,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.campaign_commit_button.text.begins_with("FINAL COMMIT · MERIDIAN PASS") and game.campaign_commit_button.text.contains("FUEL %d→" % game.state.fuel) and game.route_preview_label.text.contains("FINAL COMMITMENT") and game.route_preview_label.text.contains("no retreat"), "Meridian Pass selection should expose resulting resources and its run-ending stakes before commitment")
+	_expect(game.encounter_label.text.begins_with("ROUTE READY FOR REVIEW") and game.encounter_label.text.contains("failure ends the run") and game.encounter_label.text.contains("no retreat") and game.guidance_label.text.begins_with("FINAL COMMITMENT"), "the final road's terminal stakes should remain visible outside the scrollable map details")
 	game.campaign_commit_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "final_battle", "the fifth map node should begin the final battle")
