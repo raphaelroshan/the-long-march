@@ -1955,6 +1955,11 @@ func _refresh_campaign_controls() -> void:
 		else:
 			campaign_commit_intel_label.text = "BROAD WARNING · %s · Risk, reward, and exact contacts are unknown." % threat_hint
 			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#cbb8e8"))
+		if state.phase == "settlement" and state.settlement_actions_remaining > 0:
+			var service_word := "action" if state.settlement_actions_remaining == 1 else "actions"
+			var service_verb := "remains" if state.settlement_actions_remaining == 1 else "remain"
+			campaign_commit_intel_label.text += "\nUNUSED RECOVERY · %d service %s %s. Departing ends access to them." % [state.settlement_actions_remaining, service_word, service_verb]
+			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#e8c58e"))
 
 	var event := state.campaign_event_details()
 	var event_pending := not event.is_empty()

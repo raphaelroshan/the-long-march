@@ -507,6 +507,12 @@ func _run() -> void:
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
+	game.campaign_map.button_for("lower_ash_road").pressed.emit()
+	await process_frame
+	_expect(game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY · 2 service actions remain") and game.campaign_commit_intel_label.text.contains("Departing ends access"), "route commitment should warn before both unused Morrowline services become inaccessible")
+	game.selected_campaign_node_id = ""
+	game._refresh_ui()
+	game.settlement_refuel_button.grab_focus()
 	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
 	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
 	var recovery_previous := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) as BaseButton
@@ -542,6 +548,10 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(game.settlement_repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
 	_expect(game.guidance_label.text.contains("0 service actions remain") and not game.guidance_label.text.contains("actions remains"), "exhausted recovery guidance should retain correct plural grammar")
+	game.campaign_map.button_for("lower_ash_road").pressed.emit()
+	await process_frame
+	_expect(not game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY"), "route commitment should not show a forfeiture warning after every service has been spent")
+	game.selected_campaign_node_id = ""
 	game.state.hull_condition = recovery_hull
 	game.state.settlement_actions_remaining = recovery_actions
 	game._refresh_ui()
@@ -571,6 +581,7 @@ func _run() -> void:
 	await process_frame
 	var high_risk_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat
 	_expect(game.campaign_commit_button.text.contains("HIGH RISK") and high_risk_commit_style != null and high_risk_commit_style.border_color == Color("#ef8375"), "a known high-risk commitment should carry the danger treatment before departure")
+	_expect(game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY · 1 service action remains") and not game.campaign_commit_intel_label.text.contains("1 service actions"), "the final Morrowline departure warning should use the live singular service budget")
 	game.campaign_commit_button.pressed.emit()
 	await process_frame
 	_expect(game.current_run_flow_step == 3 and game.run_flow_labels[3].text.contains("FINAL"), "leaving Morrowline should advance the tracker to the final approach")

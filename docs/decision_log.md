@@ -627,3 +627,7 @@ Selecting a road now places its known contacts, forecast hazard, or unscouted br
 ## 2026-08-28 — Exact scouting includes preparation advice
 
 Known routes now reveal each contact's authored counter alongside its name, both in map detail and beside Commit. Forecast and unscouted routes keep those counters hidden. Signal readiness and Iven Pell therefore convert uncertainty into an actionable refit decision rather than merely replacing a generic hazard with a proper noun.
+
+## 2026-08-28 — Departure discloses unused recovery
+
+Selecting a road from Morrowline now adds the live unused service budget beside Commit and states that departure ends access to it. The warning disappears after all services are spent and uses natural singular or plural wording, preserving the choice to leave early without silently discarding a scarce recovery opportunity.
