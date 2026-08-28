@@ -523,3 +523,7 @@ The persistent Pause action no longer advertises B or Escape while those inputs 
 ## 2026-08-28 — Battle headings distinguish approach from contact
 
 The combat panel uses Contact Approaching until an undefeated enemy has actually reached the fortress, then changes to Active Contact. This aligns the encounter heading with arrival countdowns, timeline warnings, target forecasts, and damage timing instead of declaring contact several steps early.
+
+## 2026-08-28 — Route cancellation is visible without hover
+
+Selecting a route now keeps `B/Esc cancels selection` in both the route-review receipt and the state-derived current order, including when departure is blocked. Controller and keyboard players can therefore discover the reversible preview boundary from visible text instead of relying on the Pause button tooltip.

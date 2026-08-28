@@ -1305,7 +1305,7 @@ func _on_campaign_node_selected(node_id: String) -> void:
 		return
 	selected_campaign_node_id = node_id
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
-	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready." % String(preview.get("name", node_id)))
+	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready. B/Esc cancels selection." % String(preview.get("name", node_id)))
 	_refresh_ui()
 	_focus_control(campaign_commit_button)
 	_show_selected_route_preview(node_id)
@@ -2238,7 +2238,7 @@ func _refresh_ui() -> void:
 	else:
 		var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 		var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
-		var selected_instruction := "%s selected · %s" % [selected_node_name, "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review its costs and doctrine, then commit when ready."]
+		var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else "Review its costs and doctrine, then commit when ready."]
 		if state.guard_contract_status == "offered":
 			encounter_label.text = "ASHGATE PREPARATION\nAnswer the convoy contract to open the first roads."
 		elif not state.campaign_event_pending.is_empty():
@@ -2310,8 +2310,8 @@ func _current_guidance() -> String:
 		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
 		var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 		if not block_reason.is_empty():
-			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again." % block_reason
-		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit." % node_name
+			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again. B/Esc cancels selection." % block_reason
+		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit. B/Esc cancels selection." % node_name
 	if state.encounter_outcome == "forced_retreat":
 		if state.phase == "settlement":
 			return "RETREAT TO MORROWLINE · %s. Review the after-action losses, recover, and refit before choosing another road." % _service_action_status_text()
