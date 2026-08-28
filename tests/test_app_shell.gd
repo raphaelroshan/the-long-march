@@ -267,6 +267,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
+	_expect(app.save_status_label.text.contains("Next · Answer convoy contract") and app.save_status_label.text.contains("Fuel 6"), "the active checkpoint summary should identify the exact decision waiting after Continue without losing resource context")
 	_expect(app.continue_button.get_index() < app.start_button.get_index() and app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.start_button, "a valid save should place Continue first visually and route downward into fresh-start actions")
 	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.start_button and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button, "save-aware Tab navigation should follow the visible Continue, New Game, Quick Start order")
 	_expect(app.start_button.text.begins_with("NEW GAME") and app.quick_start_button.text.begins_with("NEW QUICK RUN"), "existing progress should make both fresh-start actions explicit")

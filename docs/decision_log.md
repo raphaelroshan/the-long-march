@@ -711,3 +711,7 @@ Checkpoint loading now validates every installed and stored system against the a
 ## 2026-08-28 — Saved encounters cannot invent threats or targets
 
 Checkpoint loading now validates encounter entries, unique slots, health and defeated state, target references, and the six-step progress range before restoring combat. Active battles must contain at least one authored threat, preventing a damaged save from opening an empty encounter or targeting a system that is not present on the restored chassis.
+
+## 2026-08-28 — Continue previews the waiting decision
+
+The title's checkpoint summary now derives a compact next action from the validated save: answer the contract, choose a road, resolve a named local event, continue a specific battle step, use recovery, or review the debrief. It shares the existing resource line instead of increasing the menu card height, so returning players gain orientation without crowding the 1280×720 layout.

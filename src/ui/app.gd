@@ -991,6 +991,7 @@ func _saved_run_info() -> Dictionary:
 	var build_note := "" if saved_build == current_build else "\nCompatible checkpoint from %s" % saved_build
 	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
 	var completed := phase_id == "results" and not result_id.is_empty()
+	var next_action := _saved_next_action(validation_state)
 	if completed:
 		condition = "stable" if result_id == "decisive_march" else ("watch" if result_id == "scarred_march" else "critical")
 	return {
@@ -1005,8 +1006,24 @@ func _saved_run_info() -> Dictionary:
 		"result": result_name,
 		"action": "VIEW RESULT · %s" % result_name.to_upper() if completed else "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
 		"tooltip": "Review the saved %s debrief from %s. Saved by %s." % [result_name, location, saved_build] if completed else "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
-		"summary": "Completed run · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %d/5 · %s\nFuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
+		"summary": "Completed run · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
 	}
+
+func _saved_next_action(saved_state: LongMarchState) -> String:
+	if saved_state.phase == "results":
+		return "Review debrief"
+	if saved_state.encounter_active:
+		return "Resolve battle step %d/6" % mini(saved_state.encounter_step + 1, 6)
+	if not saved_state.campaign_event_pending.is_empty():
+		var event := saved_state.campaign_event_details()
+		return "Resolve %s" % String(event.get("title", "local decision"))
+	if saved_state.guard_contract_status == "offered":
+		return "Answer convoy contract"
+	if saved_state.phase == "settlement" and saved_state.settlement_actions_remaining > 0:
+		return "Recover or choose the next road"
+	if saved_state.campaign_encounters_completed == 0:
+		return "Choose the first road"
+	return "Choose the next road"
 
 func _save_age_label(saved_at_unix: int) -> String:
 	if saved_at_unix <= 0:
