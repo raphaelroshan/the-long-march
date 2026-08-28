@@ -24,6 +24,8 @@ Before starting, move focus or the pointer across the title's chapter actions. T
 
 Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision. A tester may pause and choose **Record Playtest Notes** at any decision; closing the form returns to the still-suspended pause menu with the run unchanged.
 
+Use **March Record** when resuming a checkpoint or asking a tester to explain the run so far. Its first screen names the next order and deterministic run ID; the scrollable remainder records path, pressure, commitments, occurrences, and damaged systems. **Copy March Record** copies only that text to the local clipboard and does not save, upload, or alter the march.
+
 ## Feedback bundle
 
 The prototype keeps a small playtest journal on the local machine. It records game events such as route choice, encounter steps, interventions, settlement services, and the final result. It does not record names, typed text outside the feedback form, machine identifiers, or network information.

@@ -164,6 +164,10 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	_expect(game.current_run_code() == "ASH-1107", "the playable stage should expose a stable chapter-and-seed run identity")
+	var opening_record: String = game.current_run_record_text()
+	_expect(opening_record.contains("RUN ID · ASH-1107") and opening_record.contains("ASHGATE LOWLANDS · DAY 1 · Ashgate Depot · Refit") and opening_record.contains("Contract · Offered"), "the live March Record should identify the opening run and its unresolved obligation")
+	_expect(opening_record.contains("Systems · 6 ready · 1 strained · 0 offline") and opening_record.contains("NEXT ORDER") and opening_record.contains("guard Morrowline"), "the live March Record should preserve current system condition and the authoritative next order")
 	_expect(game.contract_accept_button.text.contains("EACH ENEMY +1 HP") and game.contract_accept_button.text.contains("+30 ASHMARKS · +2 TRUST") and game.contract_decline_button.text.contains("NO EXTRA ENEMY HP") and game.contract_decline_button.text.contains("NO CONTRACT PAYOUT OR TRUST"), "the opening contract actions should disclose both sides of the combat and reward tradeoff before commitment")
 	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
@@ -766,7 +770,7 @@ func _run() -> void:
 		enemy["hp"] = 0
 	game._refresh_ui()
 	_expect(game.results_summary_label.text.contains("travelled without the guard contract") and not game.results_summary_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
-	_expect(game.results_record_label.text.contains("Morrowline recovery: all service actions spent"), "the debrief should distinguish fully used recovery from services left behind")
+	_expect(game.results_record_label.text.contains("RUN RECORD · ASH-1107") and game.results_record_label.text.contains("Morrowline recovery: all service actions spent"), "the debrief should retain the reproducible run identity and distinguish fully used recovery from services left behind")
 	game.state.guard_contract_status = "completed"
 	game.state.settlement_actions_remaining = completed_services
 	game.state.encounter_enemies = completed_enemies
@@ -830,6 +834,7 @@ func _run() -> void:
 	var feedback_bundle = JSON.parse_string(FileAccess.get_file_as_string(game.last_feedback_path))
 	var feedback_final_state: Dictionary = feedback_bundle.get("final_state", {}) if feedback_bundle is Dictionary else {}
 	_expect(feedback_final_state.get("campaign_path", []).size() == 6 and String(feedback_final_state.get("campaign_decisions", {}).get("lost_signal", "")) == "move_silent" and int(feedback_final_state.get("unused_recovery_actions", -1)) == completed_services, "local feedback should retain the path, authored decisions, and unused recovery behind the tester's notes")
+	_expect(String(feedback_final_state.get("run_code", "")) == "ASH-1107" and int(feedback_final_state.get("seed", -1)) == 1107, "local feedback should include the same visible run identity and authoritative seed used by the deterministic simulation")
 	_expect(game.feedback_status_label.text.begins_with("SAVED LOCALLY") and game.feedback_status_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_save_button.has_focus(), "saved feedback should provide a clear versioned receipt and repeat action")
 	_expect(game.feedback_path_button.visible and not game.feedback_path_button.disabled and game.feedback_path_button.tooltip_text == game.last_feedback_path, "a saved report should expose its complete path through a controller-accessible receipt action")
 	_expect(game.feedback_close_button.get_node_or_null(game.feedback_close_button.focus_neighbor_right) == game.feedback_path_button and game.feedback_path_button.get_node_or_null(game.feedback_path_button.focus_neighbor_right) == game.feedback_save_button and game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_path_button, "the saved-report action row should follow its visible controller order")

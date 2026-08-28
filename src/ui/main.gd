@@ -1493,6 +1493,8 @@ func _checkpoint(reason: String) -> void:
 func _state_journal_summary() -> Dictionary:
 	var dependencies := state.dependency_summary()
 	return {
+		"run_code": current_run_code(),
+		"seed": state.seed,
 		"phase": state.phase,
 		"day": state.day,
 		"fuel": state.fuel,
@@ -3076,7 +3078,8 @@ func _result_record_text() -> String:
 	var occurrence_block := "\n%s" % "\n".join(occurrence_lines) if not occurrence_lines.is_empty() else ""
 	var carrier_record := " · Carrier: %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty() else ""
 	var development_record := "\nRegional development: PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts" if state.earned_regional_development() == "veyru_public_archive_signal" else ""
-	return "RUN RECORD · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	return "RUN RECORD · %s · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+		current_run_code(),
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_name(),
@@ -3092,6 +3095,56 @@ func _result_record_text() -> String:
 		_recovery_location_name(),
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
+		int(dependencies.get("ready", 0)),
+		int(dependencies.get("strained", 0)),
+		int(dependencies.get("offline", 0)),
+		_result_system_condition_text()
+	]
+
+func current_run_code() -> String:
+	var region_code := "VEY" if state.campaign_region_id == "flooded_veyru" else "ASH"
+	return "%s-%d" % [region_code, state.seed]
+
+func current_run_record_text() -> String:
+	var path_names: Array[String] = []
+	var visible_path: Array[String] = state.campaign_path.duplicate()
+	if state.phase in ["battle", "final_battle"] and state.journey_node not in visible_path:
+		visible_path.append(state.journey_node)
+	for node_id in visible_path:
+		path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
+	var current_location_name := String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, LongMarchState.JOURNEY_NODES.get(state.current_location, {})).get("name", state.current_location.replace("_", " ").capitalize()))
+	var dependencies := state.dependency_summary()
+	var contract_text := _active_contract_status().replace("_", " ").capitalize()
+	if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty():
+		contract_text += " · Carrier: %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", state.veyru_medicine_carrier_id.replace("_", " ").capitalize()))
+	var occurrence_lines := state.occurrence_debrief_lines()
+	var occurrence_text := "; ".join(occurrence_lines) if not occurrence_lines.is_empty() else "none recorded"
+	var decision_text := _campaign_decision_record_text()
+	if decision_text in ["no route events on this path", "no regional decisions recorded"]:
+		decision_text = "none recorded"
+	var doctrine := state.encounter_target_doctrine if state.phase in ["battle", "final_battle", "results"] else _selected_id(doctrine_option)
+	var next_order := _current_guidance().replace("CURRENT ORDER · ", "").replace("DEBRIEF · ", "")
+	return "RUN ID · %s\n%s · DAY %d · %s · %s\n\nNEXT ORDER\n%s\n\nPROGRESS\n%d/5 encounters secured · %s · %s %d\nPath · %s\n\nCOMMITMENTS\nContract · %s\nDoctrine · %s\nSpecialist · %s\nDecisions · %s\nRoad occurrences · %s\n\nFORTRESS CONDITION\nFuel %d · Hull %d/10 · Heat %d/%d\nSystems · %d ready · %d strained · %d offline\n%s" % [
+		current_run_code(),
+		state.campaign_region_name().to_upper(),
+		state.day,
+		current_location_name,
+		state.phase.replace("_", " ").capitalize(),
+		next_order,
+		state.campaign_encounters_completed,
+		state.campaign_pressure_name(),
+		state.campaign_pressure_band().replace("_", " ").capitalize(),
+		state.campaign_pressure,
+		" → ".join(path_names),
+		contract_text,
+		doctrine.replace("_", " ").capitalize(),
+		state.specialist_name(),
+		decision_text,
+		occurrence_text,
+		state.fuel,
+		state.hull_condition,
+		state.heat,
+		LongMarchState.BASE_HEAT_LIMIT,
 		int(dependencies.get("ready", 0)),
 		int(dependencies.get("strained", 0)),
 		int(dependencies.get("offline", 0)),

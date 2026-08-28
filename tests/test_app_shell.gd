@@ -263,6 +263,8 @@ func _run() -> void:
 	await process_frame
 	_expect(not app.confirmation_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.contract_accept_button.has_focus(), "cancelling a window close should restore the exact live-stage focus and processing state")
 	_expect(app.game_view.contract_title.text == "LANTERN QUAY CONTRACT" and app.game_view.contract_accept_button.text.contains("PARTS CRATE") and app.game_view.campaign_map.button_for("pump_gallery") != null, "the Veyru stage should expose its named carrier and regional map immediately")
+	var veyru_opening_record: String = app.game_view.current_run_record_text()
+	_expect(app.game_view.current_run_code() == "VEY-2204" and veyru_opening_record.contains("FLOODED VEYRU · DAY 1 · Lantern Quay") and veyru_opening_record.contains("sealed medicines"), "Veyru should expose a distinct reproducible run identity and chapter-aware March Record")
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_summary_label.text.begins_with("FLOODED VEYRU · DAY 1 · Lantern Quay") and app.restart_button.tooltip_text.contains("Flooded Veyru"), "Veyru pause context should identify the active chapter before a destructive action")
@@ -430,10 +432,34 @@ func _run() -> void:
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
 	_expect(app.resume_button.get_node_or_null(app.resume_button.focus_neighbor_bottom) == app.pause_save_button and app.pause_save_button.get_node_or_null(app.pause_save_button.focus_neighbor_right) == app.save_return_button, "the pause menu should have explicit directional navigation")
-	_expect(app.pause_briefing_button.get_node_or_null(app.pause_briefing_button.focus_neighbor_bottom) == app.pause_notes_button and app.pause_notes_button.get_node_or_null(app.pause_notes_button.focus_neighbor_bottom) == app.restart_button, "pause navigation should include the local playtest-notes action before destructive session controls")
+	_expect(app.pause_record_button.get_node_or_null(app.pause_record_button.focus_neighbor_right) == app.pause_briefing_button and app.pause_briefing_button.get_node_or_null(app.pause_briefing_button.focus_neighbor_right) == app.pause_settings_button and app.pause_briefing_button.get_node_or_null(app.pause_briefing_button.focus_neighbor_bottom) == app.pause_notes_button, "pause navigation should expose March Record, Field Briefing, and Settings before local notes and destructive controls")
+	_expect(app.pause_notes_button.get_node_or_null(app.pause_notes_button.focus_neighbor_bottom) == app.restart_button, "pause navigation should retain local playtest notes before destructive session controls")
 	_expect(app.title_button.get_node_or_null(app.title_button.focus_next) == app.resume_button and app.resume_button.get_node_or_null(app.resume_button.focus_previous) == app.title_button, "the pause menu should trap Tab navigation inside its visible actions")
-	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5"), "the pause menu should summarize the current run")
+	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5") and app.pause_summary_label.text.contains("RUN ASH-1107"), "the pause menu should summarize the current run and expose its reproducible identity")
 	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
+	var state_before_record: Dictionary = app.game_view.state.serialize()
+	app.pause_record_button.pressed.emit()
+	await process_frame
+	_expect(app.run_record_view.visible and not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED and app.run_record_close_button.has_focus(), "March Record should open above the paused run without resuming simulation")
+	_expect(app.run_record_context_label.text == "PAUSED MARCH · ASH-1107" and app.run_record_body_label.text.contains("ASHGATE LOWLANDS · DAY 1 · Ashgate Depot · Refit"), "the record should identify the seed, chapter, day, location, and phase")
+	_expect(app.run_record_body_label.text.contains("Contract · Offered") and app.run_record_body_label.text.contains("Systems · 6 ready · 1 strained · 0 offline") and app.run_record_body_label.text.contains("NEXT ORDER") and app.run_record_body_label.text.contains("guard Morrowline"), "the record should consolidate commitments, system condition, and the waiting decision")
+	app.run_record_copy_button.pressed.emit()
+	await process_frame
+	_expect(app.run_record_status_label.text.begins_with("MARCH RECORD COPIED") and app.run_record_status_label.text.contains("Nothing was opened or sent") and app.run_record_copy_button.has_focus(), "copying the March Record should produce a visible local-only receipt")
+	var record_cancel := InputEventAction.new()
+	record_cancel.action = "ui_cancel"
+	record_cancel.pressed = true
+	app._unhandled_input(record_cancel)
+	await process_frame
+	_expect(not app.run_record_view.visible and app.pause_view.visible and app.pause_record_button.has_focus() and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "cancel should return from March Record to the same Pause action without resuming play")
+	_expect(app._saved_values_match(state_before_record, app.game_view.state.serialize()), "opening, copying, and closing March Record should not mutate deterministic campaign state")
+	app.run_record_scroll.scroll_vertical = 10000
+	app.pause_record_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.run_record_scroll.scroll_vertical == 0, "reopening March Record should return to the run identity and next order at the top")
+	app.run_record_close_button.pressed.emit()
+	await process_frame
 	var state_before_notes: Dictionary = app.game_view.state.serialize()
 	app.pause_notes_button.pressed.emit()
 	await process_frame

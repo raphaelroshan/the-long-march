@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.248`; Feeds A through S are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.249`; Feeds A through T are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -119,6 +119,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.248` through the responsive title journey card.
 
 > Make each title start, Continue, and recovery action explain the exact journey or checkpoint it will open. Update one existing card on focus or hover, restore keyboard/controller context after mouse exit, and name obligation, pressure, recovery, finale, or saved next decision. Do not add another confirmation step or change gameplay state.
+
+### Current Feed T — pause-accessible March Record
+
+**Status:** Complete in `0.3.0-alpha.249` through the read-only March Record.
+
+> Give a paused or completed run one compact record of its seed identity, current order, secured path, pressure, commitments, authored decisions, occurrences, and fortress condition. Keep the stage suspended, make copy explicit and local-only, return focus to Pause, and include the same identity in debrief and feedback data. Do not change simulation state or imply that a seed alone reproduces player commands.
 
 ## Historical prototype feed sequence
 

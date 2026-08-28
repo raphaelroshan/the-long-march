@@ -39,6 +39,7 @@ var guide_view: Control
 var settings_view: Control
 var settings_scroll: ScrollContainer
 var data_info_view: Control
+var run_record_view: Control
 var pause_view: Control
 var confirmation_view: Control
 var checkpoint_toast: PanelContainer
@@ -76,6 +77,7 @@ var data_info_status_label: Label
 var data_info_copy_button: Button
 var data_info_close_button: Button
 var resume_button: Button
+var pause_record_button: Button
 var pause_summary_label: Label
 var pause_save_status_label: Label
 var pause_save_button: Button
@@ -91,6 +93,12 @@ var pause_detail_label: Label
 var pause_hint_label: Label
 var title_build_label: Label
 var pause_build_label: Label
+var run_record_context_label: Label
+var run_record_body_label: Label
+var run_record_status_label: Label
+var run_record_scroll: ScrollContainer
+var run_record_copy_button: Button
+var run_record_close_button: Button
 var title_control_contract_label: Label
 var title_input_legend_label: Label
 var title_right_spacer: Control
@@ -175,6 +183,7 @@ func _ready() -> void:
 	_build_settings_overlay()
 	_build_data_info_overlay()
 	_build_pause_menu()
+	_build_run_record_overlay()
 	_build_confirmation_overlay()
 	_build_checkpoint_toast()
 	interface_audio.register_root(self)
@@ -438,6 +447,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 func _configure_overlay_focus() -> void:
 	_configure_focus_pair(guide_close_button, guide_quick_start_button)
 	_configure_focus_pair(data_info_close_button, data_info_copy_button)
+	_configure_focus_pair(run_record_close_button, run_record_copy_button)
 	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
 	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(text_scale_button)
 	text_scale_button.focus_neighbor_top = text_scale_button.get_path_to(display_mode_button)
@@ -456,15 +466,21 @@ func _configure_overlay_focus() -> void:
 	resume_button.focus_neighbor_bottom = resume_button.get_path_to(pause_save_button)
 	pause_save_button.focus_neighbor_top = pause_save_button.get_path_to(resume_button)
 	pause_save_button.focus_neighbor_right = pause_save_button.get_path_to(save_return_button)
-	pause_save_button.focus_neighbor_bottom = pause_save_button.get_path_to(pause_briefing_button)
+	pause_save_button.focus_neighbor_bottom = pause_save_button.get_path_to(pause_record_button)
 	save_return_button.focus_neighbor_top = save_return_button.get_path_to(resume_button)
 	save_return_button.focus_neighbor_left = save_return_button.get_path_to(pause_save_button)
 	save_return_button.focus_neighbor_bottom = save_return_button.get_path_to(pause_settings_button)
+	pause_record_button.focus_neighbor_top = pause_record_button.get_path_to(pause_save_button)
+	pause_record_button.focus_neighbor_left = pause_record_button.get_path_to(pause_settings_button)
+	pause_record_button.focus_neighbor_right = pause_record_button.get_path_to(pause_briefing_button)
+	pause_record_button.focus_neighbor_bottom = pause_record_button.get_path_to(pause_notes_button)
 	pause_briefing_button.focus_neighbor_top = pause_briefing_button.get_path_to(pause_save_button)
+	pause_briefing_button.focus_neighbor_left = pause_briefing_button.get_path_to(pause_record_button)
 	pause_briefing_button.focus_neighbor_right = pause_briefing_button.get_path_to(pause_settings_button)
 	pause_briefing_button.focus_neighbor_bottom = pause_briefing_button.get_path_to(pause_notes_button)
 	pause_settings_button.focus_neighbor_top = pause_settings_button.get_path_to(save_return_button)
 	pause_settings_button.focus_neighbor_left = pause_settings_button.get_path_to(pause_briefing_button)
+	pause_settings_button.focus_neighbor_right = pause_settings_button.get_path_to(pause_record_button)
 	pause_settings_button.focus_neighbor_bottom = pause_settings_button.get_path_to(pause_notes_button)
 	pause_notes_button.focus_neighbor_top = pause_notes_button.get_path_to(pause_briefing_button)
 	pause_notes_button.focus_neighbor_bottom = pause_notes_button.get_path_to(restart_button)
@@ -474,7 +490,7 @@ func _configure_overlay_focus() -> void:
 	title_button.focus_neighbor_top = title_button.get_path_to(pause_notes_button)
 	title_button.focus_neighbor_left = title_button.get_path_to(restart_button)
 	title_button.focus_neighbor_bottom = title_button.get_path_to(resume_button)
-	_configure_focus_cycle([resume_button, pause_save_button, save_return_button, pause_briefing_button, pause_settings_button, pause_notes_button, restart_button, title_button])
+	_configure_focus_cycle([resume_button, pause_save_button, save_return_button, pause_record_button, pause_briefing_button, pause_settings_button, pause_notes_button, restart_button, title_button])
 	_configure_focus_pair(confirmation_cancel_button, confirmation_confirm_button)
 
 func _configure_focus_pair(first: Control, second: Control) -> void:
@@ -924,6 +940,13 @@ func _build_pause_menu() -> void:
 	var reference_actions := HBoxContainer.new()
 	reference_actions.add_theme_constant_override("separation", 8)
 	content.add_child(reference_actions)
+	pause_record_button = Button.new()
+	pause_record_button.text = "MARCH RECORD"
+	pause_record_button.custom_minimum_size = Vector2(0, 46)
+	pause_record_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pause_record_button.tooltip_text = "Review this run's path, commitments, damage, next order, and reproducible run ID."
+	pause_record_button.pressed.connect(_show_run_record)
+	reference_actions.add_child(pause_record_button)
 	pause_briefing_button = Button.new()
 	pause_briefing_button.text = "FIELD BRIEFING"
 	pause_briefing_button.custom_minimum_size = Vector2(0, 46)
@@ -973,6 +996,82 @@ func _build_pause_menu() -> void:
 	pause_build_label.add_theme_font_size_override("font_size", 10)
 	pause_build_label.add_theme_color_override("font_color", Color("#667477"))
 	content.add_child(pause_build_label)
+
+func _build_run_record_overlay() -> void:
+	run_record_view = Control.new()
+	run_record_view.name = "MarchRecord"
+	run_record_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	run_record_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	run_record_view.visible = false
+	add_child(run_record_view)
+	var shade := ColorRect.new()
+	shade.color = Color(0.01, 0.015, 0.018, 0.93)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	run_record_view.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	run_record_view.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(680, 620)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191dfb"), Color("#688587"), 2, 8, 22))
+	center.add_child(panel)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	panel.add_child(content)
+	run_record_context_label = Label.new()
+	run_record_context_label.add_theme_font_size_override("font_size", 12)
+	run_record_context_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(run_record_context_label)
+	var title := Label.new()
+	title.text = "March Record"
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color("#f0d29d"))
+	content.add_child(title)
+	var intro := Label.new()
+	intro.text = "A read-only account of the road so far. Use it to regain context or attach an exact run identity to playtest notes."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.custom_minimum_size = Vector2(610, 38)
+	intro.add_theme_font_size_override("font_size", 14)
+	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
+	content.add_child(intro)
+	var record_panel := PanelContainer.new()
+	record_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	record_panel.add_theme_stylebox_override("panel", _flat_style(Color("#0b1216f5"), Color("#455a60"), 1, 6, 12))
+	content.add_child(record_panel)
+	run_record_scroll = ScrollContainer.new()
+	run_record_scroll.custom_minimum_size = Vector2(610, 360)
+	run_record_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	run_record_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	record_panel.add_child(run_record_scroll)
+	run_record_body_label = Label.new()
+	run_record_body_label.custom_minimum_size = Vector2(580, 0)
+	run_record_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	run_record_body_label.add_theme_font_size_override("font_size", 12)
+	run_record_body_label.add_theme_color_override("font_color", Color("#d7dfdd"))
+	run_record_scroll.add_child(run_record_body_label)
+	run_record_status_label = Label.new()
+	run_record_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	run_record_status_label.custom_minimum_size = Vector2(610, 24)
+	run_record_status_label.add_theme_font_size_override("font_size", 11)
+	run_record_status_label.add_theme_color_override("font_color", Color("#d8c389"))
+	content.add_child(run_record_status_label)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	content.add_child(actions)
+	run_record_close_button = Button.new()
+	run_record_close_button.text = "BACK TO PAUSE"
+	run_record_close_button.custom_minimum_size = Vector2(0, 46)
+	run_record_close_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	run_record_close_button.pressed.connect(_hide_run_record)
+	actions.add_child(run_record_close_button)
+	run_record_copy_button = Button.new()
+	run_record_copy_button.text = "COPY MARCH RECORD"
+	run_record_copy_button.custom_minimum_size = Vector2(0, 46)
+	run_record_copy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	run_record_copy_button.tooltip_text = "Copy this read-only text summary. Nothing is opened or sent."
+	run_record_copy_button.pressed.connect(_copy_run_record)
+	_accent_button(run_record_copy_button)
+	actions.add_child(run_record_copy_button)
 
 func _build_confirmation_overlay() -> void:
 	confirmation_view = Control.new()
@@ -1190,7 +1289,7 @@ func _apply_visual_contrast() -> void:
 	_refresh_contrast_button_styles()
 
 func _refresh_contrast_button_styles() -> void:
-	for button in [guide_quick_start_button, settings_close_button, data_info_copy_button, resume_button, confirmation_cancel_button]:
+	for button in [guide_quick_start_button, settings_close_button, data_info_copy_button, run_record_copy_button, resume_button, confirmation_cancel_button]:
 		if button != null:
 			_accent_button(button)
 	for button in [reset_playtest_button, restart_button, title_button]:
@@ -1699,6 +1798,8 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	menu_view.visible = false
 	guide_view.visible = false
 	settings_view.visible = false
+	data_info_view.visible = false
+	run_record_view.visible = false
 	pause_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
@@ -1732,6 +1833,41 @@ func _show_pause() -> void:
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
 	resume_button.grab_focus()
 
+func _show_run_record() -> void:
+	if game_view == null or not pause_view.visible:
+		return
+	pause_view.visible = false
+	run_record_view.visible = true
+	_refresh_run_record()
+	run_record_close_button.grab_focus()
+	call_deferred("_reset_run_record_scroll")
+
+func _reset_run_record_scroll() -> void:
+	if run_record_scroll != null:
+		run_record_scroll.scroll_vertical = 0
+
+func _hide_run_record() -> void:
+	run_record_view.visible = false
+	pause_view.visible = true
+	_refresh_pause_summary()
+	pause_record_button.grab_focus()
+
+func _refresh_run_record(message: String = "") -> void:
+	if game_view == null:
+		return
+	var run_state = game_view.get("state")
+	var viewing_debrief := String(run_state.get("phase")) == "results"
+	run_record_context_label.text = "%s · %s" % ["COMPLETED DEBRIEF" if viewing_debrief else "PAUSED MARCH", String(game_view.call("current_run_code"))]
+	run_record_body_label.text = String(game_view.call("current_run_record_text"))
+	run_record_status_label.text = message if not message.is_empty() else "Read-only record. Copying changes only the local clipboard; nothing is opened or sent."
+
+func _copy_run_record() -> void:
+	if game_view == null:
+		return
+	DisplayServer.clipboard_set(String(game_view.call("current_run_record_text")))
+	_refresh_run_record("MARCH RECORD COPIED · Paste it into your notes when you choose. Nothing was opened or sent.")
+	run_record_copy_button.grab_focus()
+
 func _refresh_pause_summary(message: String = "") -> void:
 	if game_view == null:
 		return
@@ -1751,7 +1887,7 @@ func _refresh_pause_summary(message: String = "") -> void:
 	restart_button.text = "PLAY AGAIN" if viewing_debrief else "RESTART"
 	restart_button.tooltip_text = "Begin another %s march after confirmation." % region_name if viewing_debrief else "Discard the current %s stage state and begin again." % region_name
 	pause_hint_label.text = _pause_cancel_hint()
-	pause_summary_label.text = "%s · DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [region_name.to_upper(), int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
+	pause_summary_label.text = "%s · DAY %d · %s\n%s · %d/5 encounters secured · RUN %s\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [region_name.to_upper(), int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), String(game_view.call("current_run_code")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
 	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."
 	if current_run_saved:
@@ -2179,6 +2315,7 @@ func _return_to_title() -> void:
 	guide_view.visible = false
 	settings_view.visible = false
 	data_info_view.visible = false
+	run_record_view.visible = false
 	confirmation_view.visible = false
 	pending_confirmation = ""
 	paused_stage_focus = null
@@ -2207,7 +2344,7 @@ func _request_application_close() -> void:
 		_perform_application_quit()
 		return
 	close_request_focus = get_viewport().gui_get_focus_owner()
-	close_request_was_paused = pause_view.visible or settings_opened_from_pause
+	close_request_was_paused = pause_view.visible or run_record_view.visible or settings_opened_from_pause
 	close_request_process_mode = game_view.process_mode
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
 	_request_confirmation("quit_save")
@@ -2249,6 +2386,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if data_info_view.visible:
 		_hide_data_info()
+		get_viewport().set_input_as_handled()
+		return
+	if run_record_view.visible:
+		_hide_run_record()
 		get_viewport().set_input_as_handled()
 		return
 	if settings_view.visible:

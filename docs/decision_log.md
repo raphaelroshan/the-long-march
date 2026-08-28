@@ -875,3 +875,7 @@ Settings exposes one read-only panel that identifies the exact build/platform, s
 ## 2026-08-28 — Title focus explains the action it will take
 
 The existing right-hand title card now follows Guided Ashgate, Quick Ashgate, Flooded Veyru, Continue, and damaged-save recovery focus instead of describing both chapters generically. Each new journey names its obligation, pressure, recovery point, and finale; Continue uses validated save metadata to name the waiting decision and fortress condition. Pointer hover may inspect another action, but mouse exit restores the keyboard/controller-focused card. Launch remains a single activation and existing replacement confirmations remain authoritative, so preview does not become a hidden selection step.
+
+## 2026-08-28 — Reorientation uses an inspectable March Record
+
+Pause now exposes a read-only March Record assembled from the authoritative live state. Its first viewport prioritizes the stable chapter-and-seed run code and current order, followed by path, pressure, commitments, authored decisions, occurrences, resources, and named system damage. Copy is an explicit clipboard-only action; Back or cancel restores the suspended Pause menu and exact entry focus. The same run code enters debrief and feedback summaries so screenshots, notes, and exported reports refer to one deterministic run without claiming that the seed replaces the command history.
