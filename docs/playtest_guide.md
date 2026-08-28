@@ -50,6 +50,8 @@ Automatic saves also produce a short `Saved · <reason>` receipt in the stage he
 
 Chassis language follows the current phase. During battle, **Inspect Chassis** enters read-only target review and returns to the encounter orders. A new debrief resets its view and focuses **Inspect Final Chassis** before feedback; selecting a system stays in review, and cancel returns to the debrief action. After review begins, the current-order and Pause shortcuts advance to feedback. Neither inspection path permits placement outside a refit stop.
 
+Inside the inspector, **Battle System**, **Final System**, and **Refit Locked** distinguish targeting, debrief review, and road-state inspection. At 110% text, verify that these labels and their complete helper sentences fit the right-hand detail column; no instruction should end mid-word or disappear beneath the panel edge.
+
 **Visual Contrast** switches between the authored Standard palette and a darker, brighter-outlined High mode. Test it on the title, one route decision, and one contact card. Ask whether focus and secondary copy become easier to find without flattening the difference between safe, warning, danger, and unknown states; every state should remain understandable from its words and symbols alone.
 
 **Controller Confirm** can use A or B. The paired face button becomes Cancel, while Enter and Escape never change. After switching, check the title legend, Pause shortcut, briefing, route review, and chassis instructions; report any place whose hint disagrees with the button that actually acts.

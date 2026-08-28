@@ -919,3 +919,7 @@ The passive chassis heading now points to Edit Chassis only where refit is actua
 ## 2026-08-28 — Debrief navigation follows its teaching order
 
 A newly opened debrief now resets inherited battle scrolling and focuses Inspect Final Chassis before feedback. The action moved directly below March Debrief so both remain visible together even when the authored result record is long at 110% text. Entering review advances the current-order and Pause return targets to feedback through transient UI state; loading the result offers review first again. This aligns guidance, focus, and layout without making inspection mandatory or adding presentation state to saves.
+
+## 2026-08-28 — Chassis detail copy obeys its fixed column
+
+Locked-phase chassis help now uses compact labelled instructions sized for the existing 320-pixel detail column, with a two-line drawing bound as a fallback. Battle names the selected module as a Battle System and points to targeting; results use Final System and review language; road states name the refit lock and next road-stop opportunity. This preserves the dense inspector layout while removing visibly truncated instructions and generic headings, without changing any simulation or input behavior.

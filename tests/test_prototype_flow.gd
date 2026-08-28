@@ -400,6 +400,7 @@ func _run() -> void:
 	_expect(game.intervention_buttons[3].text.contains("Coal Cell") and game.intervention_buttons[3].text.contains("fuel feed"), "cutting loose cargo should disclose the exact module and dependency cost before use")
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
 	_expect(game.fortress_panel.interaction_heading().contains("Inspect Chassis chooses a seal target") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive battle chassis should describe the action that is actually available in this phase")
+	_expect(game.fortress_panel.inspection_detail_heading() == "BATTLE SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("TARGETING") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0, "battle inspection detail copy should name its phase and fit the fixed status column")
 	game.combat_inspect_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS INSPECTION") and not game.fortress_panel.interaction_heading().contains("EDIT MODE"), "the combat inspection action should enter a clearly named non-refit chassis mode")
@@ -611,7 +612,7 @@ func _run() -> void:
 	await _advance_until_phase("map")
 	_expect(game.state.campaign_event_pending == "lost_signal", "the Broken Relay should surface its authored decision")
 	_expect(game.encounter_label.text.begins_with("DECISION REQUIRED · THE SILENCE BETWEEN LAMPS") and game.encounter_label.text.contains("before the fortress can depart"), "an authored event should replace the previous after-action with its current blocking decision")
-	_expect(game.fortress_panel.locked_mode_help_text().contains("between road stops") and not game.fortress_panel.locked_mode_help_text().contains("battle damage"), "map-event chassis guidance should not describe the current phase as a battle")
+	_expect(game.fortress_panel.locked_mode_help_text().contains("refit at a road stop") and not game.fortress_panel.locked_mode_help_text().contains("TARGETING") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0, "map-event chassis guidance should describe the refit lock and fit the fixed status column without battle language")
 	_expect(game.campaign_map.status_for("morrowline_camp") == "blocked", "the map should show that a local decision blocks the next road")
 	_expect(game.campaign_event_buttons[0].disabled and game.campaign_event_buttons[0].text.contains("REQUIRES AN OPERATIONAL SIGNAL SYSTEM"), "locked event choices should state their missing capability without requiring hover")
 	_expect(game.campaign_event_buttons[0].text.contains("Exact forecasts") and game.campaign_event_buttons[0].text.contains("Pressure +1"), "a locked event choice should still teach its complete payoff and cost")
@@ -797,7 +798,7 @@ func _run() -> void:
 	_expect(game.results_inspect_button.has_focus(), "Go to Chassis Review should focus the debrief's first interpretation action without opening it")
 	game.results_inspect_button.pressed.emit()
 	await process_frame
-	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.tooltip_text.contains("returns to the debrief") and game.current_order_button.text == "GO TO FEEDBACK ↓" and game.guidance_label.text.contains("Final chassis reviewed"), "Inspect Final Chassis should enter review mode and advance the debrief handoff toward feedback")
+	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.inspection_detail_heading() == "FINAL SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("REVIEW") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0 and game.fortress_panel.tooltip_text.contains("returns to the debrief") and game.current_order_button.text == "GO TO FEEDBACK ↓" and game.guidance_label.text.contains("Final chassis reviewed"), "Inspect Final Chassis should enter a fitted result-specific review mode and advance the debrief handoff toward feedback")
 	var result_chassis_select := InputEventAction.new()
 	result_chassis_select.action = "ui_accept"
 	result_chassis_select.pressed = true

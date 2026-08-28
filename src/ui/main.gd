@@ -3468,10 +3468,21 @@ class FortressPanel extends Control:
 		if state == null:
 			return "Chassis data is unavailable."
 		if state.phase in ["battle", "final_battle"]:
-			return "Select another module to inspect battle damage or choose a seal target."
+			return "TARGETING · Inspect another system or choose Seal."
 		if state.phase == "results":
-			return "Select another module to review the fortress that reached the result."
-		return "Refit is unavailable between road stops; inspect system condition here."
+			return "REVIEW · Compare another surviving system."
+		return "REFIT LOCKED · Inspect condition; refit at a road stop."
+
+	func inspection_detail_heading() -> String:
+		if state == null:
+			return "SYSTEM STATUS"
+		if state.can_refit():
+			return "REFIT STATUS" if has_focus() else "INSPECTED SYSTEM"
+		if state.phase in ["battle", "final_battle"]:
+			return "BATTLE SYSTEM"
+		if state.phase == "results":
+			return "FINAL SYSTEM"
+		return "SYSTEM STATUS"
 
 	func selected_capability_text() -> String:
 		if state == null or placement_module_id.is_empty():
@@ -3578,10 +3589,7 @@ class FortressPanel extends Control:
 
 	func _draw_refit_details() -> void:
 		var x := 370.0
-		var detail_heading := "SYSTEM STATUS"
-		if state != null and state.can_refit():
-			detail_heading = "REFIT STATUS" if has_focus() else "INSPECTED SYSTEM"
-		draw_string(ThemeDB.fallback_font, Vector2(x, 40), detail_heading, HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
+		draw_string(ThemeDB.fallback_font, Vector2(x, 40), inspection_detail_heading(), HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
 		if state == null or placement_module_id.is_empty():
 			return
 		var definition := state.module_definition(placement_module_id)
@@ -3611,7 +3619,7 @@ class FortressPanel extends Control:
 			if has_focus():
 				draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · %s confirms · %s returns" % [controller_confirm_label, controller_cancel_label], HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
-			draw_string(ThemeDB.fallback_font, Vector2(x, 228), locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
+			draw_multiline_string(ThemeDB.fallback_font, Vector2(x, 228), locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, 2, Color("#b9c3bf"))
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#18242b"), true)
