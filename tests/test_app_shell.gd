@@ -34,21 +34,21 @@ func _run() -> void:
 	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.quick_start_button, "title navigation should move down from Guided Start to Quick Start")
 	_expect(app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_left) == app.guide_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_right) != null, "title navigation should traverse the utility row explicitly")
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "Continue should stay out of the action stack when no local save exists")
-	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.settings_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_top) == app.quick_start_button, "no-save navigation should route around disabled Continue")
-	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should skip Continue and wrap through visible title actions")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.settings_button, "no-save navigation should include both playable regions while routing around disabled Continue")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should include Veyru, skip Continue, and wrap through visible title actions")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("Autosave begins after your first committed decision"), "the title should explain the first automatic checkpoint in player-facing language")
 	_expect(app.guide_quick_start_button.text == "QUICK START ASHGATE", "the no-save Field Guide should offer a direct quick start")
-	_expect(_tree_contains_text(app.menu_view, "Prepare at Ashgate") and _tree_contains_text(app.menu_view, "answer the convoy contract"), "the title overview should match the contract-first playable handoff while retaining chassis preparation")
-	_expect(_tree_contains_text(app.menu_view, "CURRENT BUILD · COMPLETE TEST JOURNEY") and _tree_contains_text(app.menu_view, "Ashgate Lowlands") and _tree_contains_text(app.menu_view, "Later regions are not included in this build"), "the title should state the exact playable chapter without implying that the wider campaign is implemented")
+	_expect(_tree_contains_text(app.menu_view, "Choose the obligation") and _tree_contains_text(app.menu_view, "sealed medicines"), "the title overview should frame both chapters through their opening obligation")
+	_expect(_tree_contains_text(app.menu_view, "CURRENT BUILD · TWO TEST JOURNEYS") and _tree_contains_text(app.menu_view, "Ashgate") and _tree_contains_text(app.menu_view, "Flooded Veyru"), "the title should state both playable chapters without implying that the wider campaign is implemented")
 	_expect(_tree_contains_text(app.menu_view, "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER") and _tree_contains_text(app.menu_view, "BATTLES RESOLVE STEP BY STEP"), "the title should state the boundary between player decisions and automatic battle resolution before starting")
-	_expect(_tree_contains_text(app.menu_view, "ONE COMPLETE CHAPTER") and _tree_contains_text(app.menu_view, "5 ENCOUNTERS") and _tree_contains_text(app.menu_view, "FINALE AT 5"), "the title should make clear that this build is one complete chapter and the final battle is its fifth encounter")
+	_expect(_tree_contains_text(app.menu_view, "TWO PLAYABLE CHAPTERS") and _tree_contains_text(app.menu_view, "5 ENCOUNTERS EACH") and _tree_contains_text(app.menu_view, "FINALE AT 5"), "the title should make clear that both playable chapters reach a fifth-encounter finale")
 	_expect(_tree_contains_text(app.menu_view, "D-pad / arrows move") and _tree_contains_text(app.menu_view, "B / Esc closes panels"), "the title should describe its own navigation behavior instead of claiming that cancel pauses the game")
 	var completed_briefing := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
 	completed_briefing.store_string("completed for title test")
 	completed_briefing.close()
 	app._refresh_title_state()
 	_expect(not app.quick_start_button.visible and app.start_button.text == "START GAME · ASHGATE DEPOT", "a completed briefing should collapse the two equivalent fresh-start actions into one clear Start Game action")
-	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.settings_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.guide_button, "completed-briefing navigation should skip the hidden Quick Start action")
+	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.veyru_start_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button, "completed-briefing navigation should skip the hidden Quick Start action while retaining Veyru")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ONBOARDING_PATH))
 	app._refresh_title_state()
 	_expect(app.quick_start_button.visible and app.start_button.text.contains("GUIDED FIRST RUN"), "removing the briefing marker should restore the explicit guided and quick-start choices")
@@ -58,8 +58,8 @@ func _run() -> void:
 	app._refresh_title_state()
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "invalid save data should never expose Continue as an actionable choice")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
-	_expect(app.save_recovery_button.visible and app.save_recovery_button.text == "REMOVE UNUSABLE SAVE" and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose an accurately named recovery action in the title flow")
-	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save Tab navigation should include the recovery action")
+	_expect(app.save_recovery_button.visible and app.save_recovery_button.text == "REMOVE UNUSABLE SAVE" and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose an accurately named recovery action after both new-run choices")
+	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save Tab navigation should include the Veyru and recovery actions")
 	app._continue_game()
 	await process_frame
 	_expect(app.save_recovery_button.has_focus(), "a failed Continue attempt should focus the newly available recovery action")
@@ -114,6 +114,23 @@ func _run() -> void:
 	app.guide_close_button.pressed.emit()
 	await process_frame
 	_expect(not app.guide_view.visible and app.guide_button.has_focus(), "closing the field guide should restore title-menu focus")
+
+	app.veyru_start_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the title should open Flooded Veyru as a separate chapter at Lantern Quay")
+	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.contract_accept_button.has_focus(), "Veyru should skip the Ashgate briefing and focus its medicine decision")
+	_expect(app.game_view.contract_title.text == "LANTERN QUAY CONTRACT" and app.game_view.contract_accept_button.text.contains("PARTS CRATE") and app.game_view.campaign_map.button_for("pump_gallery") != null, "the Veyru stage should expose its named carrier and regional map immediately")
+	app.game_view.contract_accept_button.pressed.emit()
+	await process_frame
+	_expect(app.game_view.state.veyru_contract_status == "accepted" and app.game_view.campaign_path_label.text.contains("Carrier: Parts Crate") and app.game_view.campaign_map.status_for("pump_gallery") == "available", "accepting the medicine contract through the UI should record its carrier and open the Veyru roads")
+	app._return_to_title()
+	await process_frame
+	await process_frame
+	_expect(app.menu_view.visible and app.game_view == null, "returning from an unsaved Veyru inspection should restore the shared title menu")
+	if FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	app._refresh_title_state()
 
 	app.quick_start_button.pressed.emit()
 	await process_frame
@@ -270,8 +287,8 @@ func _run() -> void:
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
 	_expect(app.save_status_label.text.contains("Next · Answer convoy contract") and app.save_status_label.text.contains("Fuel 6"), "the active checkpoint summary should identify the exact decision waiting after Continue without losing resource context")
 	_expect(app.continue_button.get_index() < app.start_button.get_index() and app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.start_button, "a valid save should place Continue first visually and route downward into fresh-start actions")
-	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.start_button and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.guide_button, "save-aware Tab navigation should follow the visible Continue, New Game, Quick Start order")
-	_expect(app.start_button.text.begins_with("NEW GAME") and app.quick_start_button.text.begins_with("NEW QUICK RUN"), "existing progress should make both fresh-start actions explicit")
+	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.start_button and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button, "save-aware Tab navigation should follow Continue, Ashgate starts, Veyru, then utility actions")
+	_expect(app.start_button.text.begins_with("NEW ASHGATE") and app.quick_start_button.text.begins_with("NEW ASHGATE"), "existing progress should make both Ashgate fresh-start actions explicit")
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Watch") and app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify checkpoint condition, phase, and encounter progress")
@@ -362,7 +379,7 @@ func _run() -> void:
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()
 	app._refresh_title_state()
-	_expect(app.start_button.text == "PLAY AGAIN · GUIDED BRIEFING" and app.quick_start_button.text == "QUICK REPLAY · SKIP BRIEFING", "a completed checkpoint should offer replay actions instead of implying an unfinished new game")
+	_expect(app.start_button.text == "PLAY ASHGATE · GUIDED BRIEFING" and app.quick_start_button.text == "REPLAY ASHGATE · SKIP BRIEFING", "a completed checkpoint should offer Ashgate replay actions instead of implying an unfinished new game")
 	_expect(app.guide_quick_start_button.text == "QUICK REPLAY ASHGATE", "the Field Guide action should use the same completed-run vocabulary as the title")
 	app.start_button.pressed.emit()
 	await process_frame

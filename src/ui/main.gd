@@ -186,6 +186,7 @@ var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
 var last_synced_combat_target_id: String = ""
 var show_onboarding_on_ready: bool = true
+var starting_region_id: String = "ashgate_lowlands"
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -317,8 +318,16 @@ func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 func _run_flow_step() -> int:
 	if state.phase == "results":
 		return 4
-	if state.phase == "final_battle" or state.current_location == "meridian_pass" or state.campaign_encounters_completed >= 4:
+	if state.phase == "final_battle" or state.current_location == state.campaign_final_node_id() or state.campaign_encounters_completed >= 4:
 		return 3
+	if state.campaign_region_id == "flooded_veyru":
+		if state.current_location == "veyru_evacuation_camp" or state.campaign_encounters_completed >= 2:
+			if state.current_location != "veyru_evacuation_camp" and state.campaign_encounters_completed >= 3:
+				return 3
+			return 2
+		if state.veyru_contract_status != "offered" or state.campaign_encounters_completed > 0 or state.phase in ["map", "battle"]:
+			return 1
+		return 0
 	if state.current_location == "morrowline_camp" or state.campaign_encounters_completed >= 3:
 		if state.current_location != "morrowline_camp" and state.campaign_encounters_completed >= 3:
 			return 3
@@ -361,16 +370,28 @@ func _ready() -> void:
 		_show_onboarding()
 
 func _reset_state() -> void:
-	state = LongMarchState.new(1107)
-	state.place_module("steam_lance_engine", Vector2i(0, 0))
-	state.place_module("coal_cell", Vector2i(0, 1))
-	state.place_module("generator_core", Vector2i(2, 0))
-	state.place_module("crew_quarters", Vector2i(4, 0))
-	state.place_module("ammunition_lift", Vector2i(2, 1))
-	state.place_module("field_workshop", Vector2i(3, 1))
-	state.place_module("repeater_gun", Vector2i(3, 2), true)
+	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)
+	if starting_region_id == "flooded_veyru":
+		state.place_module("steam_lance_engine", Vector2i(0, 0))
+		state.place_module("coal_cell", Vector2i(0, 1))
+		state.place_module("generator_core", Vector2i(2, 0))
+		state.place_module("crew_quarters", Vector2i(2, 1))
+		state.place_module("field_workshop", Vector2i(2, 2))
+		state.place_module("water_condenser", Vector2i(2, 3))
+		state.place_module("parts_crate", Vector2i(4, 2))
+	else:
+		state.place_module("steam_lance_engine", Vector2i(0, 0))
+		state.place_module("coal_cell", Vector2i(0, 1))
+		state.place_module("generator_core", Vector2i(2, 0))
+		state.place_module("crew_quarters", Vector2i(4, 0))
+		state.place_module("ammunition_lift", Vector2i(2, 1))
+		state.place_module("field_workshop", Vector2i(3, 1))
+		state.place_module("repeater_gun", Vector2i(3, 2), true)
 	state.seed_starter_inventory()
-	state.start_campaign()
+	if starting_region_id == "flooded_veyru":
+		state.start_flooded_veyru()
+	else:
+		state.start_campaign()
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
@@ -1284,7 +1305,8 @@ func _state_journal_summary() -> Dictionary:
 		"campaign_path": state.campaign_path.duplicate(),
 		"campaign_decisions": state.campaign_decisions.duplicate(true),
 		"campaign_pressure": state.campaign_pressure,
-		"contract": state.guard_contract_status,
+		"campaign_region": state.campaign_region_id,
+		"contract": _active_contract_status(),
 		"settlement_trust": state.settlement_trust,
 		"unused_recovery_actions": state.settlement_actions_remaining,
 		"specialist": state.specialist_id,
@@ -1381,10 +1403,10 @@ func _on_departure_option_changed(_index: int) -> void:
 	_refresh_ui()
 
 func _on_guard_contract_pressed(accept: bool) -> void:
-	var result := state.choose_guard_contract(accept)
+	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else state.choose_guard_contract(accept)
 	if bool(result.get("ok", false)):
 		_set_event("CONTRACT DECISION\n%s" % String(result.get("message", "Contract decision recorded.")))
-		_journal_event("guard_contract_answered", {"accepted": accept})
+		_journal_event("medicine_contract_answered" if state.campaign_region_id == "flooded_veyru" else "guard_contract_answered", {"accepted": accept})
 		_checkpoint("contract_answered")
 	else:
 		_set_event("Contract choice blocked: %s." % String(result.get("reason", "unknown")))
@@ -1445,8 +1467,8 @@ func _show_selected_route_preview(node_id: String) -> void:
 	var block_reason := _campaign_departure_block_reason(node_id)
 	var selected_detail := campaign_map.detail_for(node_id)
 	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)).to_upper()
-	var final_warning := "\nFINAL COMMITMENT · Failure ends the run; there is no retreat." if node_id == "meridian_pass" else ""
-	_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == "meridian_pass" else campaign_map.intel_tone_for(node_id))
+	var final_warning := "\nFINAL COMMITMENT · Failure ends the run; there is no retreat." if node_id == state.campaign_final_node_id() else ""
+	_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
 
 func _on_campaign_route_committed(node_id: String) -> void:
 	if node_id.is_empty() or node_id != selected_campaign_node_id:
@@ -1728,6 +1750,15 @@ func _campaign_departure_block_reason(node_id: String) -> String:
 		return "Need %d fuel · %d available" % [fuel_required, state.fuel]
 	return ""
 
+func current_location_is_region_start() -> bool:
+	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
+
+func _active_contract_status() -> String:
+	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
+
+func _recovery_location_name() -> String:
+	return "Evacuation Camp" if state.campaign_region_id == "flooded_veyru" else "Morrowline"
+
 func _on_grid_cell_pressed(cell: Vector2i) -> void:
 	var clicked := state.module_at(cell)
 	if not clicked.is_empty():
@@ -1871,7 +1902,7 @@ func _on_settlement_repair_pressed() -> void:
 
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
-	var service_message := "+2 fuel loaded for %d Ashmarks. %s." % [int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
+	var service_message := "+%d fuel loaded for %d Ashmarks. %s." % [int(result.get("fuel_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -1961,6 +1992,7 @@ func load_saved_run() -> bool:
 		_set_event("Load failed: %s." % String(result.get("reason", "unknown")))
 		return false
 	state = restored
+	starting_region_id = state.campaign_region_id
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
@@ -1981,7 +2013,7 @@ func _on_load_pressed() -> void:
 func _on_reset_pressed() -> void:
 	_reset_state()
 	fortress_panel.state = state
-	_set_event("The fortress is back at Ashgate Depot with a clean maintenance slate.")
+	_set_event("The fortress is back at %s with a clean maintenance slate." % String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location)))
 	_journal_event("run_reset")
 	_refresh_ui()
 
@@ -1994,7 +2026,7 @@ func _on_play_again_pressed() -> void:
 func start_replay_from_results() -> void:
 	_reset_state()
 	fortress_panel.state = state
-	_set_event("A new Ashgate march is ready. Answer the contract, inspect the chassis, and choose the first road.")
+	_set_event("A new %s march is ready. Answer the contract, inspect the chassis, and choose the first road." % state.campaign_region_name())
 	_journal_event("run_restarted_from_results")
 	_checkpoint("new_run_started")
 	_refresh_ui()
@@ -2019,27 +2051,63 @@ func _refresh_campaign_controls() -> void:
 	campaign_path_label.visible = state.campaign_active
 	campaign_map.visible = state.campaign_active and planning_phase
 	var pressure_band := state.campaign_pressure_band()
+	campaign_title.text = "%s MAP" % state.campaign_region_name().to_upper()
+	campaign_progress_bar.tooltip_text = "Secured encounters in the five-encounter %s chapter." % state.campaign_region_name()
 	var pressure_effect := "Closing begins at 3 · Break at 5 can close Signal Causeway."
 	var pressure_color := Color("#d8b568")
-	if pressure_band == "closing":
-		pressure_effect = "Break begins at 5 and can close Signal Causeway without forecasting."
-		pressure_color = Color("#e89270")
-	elif pressure_band == "break":
-		if state.campaign_node_closed("signal_causeway"):
-			pressure_effect = "Signal Causeway is closed · ready forecasting gear or Iven Pell can reopen it."
-		else:
-			pressure_effect = "Forecasting keeps Signal Causeway open despite Break pressure."
-		pressure_color = Color("#ef8375")
-	campaign_pressure_label.text = "Blockade — %s · pressure %d · secured %d/5\n%s" % [pressure_band.capitalize(), state.campaign_pressure, state.campaign_encounters_completed, pressure_effect]
+	if state.campaign_region_id == "flooded_veyru":
+		pressure_effect = "Flooding begins at 3 · Breach at 5 closes Drowned Registry and opens Pilgrim Gantry."
+		if pressure_band == "flooding":
+			pressure_effect = "Flood Surge gains damage · Breach at 5 opens the guaranteed high-road recovery route."
+			pressure_color = Color("#e89270")
+		elif pressure_band == "breach":
+			pressure_effect = "Drowned Registry is closed · Pilgrim Gantry is open and cannot close."
+			pressure_color = Color("#ef8375")
+	else:
+		if pressure_band == "closing":
+			pressure_effect = "Break begins at 5 and can close Signal Causeway without forecasting."
+			pressure_color = Color("#e89270")
+		elif pressure_band == "break":
+			if state.campaign_node_closed("signal_causeway"):
+				pressure_effect = "Signal Causeway is closed · ready forecasting gear or Iven Pell can reopen it."
+			else:
+				pressure_effect = "Forecasting keeps Signal Causeway open despite Break pressure."
+			pressure_color = Color("#ef8375")
+	campaign_pressure_label.text = "%s — %s · pressure %d · secured %d/5\n%s" % [state.campaign_pressure_name(), pressure_band.replace("_", " ").capitalize(), state.campaign_pressure, state.campaign_encounters_completed, pressure_effect]
 	campaign_pressure_label.add_theme_color_override("font_color", pressure_color)
-	campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [state.guard_contract_status.replace("_", " ").capitalize(), state.specialist_name()]
+	var active_contract_status := state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
+	if state.campaign_region_id == "flooded_veyru":
+		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if not state.veyru_medicine_carrier_id.is_empty() else "none"
+		campaign_path_label.text = "Medicine contract: %s · Carrier: %s" % [active_contract_status.replace("_", " ").capitalize(), carrier_name]
+	else:
+		campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [active_contract_status.replace("_", " ").capitalize(), state.specialist_name()]
 
-	var contract_offered := state.campaign_active and state.guard_contract_status == "offered" and state.current_location == "ashgate_depot"
+	var contract_offered := state.campaign_active and active_contract_status == "offered" and current_location_is_region_start()
 	contract_title.visible = contract_offered
 	contract_label.visible = contract_offered
 	contract_accept_button.visible = contract_offered
 	contract_decline_button.visible = contract_offered
-	contract_label.text = "Morrowline's parts wagon is exposed. Decide whether its payment and trust are worth a harder camp approach."
+	contract_accept_button.disabled = false
+	contract_decline_button.disabled = false
+	if state.campaign_region_id == "flooded_veyru":
+		var medicine_status := state.veyru_medicine_contract_status()
+		var carrier_name := String(medicine_status.get("carrier_name", "No carrier"))
+		contract_title.text = "LANTERN QUAY CONTRACT"
+		contract_label.text = "Carry sealed medicine cases to the Dry Archive. Flood contacts will value the exact reserved carrier shown below."
+		contract_accept_button.text = "CARRY SEALED MEDICINES\nCARRIER · %s\nDELIVERY · +28 ASHMARKS · +2 TRUST · +1 CAMP ACTION" % carrier_name.to_upper()
+		contract_accept_button.tooltip_text = "Reserve %s as the medicine carrier. Losing it fails the delivery but does not end the run." % carrier_name
+		contract_accept_button.disabled = not bool(medicine_status.get("available", false))
+		if contract_accept_button.disabled:
+			contract_accept_button.text += "\nLOCKED · %s" % String(medicine_status.get("reason", "No carrier available")).to_upper()
+		contract_decline_button.text = "DECLINE THE DELIVERY\nNO RESERVED CARRIER · MOBILITY +1\nONE CAMP ACTION · NO DELIVERY REWARD"
+		contract_decline_button.tooltip_text = "Keep cargo capacity free and gain one Mobility tendency, but forgo the medicine reward and extra camp action."
+	else:
+		contract_title.text = "ASHGATE CONTRACT"
+		contract_label.text = "Morrowline's parts wagon is exposed. Decide whether its payment and trust are worth a harder camp approach."
+		contract_accept_button.text = "GUARD THE CONVOY\nMORROWLINE · EACH ENEMY +1 HP\nON ARRIVAL · +30 ASHMARKS · +2 TRUST"
+		contract_accept_button.tooltip_text = "Accept a harder Morrowline approach in exchange for payment and settlement trust if the convoy arrives."
+		contract_decline_button.text = "TRAVEL UNBOUND\nNO EXTRA ENEMY HP\nNO CONTRACT PAYOUT OR TRUST"
+		contract_decline_button.tooltip_text = "Decline the escort, avoid its extra enemy endurance, and forgo the contract reward."
 
 	var options := state.campaign_available_nodes()
 	if selected_campaign_node_id not in options or contract_offered or not state.campaign_event_pending.is_empty():
@@ -2054,7 +2122,7 @@ func _refresh_campaign_controls() -> void:
 	var previews := {}
 	for node_id in options:
 		previews[node_id] = state.campaign_node_preview(node_id, _selected_id(doctrine_option))
-	var comparison_lines: Array[String] = ["COMPARE AVAILABLE ROADS · CONTRACT %s" % state.guard_contract_status.replace("_", " ").to_upper()]
+	var comparison_lines: Array[String] = ["COMPARE AVAILABLE ROADS · CONTRACT %s" % active_contract_status.replace("_", " ").to_upper()]
 	for route in state.campaign_route_comparison(_selected_id(doctrine_option)):
 		var visibility := String(route.get("visibility", "unscouted"))
 		var confidence_text := visibility.to_upper()
@@ -2343,7 +2411,7 @@ func _refresh_ui() -> void:
 	settlement_routes_button.visible = state.phase == "settlement" and state.campaign_active
 	final_journey_button.visible = state.phase == "settlement" and not state.campaign_active
 	var action_word := "ACTION" if state.settlement_actions_remaining == 1 else "ACTIONS"
-	settlement_title.text = "MORROWLINE SERVICES · %d %s LEFT" % [state.settlement_actions_remaining, action_word]
+	settlement_title.text = "%s SERVICES · %d %s LEFT" % [_recovery_location_name().to_upper(), state.settlement_actions_remaining, action_word]
 	var repair_missing := 0
 	var repair_cost := 0
 	var repair_candidate := _most_damaged_installed_module()
@@ -2355,7 +2423,7 @@ func _refresh_ui() -> void:
 	settlement_repair_button.disabled = not services_open
 	if not services_open:
 		settlement_repair_button.text = "REPAIR MODULE\nLOCKED · NO SERVICE ACTIONS LEFT"
-		settlement_repair_button.tooltip_text = "No Morrowline service actions remain."
+		settlement_repair_button.tooltip_text = "No %s service actions remain." % _recovery_location_name()
 	elif selected_installed.is_empty() or repair_missing <= 0:
 		if repair_candidate.is_empty():
 			settlement_repair_button.text = "REPAIR MODULE · ALL SYSTEMS FULL"
@@ -2376,12 +2444,20 @@ func _refresh_ui() -> void:
 		if state.money < repair_cost:
 			settlement_repair_button.disabled = true
 			settlement_repair_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
-	settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS\nFUEL %d→%d · ACTIONS %d→%d" % [state.fuel, state.fuel + 2, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
-	settlement_refuel_button.disabled = not services_open or state.money < 8
-	if not services_open:
-		settlement_refuel_button.text += "\nLOCKED · NO SERVICE ACTIONS LEFT"
-	elif state.money < 8:
-		settlement_refuel_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
+	if state.campaign_region_id == "flooded_veyru":
+		settlement_refuel_button.text = "TAKE +1 EMERGENCY FUEL · FREE\nFUEL %d→%d · ACTIONS %d→%d" % [state.fuel, state.fuel + 1, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
+		settlement_refuel_button.disabled = not services_open or state.fuel >= 2
+		if not services_open:
+			settlement_refuel_button.text += "\nLOCKED · NO SERVICE ACTIONS LEFT"
+		elif state.fuel >= 2:
+			settlement_refuel_button.text += "\nLOCKED · RESERVED FOR FUEL BELOW 2"
+	else:
+		settlement_refuel_button.text = "BUY +2 FUEL · 8 ASHMARKS\nFUEL %d→%d · ACTIONS %d→%d" % [state.fuel, state.fuel + 2, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
+		settlement_refuel_button.disabled = not services_open or state.money < 8
+		if not services_open:
+			settlement_refuel_button.text += "\nLOCKED · NO SERVICE ACTIONS LEFT"
+		elif state.money < 8:
+			settlement_refuel_button.text += "\nLOCKED · HAVE %d ASHMARKS" % state.money
 	var hull_repair_amount := mini(2, 10 - state.hull_condition)
 	settlement_hull_button.text = "HULL · FULL" if state.hull_condition >= 10 else "REPAIR +%d HULL · 10 ASHMARKS\nHULL %d→%d · ACTIONS %d→%d" % [hull_repair_amount, state.hull_condition, state.hull_condition + hull_repair_amount, state.settlement_actions_remaining, maxi(0, state.settlement_actions_remaining - 1)]
 	settlement_hull_button.disabled = not services_open or state.hull_condition >= 10 or state.money < 10
@@ -2400,12 +2476,12 @@ func _refresh_ui() -> void:
 	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:
 		if not state.campaign_event_pending.is_empty():
 			_set_route_preview("A local decision blocks departure. Resolve it before choosing the next road.", "warning")
-		elif state.guard_contract_status == "offered":
-			_set_route_preview("The first map branches are visible after the Ashgate contract is answered.")
+		elif _active_contract_status() == "offered":
+			_set_route_preview("The first map branches are visible after the %s contract is answered." % ("Lantern Quay medicine" if state.campaign_region_id == "flooded_veyru" else "Ashgate convoy"))
 		elif not selected_campaign_node_id.is_empty():
 			_show_selected_route_preview(selected_campaign_node_id)
 		elif state.phase == "settlement":
-			_set_route_preview("Morrowline recovery — %s. Refit freely, then choose a doctrine and the next road." % _service_action_status_text(), "safe")
+			_set_route_preview("%s recovery — %s. Refit freely, then choose a doctrine and the next road." % [_recovery_location_name(), _service_action_status_text()], "safe")
 		else:
 			_set_route_preview("Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals.")
 	elif state.phase == "refit":
@@ -2436,7 +2512,7 @@ func _refresh_ui() -> void:
 	_set_metric("mass", "%d/%d" % [snapshot.mass, snapshot.mass_limit], danger_color if snapshot.mass > snapshot.mass_limit else (warning_color if snapshot.mass >= snapshot.mass_limit else Color("#f1e6cf")))
 	_set_metric("power", "%d/%d" % [snapshot.power_draw, snapshot.power_output], danger_color if snapshot.power_draw > snapshot.power_output else safe_color)
 	_set_metric("heat", "%d/%d" % [snapshot.heat, snapshot.heat_limit], danger_color if snapshot.heat > snapshot.heat_limit else (warning_color if snapshot.heat >= snapshot.heat_limit - 1 else safe_color))
-	status_label.text = "SYSTEMS · %d ready   %d strained   %d offline%s" % [int(dependencies.ready), int(dependencies.strained), int(dependencies.offline), "   ·   BLOCKADE %s %d" % [state.campaign_pressure_band().to_upper(), state.campaign_pressure] if state.campaign_active else ""]
+	status_label.text = "SYSTEMS · %d ready   %d strained   %d offline%s" % [int(dependencies.ready), int(dependencies.strained), int(dependencies.offline), "   ·   %s %s %d" % [state.campaign_pressure_name().to_upper(), state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure] if state.campaign_active else ""]
 	campaign_progress_bar.visible = state.campaign_active
 	campaign_progress_bar.value = state.campaign_encounters_completed
 	var combat_view := state.encounter_summary()
@@ -2457,15 +2533,15 @@ func _refresh_ui() -> void:
 		for node_id in visible_path:
 			path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)))
 		var progress_text := "Encounter %d/5 underway" % mini(state.campaign_encounters_completed + 1, 5) if is_battle_phase else "%d/5 encounters secured" % state.campaign_encounters_completed
-		journey_label.text = "ROAD OUT — %s\nPhase: %s | Current node: %s | %s" % [" → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), progress_text]
+		journey_label.text = "%s — %s\nPhase: %s | Current node: %s | %s" % [state.campaign_region_name().to_upper(), " → ".join(path_names), state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), progress_text]
 	else:
 		journey_label.text = "JOURNEY — Ashgate Depot → Morrowline Camp → Meridian Pass\nPhase: %s | Current node: %s | Route: %s" % [state.phase.replace("_", " ").capitalize(), String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)), route_name]
 	var selected_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 	var selected_node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
-	var selected_review := "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else ("Final commitment: failure ends the run; there is no retreat. Review costs and doctrine, then commit when ready." if selected_campaign_node_id == "meridian_pass" else "Review its costs and doctrine, then commit when ready.")
+	var selected_review := "Resolve departure block: %s." % selected_block_reason if not selected_block_reason.is_empty() else ("Final commitment: failure ends the run; there is no retreat. Review costs and doctrine, then commit when ready." if selected_campaign_node_id == state.campaign_final_node_id() else "Review its costs and doctrine, then commit when ready.")
 	var selected_instruction := "%s selected · %s B/Esc cancels selection." % [selected_node_name, selected_review]
 	if state.phase == "results":
-		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
+		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, _active_contract_status().replace("_", " ").capitalize(), int(dependencies.offline)]
 		encounter_label.add_theme_color_override("font_color", Color("#f0d29d"))
 	elif not selected_campaign_node_id.is_empty():
 		encounter_label.text = "ROUTE READY FOR REVIEW\n%s" % selected_instruction
@@ -2475,17 +2551,17 @@ func _refresh_ui() -> void:
 		encounter_label.text = "DECISION REQUIRED · %s\nChoose one response below before the fortress can depart." % String(pending_event.get("title", "Local event")).to_upper()
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
 	elif state.phase == "settlement" and state.encounter_outcome != "forced_retreat":
-		encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
+		encounter_label.text = "%s RECOVERY\n%s. Refit freely, then prepare for the next road." % [_recovery_location_name().to_upper(), _service_action_status_text()]
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
 	elif not state.encounter_outcome.is_empty():
 		var last_consequence := state.encounter_report[-1] if not state.encounter_report.is_empty() else "The road is clear."
 		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step%s\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, "" if state.encounter_step == 1 else "s", String(last_consequence)]
 		encounter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
-		if state.guard_contract_status == "offered":
-			encounter_label.text = "ASHGATE PREPARATION\nAnswer the convoy contract to open the first roads."
+		if _active_contract_status() == "offered":
+			encounter_label.text = "%s PREPARATION\nAnswer the %s contract to open the first roads." % [state.campaign_region_name().to_upper(), "medicine" if state.campaign_region_id == "flooded_veyru" else "convoy"]
 		elif state.phase == "settlement":
-			encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
+			encounter_label.text = "%s RECOVERY\n%s. Refit freely, then prepare for the next road." % [_recovery_location_name().to_upper(), _service_action_status_text()]
 		else:
 			encounter_label.text = "ROUTE PLANNING\nSelect a cyan route and review its costs."
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
@@ -2495,7 +2571,7 @@ func _refresh_ui() -> void:
 		recent.append(state.log[index])
 	log_label.text = "RECENT ORDERS & DAMAGE\n• " + ("\n• ".join(recent) if not recent.is_empty() else "The crew is waiting for a route order.")
 	if event_label.text.is_empty():
-		event_label.text = "Ashgate is ready. Inspect the chassis, answer the contract, then choose a highlighted map node."
+		event_label.text = "%s is ready. Inspect the chassis, answer the contract, then choose a highlighted map node." % String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
 	fortress_panel.state = state
 	fortress_panel.placement_module_id = selected_module_id
 	fortress_panel.placement_rotated = placement_rotated
@@ -2544,19 +2620,19 @@ func _current_guidance() -> String:
 		return "CURRENT ORDER · Advance the encounter and watch for a new target. %s" % order_status
 	if not state.campaign_event_pending.is_empty():
 		return "DECISION REQUIRED · Resolve the local event below before the fortress can depart."
-	if state.guard_contract_status == "offered":
-		return "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
+	if _active_contract_status() == "offered":
+		return "CURRENT ORDER · Decide whether to carry Lantern Quay's sealed medicines. This unlocks the first roads." if state.campaign_region_id == "flooded_veyru" else "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
 	if not selected_campaign_node_id.is_empty():
 		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
 		var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 		if not block_reason.is_empty():
 			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again. B/Esc cancels selection." % block_reason
-		if selected_campaign_node_id == "meridian_pass":
-			return "FINAL COMMITMENT · Meridian Pass is selected. Failure ends the run; there is no retreat. Review costs and doctrine, then press Commit. B/Esc cancels selection."
+		if selected_campaign_node_id == state.campaign_final_node_id():
+			return "FINAL COMMITMENT · %s is selected. Failure ends the run; there is no retreat. Review costs and doctrine, then press Commit. B/Esc cancels selection." % node_name
 		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit. B/Esc cancels selection." % node_name
 	if state.encounter_outcome == "forced_retreat":
 		if state.phase == "settlement":
-			return "RETREAT TO MORROWLINE · %s. Review the after-action losses, recover, and refit before choosing another road." % _service_action_status_text()
+			return "RETREAT TO %s · %s. Review the after-action losses, recover, and refit before choosing another road." % [_recovery_location_name().to_upper(), _service_action_status_text()]
 		return "RETREAT RECOVERED · Review the exact losses at left and the patched movement chain, refit if needed, then choose another road."
 	if state.phase == "settlement":
 		return "RECOVERY · %s. Repair or refuel, refit freely, then choose the next road." % _service_action_status_text()
@@ -2627,6 +2703,20 @@ func _advance_encounter_action_text() -> String:
 
 func _result_summary_text() -> String:
 	match state.final_result:
+		"archive_kept":
+			var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "medicine carrier"))
+			return "ARCHIVE KEPT · The %s delivered the sealed medicines, the fortress retained %d/10 hull, and the archive commitment held." % [carrier_name, state.hull_condition]
+		"archive_scarred":
+			var missed: Array[String] = []
+			if state.hull_condition < 6:
+				missed.append("hull ended at %d/10 (6 required)" % state.hull_condition)
+			if state.veyru_contract_status != "completed":
+				missed.append("medicine delivery ended %s" % state.veyru_contract_status.replace("_", " "))
+			return "ARCHIVE SCARRED · The fortress reached the vault, but %s." % (" and ".join(missed) if not missed.is_empty() else "the final approach left lasting damage")
+		"veyru_lost":
+			if state.hull_condition <= 0:
+				return "VEYRU LOST · The fortress hull reached zero at the Dry Archive."
+			return "VEYRU LOST · %s at the Dry Archive." % String(_movement_failure_diagnosis().get("cause", "No operational, fuel-connected engine remained"))
 		"decisive_march":
 			var contract_note := "the guard contract was completed" if state.guard_contract_status == "completed" else ("the fortress travelled without the guard contract" if state.guard_contract_status == "declined" else "the guard contract was not completed")
 			return "DECISIVE MARCH · Meridian Pass is open. Every final contact was defeated, the fortress retained %d/10 hull, and %s." % [state.hull_condition, contract_note]
@@ -2645,6 +2735,14 @@ func _result_summary_text() -> String:
 	return "UNCLASSIFIED DEBRIEF · The completed run has no recognized outcome."
 
 func _result_replay_text() -> String:
+	if state.final_result == "archive_kept":
+		return "NEXT RUN · Test the other archive commitment or take the Registry shortcut under higher water."
+	if state.final_result == "archive_scarred":
+		if state.veyru_contract_status != "completed":
+			return "NEXT RUN · CARRIER FIRST · Protect the named medicine system with doctrine, armor, sealing, or the safer Causeway."
+		return "NEXT RUN · HULL FIRST · Spend an Evacuation Camp action before the final two contacts and reach the archive at 6/10 hull or better."
+	if state.final_result == "veyru_lost":
+		return "NEXT RUN · RECOVERY FIRST · Preserve the movement chain and use Pilgrim Gantry after a retreat or at Breach water."
 	if state.final_result == "decisive_march":
 		return "NEXT RUN · Test a different doctrine or road and see whether the fortress can remain decisive."
 	if state.final_result == "scarred_march":
@@ -2705,7 +2803,7 @@ func _movement_failure_diagnosis() -> Dictionary:
 			}
 	return {
 		"cause": "No engine remained installed",
-		"action": "Carry and connect an engine before committing to Meridian Pass."
+		"action": "Carry and connect an engine before committing to %s." % String(LongMarchState.JOURNEY_NODES.get(state.campaign_final_node_id(), {}).get("name", "the final road"))
 	}
 
 func _result_record_text() -> String:
@@ -2715,21 +2813,25 @@ func _result_record_text() -> String:
 	var dependencies: Dictionary = state.dependency_summary()
 	var specialist_name := state.specialist_name()
 	var stopping_line := ""
-	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
+	if state.final_result in ["march_failed", "veyru_lost"] and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
 	var mara_line := "\n%s" % state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else ""
 	var occurrence_lines := state.occurrence_debrief_lines()
 	var occurrence_block := "\n%s" % "\n".join(occurrence_lines) if not occurrence_lines.is_empty() else ""
-	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nKey decisions: %s%s%s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	var carrier_record := " · Carrier: %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty() else ""
+	return "RUN RECORD · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
-		state.campaign_pressure_band().capitalize(),
+		state.campaign_pressure_name(),
+		state.campaign_pressure_band().replace("_", " ").capitalize(),
 		state.campaign_pressure,
-		state.guard_contract_status.replace("_", " ").capitalize(),
+		_active_contract_status().replace("_", " ").capitalize(),
+		carrier_record,
 		specialist_name,
 		_campaign_decision_record_text(),
 		mara_line,
 		occurrence_block,
+		_recovery_location_name(),
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
 		int(dependencies.get("ready", 0)),
@@ -2741,6 +2843,14 @@ func _result_record_text() -> String:
 func _campaign_decision_record_text() -> String:
 	var decisions: Array[String] = []
 	var recorded: Dictionary = state.campaign_decisions
+	if state.campaign_region_id == "flooded_veyru":
+		if recorded.has("drain_pumps"):
+			decisions.append("Pump Gallery — %s" % ("drained the lower roads" if String(recorded.drain_pumps) == "drain_gallery" else "kept moving"))
+		if recorded.has("registry_salvage"):
+			decisions.append("Drowned Registry — %s" % ("recovered sealed records" if String(recorded.registry_salvage) == "recover_records" else "abandoned the flooded stacks"))
+		if recorded.has("archive_broadcast"):
+			decisions.append("Dry Archive — %s" % ("broadcast publicly" if String(recorded.archive_broadcast) == "broadcast_archive" else "sealed the signal"))
+		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
 	if "soot_orchard" in state.campaign_path:
 		var orchard_choice := String(recorded.get("salvage_choice", "rescue_workers" if state.workers_rescued else "take_fuel"))
 		decisions.append("Soot Orchard — %s" % ("rescued workers" if orchard_choice == "rescue_workers" else "recovered fuel"))

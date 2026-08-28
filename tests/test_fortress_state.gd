@@ -947,20 +947,19 @@ func _test_flooded_veyru_region_state() -> void:
 	_expect(bool(declined.choose_veyru_medicine_contract(false).get("ok", false)) and declined.veyru_contract_status == "declined" and declined.mobility_tendency == 1 and declined.veyru_medicine_carrier_id.is_empty(), "declining the Veyru contract should preserve capacity and record the mobility tradeoff")
 
 func _install_veyru_loadout(state: LongMarchState) -> void:
-	_expect(bool(state.place_module("ash_runner_engine", Vector2i(0, 0)).get("ok", false)), "Veyru engine should install")
-	_expect(bool(state.place_module("coal_cell", Vector2i(1, 0)).get("ok", false)), "Veyru fuel should install beside the engine")
+	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "Veyru engine should install")
+	_expect(bool(state.place_module("coal_cell", Vector2i(0, 1)).get("ok", false)), "Veyru fuel should install beside the engine")
 	_expect(bool(state.place_module("generator_core", Vector2i(2, 0)).get("ok", false)), "Veyru generator should install")
 	_expect(bool(state.place_module("crew_quarters", Vector2i(2, 1)).get("ok", false)), "Veyru crew quarters should install")
 	_expect(bool(state.place_module("field_workshop", Vector2i(2, 2)).get("ok", false)), "Veyru workshop should install beside crew")
 	_expect(bool(state.place_module("water_condenser", Vector2i(2, 3)).get("ok", false)), "Veyru condenser should install beside the workshop")
-	_expect(bool(state.place_module("refugee_bunk", Vector2i(4, 2)).get("ok", false)), "Veyru medicine carrier should install beside the workshop")
+	_expect(bool(state.place_module("parts_crate", Vector2i(4, 2)).get("ok", false)), "Veyru medicine carrier should install beside the workshop")
 	state.seed_starter_inventory()
 
 func _veyru_battle(state: LongMarchState, node_id: String, doctrine: String = "protect_cargo") -> Dictionary:
 	var begun := state.begin_campaign_route(node_id, doctrine)
 	if not bool(begun.get("ok", false)):
 		return begun
-	state.advance_encounter(1.0)
 	state.use_encounter_intervention("vent_heat")
 	return state.advance_encounter(6.0)
 
@@ -994,7 +993,7 @@ func _test_flooded_veyru_threats_and_contract() -> void:
 	var teaching := LongMarchState.new(2204)
 	_install_veyru_loadout(teaching)
 	teaching.start_flooded_veyru()
-	_expect(bool(teaching.choose_veyru_medicine_contract(true).get("ok", false)) and teaching.veyru_medicine_carrier_id == "refugee_bunk", "the Veyru fixture should reserve its exact Refugee Bunk")
+	_expect(bool(teaching.choose_veyru_medicine_contract(true).get("ok", false)) and teaching.veyru_medicine_carrier_id == "parts_crate", "the Veyru fixture should reserve its exact cargo-capable Parts Crate")
 	var carrier := teaching.module_at(Vector2i(4, 2))
 	var rationale := teaching.encounter_target_rationale("flood_surge", carrier)
 	_expect(String(rationale.get("reason", "")).contains("lower-deck exposure") and String(rationale.get("reason", "")).contains("sealed medicine carrier"), "Flood Surge should explain both the carrier obligation and lower-deck exposure")
@@ -1003,9 +1002,9 @@ func _test_flooded_veyru_threats_and_contract() -> void:
 	var active_restore := LongMarchState.new(0)
 	_expect(bool(active_restore.load_serialized(teaching.serialize()).get("ok", false)) and active_restore.encounter_active and String(active_restore.encounter_enemies[0].get("id", "")) == "flood_surge", "an active Veyru teaching encounter should survive save/load")
 	var cut_loose := teaching.use_encounter_intervention("cut_loose_cargo")
-	_expect(bool(cut_loose.get("ok", false)) and String(cut_loose.get("removed_module", "")) == "refugee_bunk" and teaching.veyru_contract_status == "failed" and teaching.encounter_active, "losing the reserved medicine carrier should fail the contract without ending the run")
+	_expect(bool(cut_loose.get("ok", false)) and String(cut_loose.get("removed_module", "")) == "parts_crate" and teaching.veyru_contract_status == "failed" and teaching.encounter_active, "losing the reserved medicine carrier should fail the contract without ending the run")
 	var failed_restore := LongMarchState.new(0)
-	_expect(bool(failed_restore.load_serialized(teaching.serialize()).get("ok", false)) and failed_restore.veyru_contract_status == "failed" and failed_restore.veyru_medicine_carrier_id == "refugee_bunk", "a failed medicine contract should preserve its named carrier even when that carrier was cut loose")
+	_expect(bool(failed_restore.load_serialized(teaching.serialize()).get("ok", false)) and failed_restore.veyru_contract_status == "failed" and failed_restore.veyru_medicine_carrier_id == "parts_crate", "a failed medicine contract should preserve its named carrier even when that carrier was cut loose")
 
 func _test_complete_flooded_veyru_campaign() -> void:
 	var state := LongMarchState.new(2204)

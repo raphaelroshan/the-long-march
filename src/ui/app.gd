@@ -34,6 +34,7 @@ var checkpoint_toast_label: Label
 var game_view: Control
 var start_button: Button
 var quick_start_button: Button
+var veyru_start_button: Button
 var continue_button: Button
 var save_recovery_button: Button
 var guide_button: Button
@@ -160,7 +161,7 @@ func _build_title_menu() -> void:
 	columns.add_child(left)
 
 	title_build_label = Label.new()
-	title_build_label.text = "ASHGATE LOWLANDS · PLAYABLE ALPHA · %s" % _build_version()
+	title_build_label.text = "TWO PLAYABLE REGIONS · ALPHA · %s" % _build_version()
 	title_build_label.add_theme_font_size_override("font_size", 13)
 	title_build_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	left.add_child(title_build_label)
@@ -198,7 +199,7 @@ func _build_title_menu() -> void:
 
 	start_button = Button.new()
 	start_button.name = "StartGameButton"
-	start_button.text = "START GAME  ·  GUIDED FIRST RUN"
+	start_button.text = "START ASHGATE  ·  GUIDED FIRST RUN"
 	start_button.custom_minimum_size = Vector2(0, 62)
 	start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
 	start_button.pressed.connect(_start_new_game)
@@ -207,11 +208,19 @@ func _build_title_menu() -> void:
 
 	quick_start_button = Button.new()
 	quick_start_button.name = "QuickStartButton"
-	quick_start_button.text = "QUICK START  ·  SKIP BRIEFING"
+	quick_start_button.text = "START ASHGATE  ·  SKIP BRIEFING"
 	quick_start_button.custom_minimum_size = Vector2(0, 50)
 	quick_start_button.tooltip_text = "Open a fresh Ashgate stage immediately without changing the saved briefing preference."
 	quick_start_button.pressed.connect(_quick_start_game)
 	actions.add_child(quick_start_button)
+
+	veyru_start_button = Button.new()
+	veyru_start_button.name = "VeyruStartButton"
+	veyru_start_button.text = "START FLOODED VEYRU  ·  RISING WATER"
+	veyru_start_button.custom_minimum_size = Vector2(0, 50)
+	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay."
+	veyru_start_button.pressed.connect(_start_veyru_game)
+	actions.add_child(veyru_start_button)
 
 	continue_button = Button.new()
 	continue_button.name = "ContinueButton"
@@ -276,29 +285,29 @@ func _build_title_menu() -> void:
 	stage_panel.add_child(stage)
 
 	var stage_eyebrow := Label.new()
-	stage_eyebrow.text = "CURRENT BUILD · COMPLETE TEST JOURNEY · 15–25 MINUTES"
+	stage_eyebrow.text = "CURRENT BUILD · TWO TEST JOURNEYS · 15–25 MINUTES EACH"
 	stage_eyebrow.add_theme_font_size_override("font_size", 12)
 	stage_eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
 	stage.add_child(stage_eyebrow)
 	var stage_title := Label.new()
-	stage_title.text = "Ashgate Lowlands"
+	stage_title.text = "Choose a region"
 	stage_title.add_theme_font_size_override("font_size", 30)
 	stage_title.add_theme_color_override("font_color", Color("#f0d29d"))
 	stage.add_child(stage_title)
 	var briefing := Label.new()
-	briefing.text = "Begin at Ashgate Depot. Refit the walking fortress, answer the convoy contract, and reach Meridian Pass. Later regions are not included in this build."
+	briefing.text = "Ashgate teaches route pressure, signal, and convoy recovery. Flooded Veyru tests lower-hull condition, rising water, and a medicine carrier bound for the Dry Archive."
 	briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	briefing.custom_minimum_size = Vector2(330, 72)
 	briefing.add_theme_color_override("font_color", Color("#d0d8d5"))
 	stage.add_child(briefing)
 	var scope := Label.new()
-	scope.text = "ONE COMPLETE CHAPTER   ·   5 ENCOUNTERS   ·   RECOVERY AFTER 3   ·   FINALE AT 5"
+	scope.text = "TWO PLAYABLE CHAPTERS   ·   5 ENCOUNTERS EACH   ·   RECOVERY MID-RUN   ·   FINALE AT 5"
 	scope.add_theme_font_size_override("font_size", 11)
 	scope.add_theme_color_override("font_color", Color("#d8a650"))
 	stage.add_child(scope)
-	stage.add_child(_stage_rule("01", "Prepare at Ashgate", "Inspect connected systems, then answer the convoy contract."))
-	stage.add_child(_stage_rule("02", "Choose the first road", "Compare risk, fuel, time, pressure, and what your signal crew can see."))
-	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once, and recover at Morrowline."))
+	stage.add_child(_stage_rule("01", "Choose the obligation", "Guard Ashgate's convoy or carry Veyru's sealed medicines."))
+	stage.add_child(_stage_rule("02", "Read the regional pressure", "Compare risk, fuel, time, rising danger, and what the fortress can see."))
+	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once per contact, and recover mid-run."))
 
 	var controls := Label.new()
 	controls.text = "MOUSE · KEYBOARD · CONTROLLER\nD-pad / arrows move  ·  A / Enter confirms  ·  B / Esc closes panels"
@@ -312,7 +321,9 @@ func _configure_title_focus() -> void:
 	start_button.focus_neighbor_top = start_button.get_path_to(quit_button)
 	start_button.focus_neighbor_bottom = start_button.get_path_to(quick_start_button)
 	quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
-	continue_button.focus_neighbor_top = continue_button.get_path_to(quick_start_button)
+	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(veyru_start_button)
+	veyru_start_button.focus_neighbor_top = veyru_start_button.get_path_to(quick_start_button)
+	continue_button.focus_neighbor_top = continue_button.get_path_to(veyru_start_button)
 	continue_button.focus_neighbor_bottom = continue_button.get_path_to(settings_button)
 	save_recovery_button.focus_neighbor_top = save_recovery_button.get_path_to(quick_start_button)
 	save_recovery_button.focus_neighbor_bottom = save_recovery_button.get_path_to(settings_button)
@@ -331,6 +342,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 	title_actions.append(start_button)
 	if show_quick_start:
 		title_actions.append(quick_start_button)
+	title_actions.append(veyru_start_button)
 	if has_invalid_save:
 		title_actions.append(save_recovery_button)
 	var active_controls: Array = []
@@ -909,10 +921,11 @@ func _refresh_title_state() -> void:
 		start_button.text = "PLAY AGAIN · ASHGATE DEPOT" if has_completed_save else ("NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT")
 		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
 	else:
-		start_button.text = "PLAY AGAIN · GUIDED BRIEFING" if has_completed_save else ("NEW GAME · GUIDED BRIEFING" if has_valid_save else "START GAME  ·  GUIDED FIRST RUN")
+		start_button.text = "PLAY ASHGATE · GUIDED BRIEFING" if has_completed_save else ("NEW ASHGATE · GUIDED BRIEFING" if has_valid_save else "START ASHGATE  ·  GUIDED FIRST RUN")
 		start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
 	quick_start_button.visible = not briefing_complete
-	quick_start_button.text = "QUICK REPLAY · SKIP BRIEFING" if has_completed_save else ("NEW QUICK RUN · SKIP BRIEFING" if has_valid_save else "QUICK START  ·  SKIP BRIEFING")
+	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
+	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
 	guide_quick_start_button.text = "QUICK REPLAY ASHGATE" if has_completed_save else ("START NEW ASHGATE RUN" if has_valid_save else "QUICK START ASHGATE")
 	guide_quick_start_button.tooltip_text = "Begin a fresh Ashgate run without opening the introductory briefing."
 	continue_button.visible = has_valid_save
@@ -923,11 +936,13 @@ func _refresh_title_state() -> void:
 		actions.move_child(continue_button, 0)
 		actions.move_child(start_button, 1)
 		actions.move_child(quick_start_button, 2)
+		actions.move_child(veyru_start_button, 3)
 	else:
 		actions.move_child(start_button, 0)
 		actions.move_child(quick_start_button, 1)
-		actions.move_child(continue_button, 2)
-		actions.move_child(save_recovery_button, 3)
+		actions.move_child(veyru_start_button, 2)
+		actions.move_child(continue_button, 3)
+		actions.move_child(save_recovery_button, 4)
 	_refresh_title_focus(has_valid_save, has_invalid_save, not briefing_complete)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
@@ -993,7 +1008,7 @@ func _saved_run_info() -> Dictionary:
 	var completed := phase_id == "results" and not result_id.is_empty()
 	var next_action := _saved_next_action(validation_state)
 	if completed:
-		condition = "stable" if result_id == "decisive_march" else ("watch" if result_id == "scarred_march" else "critical")
+		condition = "stable" if result_id in ["decisive_march", "archive_kept"] else ("watch" if result_id in ["scarred_march", "archive_scarred"] else "critical")
 	return {
 		"exists": true,
 		"valid": true,
@@ -1017,6 +1032,8 @@ func _saved_next_action(saved_state: LongMarchState) -> String:
 	if not saved_state.campaign_event_pending.is_empty():
 		var event := saved_state.campaign_event_details()
 		return "Resolve %s" % String(event.get("title", "local decision"))
+	if saved_state.campaign_region_id == "flooded_veyru" and saved_state.veyru_contract_status == "offered":
+		return "Answer medicine contract"
 	if saved_state.guard_contract_status == "offered":
 		return "Answer convoy contract"
 	if saved_state.phase == "settlement" and saved_state.settlement_actions_remaining > 0:
@@ -1046,13 +1063,16 @@ func _start_new_game() -> void:
 	_request_new_game(true)
 
 func _quick_start_game() -> void:
-	_request_new_game(false)
+	_request_new_game(false, "ashgate_lowlands")
 
-func _request_new_game(show_briefing: bool) -> void:
+func _start_veyru_game() -> void:
+	_request_new_game(false, "flooded_veyru")
+
+func _request_new_game(show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
 	if bool(_saved_run_info().get("valid", false)):
-		_request_confirmation("new_guided" if show_briefing else "new_quick")
+		_request_confirmation("new_veyru" if region_id == "flooded_veyru" else ("new_guided" if show_briefing else "new_quick"))
 		return
-	_open_stage(false, show_briefing)
+	_open_stage(false, show_briefing, region_id)
 
 func _continue_game() -> void:
 	if not bool(_saved_run_info().get("valid", false)):
@@ -1061,11 +1081,12 @@ func _continue_game() -> void:
 		return
 	_open_stage(true, false)
 
-func _open_stage(load_saved: bool, show_briefing: bool) -> void:
+func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
 	if game_view != null:
 		game_view.queue_free()
 	game_view = GAME_SCENE.instantiate()
 	game_view.set("show_onboarding_on_ready", show_briefing)
+	game_view.set("starting_region_id", region_id)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
 	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))
@@ -1250,7 +1271,8 @@ func _show_in_run_briefing() -> void:
 	game_view.call("_show_onboarding", true)
 
 func _restart_game() -> void:
-	_open_stage(false, false)
+	var region_id := String(game_view.get("state").get("campaign_region_id")) if game_view != null else "ashgate_lowlands"
+	_open_stage(false, false, region_id)
 
 func _on_restart_pressed() -> void:
 	if game_view != null and String(game_view.get("state").get("phase")) == "results":
@@ -1265,7 +1287,7 @@ func _request_replay_confirmation() -> void:
 	_request_confirmation("replay")
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick"]:
+	if action not in ["restart", "replay", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1311,7 +1333,7 @@ func _request_confirmation(action: String) -> void:
 			confirmation_title_label.text = "Begin a new march?"
 			confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
 			confirmation_confirm_button.text = "START NEW"
-	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else (("KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE") if action in ["new_guided", "new_quick"] else ("KEEP SAVE" if action == "clear_save" else ("KEEP RESULT" if action == "replay" else "KEEP PLAYING")))
+	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else (("KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE") if action in ["new_guided", "new_quick", "new_veyru"] else ("KEEP SAVE" if action == "clear_save" else ("KEEP RESULT" if action == "replay" else "KEEP PLAYING")))
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
@@ -1335,6 +1357,8 @@ func _cancel_confirmation() -> void:
 		(guide_quick_start_button if guide_view.visible else quick_start_button).grab_focus()
 	elif previous_action == "new_guided":
 		start_button.grab_focus()
+	elif previous_action == "new_veyru":
+		veyru_start_button.grab_focus()
 	else:
 		title_button.grab_focus()
 
@@ -1366,6 +1390,8 @@ func _confirm_pending_action() -> void:
 		_open_stage(false, true)
 	elif action == "new_quick":
 		_open_stage(false, false)
+	elif action == "new_veyru":
+		_open_stage(false, false, "flooded_veyru")
 
 func _show_guide() -> void:
 	guide_view.visible = true
