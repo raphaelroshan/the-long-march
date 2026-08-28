@@ -137,7 +137,13 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 	var intervention_used := bool(view.get("intervention_used", false))
 	var enemies: Array = view.get("enemies", [])
 	var target_names: Dictionary = view.get("target_names", {})
-	title_label.text = "ACTIVE CONTACT · %s" % String(view.get("location_name", "Unknown road")).to_upper()
+	var unresolved_contact := false
+	for enemy in enemies:
+		if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)):
+			unresolved_contact = true
+			break
+	var contact_heading := "ACTIVE CONTACT" if unresolved_contact else ("CONTACT APPROACHING" if active else "CONTACT CLEARED")
+	title_label.text = "%s · %s" % [contact_heading, String(view.get("location_name", "Unknown road")).to_upper()]
 	var timeline_status := "Complete" if not active else "Next step %d/%d" % [mini(step + 1, MAX_STEPS), MAX_STEPS]
 	order_label.text = "Doctrine: %s   ·   Emergency order: %s   ·   %s" % [doctrine, "spent" if intervention_used else "1 available", timeline_status]
 	for index in range(MAX_STEPS):

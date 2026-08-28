@@ -277,6 +277,7 @@ func _run() -> void:
 	var battle_asset_rect: Rect2 = game.asset_row.get_global_rect()
 	_expect(not battle_asset_rect.intersects(battle_viewport_rect) or battle_viewport_rect.encloses(battle_asset_rect), "battle focus should settle after layout changes without clipping the icon row")
 	_expect(game.combat_panel.visible and game.combat_panel.step_panels.size() == 6, "battle state should expose the six-step encounter timeline")
+	_expect(game.combat_panel.title_label.text.begins_with("CONTACT APPROACHING"), "the battle heading should distinguish a tracked approach from an enemy already in contact")
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	_expect(game.combat_panel.step_labels[0].text == "NEXT · 1" and game.advance_encounter_button.text.contains("STEP 1 OF 6"), "combat controls should identify the exact next timeline step")
 	_expect(game.combat_panel.enemy_states[0].text.contains("2 STEPS OUT") and game.guidance_label.text.contains("2 steps out"), "approaching enemies should use a live countdown before contact")
@@ -408,6 +409,7 @@ func _run() -> void:
 	target_card_preview.enemies[0] = target_enemy
 	target_card_preview["target_names"] = {"hull": "Hull", "coal_cell": "Coal Cell", "front_armor_plate": "Front Armor Plate"}
 	game.combat_panel.configure(target_card_preview, game.state.ENCOUNTER_ENEMIES)
+	_expect(game.combat_panel.title_label.text.begins_with("ACTIVE CONTACT"), "the battle heading should change when an undefeated enemy reaches the fortress")
 	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR · FRONT ARMOR PLATE · 1→0 · BREAKS") and game.combat_panel.enemy_states[0].text.contains("CASCADE · STEAM LANCE ENGINE → OFFLINE") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose target, armor, and downstream dependency consequences")
 	var pre_hull_preview_enemy: Dictionary = game.state.encounter_enemies[0].duplicate(true)
 	game.state.encounter_enemies[0]["arrived"] = true

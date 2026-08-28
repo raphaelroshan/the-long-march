@@ -519,3 +519,7 @@ Before the player commits any decision, the pause menu now states that there is 
 ## 2026-08-28 — The pause shortcut reflects nested controls
 
 The persistent Pause action no longer advertises B or Escape while those inputs belong to chassis inspection or an open route review. Its visible state and tooltip explain which nested interaction will close first; once that interaction ends, the normal pause shortcut returns. The button itself remains an immediate pointer-accessible route to Pause in every state.
+
+## 2026-08-28 — Battle headings distinguish approach from contact
+
+The combat panel uses Contact Approaching until an undefeated enemy has actually reached the fortress, then changes to Active Contact. This aligns the encounter heading with arrival countdowns, timeline warnings, target forecasts, and damage timing instead of declaring contact several steps early.
