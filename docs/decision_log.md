@@ -914,4 +914,8 @@ The non-modal checkpoint toast now uses compact `Saved · reason` copy in a 250-
 
 ## 2026-08-28 — Chassis guidance follows the available phase action
 
-The passive chassis heading now points to Edit Chassis only where refit is actually available, to battle inspection during contact, and to final-chassis review during debrief. Results expose a dedicated Inspect Final Chassis action between the outcome summary and follow-up actions; controller or keyboard selection remains in review, while cancel returns to that visible action. This closes the previous pointer-only debrief path and removes refit language from locked phases without changing placement, damage, targeting, results, or serialized state.
+The passive chassis heading now points to Edit Chassis only where refit is actually available, to battle inspection during contact, and to final-chassis review during debrief. Results expose a dedicated Inspect Final Chassis action in the debrief action sequence; controller or keyboard selection remains in review, while cancel returns to that visible action. This closes the previous pointer-only debrief path and removes refit language from locked phases without changing placement, damage, targeting, results, or serialized state.
+
+## 2026-08-28 — Debrief navigation follows its teaching order
+
+A newly opened debrief now resets inherited battle scrolling and focuses Inspect Final Chassis before feedback. The action moved directly below March Debrief so both remain visible together even when the authored result record is long at 110% text. Entering review advances the current-order and Pause return targets to feedback through transient UI state; loading the result offers review first again. This aligns guidance, focus, and layout without making inspection mandatory or adding presentation state to saves.

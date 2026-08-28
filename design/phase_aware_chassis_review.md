@@ -16,9 +16,9 @@ The chassis stays visible throughout preparation, travel, battle, and debrief, b
 
 ## Presentation
 
-Passive headings name the action that is actually available in the current phase. Tooltips use the same phase-specific destination and return language. The result action sits between the summary and playtest follow-ups so reviewing the machine remains part of understanding the outcome rather than appearing to be another replay action.
+Passive headings name the action that is actually available in the current phase. Tooltips use the same phase-specific destination and return language. The result action sits directly below the debrief heading so reviewing the machine remains part of understanding the outcome rather than appearing to be another replay action.
 
-At 1280×720 with 110% text, focusing the result action keeps it and the primary follow-up actions visible. Entering chassis review scrolls the left pane to the full inspector while preserving the debrief action's right-pane position.
+At 1280×720 with 110% text, focusing the result action keeps it and the debrief heading visible. Entering chassis review scrolls the left pane to the full inspector while preserving the debrief action's right-pane position.
 
 ## Scope
 

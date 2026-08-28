@@ -229,6 +229,8 @@ var last_feedback_path: String = ""
 var feedback_return_context: String = "results"
 var journal: PlaytestJournal
 var result_recorded: bool = false
+var results_chassis_reviewed: bool = false
+var last_rendered_phase: String = ""
 var fortress_panel: Control
 var selected_module_id: String = ""
 var selected_module_cell := Vector2i(-1, -1)
@@ -517,6 +519,8 @@ func _reset_state() -> void:
 	placement_rotated = false
 	last_synced_combat_target_id = ""
 	result_recorded = false
+	results_chassis_reviewed = false
+	last_rendered_phase = ""
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -970,13 +974,19 @@ func _build_ui() -> void:
 	controls.add_child(reset_button)
 
 	results_group = VBoxContainer.new()
-	results_group.add_theme_constant_override("separation", 8)
+	results_group.add_theme_constant_override("separation", 6)
 	controls.add_child(results_group)
 	results_heading = Label.new()
 	results_heading.text = "MARCH DEBRIEF"
 	results_heading.add_theme_font_size_override("font_size", 17)
 	results_heading.add_theme_color_override("font_color", Color("#e8c58e"))
 	results_group.add_child(results_heading)
+	results_inspect_button = Button.new()
+	results_inspect_button.text = "INSPECT FINAL CHASSIS"
+	results_inspect_button.custom_minimum_size = Vector2(0, 44)
+	results_inspect_button.tooltip_text = "Move keyboard or controller focus to the final chassis. Use arrows to review systems, A or Enter to inspect one, and B or Escape to return to the debrief."
+	results_inspect_button.pressed.connect(_focus_chassis_for_results)
+	results_group.add_child(results_inspect_button)
 	var results_summary_panel := PanelContainer.new()
 	results_summary_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 12))
 	results_group.add_child(results_summary_panel)
@@ -998,12 +1008,6 @@ func _build_ui() -> void:
 	results_replay_label.add_theme_font_size_override("font_size", 12)
 	results_replay_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	results_summary_stack.add_child(results_replay_label)
-	results_inspect_button = Button.new()
-	results_inspect_button.text = "INSPECT FINAL CHASSIS"
-	results_inspect_button.custom_minimum_size = Vector2(0, 44)
-	results_inspect_button.tooltip_text = "Move keyboard or controller focus to the final chassis. Use arrows to review systems, A or Enter to inspect one, and B or Escape to return to the debrief."
-	results_inspect_button.pressed.connect(_focus_chassis_for_results)
-	results_group.add_child(results_inspect_button)
 	feedback_button = Button.new()
 	feedback_button.text = "RECORD PLAYTEST NOTES"
 	feedback_button.custom_minimum_size = Vector2(0, 50)
@@ -1642,8 +1646,11 @@ func focus_current_action() -> void:
 	if feedback_overlay != null and feedback_overlay.visible:
 		_focus_control(feedback_clear_text)
 		return
-	if state.phase == "results" and _focus_control(feedback_button):
-		return
+	if state.phase == "results":
+		if not results_chassis_reviewed and _focus_control(results_inspect_button):
+			return
+		if _focus_control(feedback_button):
+			return
 	if state.phase in ["battle", "final_battle"] and _focus_control(advance_encounter_button):
 		return
 	if not state.campaign_event_pending.is_empty():
@@ -1837,6 +1844,9 @@ func _focus_chassis_for_combat() -> void:
 func _focus_chassis_for_results() -> void:
 	if state.phase != "results":
 		return
+	if not results_chassis_reviewed:
+		results_chassis_reviewed = true
+		_refresh_ui()
 	if selected_module_cell.x >= 0:
 		fortress_panel.cursor_cell = selected_module_cell
 	elif not state.modules.is_empty():
@@ -2324,6 +2334,8 @@ func load_saved_run() -> bool:
 	fortress_panel.state = state
 	_set_event("March restored from the local checkpoint.")
 	result_recorded = state.phase == "results"
+	results_chassis_reviewed = false
+	last_rendered_phase = ""
 	_journal_event("run_loaded", {"phase": state.phase, "day": state.day})
 	_refresh_ui()
 	return true
@@ -2568,6 +2580,12 @@ func _refresh_campaign_controls() -> void:
 	recruit_iven_button.tooltip_text = "Adds exact immediate threat forecasts and storm navigation." if can_recruit_iven else recruit_reason
 
 func _refresh_ui() -> void:
+	var entered_results := state.phase == "results" and last_rendered_phase != "results"
+	if entered_results:
+		results_chassis_reviewed = false
+		left_scroll.scroll_vertical = 0
+		right_scroll.scroll_vertical = 0
+	last_rendered_phase = state.phase
 	_sync_new_active_combat_target()
 	_refresh_module_options()
 	var snapshot := state.summary()
@@ -2934,7 +2952,7 @@ func _refresh_ui() -> void:
 
 func _current_guidance() -> String:
 	if state.phase == "results":
-		return "DEBRIEF · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
+		return "DEBRIEF · Final chassis reviewed. Record playtest notes while the decisions are fresh." if results_chassis_reviewed else "DEBRIEF · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
 	if state.phase in ["battle", "final_battle"]:
 		var active_targets: Array[String] = []
 		var nearest_enemy := ""
@@ -2988,7 +3006,7 @@ func _current_guidance() -> String:
 
 func _current_action_jump_label() -> String:
 	if state.phase == "results":
-		return "GO TO FEEDBACK ↓"
+		return "GO TO FEEDBACK ↓" if results_chassis_reviewed else "GO TO CHASSIS REVIEW ↓"
 	if state.phase in ["battle", "final_battle"]:
 		return "GO TO BATTLE STEP ↓"
 	if not state.campaign_event_pending.is_empty():

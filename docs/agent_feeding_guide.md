@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.258`; Feeds A through AC are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.259`; Feeds A through AD are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -179,6 +179,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.258` through truthful battle and debrief inspection handoffs.
 
 > Make passive chassis guidance name the inspection action available in the current phase. Add a keyboard/controller-accessible final-chassis review to the debrief, keep system selection inside that review, return cancel to its visible action, and preserve every authoritative placement and simulation rule.
+
+### Current Feed AD — debrief first action
+
+**Status:** Complete in `0.3.0-alpha.259` through an inspect-then-feedback result handoff.
+
+> Reset inherited battle scrolling when the debrief opens, keep March Debrief and Inspect Final Chassis visible together at 110% text, and make the current-order and Pause jumps point to chassis review first. After review begins, retarget both to feedback without serializing presentation-only progress.
 
 ## Historical prototype feed sequence
 

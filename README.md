@@ -71,7 +71,7 @@ The repository contains an agent-first Godot project with:
 - Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.
 - A Morrowline recovery phase with a visible two-action budget, availability-aware paid services, damaged-system repair guidance, free refitting, and a fifth Meridian Pass battle with decisive, scarred, or failed run results.
 - Above-fold service receipts showing the exact restoration, Ashmark cost, and remaining recovery budget.
-- A result debrief that names missed success thresholds, retains the route and final operating record, and offers one concrete replay goal before feedback or replay.
+- A result debrief that opens with final-chassis review, then names missed success thresholds, retains the route and final operating record, and offers one concrete replay goal before feedback or replay.
 - Versioned JSON save/load and an automated UI-level complete-run test.
 - A first-run Marchmaster briefing, phase-specific guidance, and an opaque local-only playtest feedback form and bundle.
 - An original visual kit in `assets/` for the journey background, Steam Lance Engine, Shell Cannon, Field Workshop, Signal Coil, and internal art direction.

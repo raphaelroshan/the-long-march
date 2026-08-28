@@ -838,7 +838,7 @@ func _run() -> void:
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_eyebrow_label.text == "FINAL REPORT" and app.pause_title_label.text == "DEBRIEF OPTIONS", "opening session options from results should use completed-run framing")
-	_expect(app.pause_detail_label.text.contains("march has ended") and app.resume_button.text == "RETURN TO DEBRIEF" and app.pause_order_button.text == "GO TO FEEDBACK" and app.pause_save_button.text == "SAVE RESULT" and app.restart_button.text == "PLAY AGAIN" and app.pause_hint_label.text.contains("returns to debrief"), "the completed-run overlay should describe its actual return, feedback, save, and replay actions")
+	_expect(app.pause_detail_label.text.contains("march has ended") and app.resume_button.text == "RETURN TO DEBRIEF" and app.pause_order_button.text == "GO TO CHASSIS REVIEW" and app.pause_save_button.text == "SAVE RESULT" and app.restart_button.text == "PLAY AGAIN" and app.pause_hint_label.text.contains("returns to debrief"), "the completed-run overlay should send an unreviewed result to final chassis inspection before feedback")
 	_expect(app.pause_save_status_label.text.contains("result is not saved yet") and app.pause_save_status_label.text.contains("Save Result"), "an unsaved debrief should name the result-specific persistence action instead of asking for another campaign decision")
 	app.restart_button.pressed.emit()
 	await process_frame
@@ -850,8 +850,18 @@ func _run() -> void:
 	app.pause_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from debrief options at the required result action")
-	_expect(app._saved_values_match(paused_result_state, app.game_view.state.serialize()), "Go to Feedback should preserve the completed result without opening the form")
+	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.results_inspect_button.has_focus(), "Go to Chassis Review should return from debrief options at the first interpretation action")
+	app.game_view.results_inspect_button.pressed.emit()
+	await process_frame
+	_expect(app.game_view.fortress_panel.has_focus() and app.game_view.results_chassis_reviewed, "entering final chassis review should advance the debrief's transient next-action guidance")
+	app._show_pause()
+	await process_frame
+	_expect(app.pause_order_button.text == "GO TO FEEDBACK", "debrief options should retarget to feedback after final chassis review begins")
+	app.pause_order_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(not app.pause_view.visible and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from reviewed debrief options at the required result action")
+	_expect(app._saved_values_match(paused_result_state, app.game_view.state.serialize()), "chassis review and Go to Feedback should preserve the completed result without opening the form")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Replay Ashgate Lowlands?" and app.confirmation_confirm_button.text == "PLAY AGAIN" and app.confirmation_cancel_button.text == "KEEP RESULT", "Play Again should require an explicit chapter-aware result-preserving confirmation")

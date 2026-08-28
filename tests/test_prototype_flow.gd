@@ -783,15 +783,21 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.phase == "final_battle", "the fifth map node should begin the final battle")
 	await _advance_until_phase("results")
+	await process_frame
+	await process_frame
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
 	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose final chassis review, onward, replay, and return-to-title actions")
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
-	_expect(game.current_order_button.text == "GO TO FEEDBACK ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.results_inspect_button, "the completed run should retain its feedback jump while exposing final chassis review in the visible controller path")
+	_expect(game.results_inspect_button.has_focus() and game.current_order_button.text == "GO TO CHASSIS REVIEW ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.results_inspect_button, "a newly opened debrief should focus and name final chassis review before asking for feedback")
+	_expect(game.right_scroll.get_global_rect().encloses(game.results_heading.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.results_inspect_button.get_global_rect()), "debrief arrival should reset inherited battle scrolling and keep both the outcome heading and first action visible")
 	_expect(game.fortress_panel.interaction_heading().contains("Inspect Final Chassis reviews survivors") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive result chassis should describe debrief review instead of an unavailable refit action")
+	game.current_order_button.pressed.emit()
+	await process_frame
+	_expect(game.results_inspect_button.has_focus(), "Go to Chassis Review should focus the debrief's first interpretation action without opening it")
 	game.results_inspect_button.pressed.emit()
 	await process_frame
-	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.tooltip_text.contains("returns to the debrief"), "Inspect Final Chassis should enter a phase-specific keyboard and controller review mode")
+	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.tooltip_text.contains("returns to the debrief") and game.current_order_button.text == "GO TO FEEDBACK ↓" and game.guidance_label.text.contains("Final chassis reviewed"), "Inspect Final Chassis should enter review mode and advance the debrief handoff toward feedback")
 	var result_chassis_select := InputEventAction.new()
 	result_chassis_select.action = "ui_accept"
 	result_chassis_select.pressed = true
