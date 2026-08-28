@@ -551,3 +551,7 @@ The pause status now evaluates whether the live run matches the local save befor
 ## 2026-08-28 — The title overview matches the first playable gate
 
 The first chapter step is Prepare at Ashgate: inspect connected systems, then answer the convoy contract. This keeps chassis preparation in the promise while matching the actual contract-first focus handoff, rather than presenting inspection as a mandatory gate the stage does not enforce.
+
+## 2026-08-28 — Test instructions mirror the live input model
+
+Internal release and playtest instructions describe choosing chassis cells and event responses rather than assuming a pointer click. They also name the live CURRENT ORDER guidance instead of the retired NEXT label, so facilitators do not teach controls or terminology the build no longer presents.

@@ -11,7 +11,7 @@ The build opens with a four-part Marchmaster briefing. **Open Field Briefing** r
 1. At Ashgate, compare Rill Crossing and The Soot Orchard before choosing; ask what the player believes each visibility label promises.
 2. Accept or decline the guard contract without coaching, then complete one route through Broken Relay or Red Wheel Toll Bridge.
 3. During battle, stop after each step and explain aloud why an enemy chose its target. Compare the card's exact next-hit damage with the applied result. With keyboard or controller, use **Inspect Chassis** and confirm that active targets are reached without a mouse.
-4. Resolve the local event and ask whether its cost and consequence were clear before clicking.
+4. Resolve the local event and ask whether its cost and consequence were clear before choosing.
 5. At Morrowline, decide whether repairing, refueling, changing the layout, or preserving money is more valuable. If the selected system is healthy, confirm the Repair row points to the most damaged installed candidate.
 6. Complete the last two encounters. On a second attempt, change at least one dependency and take the other branch or deliberately test a recoverable retreat.
 7. At the result screen, verify that the debrief card itself retains the secured path, pressure, contract, specialist, and surviving systems, then choose **Record Playtest Notes**.

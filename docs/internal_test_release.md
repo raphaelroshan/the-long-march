@@ -7,7 +7,7 @@ This is an internal, testable alpha chapter for The Long March. It proves a five
 ## Test flow
 
 1. Start at Ashgate Depot with the prepared fortress modules visible in the chassis grid.
-2. Select an installed module to move, rotate, or remove it. Select a module from the palette and click an empty cell to install it. Exterior-tagged modules consume one of two mount slots.
+2. Select an installed module to move, rotate, or remove it. Select a module from the palette, then choose an empty cell with the pointer or with arrows and A/Enter to install it. Exterior-tagged modules consume one of two mount slots.
 3. Confirm that invalid overlap, bounds, mass, and exterior-capacity placements show a blocked preview without changing the old layout.
 4. Move the Coal Cell away from the Steam Lance Engine and confirm the engine turns offline; reconnect it before departure. Move the Ammunition Lift away from the weapon and confirm the weapon becomes strained rather than silently retaining full damage.
 5. Accept or decline the **Morrowline Parts Guard**, then compare the known/forecast/unscouted information for **Rill Crossing** and **The Soot Orchard**.
@@ -23,7 +23,7 @@ This is an internal, testable alpha chapter for The Long March. It proves a five
 15. Save and load during a map decision or Morrowline recovery and confirm the graph position, phase, resources, module state, contract, specialist, pressure, damage, and reports are preserved.
 16. Open **Playtest feedback** after the result, confirm the modal cleanly separates the form from the debrief beneath it, answer the two short prompts, and save the local JSON bundle if the tester agrees to share it.
 
-The first-run Marchmaster briefing explains the complete loop, while the phase-specific NEXT line keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
+The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 
 ## Implemented units and behaviors
 
