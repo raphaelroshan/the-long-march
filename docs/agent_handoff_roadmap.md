@@ -7,7 +7,7 @@
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Next build target:** Extract a dedicated Plan Journey scene, then add deterministic travel presentation according to [`design/journey_presentation_vertical_slice.md`](../design/journey_presentation_vertical_slice.md)
+**Next build target:** Replace the settlement control stack with a bazaar hub, then extract Plan Journey and add deterministic in-between travel according to [`design/journey_presentation_vertical_slice.md`](../design/journey_presentation_vertical_slice.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
 
@@ -39,7 +39,7 @@ The implemented slice includes the following capabilities:
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
 
-The next vertical slice is presentation depth rather than campaign breadth. Build a separate Plan Journey view, an atomic route-commit boundary, a saveable travel phase, and a side-on moving-fortress scene for the first Ashgate roads. The simulation must continue to decide schedules, targets, damage, and consequences; animation consumes structured events and cannot advance or randomize the run.
+The next vertical slice is presentation depth rather than campaign breadth. Build a visual settlement bazaar with task-specific stations, a separate assignment-aware Plan Journey view, an atomic route-commit boundary, a saveable in-between travel phase, and a side-on moving-fortress scene for the first Ashgate roads. The fortress remains at its origin until road beats, events, contacts, and arrival resolve. The simulation must continue to decide offers, costs, schedules, targets, damage, and consequences; animation consumes structured events and cannot advance or randomize the run.
 
 ---
 
