@@ -907,3 +907,7 @@ Before releasing a live stage, the shell now compares its complete serialized st
 ## 2026-08-28 — Chassis selection is inspection until the grid owns focus
 
 The preparation screen still selects one installed module so its dependency card is immediately useful, but the passive chassis now names that state as Overview, Inspected System, and Inspect. Edit Chassis or a direct pointer click changes the same panel into explicit edit mode with a stronger selection outline, active cursor, placement language, and mapped confirm/cancel instructions. Stored modules continue to expose global placement blockers before entry. This preserves fast mouse editing and controller parity while removing the false impression that the opening engine is already being moved. The stage refresh also type-checks non-button focus before route-button membership tests, preventing chassis focus from emitting an engine error.
+
+## 2026-08-28 — Checkpoint feedback owns a safe header slot
+
+The non-modal checkpoint toast now uses compact `Saved · reason` copy in a 250-pixel header slot capped at x=330 and positioned with a twelve-pixel gap before the live Pause control. The cap reserves space for the widest contextual Pause label before that label expands, preventing an existing toast from being covered during Route Review. This keeps save feedback, the title, and session control simultaneously legible at 1280×720 with 110% text. The toast still carries no focus, dismisses when Pause opens, and changes no autosave timing, state, or audio behavior.

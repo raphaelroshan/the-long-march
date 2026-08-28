@@ -392,14 +392,26 @@ func _run() -> void:
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.contract_decline_button.has_focus(), "resuming should restore the stage control that had focus")
+	app.text_scale_percent = 110
+	app._apply_text_scale()
+	await process_frame
 	app.game_view.contract_decline_button.pressed.emit()
 	await process_frame
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "confirming the first campaign decision should create an automatic checkpoint")
 	_expect(app.last_checkpoint_reason == "contract_answered", "the application should report the latest automatic checkpoint reason")
-	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text.contains("CONTRACT DECISION"), "a successful automatic checkpoint should produce a brief player-facing notice")
-	_expect(not app.checkpoint_toast.get_global_rect().intersects(app.game_view.pause_button.get_global_rect()), "checkpoint notices should not cover the persistent stage pause control")
+	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text == "SAVED · CONTRACT DECISION", "a successful automatic checkpoint should produce a compact player-facing notice")
+	app.game_view.campaign_map.button_for("rill_crossing").pressed.emit()
+	await process_frame
+	_expect(app.game_view.pause_button.text.contains("ROUTE REVIEW"), "the toast-clearance regression should exercise the widest contextual Pause label")
+	var toast_rect: Rect2 = app.checkpoint_toast.get_global_rect()
+	var stage_pause_rect: Rect2 = app.game_view.pause_button.get_global_rect()
+	_expect(not toast_rect.intersects(stage_pause_rect) and toast_rect.end.x <= stage_pause_rect.position.x - 8.0, "checkpoint notices should retain a visible gap before the persistent Pause control at 110% text")
+	app.game_view.campaign_cancel_button.pressed.emit()
+	await process_frame
 	app._show_pause()
 	_expect(not app.checkpoint_toast.visible, "opening the pause menu should dismiss transient checkpoint notices")
+	app.text_scale_percent = 100
+	app._apply_text_scale()
 	_expect(app.title_button.text == "RETURN TO TITLE" and app.pause_save_status_label.text.begins_with("Current decision saved"), "the pause menu should recognize a current automatic checkpoint")
 	_expect(app.pause_order_button.text == "GO TO ROUTES", "Pause should update its order return when the contract opens the road map")
 	_expect(app.restart_button.has_theme_stylebox_override("normal") and not app.title_button.has_theme_stylebox_override("normal"), "pause should distinguish destructive restart from a safely checkpointed title return")

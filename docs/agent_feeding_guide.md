@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.256`; Feeds A through AA are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.257`; Feeds A through AB are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -167,6 +167,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.256` through distinct passive inspection and active edit presentation.
 
 > Make an untouched preparation screen describe the selected module as inspection, not an active move. Entering the chassis must switch the heading, status, cursor, focus treatment, and controller copy together; stored-module blockers must remain visible before entry. Preserve direct pointer editing and every authoritative placement rule.
+
+### Current Feed AB — checkpoint toast clearance
+
+**Status:** Complete in `0.3.0-alpha.257` through a reserved collision-safe header slot.
+
+> Keep automatic checkpoint feedback visible and non-modal at 110% text without covering the game title or any contextual Pause label. Shorten the receipt without losing its reason, position it against the live Pause control with a stable reserved maximum, preserve immediate Pause dismissal, and add a route-review overlap regression.
 
 ## Historical prototype feed sequence
 
