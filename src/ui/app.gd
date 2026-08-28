@@ -923,7 +923,7 @@ func _refresh_title_state() -> void:
 	else:
 		start_button.text = "PLAY ASHGATE · GUIDED BRIEFING" if has_completed_save else ("NEW ASHGATE · GUIDED BRIEFING" if has_valid_save else "START ASHGATE  ·  GUIDED FIRST RUN")
 		start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
-	quick_start_button.visible = not briefing_complete
+	quick_start_button.visible = not briefing_complete and not has_valid_save
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
 	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
 	guide_quick_start_button.text = "QUICK REPLAY ASHGATE" if has_completed_save else ("START NEW ASHGATE RUN" if has_valid_save else "QUICK START ASHGATE")
@@ -943,7 +943,7 @@ func _refresh_title_state() -> void:
 		actions.move_child(veyru_start_button, 2)
 		actions.move_child(continue_button, 3)
 		actions.move_child(save_recovery_button, 4)
-	_refresh_title_focus(has_valid_save, has_invalid_save, not briefing_complete)
+	_refresh_title_focus(has_valid_save, has_invalid_save, quick_start_button.visible)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
@@ -1004,6 +1004,9 @@ func _saved_run_info() -> Dictionary:
 	var save_age := _save_age_label(saved_at_unix)
 	var current_build := String(ProjectSettings.get_setting("application/config/version", "development"))
 	var build_note := "" if saved_build == current_build else "\nCompatible checkpoint from %s" % saved_build
+	var region_id := validation_state.campaign_region_id
+	var region_name := validation_state.campaign_region_name()
+	var region_menu_name := _region_menu_name(region_id)
 	var condition := "critical" if hull <= 3 or fuel <= 1 or heat > LongMarchState.BASE_HEAT_LIMIT else ("watch" if hull <= 6 or fuel <= 2 or heat >= LongMarchState.BASE_HEAT_LIMIT - 1 else "stable")
 	var completed := phase_id == "results" and not result_id.is_empty()
 	var next_action := _saved_next_action(validation_state)
@@ -1019,9 +1022,11 @@ func _saved_run_info() -> Dictionary:
 		"condition": condition,
 		"completed": completed,
 		"result": result_name,
-		"action": "VIEW RESULT · %s" % result_name.to_upper() if completed else "CONTINUE · DAY %d · %s" % [day, location.to_upper()],
-		"tooltip": "Review the saved %s debrief from %s. Saved by %s." % [result_name, location, saved_build] if completed else "Resume at %s during %s with %d of 5 encounters secured. Saved by %s." % [location, phase, encounters, saved_build],
-		"summary": "Completed run · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [condition.capitalize(), phase, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
+		"region_id": region_id,
+		"region": region_name,
+		"action": "VIEW RESULT · %s · %s" % [result_name.to_upper(), region_menu_name] if completed else "CONTINUE · %s · DAY %d · %s" % [region_menu_name, day, location.to_upper()],
+		"tooltip": "Review the saved %s debrief from %s in %s. Saved by %s." % [result_name, location, region_name, saved_build] if completed else "Resume %s at %s during %s with %d of 5 encounters secured. Saved by %s." % [region_name, location, phase, encounters, saved_build],
+		"summary": "Completed run · %s · %d/5 · %s · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, region_name, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [region_name, condition.capitalize(), phase, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
 	}
 
 func _saved_next_action(saved_state: LongMarchState) -> String:
@@ -1058,6 +1063,20 @@ func _save_age_label(saved_at_unix: int) -> String:
 
 func _empty_save_summary() -> String:
 	return "No saved march · Autosave begins after your first committed decision." if autosave_enabled else "No saved march · Use Save March from the pause menu."
+
+func _region_menu_name(region_id: String) -> String:
+	return "VEYRU" if region_id == "flooded_veyru" else "ASHGATE"
+
+func _region_display_name(region_id: String) -> String:
+	return "Flooded Veyru" if region_id == "flooded_veyru" else "Ashgate Lowlands"
+
+func _region_start_name(region_id: String) -> String:
+	return "Lantern Quay" if region_id == "flooded_veyru" else "Ashgate Depot"
+
+func _active_region_id() -> String:
+	if game_view == null:
+		return "ashgate_lowlands"
+	return String(game_view.get("state").get("campaign_region_id"))
 
 func _start_new_game() -> void:
 	_request_new_game(true)
@@ -1136,15 +1155,17 @@ func _refresh_pause_summary(message: String = "") -> void:
 	var phase := phase_id.replace("_", " ").capitalize()
 	var viewing_debrief := phase_id == "results"
 	var current_run_saved := _current_run_matches_save()
+	var region_id := String(run_state.get("campaign_region_id"))
+	var region_name := _region_display_name(region_id)
 	pause_eyebrow_label.text = "FINAL REPORT" if viewing_debrief else "THE ROAD WAITS"
 	pause_title_label.text = "DEBRIEF OPTIONS" if viewing_debrief else "MARCH PAUSED"
 	pause_detail_label.text = "The march has ended. Review the result, save it locally, or adjust settings." if viewing_debrief else "The road is turn-based. Nothing changes while this menu is open."
 	resume_button.text = "RETURN TO DEBRIEF" if viewing_debrief else "RESUME MARCH"
 	pause_save_button.text = "SAVE RESULT" if viewing_debrief else "SAVE MARCH"
 	restart_button.text = "PLAY AGAIN" if viewing_debrief else "RESTART"
-	restart_button.tooltip_text = "Begin another Ashgate march after confirmation." if viewing_debrief else "Discard the current unsaved stage state and begin again."
+	restart_button.tooltip_text = "Begin another %s march after confirmation." % region_name if viewing_debrief else "Discard the current %s stage state and begin again." % region_name
 	pause_hint_label.text = "B / Esc returns to debrief" if viewing_debrief else "B / Esc resumes"
-	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
+	pause_summary_label.text = "%s · DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [region_name.to_upper(), int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
 	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."
 	if current_run_saved:
@@ -1295,23 +1316,29 @@ func _request_confirmation(action: String) -> void:
 	pending_confirmation = action
 	if action == "restart":
 		var restart_save := _saved_run_info()
-		confirmation_title_label.text = "Restart from Ashgate?"
+		var restart_region_id := _active_region_id()
+		var restart_region_name := _region_display_name(restart_region_id)
+		var restart_start_name := _region_start_name(restart_region_id)
+		confirmation_title_label.text = "Restart %s?" % restart_region_name
 		if bool(restart_save.get("valid", false)):
-			var saved_context := "%s result" % String(restart_save.get("result", "completed")) if bool(restart_save.get("completed", false)) else "Day %d at %s checkpoint" % [int(restart_save.get("day", 1)), String(restart_save.get("location", "the last location"))]
-			confirmation_body_label.text = ("Current stage progress will reset. Your %s remains under Continue until the restarted run reaches its first automatic checkpoint." if autosave_enabled else "Current stage progress will reset. Your %s remains under Continue until you save the restarted run.") % saved_context
+			var saved_context := "%s result from %s" % [String(restart_save.get("result", "completed")), String(restart_save.get("region", "the saved chapter"))] if bool(restart_save.get("completed", false)) else "Day %d at %s in %s" % [int(restart_save.get("day", 1)), String(restart_save.get("location", "the last location")), String(restart_save.get("region", "the saved chapter"))]
+			confirmation_body_label.text = ("Current %s progress will reset to %s. Your %s checkpoint remains under Continue until the restarted run reaches its first automatic checkpoint." if autosave_enabled else "Current %s progress will reset to %s. Your %s checkpoint remains under Continue until you save the restarted run.") % [restart_region_name, restart_start_name, saved_context]
 		else:
-			confirmation_body_label.text = "Current stage progress will reset to Ashgate. There is no usable checkpoint to return to."
+			confirmation_body_label.text = "Current %s progress will reset to %s. There is no usable checkpoint to return to." % [restart_region_name, restart_start_name]
 		confirmation_confirm_button.text = "RESTART"
 	elif action == "replay":
 		var replay_save := _saved_run_info()
-		confirmation_title_label.text = "Begin another march?"
+		var replay_region_id := _active_region_id()
+		var replay_region_name := _region_display_name(replay_region_id)
+		var replay_menu_name := "Flooded Veyru" if replay_region_id == "flooded_veyru" else "Ashgate"
+		confirmation_title_label.text = "Replay %s?" % replay_region_name
 		if _current_run_matches_save():
-			confirmation_body_label.text = "Your completed result is saved under Continue. Play Again will replace it with a fresh Ashgate checkpoint immediately." if autosave_enabled else "Your completed result remains under Continue until you save the fresh run."
+			confirmation_body_label.text = "Your completed result is saved under Continue. Play Again will replace it with a fresh %s checkpoint immediately." % replay_menu_name if autosave_enabled else "Your completed result remains under Continue until you save the fresh %s run." % replay_menu_name
 		elif bool(replay_save.get("valid", false)):
-			var saved_context := "%s result" % String(replay_save.get("result", "completed")) if bool(replay_save.get("completed", false)) else "Day %d at %s" % [int(replay_save.get("day", 1)), String(replay_save.get("location", "the previous checkpoint"))]
-			confirmation_body_label.text = ("This result is not saved under Continue; it still points to %s. Play Again will replace that checkpoint with a fresh Ashgate run immediately." if autosave_enabled else "This result is not saved under Continue; it still points to %s. That checkpoint remains until you save the fresh run.") % saved_context
+			var saved_context := "%s result from %s" % [String(replay_save.get("result", "completed")), String(replay_save.get("region", "the saved chapter"))] if bool(replay_save.get("completed", false)) else "Day %d at %s in %s" % [int(replay_save.get("day", 1)), String(replay_save.get("location", "the previous checkpoint")), String(replay_save.get("region", "the saved chapter"))]
+			confirmation_body_label.text = ("This result is not saved under Continue; it still points to %s. Play Again will replace that checkpoint with a fresh %s run immediately." if autosave_enabled else "This result is not saved under Continue; it still points to %s. That checkpoint remains until you save the fresh %s run.") % [saved_context, replay_menu_name]
 		else:
-			confirmation_body_label.text = "This result is not saved under Continue. Play Again will create a fresh Ashgate checkpoint immediately." if autosave_enabled else "This result is not saved under Continue. Play Again starts fresh without creating a checkpoint until you save manually."
+			confirmation_body_label.text = "This result is not saved under Continue. Play Again will create a fresh %s checkpoint immediately." % replay_menu_name if autosave_enabled else "This result is not saved under Continue. Play Again starts a fresh %s run without creating a checkpoint until you save manually." % replay_menu_name
 		confirmation_confirm_button.text = "PLAY AGAIN"
 	elif action == "title":
 		confirmation_title_label.text = "Return without saving?"

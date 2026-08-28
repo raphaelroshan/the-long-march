@@ -8,7 +8,7 @@ The battles resolve automatically, but the player chooses the fortress layout, r
 
 The repository contains an agent-first Godot project with:
 
-- A playtest-focused title flow with guided Start Game, briefing-free Quick Start, save-aware Continue, and a concise run guide.
+- A playtest-focused title flow with guided Ashgate, Flooded Veyru, chapter-aware Continue, and a concise run guide.
 - A session-safe pause menu with live run status, Save, Save & Return, field briefing, settings, and confirmation before discarding progress.
 - A visible in-stage Pause action alongside Esc/controller-B shortcuts, keeping session controls discoverable for every input method.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
@@ -47,6 +47,7 @@ The repository contains an agent-first Godot project with:
 - Structured campaign content in `content/content_manifest.json` and `content/gameplay_framework.json`.
 - Deterministic headless tests in `tests/test_fortress_state.gd`.
 - A complete five-encounter Ashgate Lowlands chapter with branching routes through Rill Crossing, The Soot Orchard, Broken Relay, Red Wheel Toll Bridge, Morrowline Camp, Lower Ash Road, and Signal Causeway.
+- A separate five-encounter Flooded Veyru chapter with rising-water closures, a named medicine carrier, Evacuation Camp recovery, Flood Surge and Civic Guardian contacts, and a Dry Archive commitment.
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
 - An Ashgate guard contract, three local route decisions, recruitable signal officer Iven Pell, and persistent settlement trust.
 - Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.
@@ -65,7 +66,7 @@ Open the project in Godot 4.x or use:
 bash scripts/verify.sh
 ```
 
-Running the project opens on the title menu. On the first run, choose **Start Game · Guided First Run** for the Marchmaster briefing or **Quick Start · Skip Briefing** for an immediate playtest. After the briefing is completed, those equivalent paths collapse into one direct **Start Game · Ashgate Depot** action; Settings can reset the guided introduction. **Continue** restores a compatible local save, and **Field Guide** summarizes the five decisions in a complete run. Press Escape during the stage to pause, inspect run progress, reopen the briefing, save, or safely return to the title.
+Running the project opens on the title menu. Choose **Start Ashgate · Guided First Run** for the Marchmaster briefing, **Start Ashgate · Skip Briefing** for an immediate Ashgate test, or **Start Flooded Veyru · Rising Water** for the second isolated chapter. Once a valid checkpoint exists, the title keeps one guided Ashgate action, Veyru, and a chapter-labelled Continue above the fold; Ashgate Quick Start remains available in the Field Guide. After the briefing is completed, Ashgate collapses to one direct **Start Game · Ashgate Depot** action. **Continue** restores a compatible local save, and **Field Guide** summarizes the five decisions in a complete run. Press Escape during the stage to pause, inspect run progress, reopen the briefing, save, restart the current chapter, or safely return to the title.
 
 With Godot export templates installed, create desktop playtest builds with:
 
@@ -89,9 +90,9 @@ The recommended sequence is:
 5. Add settlement contracts, refit, salvage, and campaign transitions.
 6. Expand modules, crew stories, and routes only after the core loop is reliable.
 
-## Initial journey test release
+## Playable journey test release
 
-The current focused test flow begins at Ashgate Depot, branches through five encounters, recovers at Morrowline Camp, and ends at Meridian Pass. The chapter contract is in [`design/ashgate_lowlands_alpha.md`](design/ashgate_lowlands_alpha.md); the release checklist is in [`docs/internal_test_release.md`](docs/internal_test_release.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
+The current build contains two isolated five-encounter test journeys. Ashgate begins at Ashgate Depot, recovers at Morrowline Camp, and ends at Meridian Pass. Flooded Veyru begins at Lantern Quay, recovers at Evacuation Camp, and ends at the Dry Archive. Their contracts are in [`design/ashgate_lowlands_alpha.md`](design/ashgate_lowlands_alpha.md) and [`design/flooded_veyru_alpha.md`](design/flooded_veyru_alpha.md); the release checklist is in [`docs/internal_test_release.md`](docs/internal_test_release.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
 
 The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
 The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
@@ -102,7 +103,7 @@ The dungeon-and-shop inventory battler remains a separate follow-up concept. It 
 
 ## Expanded design package
 
-The current GPT-agent roadmap is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md); it records the implemented Ashgate Lowlands baseline and the next bounded fortress, specialist, event, occurrence, regional, UX, and campaign tasks.
+The current GPT-agent roadmap is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md); it records the implemented Ashgate and Flooded Veyru baseline and the next bounded regional-consequence, replay, UX, and alpha-hardening tasks.
 
 The broader fortress plan is documented separately so agents can implement it in controlled slices:
 
@@ -110,4 +111,4 @@ The broader fortress plan is documented separately so agents can implement it in
 - [`design/map_regions_and_settlements.md`](design/map_regions_and_settlements.md) — FTL-like node map, visibility, closure pressure, regions, settlements, and route archetypes.
 - [`design/characters_factions_and_campaign.md`](design/characters_factions_and_campaign.md) — crew, rivals, factions, campaign pressures, regional arcs, and endings.
 
-The machine-readable campaign manifest now includes regions, settlements, extended character hooks, map rules, and authored events. The Ashgate Lowlands graph, pressure model, guard contract, Iven recruitment, and recovery loop have runtime behavior and deterministic tests; later regions remain design targets until implemented to the same standard.
+The machine-readable campaign manifest now includes regions, settlements, extended character hooks, map rules, and authored events. Ashgate Lowlands and Flooded Veyru each have runtime graphs, regional pressure, contracts, recovery, finales, save validation, and deterministic tests; the remaining regions are design targets until implemented to the same standard.

@@ -811,3 +811,7 @@ Flooded Veyru now has a dedicated authored content file referenced by the main m
 ## 2026-08-28 — Region-rebuilt map controls retain accessible handoffs
 
 Campaign map controls rebuilt for a different regional layout now receive the same focus-triggered command-desk scrolling as the initial Ashgate buttons. Settlement focus also includes Review Next Roads after enabled services, so a fully supplied Evacuation Camp does not jump directly into the map or leave controller focus below the viewport. The Veyru UI regression drives the complete five-encounter route through real buttons and requires the opening route, recovery handoff, final archive choice, and debrief to remain visible and actionable at 1280×720.
+
+## 2026-08-28 — Session actions preserve chapter identity
+
+Continue now names Ashgate or Veyru on the action, summary, and tooltip. Pause summaries, restart confirmations, and replay confirmations derive their chapter and starting settlement from the active run, preventing a Veyru player from being told that a destructive action will restart Ashgate. When a checkpoint exists, the title hides the redundant Ashgate Skip Briefing button and keeps that path in the Field Guide; Continue, one guided Ashgate start, Veyru, utilities, and the complete checkpoint summary therefore remain visible together at 1280×720.

@@ -1,10 +1,10 @@
-# The Long March — Initial Journey Test Release
+# The Long March — Playable Journey Test Release
 
 ## Purpose
 
-This is an internal, testable alpha chapter for The Long March. It proves a five-encounter run from **Ashgate Depot** through a branching Ashgate Lowlands map, **Morrowline Camp**, and **Meridian Pass**, with dependency-driven refitting, incomplete route information, an optional contract, mutually exclusive specialists, deterministic encounters, recoverable failure, settlement recovery, and explicit run results.
+This is a testable two-chapter alpha for The Long March. It proves separate five-encounter runs through **Ashgate Lowlands** and **Flooded Veyru**, with dependency-driven refitting, incomplete route information, regional contracts and pressure, deterministic encounters, recoverable failure, mid-run recovery, and explicit results. The chapters share one simulation and interface but remain isolated rather than pretending the full campaign layer exists.
 
-## Test flow
+## Ashgate test flow
 
 1. Start at Ashgate Depot with the prepared fortress modules visible in the chassis grid.
 2. Select an installed module to move, rotate, or remove it. Select a module from the palette, then choose an empty cell with the pointer or with arrows and A/Enter to install it. Exterior-tagged modules consume one of two mount slots.
@@ -25,6 +25,18 @@ This is an internal, testable alpha chapter for The Long March. It proves a five
 17. Save and load during a map decision, active occurrence, active Mara event, or Morrowline recovery and confirm the graph position, phase, resources, module state, event stream, pressure, damage, and reports are preserved.
 18. Open **Playtest feedback** after the result, confirm the modal cleanly separates the form from the debrief beneath it, answer the two short prompts, and save the local JSON bundle if the tester agrees to share it.
 
+## Flooded Veyru test flow
+
+1. Choose **Start Flooded Veyru · Rising Water** and confirm the run opens at Lantern Quay without the Ashgate-specific briefing.
+2. Accept or decline the sealed-medicine contract. If accepted, confirm the UI names the exact Parts Crate or Refugee Bunk carrying it.
+3. Compare Pump Gallery with Sunken Tramworks. Confirm the former names Flood Surge and its counters while the latter exposes its faster but mass-sensitive structural risk.
+4. During Flood Surge contact, compare the named target and next-hit damage with the Water Condenser, workshop, armor, doctrine, and Seal Compartment options.
+5. Reach Evacuation Camp and confirm the service budget is one action, or two while the accepted medicine carrier remains operational. With fuel below two, verify the free emergency-fuel option.
+6. Compare Archive Causeway, Drowned Registry, and—when Breach water or retreat makes it available—Pilgrim Gantry. Confirm rising water can close the Registry but never every recovery path.
+7. At Dry Archive Gate, verify both Broadcast and Seal show their complete mechanical consequences before selection.
+8. Resolve the Civic Guardian final contact and confirm Archive Kept, Archive Scarred, or Veyru Lost names the carrier, water, final commitment, and decisive system state.
+9. Save and Continue at a route choice, battle, camp, or final decision. Confirm the title, pause menu, restart warning, and replay warning all identify Flooded Veyru rather than Ashgate.
+
 The first-run Marchmaster briefing explains the complete loop, while the phase-specific CURRENT ORDER keeps guidance available without hiding the current state. The refit interaction remains the input foundation for the spatial engineering loop. Fuel, ammunition, crew, parts, power, and visibility dependencies are evaluated explicitly and displayed as ready, strained, or offline.
 
 ## Implemented units and behaviors
@@ -44,4 +56,4 @@ The integrated kit includes a Long March visual reference, Ashgate journey backg
 
 ## Scope boundaries
 
-This release includes one authored FTL-like regional graph, two mutually exclusive recruitable specialists, and a bounded scheduler for four authored occurrences. It does not include later regions, procedural prose or maps, a complete cargo economy, final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. The chapter is intentionally deterministic and inspectable so agents and testers can tune the map loop before adding campaign breadth.
+This release includes two authored FTL-like regional graphs, two mutually exclusive recruitable Ashgate specialists, one Veyru medicine obligation, and a bounded scheduler for four authored Ashgate occurrences. It does not connect the chapters into a campaign, add procedural prose or maps, implement a complete cargo economy, or include final sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. Both chapters remain deterministic and inspectable so agents and testers can tune their distinct preparation and route decisions before adding campaign breadth.

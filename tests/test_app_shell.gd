@@ -121,13 +121,36 @@ func _run() -> void:
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the title should open Flooded Veyru as a separate chapter at Lantern Quay")
 	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.contract_accept_button.has_focus(), "Veyru should skip the Ashgate briefing and focus its medicine decision")
 	_expect(app.game_view.contract_title.text == "LANTERN QUAY CONTRACT" and app.game_view.contract_accept_button.text.contains("PARTS CRATE") and app.game_view.campaign_map.button_for("pump_gallery") != null, "the Veyru stage should expose its named carrier and regional map immediately")
+	app._show_pause()
+	await process_frame
+	_expect(app.pause_summary_label.text.begins_with("FLOODED VEYRU · DAY 1 · Lantern Quay") and app.restart_button.tooltip_text.contains("Flooded Veyru"), "Veyru pause context should identify the active chapter before a destructive action")
+	app.restart_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_title_label.text == "Restart Flooded Veyru?" and app.confirmation_body_label.text.contains("reset to Lantern Quay"), "Veyru restart should name the chapter and its actual starting settlement")
+	app.confirmation_cancel_button.pressed.emit()
+	app.resume_button.pressed.emit()
+	await process_frame
 	app.game_view.contract_accept_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.state.veyru_contract_status == "accepted" and app.game_view.campaign_path_label.text.contains("Carrier: Parts Crate") and app.game_view.campaign_map.status_for("pump_gallery") == "available", "accepting the medicine contract through the UI should record its carrier and open the Veyru roads")
+	app.game_view.state.phase = "results"
+	app.game_view.state.run_complete = true
+	app.game_view.state.journey_complete = true
+	app.game_view.state.final_result = "archive_scarred"
+	app.game_view._refresh_ui()
+	app.game_view.play_again_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_title_label.text == "Replay Flooded Veyru?" and app.confirmation_body_label.text.contains("fresh Flooded Veyru run"), "Veyru replay should not describe the replacement run as Ashgate")
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay" and app.game_view.state.veyru_contract_status == "offered", "confirming Veyru replay should create another Veyru run at Lantern Quay")
 	app._return_to_title()
 	await process_frame
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "returning from an unsaved Veyru inspection should restore the shared title menu")
+	_expect(app.continue_button.text.contains("VEYRU") and app.save_status_label.text.contains("Flooded Veyru") and app.continue_button.tooltip_text.contains("Flooded Veyru"), "a Veyru checkpoint should identify its chapter in the title action, summary, and tooltip")
+	_expect(not app.quick_start_button.visible, "a returning-player title should collapse the redundant Ashgate quick-start action while the Field Guide retains that path")
 	if FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	app._refresh_title_state()
@@ -246,7 +269,7 @@ func _run() -> void:
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "restart should require confirmation before discarding progress")
-	_expect(app.confirmation_body_label.text.contains("Day 1 at Ashgate Depot checkpoint") and app.confirmation_body_label.text.contains("automatic checkpoint"), "restart should name the protected checkpoint and when autosave will replace it")
+	_expect(app.confirmation_body_label.text.contains("Day 1 at Ashgate Depot in Ashgate Lowlands checkpoint") and app.confirmation_body_label.text.contains("automatic checkpoint"), "restart should name the protected checkpoint, chapter, and when autosave will replace it")
 	_expect(app.confirmation_cancel_button.get_node_or_null(app.confirmation_cancel_button.focus_neighbor_right) == app.confirmation_confirm_button, "confirmation actions should have explicit horizontal controller navigation")
 	_expect(app.confirmation_cancel_button.get_node_or_null(app.confirmation_cancel_button.focus_neighbor_top) == app.confirmation_cancel_button and app.confirmation_confirm_button.get_node_or_null(app.confirmation_confirm_button.focus_next) == app.confirmation_cancel_button, "confirmation dialogs should trap directional and Tab focus")
 	app.confirmation_cancel_button.pressed.emit()
@@ -287,8 +310,8 @@ func _run() -> void:
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
 	_expect(app.save_status_label.text.contains("Next · Answer convoy contract") and app.save_status_label.text.contains("Fuel 6"), "the active checkpoint summary should identify the exact decision waiting after Continue without losing resource context")
 	_expect(app.continue_button.get_index() < app.start_button.get_index() and app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.start_button, "a valid save should place Continue first visually and route downward into fresh-start actions")
-	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.start_button and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button, "save-aware Tab navigation should follow Continue, Ashgate starts, Veyru, then utility actions")
-	_expect(app.start_button.text.begins_with("NEW ASHGATE") and app.quick_start_button.text.begins_with("NEW ASHGATE"), "existing progress should make both Ashgate fresh-start actions explicit")
+	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.start_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button, "save-aware Tab navigation should follow Continue, guided Ashgate, Veyru, then utility actions")
+	_expect(app.start_button.text.begins_with("NEW ASHGATE") and not app.quick_start_button.visible, "existing progress should keep one clear Ashgate start on the title instead of crowding out checkpoint details")
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Watch") and app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify checkpoint condition, phase, and encounter progress")
@@ -447,7 +470,7 @@ func _run() -> void:
 	_expect(app.pause_save_status_label.text.contains("result is not saved yet") and app.pause_save_status_label.text.contains("Save Result"), "an unsaved debrief should name the result-specific persistence action instead of asking for another campaign decision")
 	app.restart_button.pressed.emit()
 	await process_frame
-	_expect(app.confirmation_view.visible and app.pause_view.visible and app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN", "Play Again from debrief options should use the same result-aware confirmation as the visible result action")
+	_expect(app.confirmation_view.visible and app.pause_view.visible and app.confirmation_title_label.text == "Replay Ashgate Lowlands?" and app.confirmation_confirm_button.text == "PLAY AGAIN", "Play Again from debrief options should identify the active chapter in its result-aware confirmation")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
 	_expect(not app.confirmation_view.visible and app.pause_view.visible and app.restart_button.has_focus() and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "cancelling a debrief-options replay should return focus to the paused overlay")
@@ -456,7 +479,7 @@ func _run() -> void:
 	_expect(not app.pause_view.visible and app.game_view.state.phase == "results", "returning from debrief options should preserve the completed result")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
-	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN" and app.confirmation_cancel_button.text == "KEEP RESULT", "Play Again should require an explicit result-preserving confirmation")
+	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Replay Ashgate Lowlands?" and app.confirmation_confirm_button.text == "PLAY AGAIN" and app.confirmation_cancel_button.text == "KEEP RESULT", "Play Again should require an explicit chapter-aware result-preserving confirmation")
 	_expect(app.confirmation_body_label.text.contains("This result is not saved under Continue") and app.confirmation_body_label.text.contains("fresh Ashgate checkpoint immediately"), "replay confirmation should not claim an unsaved result already exists under Continue")
 	_expect(app.game_view.state.phase == "results", "opening replay confirmation should preserve the completed run")
 	app.confirmation_cancel_button.pressed.emit()
@@ -475,7 +498,7 @@ func _run() -> void:
 	app.autosave_enabled = false
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
-	_expect(app.confirmation_body_label.text.contains("completed result remains under Continue until you save the fresh run"), "manual-save replay should explain that the saved result remains until another explicit save")
+	_expect(app.confirmation_body_label.text.contains("completed result remains under Continue until you save the fresh Ashgate run"), "manual-save replay should explain that the saved result remains until another explicit save")
 	app.confirmation_cancel_button.pressed.emit()
 	app.autosave_enabled = true
 	app.game_view.play_again_button.pressed.emit()

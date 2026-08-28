@@ -1,10 +1,10 @@
 # Agent Feeding Guide — The Long March
 
-Feed the implementation agent one slice at a time. Each prompt assumes the agent has read `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md`. The current post-alpha handoff contract is [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md); use it before issuing a new task so the agent starts from the implemented Ashgate Lowlands baseline rather than the historical prototype sequence.
+Feed the implementation agent one slice at a time. Each prompt assumes the agent has read `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md`. The current post-alpha handoff contract is [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md); use it before issuing a new task so the agent starts from the implemented Ashgate Lowlands and Flooded Veyru baseline rather than the historical prototype sequence.
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.233`; Feeds A through D are complete, so begin new feature work with Feed E.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.234`; Feeds A through E are complete, so begin new feature work with Feed F.
 
 ### Current Feed A — fortress comprehension
 
@@ -32,9 +32,15 @@ The original prompts below describe the build-up of the prototype and are retain
 
 ### Current Feed E — Flooded Veyru chapter
 
-**Status:** Next recommended slice.
+**Status:** Complete in `0.3.0-alpha.234`.
 
 > Implement Flooded Veyru as an isolated authored chapter using the existing fortress state and map contracts. Add one new pressure, one settlement, two viable route branches, one contract, a guaranteed recovery path, an isolated teaching encounter, a combination encounter, and a final commitment. Add deterministic route, save, UI, and balance tests. Do not build the full five-region campaign.
+
+### Current Feed F — one regional consequence
+
+**Status:** Next recommended slice.
+
+> Connect one completed Ashgate or Flooded Veyru decision to one visible regional development. Persist one small migration-safe consequence, show its cause on the map and in the debrief, and make it change a later option rather than grant a flat permanent stat bonus. Do not build the full campaign layer in the same change.
 
 ## Historical prototype feed sequence
 
