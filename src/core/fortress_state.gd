@@ -1081,6 +1081,37 @@ func _validated_module_records(value: Variant, installed: bool) -> Dictionary:
 		return {"ok": false, "reason": "fortress module record exceeds chassis mass capacity"}
 	return {"ok": true, "modules": restored}
 
+func _validated_encounter_records(value: Variant, installed_modules: Array) -> Dictionary:
+	if not value is Array:
+		return {"ok": false, "reason": "encounter contact record is malformed"}
+	var installed_ids: Dictionary = {}
+	for instance in installed_modules:
+		installed_ids[String(instance.get("id", ""))] = true
+	var restored: Array = []
+	var occupied_slots: Dictionary = {}
+	for raw_enemy in value:
+		if not raw_enemy is Dictionary:
+			return {"ok": false, "reason": "encounter contact record contains a malformed entry"}
+		var enemy: Dictionary = raw_enemy.duplicate(true)
+		var enemy_id := String(enemy.get("id", ""))
+		if enemy_id not in ENCOUNTER_ENEMIES:
+			return {"ok": false, "reason": "encounter contact record contains an unknown threat"}
+		var slot := int(enemy.get("slot", -1))
+		if slot < 0 or occupied_slots.has(slot):
+			return {"ok": false, "reason": "encounter contact record contains an invalid slot"}
+		occupied_slots[slot] = true
+		var maximum_health := int(enemy.get("max_hp", 0))
+		var health := int(enemy.get("hp", 0))
+		if maximum_health <= 0 or health < 0 or health > maximum_health:
+			return {"ok": false, "reason": "encounter contact record contains invalid health"}
+		if bool(enemy.get("defeated", false)) != (health == 0):
+			return {"ok": false, "reason": "encounter contact record conflicts with threat health"}
+		var target_id := String(enemy.get("target", ""))
+		if not target_id.is_empty() and target_id != "hull" and not installed_ids.has(target_id):
+			return {"ok": false, "reason": "encounter contact record targets a missing system"}
+		restored.append(enemy)
+	return {"ok": true, "enemies": restored}
+
 func load_serialized(data: Dictionary) -> Dictionary:
 	var save_version := int(data.get("save_version", 1))
 	if save_version > SAVE_VERSION:
@@ -1095,11 +1126,16 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		restored_stored_modules_result = _validated_module_records(data.get("stored_modules", []), false)
 		if not bool(restored_stored_modules_result.get("ok", false)):
 			return restored_stored_modules_result
+	var restored_encounter_result := _validated_encounter_records(data.get("encounter_enemies", []), restored_modules_result.get("modules", []))
+	if not bool(restored_encounter_result.get("ok", false)):
+		return restored_encounter_result
 	var restored_phase := String(data.get("phase", phase))
 	var restored_final_result := String(data.get("final_result", final_result))
 	var restored_run_complete := bool(data.get("run_complete", run_complete))
 	var restored_journey_complete := bool(data.get("journey_complete", journey_complete))
 	var restored_encounter_active := bool(data.get("encounter_active", encounter_active))
+	var restored_encounter_step := int(data.get("encounter_step", encounter_step))
+	var restored_encounter_progress := float(data.get("encounter_progress", encounter_progress))
 	var restored_campaign_active := bool(data.get("campaign_active", campaign_active))
 	var restored_current_location := String(data.get("current_location", current_location))
 	var restored_journey_node := String(data.get("journey_node", journey_node))
@@ -1143,6 +1179,10 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_battle_phase := restored_phase in ["battle", "final_battle"]
 	if restored_battle_phase != restored_encounter_active:
 		return {"ok": false, "reason": "encounter state conflicts with the campaign phase"}
+	if restored_encounter_step < 0 or restored_encounter_step > 6 or restored_encounter_progress < 0.0 or restored_encounter_progress > 1.0:
+		return {"ok": false, "reason": "checkpoint contains invalid encounter progress"}
+	if restored_encounter_active and restored_encounter_result.get("enemies", []).is_empty():
+		return {"ok": false, "reason": "active encounter checkpoint has no threats"}
 	if restored_phase == "results" and restored_final_result not in FINAL_RESULTS:
 		return {"ok": false, "reason": "result checkpoint has no recognized outcome"}
 	if restored_phase == "results" and (not restored_run_complete or not restored_journey_complete):
@@ -1171,9 +1211,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	journey_route = restored_journey_route
 	journey_complete = restored_journey_complete
 	encounter_active = restored_encounter_active
-	encounter_step = int(data.get("encounter_step", encounter_step))
-	encounter_progress = float(data.get("encounter_progress", encounter_progress))
-	encounter_enemies = data.get("encounter_enemies", []).duplicate(true)
+	encounter_step = restored_encounter_step
+	encounter_progress = restored_encounter_progress
+	encounter_enemies = restored_encounter_result.get("enemies", []).duplicate(true)
 	encounter_report = _string_array(data.get("encounter_report", []))
 	encounter_outcome = String(data.get("encounter_outcome", encounter_outcome))
 	encounter_intervention_used = bool(data.get("encounter_intervention_used", encounter_intervention_used))

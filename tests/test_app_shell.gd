@@ -349,6 +349,13 @@ func _run() -> void:
 	invalid_chassis_file.close()
 	var invalid_chassis_info: Dictionary = app._saved_run_info()
 	_expect(not bool(invalid_chassis_info.get("valid", true)) and String(invalid_chassis_info.get("summary", "")).contains("unknown system"), "the title should reject a checkpoint containing a system that does not exist")
+	var invalid_encounter_payload: Dictionary = completed_payload.duplicate(true)
+	invalid_encounter_payload["encounter_enemies"] = [{"id": "developer_dragon", "hp": 1, "max_hp": 1, "slot": 0}]
+	var invalid_encounter_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	invalid_encounter_file.store_string(JSON.stringify(invalid_encounter_payload))
+	invalid_encounter_file.close()
+	var invalid_encounter_info: Dictionary = app._saved_run_info()
+	_expect(not bool(invalid_encounter_info.get("valid", true)) and String(invalid_encounter_info.get("summary", "")).contains("unknown threat"), "the title should reject a checkpoint containing an unauthored encounter threat")
 	completed_save = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()

@@ -450,6 +450,18 @@ func _test_save_round_trip() -> void:
 	out_of_bounds_module_save["modules"][0]["position"] = [LongMarchState.GRID_WIDTH, 0]
 	var out_of_bounds_module_load := LongMarchState.new(0).load_serialized(out_of_bounds_module_save)
 	_expect(not bool(out_of_bounds_module_load.get("ok", false)) and String(out_of_bounds_module_load.get("reason", "")).contains("outside the chassis"), "saved chassis layouts should reject out-of-bounds systems")
+	var unknown_enemy_save := state.serialize()
+	unknown_enemy_save["encounter_enemies"] = [{"id": "developer_dragon", "hp": 1, "max_hp": 1, "slot": 0}]
+	var unknown_enemy_load := LongMarchState.new(0).load_serialized(unknown_enemy_save)
+	_expect(not bool(unknown_enemy_load.get("ok", false)) and String(unknown_enemy_load.get("reason", "")).contains("unknown threat"), "saved encounters should reject unknown threat IDs")
+	var missing_target_save := state.serialize()
+	missing_target_save["encounter_enemies"] = [{"id": "road_raiders", "hp": 2, "max_hp": 5, "slot": 0, "target": "miracle_engine", "defeated": false}]
+	var missing_target_load := LongMarchState.new(0).load_serialized(missing_target_save)
+	_expect(not bool(missing_target_load.get("ok", false)) and String(missing_target_load.get("reason", "")).contains("missing system"), "saved encounters should reject targets absent from the restored chassis")
+	var invalid_progress_save := state.serialize()
+	invalid_progress_save["encounter_step"] = 9
+	var invalid_progress_load := LongMarchState.new(0).load_serialized(invalid_progress_save)
+	_expect(not bool(invalid_progress_load.get("ok", false)) and String(invalid_progress_load.get("reason", "")).contains("invalid encounter progress"), "saved encounters should reject steps beyond the six-step timeline")
 	var unknown_location_save := state.serialize()
 	unknown_location_save["current_location"] = "the_road_beyond_the_map"
 	var unknown_location_load := LongMarchState.new(0).load_serialized(unknown_location_save)

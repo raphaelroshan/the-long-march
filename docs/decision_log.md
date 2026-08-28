@@ -707,3 +707,7 @@ Before any hostile target is assigned, the encounter-order panel now states that
 ## 2026-08-28 — Saved chassis layouts are validated before use
 
 Checkpoint loading now validates every installed and stored system against the authored module catalog before mutating live state. Installed layouts must also respect chassis bounds, overlap, mount, durability, and mass limits. Corrupt layouts are routed to title-screen recovery instead of rendering an impossible fortress or failing later during combat.
+
+## 2026-08-28 — Saved encounters cannot invent threats or targets
+
+Checkpoint loading now validates encounter entries, unique slots, health and defeated state, target references, and the six-step progress range before restoring combat. Active battles must contain at least one authored threat, preventing a damaged save from opening an empty encounter or targeting a system that is not present on the restored chassis.
