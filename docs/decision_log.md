@@ -951,3 +951,7 @@ Encounter checkpoint reasons now distinguish an intermediate Battle Step from a 
 ## 2026-08-28 — Event consequences hand off to the next order
 
 A completed authored event now appends one Next line derived from the live Current Order guidance. The left evidence column therefore keeps the consequence and immediate route or recovery instruction together even when automatic focus scrolls the desk to lower controls. Chained events retain their existing Decision Continues treatment until the final choice resolves.
+
+## 2026-08-29 — Journey spectacle follows an explicit simulation boundary
+
+The next presentation slice will separate reversible Plan Journey choices from one atomic Commit, then introduce a saveable `travel` phase before contact or arrival. A side-on moving-fortress scene, scenery, threat actors, and scenario tableaux will consume structured events produced by the deterministic core; animation frames, tween progress, particles, and camera motion will never decide route costs, schedules, targets, damage, or outcomes. This was chosen over animating the current instant map-to-battle transition because a real phase boundary supports safe Continue behavior, skip/reduced-motion parity, and exact causal playback without building a second combat engine. The first proof is limited to Rill Crossing and The Soot Orchard before the visual grammar expands to every threat and region.
