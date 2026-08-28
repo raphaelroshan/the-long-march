@@ -66,6 +66,9 @@ var journey_banner: TextureRect
 var status_label: Label
 var left_scroll: ScrollContainer
 var right_scroll: ScrollContainer
+var pending_desk_scroll_control: Control
+var desk_scroll_queued: bool = false
+var desk_scroll_frames_remaining: int = 0
 var journey_label: Label
 var encounter_label: Label
 var combat_panel: CombatPanel
@@ -892,7 +895,22 @@ func _connect_desk_focus_scrolling() -> void:
 		control.focus_entered.connect(_on_desk_control_focused.bind(control))
 
 func _on_desk_control_focused(control: Control) -> void:
-	_scroll_action_context_into_view.call_deferred(control)
+	pending_desk_scroll_control = control
+	desk_scroll_frames_remaining = 2
+	if desk_scroll_queued:
+		return
+	desk_scroll_queued = true
+	get_tree().process_frame.connect(_advance_pending_desk_scroll, CONNECT_ONE_SHOT)
+
+func _advance_pending_desk_scroll() -> void:
+	_scroll_action_context_into_view(pending_desk_scroll_control)
+	desk_scroll_frames_remaining -= 1
+	if desk_scroll_frames_remaining > 0:
+		get_tree().process_frame.connect(_advance_pending_desk_scroll, CONNECT_ONE_SHOT)
+		return
+	desk_scroll_queued = false
+	desk_scroll_frames_remaining = 0
+	pending_desk_scroll_control = null
 
 func _show_intervention_preview(intervention_id: String) -> void:
 	if state.phase not in ["battle", "final_battle"] or state.encounter_intervention_used:
@@ -1264,12 +1282,9 @@ func _focus_control(control: Control) -> bool:
 	if not _control_can_receive_focus(control):
 		return false
 	control.grab_focus()
-	if right_scroll != null and right_scroll.is_ancestor_of(control):
-		_scroll_action_context_into_view(control)
 	return true
 
 func _scroll_action_context_into_view(control: Control) -> void:
-	await get_tree().process_frame
 	if not _control_can_receive_focus(control) or not control.has_focus() or right_scroll == null or not right_scroll.is_ancestor_of(control):
 		return
 	var viewport_rect := right_scroll.get_global_rect()

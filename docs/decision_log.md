@@ -735,3 +735,7 @@ At Morrowline, the limited service actions now move ahead of optional doctrine a
 ## 2026-08-28 — Recovery has an explicit route handoff
 
 Campaign recovery now ends with a Review Next Roads action that moves focus to the first available map route without choosing or committing it. The control states how many service actions remain available, and the resulting message confirms that the handoff spends no service action, fuel, time, or Ashmarks; the existing route preview and explicit commit remain authoritative.
+
+## 2026-08-28 — Focus handoffs must also move the viewport
+
+Command-desk focus scrolling now coalesces rapid focus changes and reapplies the latest target across the next two UI frames, after layout has settled. The previous nested coroutine reached the target control logically but never applied its scroll, allowing controller focus to sit far below the visible panel. A geometry regression now requires the recovery-to-route handoff to place the entire focused node inside the right-hand viewport.

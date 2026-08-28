@@ -535,6 +535,9 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.get_viewport().gui_get_focus_owner() in game.campaign_node_buttons and game.selected_campaign_node_id.is_empty(), "Review Next Roads should move focus to route selection without choosing a road for the player")
+	var focused_route_rect: Rect2 = game.get_viewport().gui_get_focus_owner().get_global_rect()
+	var recovery_route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
+	_expect(focused_route_rect.position.y >= recovery_route_viewport_rect.position.y and focused_route_rect.end.y <= recovery_route_viewport_rect.end.y, "the recovery handoff should scroll its focused route fully into the visible command desk")
 	_expect(game.state.money == handoff_money and game.state.settlement_actions_remaining == handoff_actions and game.event_label.text.contains("no service action has been spent"), "the recovery handoff should preserve resources and explicitly state its no-cost semantics")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
