@@ -2235,7 +2235,7 @@ func _refresh_ui() -> void:
 		else:
 			var candidate_id := String(repair_candidate.get("id", ""))
 			var candidate_name := String(state.module_definition(candidate_id).get("name", candidate_id))
-			settlement_repair_button.text = "SELECT %s FOR REPAIR · %d/%d" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
+			settlement_repair_button.text = "REVIEW %s · %d/%d\nNO COST · PRESS AGAIN TO REPAIR" % [candidate_name.to_upper(), int(repair_candidate.get("durability", 0)), int(repair_candidate.get("maximum_durability", 1))]
 			settlement_repair_button.tooltip_text = "Select and inspect %s without spending a service action; press again to confirm its repair." % candidate_name
 	else:
 		settlement_repair_button.text = "REPAIR %s +%d · %d ASHMARKS" % [String(selected_definition.get("name", "module")).to_upper(), mini(2, repair_missing), repair_cost]

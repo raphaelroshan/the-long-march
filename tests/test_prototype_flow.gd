@@ -543,7 +543,7 @@ func _run() -> void:
 	game.state.modules[damaged_workshop_index]["durability"] = 1
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(not game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("SELECT FIELD WORKSHOP FOR REPAIR") and game.settlement_repair_button.text.contains("1/3"), "repair should offer a direct handoff to the most damaged system when the current selection is already full")
+	_expect(not game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("REVIEW FIELD WORKSHOP") and game.settlement_repair_button.text.contains("1/3") and game.settlement_repair_button.text.contains("NO COST · PRESS AGAIN TO REPAIR"), "repair should offer a clearly reversible inspection handoff to the most damaged system when the current selection is already full")
 	var actions_before_repair_selection: int = game.state.settlement_actions_remaining
 	game.settlement_repair_button.pressed.emit()
 	await process_frame

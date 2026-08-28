@@ -715,3 +715,7 @@ Checkpoint loading now validates encounter entries, unique slots, health and def
 ## 2026-08-28 — Continue previews the waiting decision
 
 The title's checkpoint summary now derives a compact next action from the validated save: answer the contract, choose a road, resolve a named local event, continue a specific battle step, use recovery, or review the debrief. It shares the existing resource line instead of increasing the menu card height, so returning players gain orientation without crowding the 1280×720 layout.
+
+## 2026-08-28 — Recommended repairs disclose their two-stage action
+
+When the currently inspected system is healthy, Morrowline's repair action now labels the damaged recommendation as a free review and states that a second press confirms repair. The existing safety step remains intact, but players no longer have to infer from a tooltip whether the first press consumes Ashmarks or one of the two service actions.
