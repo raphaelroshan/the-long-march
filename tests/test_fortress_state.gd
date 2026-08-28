@@ -29,6 +29,7 @@ func _init() -> void:
 	_test_water_condenser_threat_and_recovery()
 	_test_mara_flint_event_chain()
 	_test_bounded_occurrence_scheduler()
+	_test_flooded_veyru_region_state()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -890,6 +891,58 @@ func _test_bounded_occurrence_scheduler() -> void:
 	_expect(bool(migrated.load_serialized(version_five).get("ok", false)) and migrated.occurrence_history.is_empty() and migrated.occurrence_stream_cursor == 0, "version-five checkpoints should migrate with an empty occurrence scheduler")
 	_expect(first.occurrence_debrief_lines()[0].contains("Boiler's Second Heartbeat") and first.occurrence_debrief_lines()[0].contains("Inspect Boiler"), "resolved occurrences should produce a concise causal debrief record")
 
+func _test_flooded_veyru_region_state() -> void:
+	var state := LongMarchState.new(2204)
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("refugee_bunk", Vector2i(4, 1))
+	state.start_flooded_veyru()
+	_expect(state.campaign_region_id == "flooded_veyru" and state.current_location == "lantern_quay" and state.campaign_path == ["lantern_quay"], "a Veyru chapter should initialize independently at Lantern Quay")
+	_expect(state.campaign_region_name() == "Flooded Veyru" and state.campaign_pressure_name() == "Rising water" and state.campaign_pressure_band() == "low_water", "Veyru should expose its regional identity and low-water pressure band")
+	_expect(state.campaign_available_nodes() == ["pump_gallery", "sunken_tramworks"] and not state.campaign_edges()["veyru_evacuation_camp"].has("pilgrim_gantry"), "low water should expose both opening routes while keeping the emergency gantry out of the normal graph")
+	var contract_status := state.veyru_medicine_contract_status()
+	_expect(bool(contract_status.get("available", false)) and String(contract_status.get("carrier_id", "")) == "refugee_bunk", "the medicine contract should reserve the operational Refugee Bunk before falling back to parts storage")
+	var accepted := state.choose_veyru_medicine_contract(true)
+	_expect(bool(accepted.get("ok", false)) and state.veyru_contract_status == "accepted" and state.veyru_medicine_carrier_id == "refugee_bunk" and state.veyru_contract_carrier_operational(), "accepting the Veyru contract should preserve its exact physical carrier")
+	state.current_location = "veyru_evacuation_camp"
+	state.journey_node = "veyru_evacuation_camp"
+	state.campaign_path.append("pump_gallery")
+	state.campaign_path.append("veyru_evacuation_camp")
+	state.campaign_last_safe_node = "veyru_evacuation_camp"
+	state.phase = "settlement"
+	state.campaign_pressure = 5
+	_expect(state.campaign_pressure_band() == "breach" and state.campaign_node_closed("drowned_registry"), "Breach water should close the low Drowned Registry branch")
+	_expect(state.campaign_available_nodes() == ["archive_causeway", "pilgrim_gantry"] and state.campaign_edges()["veyru_evacuation_camp"].has("pilgrim_gantry"), "Breach water must add Pilgrim Gantry while preserving another forward route")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.campaign_region_id == "flooded_veyru" and restored.campaign_pressure == 5 and restored.veyru_medicine_carrier_id == "refugee_bunk" and restored.campaign_available_nodes() == ["archive_causeway", "pilgrim_gantry"], "Veyru region, water pressure, graph state, and contract carrier should survive save/load")
+	var bad_region := state.serialize()
+	bad_region["campaign_region_id"] = "endless_ocean"
+	_expect(not bool(LongMarchState.new(0).load_serialized(bad_region).get("ok", false)), "unknown campaign regions should be rejected before restore")
+	var bad_carrier := state.serialize()
+	bad_carrier["veyru_medicine_carrier_id"] = "shell_cannon"
+	_expect(not bool(LongMarchState.new(0).load_serialized(bad_carrier).get("ok", false)), "the medicine contract should reject a carrier outside its authored cargo options")
+	var missing_carrier := state.serialize()
+	for index in range(missing_carrier["modules"].size() - 1, -1, -1):
+		if String(missing_carrier["modules"][index].get("id", "")) == "refugee_bunk":
+			missing_carrier["modules"].remove_at(index)
+	_expect(not bool(LongMarchState.new(0).load_serialized(missing_carrier).get("ok", false)), "an accepted medicine contract should reject a checkpoint whose reserved carrier has been removed")
+	var legacy := state.serialize()
+	legacy["save_version"] = 6
+	legacy.erase("campaign_region_id")
+	legacy.erase("veyru_contract_status")
+	legacy.erase("veyru_medicine_carrier_id")
+	legacy["campaign_path"] = ["ashgate_depot"]
+	legacy["campaign_last_safe_node"] = "ashgate_depot"
+	legacy["current_location"] = "ashgate_depot"
+	legacy["journey_node"] = "ashgate_depot"
+	var legacy_restore := LongMarchState.new(0)
+	_expect(bool(legacy_restore.load_serialized(legacy).get("ok", false)) and legacy_restore.campaign_region_id == "ashgate_lowlands" and legacy_restore.veyru_contract_status == "unoffered", "version-six checkpoints should migrate into the Ashgate region with no Veyru contract")
+	var declined := LongMarchState.new(2204)
+	declined.start_flooded_veyru()
+	_expect(bool(declined.choose_veyru_medicine_contract(false).get("ok", false)) and declined.veyru_contract_status == "declined" and declined.mobility_tendency == 1 and declined.veyru_medicine_carrier_id.is_empty(), "declining the Veyru contract should preserve capacity and record the mobility tradeoff")
 func _test_water_condenser_route_unlock() -> void:
 	var locked_state := LongMarchState.new(1107)
 	locked_state.start_campaign()

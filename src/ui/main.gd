@@ -2072,7 +2072,8 @@ func _refresh_campaign_controls() -> void:
 	var outgoing_nodes: Array[String] = []
 	var closed_nodes: Array[String] = []
 	var locked_reasons: Dictionary = {}
-	for raw_node_id in LongMarchState.CAMPAIGN_EDGES.get(state.current_location, []):
+	var active_campaign_edges := state.campaign_edges()
+	for raw_node_id in active_campaign_edges.get(state.current_location, []):
 		var node_id := String(raw_node_id)
 		outgoing_nodes.append(node_id)
 		if state.campaign_node_closed(node_id):
@@ -2081,7 +2082,8 @@ func _refresh_campaign_controls() -> void:
 		if not lock_reason.is_empty():
 			locked_reasons[node_id] = lock_reason
 	campaign_map.configure({
-		"edges": LongMarchState.CAMPAIGN_EDGES,
+		"region_id": state.campaign_region_id,
+		"edges": active_campaign_edges,
 		"current_node": state.current_location,
 		"secured_path": state.campaign_path,
 		"available_nodes": options,

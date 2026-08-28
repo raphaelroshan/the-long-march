@@ -7,10 +7,12 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
+const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru"]
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
+const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
 const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint"}
 const CAMPAIGN_DECISION_OPTIONS := {
 	"salvage_choice": ["take_fuel", "rescue_workers"],
@@ -58,7 +60,16 @@ const JOURNEY_NODES := {
 	"red_wheel_toll_bridge": {"name": "Red Wheel Toll Bridge", "kind": "ambush", "description": "A fortified crossing where the blockade has learned the fortress silhouette."},
 	"lower_ash_road": {"name": "Lower Ash Road", "kind": "hazard", "description": "A buried service road where Burrowers test the lower hull."},
 	"dry_cistern_cut": {"name": "Dry Cistern Cut", "kind": "hazard", "description": "A short cistern road where a maintained condenser can recover enough water to spare fuel."},
-	"signal_causeway": {"name": "Signal Causeway", "kind": "hazard", "description": "An exposed relay causeway caught inside a moving storm front."}
+	"signal_causeway": {"name": "Signal Causeway", "kind": "hazard", "description": "An exposed relay causeway caught inside a moving storm front."},
+	"lantern_quay": {"name": "Lantern Quay", "kind": "city", "description": "A flood-edge market where the fortress chooses what it will carry into Veyru."},
+	"pump_gallery": {"name": "Pump Gallery", "kind": "hazard", "description": "Old civic pumps offer a slow road above the first flood line."},
+	"sunken_tramworks": {"name": "Sunken Tramworks", "kind": "hazard", "description": "A fast submerged rail cut that punishes heavy lower hulls."},
+	"veyru_evacuation_camp": {"name": "Evacuation Camp", "kind": "camp", "description": "A raised platform where stranded crews can restore one critical system."},
+	"archive_causeway": {"name": "Archive Causeway", "kind": "relay", "description": "A longer signal-marked road that keeps fragile cargo above the water."},
+	"drowned_registry": {"name": "Drowned Registry", "kind": "salvage", "description": "A short flooded records hall where salvage and exposed systems compete."},
+	"pilgrim_gantry": {"name": "Pilgrim Gantry", "kind": "recovery", "description": "A slow high-water gantry that remains passable after the lower roads close."},
+	"dry_archive_gate": {"name": "Dry Archive Gate", "kind": "choice", "description": "The last sealed approach where the archive's signal must be broadcast or hidden."},
+	"dry_archive": {"name": "The Dry Archive", "kind": "finale", "description": "The civic vault above the flood line and the chapter's final commitment."}
 }
 const JOURNEY_ENCOUNTERS := {
 	"safe_road": ["road_raiders", "road_raiders"],
@@ -82,7 +93,16 @@ const CAMPAIGN_NODES := {
 	"lower_ash_road": {"name": "Lower Ash Road", "type": "hazard", "visibility": "forecast", "days": 2, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 24, "mass_sensitive": true, "threat_hint": "movement below the road", "encounter": ["burrowers"]},
 	"dry_cistern_cut": {"name": "Dry Cistern Cut", "type": "hazard", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.28, "pressure": 1, "reward": 18, "threat_hint": "dry weather line", "encounter": ["storm_front"]},
 	"signal_causeway": {"name": "Signal Causeway", "type": "hazard", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.43, "pressure": 2, "reward": 20, "threat_hint": "weather and exposed approaches", "encounter": ["storm_front", "climbers"]},
-	"meridian_pass": {"name": "Meridian Pass", "type": "boss", "visibility": "known", "days": 2, "fuel": 2, "risk": 0.58, "pressure": 2, "reward": 40, "threat_hint": "Siege Beast", "encounter": ["siege_beast"]}
+	"meridian_pass": {"name": "Meridian Pass", "type": "boss", "visibility": "known", "days": 2, "fuel": 2, "risk": 0.58, "pressure": 2, "reward": 40, "threat_hint": "Siege Beast", "encounter": ["siege_beast"]},
+	"lantern_quay": {"name": "Lantern Quay", "type": "settlement", "visibility": "known", "description": "Choose the medicine contract and prepare for rising water."},
+	"pump_gallery": {"name": "Pump Gallery", "type": "hazard", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.22, "pressure": 2, "reward": 12, "threat_hint": "rising water", "encounter": ["flood_surge"]},
+	"sunken_tramworks": {"name": "Sunken Tramworks", "type": "hazard", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.34, "pressure": 1, "reward": 18, "mass_sensitive": true, "threat_hint": "submerged rail movement", "encounter": ["burrowers"]},
+	"veyru_evacuation_camp": {"name": "Evacuation Camp", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.2, "pressure": 1, "reward": 8, "threat_hint": "flooded approach", "encounter": ["flood_surge"]},
+	"archive_causeway": {"name": "Archive Causeway", "type": "relay", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.25, "pressure": 1, "reward": 14, "threat_hint": "signal-marked high road", "encounter": ["flood_surge"]},
+	"drowned_registry": {"name": "Drowned Registry", "type": "salvage", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.42, "pressure": 2, "reward": 20, "threat_hint": "flooded records and upper movement", "encounter": ["flood_surge", "climbers"]},
+	"pilgrim_gantry": {"name": "Pilgrim Gantry", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "reduced flood surge", "encounter": ["flood_surge"]},
+	"dry_archive_gate": {"name": "Dry Archive Gate", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.36, "pressure": 1, "reward": 12, "threat_hint": "flood and archive defenses", "encounter": ["flood_surge", "climbers"]},
+	"dry_archive": {"name": "The Dry Archive", "type": "boss", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.56, "pressure": 1, "reward": 36, "threat_hint": "Civic Guardian", "encounter": ["civic_guardian"]}
 }
 const CAMPAIGN_EDGES := {
 	"ashgate_depot": ["rill_crossing", "soot_orchard"],
@@ -94,6 +114,16 @@ const CAMPAIGN_EDGES := {
 	"lower_ash_road": ["meridian_pass"],
 	"dry_cistern_cut": ["meridian_pass"],
 	"signal_causeway": ["meridian_pass"]
+}
+const VEYRU_EDGES := {
+	"lantern_quay": ["pump_gallery", "sunken_tramworks"],
+	"pump_gallery": ["veyru_evacuation_camp"],
+	"sunken_tramworks": ["veyru_evacuation_camp"],
+	"veyru_evacuation_camp": ["archive_causeway", "drowned_registry", "pilgrim_gantry"],
+	"archive_causeway": ["dry_archive_gate"],
+	"drowned_registry": ["dry_archive_gate"],
+	"pilgrim_gantry": ["dry_archive_gate"],
+	"dry_archive_gate": ["dry_archive"]
 }
 const MODULE_DEFS := {
 	"steam_lance_engine": {"name": "Steam Lance Engine", "family": "engine", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 0, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"], "capability": "Keeps the fortress moving while adjacent to a fuel module."},
@@ -154,6 +184,7 @@ var final_result: String = ""
 var settlement_actions_remaining: int = 0
 var settlement_report: Array[String] = []
 var campaign_active: bool = false
+var campaign_region_id: String = "ashgate_lowlands"
 var campaign_encounters_completed: int = 0
 var campaign_path: Array[String] = []
 var campaign_target_node: String = ""
@@ -168,6 +199,8 @@ var occurrence_phase_history: Array[String] = []
 var occurrence_history: Array[Dictionary] = []
 var occurrence_cooldowns: Dictionary = {}
 var guard_contract_status: String = "unoffered"
+var veyru_contract_status: String = "unoffered"
+var veyru_medicine_carrier_id: String = ""
 var settlement_trust: int = 0
 var mobility_tendency: int = 0
 var shelter_tendency: int = 0
@@ -362,6 +395,7 @@ func can_refit() -> bool:
 
 func start_campaign() -> Dictionary:
 	campaign_active = true
+	campaign_region_id = "ashgate_lowlands"
 	campaign_encounters_completed = 0
 	campaign_path = ["ashgate_depot"]
 	campaign_target_node = ""
@@ -376,6 +410,8 @@ func start_campaign() -> Dictionary:
 	occurrence_history.clear()
 	occurrence_cooldowns.clear()
 	guard_contract_status = "offered"
+	veyru_contract_status = "unoffered"
+	veyru_medicine_carrier_id = ""
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
@@ -398,7 +434,74 @@ func start_campaign() -> Dictionary:
 	log.append("The Ashgate Lowlands map is open. Choose whether to guard Morrowline's parts convoy before taking the first road.")
 	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
 
+func start_flooded_veyru() -> Dictionary:
+	campaign_active = true
+	campaign_region_id = "flooded_veyru"
+	campaign_encounters_completed = 0
+	campaign_path = ["lantern_quay"]
+	campaign_target_node = ""
+	campaign_last_safe_node = "lantern_quay"
+	campaign_pressure = 0
+	campaign_retreats = 0
+	campaign_event_pending = ""
+	campaign_decisions.clear()
+	occurrence_stream_cursor = 0
+	occurrence_active_phase = ""
+	occurrence_phase_history.clear()
+	occurrence_history.clear()
+	occurrence_cooldowns.clear()
+	guard_contract_status = "unoffered"
+	veyru_contract_status = "offered"
+	veyru_medicine_carrier_id = ""
+	settlement_trust = 0
+	mobility_tendency = 0
+	shelter_tendency = 0
+	knowledge_tendency = 0
+	specialist_id = ""
+	mara_repaired_module_id = ""
+	relay_repaired = false
+	workers_rescued = false
+	journey_node = "lantern_quay"
+	journey_destination = ""
+	journey_route = ""
+	journey_leg = 0
+	current_location = "lantern_quay"
+	phase = "refit"
+	journey_complete = false
+	run_complete = false
+	final_result = ""
+	encounter_active = false
+	encounter_outcome = ""
+	log.append("The Flooded Veyru chart is open. Decide whether to carry Lantern Quay's sealed medicines before the water rises.")
+	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
+
+func campaign_region_name() -> String:
+	return "Flooded Veyru" if campaign_region_id == "flooded_veyru" else "Ashgate Lowlands"
+
+func campaign_pressure_name() -> String:
+	return "Rising water" if campaign_region_id == "flooded_veyru" else "Blockade"
+
+func campaign_edges() -> Dictionary:
+	return _campaign_edges_for_state(campaign_region_id, campaign_pressure, campaign_retreats)
+
+func _campaign_edges_for_state(region_id: String, pressure: int, retreats: int) -> Dictionary:
+	if region_id != "flooded_veyru":
+		return CAMPAIGN_EDGES
+	var edges := VEYRU_EDGES.duplicate(true)
+	if pressure < 5 and retreats == 0:
+		edges["veyru_evacuation_camp"].erase("pilgrim_gantry")
+	return edges
+
+func campaign_final_node_id() -> String:
+	return "dry_archive" if campaign_region_id == "flooded_veyru" else "meridian_pass"
+
 func campaign_pressure_band() -> String:
+	if campaign_region_id == "flooded_veyru":
+		if campaign_pressure >= 5:
+			return "breach"
+		if campaign_pressure >= 3:
+			return "flooding"
+		return "low_water"
 	if campaign_pressure >= 5:
 		return "break"
 	if campaign_pressure >= 3:
@@ -406,6 +509,8 @@ func campaign_pressure_band() -> String:
 	return "watch"
 
 func campaign_node_closed(node_id: String) -> bool:
+	if campaign_region_id == "flooded_veyru":
+		return node_id == "drowned_registry" and campaign_pressure_band() == "breach"
 	if node_id == "signal_causeway" and campaign_pressure_band() == "break" and specialist_id != "iven_pell" and not _has_ready_tag("forecast"):
 		return true
 	return false
@@ -419,7 +524,7 @@ func campaign_available_nodes() -> Array[String]:
 	var result: Array[String] = []
 	if not campaign_active or encounter_active or not campaign_event_pending.is_empty() or phase == "results":
 		return result
-	for raw_node_id in CAMPAIGN_EDGES.get(current_location, []):
+	for raw_node_id in campaign_edges().get(current_location, []):
 		var node_id := String(raw_node_id)
 		if not campaign_node_closed(node_id) and campaign_node_lock_reason(node_id).is_empty():
 			result.append(node_id)
@@ -504,7 +609,7 @@ func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dict
 		var preview := campaign_node_preview(node_id, doctrine)
 		var next_names: Array[String] = []
 		var settlement_follows := false
-		for raw_next_id in CAMPAIGN_EDGES.get(node_id, []):
+		for raw_next_id in campaign_edges().get(node_id, []):
 			var next_id := String(raw_next_id)
 			var next_node: Dictionary = CAMPAIGN_NODES.get(next_id, {})
 			next_names.append(String(next_node.get("name", next_id)))
@@ -541,6 +646,40 @@ func choose_guard_contract(accept: bool) -> Dictionary:
 		message = "Contract declined: Morrowline enemies keep normal endurance; the fortress gives up the 30-Ashmark and 2-trust payout."
 	log.append(message)
 	return {"ok": true, "status": guard_contract_status, "message": message, "summary": summary()}
+
+func veyru_medicine_contract_status() -> Dictionary:
+	if not campaign_active or campaign_region_id != "flooded_veyru" or current_location != "lantern_quay" or phase != "refit":
+		return {"available": false, "reason": "the medicine contract is only offered at Lantern Quay"}
+	if veyru_contract_status != "offered":
+		return {"available": false, "reason": "the medicine contract has already been answered"}
+	var carrier_id := "refugee_bunk" if operational("refugee_bunk") else ("parts_crate" if operational("parts_crate") else "")
+	if carrier_id.is_empty():
+		return {"available": false, "reason": "requires an operational Refugee Bunk or Parts Crate"}
+	return {"available": true, "reason": "", "carrier_id": carrier_id, "carrier_name": String(module_definition(carrier_id).get("name", carrier_id))}
+
+func choose_veyru_medicine_contract(accept: bool) -> Dictionary:
+	if not campaign_active or campaign_region_id != "flooded_veyru" or current_location != "lantern_quay" or phase != "refit":
+		return {"ok": false, "reason": "the medicine contract is only offered at Lantern Quay"}
+	if veyru_contract_status != "offered":
+		return {"ok": false, "reason": "the medicine contract has already been answered"}
+	var message := ""
+	if accept:
+		var status := veyru_medicine_contract_status()
+		if not bool(status.get("available", false)):
+			return {"ok": false, "reason": String(status.get("reason", "no carrier is available"))}
+		veyru_contract_status = "accepted"
+		veyru_medicine_carrier_id = String(status.get("carrier_id", ""))
+		message = "Medicine contract accepted: %s carries the sealed cases. Delivery pays 28 Ashmarks and 2 trust if that system reaches the Dry Archive operational." % String(status.get("carrier_name", "The selected carrier"))
+	else:
+		veyru_contract_status = "declined"
+		veyru_medicine_carrier_id = ""
+		mobility_tendency += 1
+		message = "Medicine contract declined: cargo capacity stays free and Mobility rises by 1, but the fortress gives up the 28-Ashmark and 2-trust delivery."
+	log.append(message)
+	return {"ok": true, "status": veyru_contract_status, "carrier_id": veyru_medicine_carrier_id, "message": message, "summary": summary()}
+
+func veyru_contract_carrier_operational() -> bool:
+	return veyru_contract_status == "accepted" and not veyru_medicine_carrier_id.is_empty() and operational(veyru_medicine_carrier_id)
 
 func mara_recruitment_status() -> Dictionary:
 	if not campaign_active or current_location != "morrowline_camp" or phase != "settlement" or campaign_event_pending != "mara_meeting":
@@ -999,12 +1138,14 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 		return {"ok": false, "reason": "the authored campaign has not started"}
 	if encounter_active or phase not in ["refit", "map", "settlement"]:
 		return {"ok": false, "reason": "the fortress cannot choose a map route in the current phase"}
-	if guard_contract_status == "offered":
+	if campaign_region_id == "ashgate_lowlands" and guard_contract_status == "offered":
 		return {"ok": false, "reason": "answer the Ashgate guard contract before departure"}
+	if campaign_region_id == "flooded_veyru" and veyru_contract_status == "offered":
+		return {"ok": false, "reason": "answer the Lantern Quay medicine contract before departure"}
 	if not campaign_event_pending.is_empty():
 		return {"ok": false, "reason": "resolve the current node decision before leaving"}
 	var lock_reason := campaign_node_lock_reason(node_id)
-	if not lock_reason.is_empty() and node_id in CAMPAIGN_EDGES.get(current_location, []):
+	if not lock_reason.is_empty() and node_id in campaign_edges().get(current_location, []):
 		return {"ok": false, "reason": lock_reason}
 	if node_id not in campaign_available_nodes():
 		return {"ok": false, "reason": "that node is not reachable from the current position"}
@@ -1033,7 +1174,7 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 	journey_leg = campaign_encounters_completed + 1
 	command_points = 2
 	power_priority = "balanced"
-	phase = "final_battle" if node_id == "meridian_pass" else "battle"
+	phase = "final_battle" if node_id == campaign_final_node_id() else "battle"
 	var node: Dictionary = CAMPAIGN_NODES[node_id]
 	var composition: Array = node.get("encounter", []).duplicate()
 	if node_id == "meridian_pass" and campaign_pressure_band() == "break":
@@ -1471,6 +1612,7 @@ func summary() -> Dictionary:
 		"final_result": final_result,
 		"settlement_actions_remaining": settlement_actions_remaining,
 		"campaign_active": campaign_active,
+		"campaign_region_id": campaign_region_id,
 		"campaign_encounters_completed": campaign_encounters_completed,
 		"campaign_path": campaign_path.duplicate(),
 		"campaign_target_node": campaign_target_node,
@@ -1486,6 +1628,8 @@ func summary() -> Dictionary:
 		"occurrence_history": occurrence_history.duplicate(true),
 		"occurrence_cooldowns": occurrence_cooldowns.duplicate(true),
 		"guard_contract_status": guard_contract_status,
+		"veyru_contract_status": veyru_contract_status,
+		"veyru_medicine_carrier_id": veyru_medicine_carrier_id,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
 		"shelter_tendency": shelter_tendency,
@@ -1535,6 +1679,7 @@ func serialize() -> Dictionary:
 		"settlement_actions_remaining": settlement_actions_remaining,
 		"settlement_report": settlement_report.duplicate(),
 		"campaign_active": campaign_active,
+		"campaign_region_id": campaign_region_id,
 		"campaign_encounters_completed": campaign_encounters_completed,
 		"campaign_path": campaign_path.duplicate(),
 		"campaign_target_node": campaign_target_node,
@@ -1550,6 +1695,8 @@ func serialize() -> Dictionary:
 		"occurrence_history": occurrence_history.duplicate(true),
 		"occurrence_cooldowns": occurrence_cooldowns.duplicate(true),
 		"guard_contract_status": guard_contract_status,
+		"veyru_contract_status": veyru_contract_status,
+		"veyru_medicine_carrier_id": veyru_medicine_carrier_id,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
 		"shelter_tendency": shelter_tendency,
@@ -1745,6 +1892,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_encounter_step := int(data.get("encounter_step", encounter_step))
 	var restored_encounter_progress := float(data.get("encounter_progress", encounter_progress))
 	var restored_campaign_active := bool(data.get("campaign_active", campaign_active))
+	var restored_campaign_region_id := String(data.get("campaign_region_id", "ashgate_lowlands"))
+	var restored_campaign_pressure := int(data.get("campaign_pressure", campaign_pressure))
+	var restored_campaign_retreats := int(data.get("campaign_retreats", campaign_retreats))
 	var restored_current_location := String(data.get("current_location", current_location))
 	var restored_journey_node := String(data.get("journey_node", journey_node))
 	var restored_journey_destination := String(data.get("journey_destination", journey_destination))
@@ -1754,7 +1904,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_campaign_event_pending := String(data.get("campaign_event_pending", campaign_event_pending))
 	var restored_specialist_id := String(data.get("specialist_id", specialist_id))
 	var restored_mara_repaired_module_id := String(data.get("mara_repaired_module_id", ""))
+	var restored_veyru_contract_status := String(data.get("veyru_contract_status", "unoffered"))
+	var restored_veyru_medicine_carrier_id := String(data.get("veyru_medicine_carrier_id", ""))
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
+	if restored_campaign_region_id not in VALID_CAMPAIGN_REGIONS:
+		return {"ok": false, "reason": "checkpoint contains an unknown campaign region"}
 	if restored_current_location not in JOURNEY_NODES or restored_journey_node not in JOURNEY_NODES:
 		return {"ok": false, "reason": "checkpoint contains an unknown journey location"}
 	if not restored_journey_destination.is_empty() and restored_journey_destination not in JOURNEY_NODES:
@@ -1772,10 +1926,12 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		if node_id not in CAMPAIGN_NODES:
 			return {"ok": false, "reason": "campaign path contains an unknown node"}
 	if restored_campaign_active:
-		if restored_campaign_path.is_empty() or restored_campaign_path[0] != "ashgate_depot":
-			return {"ok": false, "reason": "campaign path does not begin at Ashgate Depot"}
+		var expected_start := "lantern_quay" if restored_campaign_region_id == "flooded_veyru" else "ashgate_depot"
+		if restored_campaign_path.is_empty() or restored_campaign_path[0] != expected_start:
+			return {"ok": false, "reason": "campaign path does not begin at the region's starting settlement"}
+		var restored_edges := VEYRU_EDGES if restored_campaign_region_id == "flooded_veyru" else CAMPAIGN_EDGES
 		for index in range(1, restored_campaign_path.size()):
-			if restored_campaign_path[index] not in CAMPAIGN_EDGES.get(restored_campaign_path[index - 1], []):
+			if restored_campaign_path[index] not in restored_edges.get(restored_campaign_path[index - 1], []):
 				return {"ok": false, "reason": "campaign path contains an impossible route"}
 		if restored_campaign_last_safe_node != restored_campaign_path.back():
 			return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
@@ -1792,6 +1948,22 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return restored_occurrence_state
 	if restored_specialist_id not in VALID_SPECIALIST_IDS:
 		return {"ok": false, "reason": "checkpoint contains an unknown specialist"}
+	if restored_veyru_contract_status not in VALID_CONTRACT_STATUSES:
+		return {"ok": false, "reason": "checkpoint contains an unknown Veyru contract state"}
+	if not restored_veyru_medicine_carrier_id.is_empty() and restored_veyru_medicine_carrier_id not in ["refugee_bunk", "parts_crate"]:
+		return {"ok": false, "reason": "checkpoint contains an invalid medicine carrier"}
+	if restored_veyru_contract_status == "accepted" and restored_veyru_medicine_carrier_id.is_empty():
+		return {"ok": false, "reason": "accepted Veyru medicine contract is missing its carrier"}
+	if restored_veyru_contract_status != "accepted" and not restored_veyru_medicine_carrier_id.is_empty():
+		return {"ok": false, "reason": "Veyru medicine carrier conflicts with contract state"}
+	if restored_veyru_contract_status == "accepted":
+		var carrier_present := false
+		for instance in restored_modules_result.get("modules", []):
+			if String(instance.get("id", "")) == restored_veyru_medicine_carrier_id:
+				carrier_present = true
+				break
+		if not carrier_present:
+			return {"ok": false, "reason": "Veyru medicine carrier is missing from the installed fortress"}
 	if not restored_mara_repaired_module_id.is_empty() and restored_mara_repaired_module_id not in MODULE_DEFS:
 		return {"ok": false, "reason": "checkpoint contains an unknown Mara repair target"}
 	var mara_meeting_choice := String(restored_decisions.get("mara_meeting", ""))
@@ -1857,12 +2029,13 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	settlement_actions_remaining = int(data.get("settlement_actions_remaining", settlement_actions_remaining))
 	settlement_report = _string_array(data.get("settlement_report", []))
 	campaign_active = restored_campaign_active
+	campaign_region_id = restored_campaign_region_id
 	campaign_encounters_completed = int(data.get("campaign_encounters_completed", campaign_encounters_completed))
 	campaign_path = restored_campaign_path
 	campaign_target_node = restored_campaign_target_node
 	campaign_last_safe_node = restored_campaign_last_safe_node
-	campaign_pressure = int(data.get("campaign_pressure", campaign_pressure))
-	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
+	campaign_pressure = restored_campaign_pressure
+	campaign_retreats = restored_campaign_retreats
 	campaign_event_pending = restored_campaign_event_pending
 	campaign_decisions = restored_decisions.duplicate(true)
 	occurrence_stream_cursor = int(restored_occurrence_state.get("cursor", 0))
@@ -1871,6 +2044,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	occurrence_history = restored_occurrence_state.get("history", []).duplicate(true)
 	occurrence_cooldowns = restored_occurrence_state.get("cooldowns", {}).duplicate(true)
 	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
+	veyru_contract_status = restored_veyru_contract_status
+	veyru_medicine_carrier_id = restored_veyru_medicine_carrier_id
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))
 	shelter_tendency = int(data.get("shelter_tendency", shelter_tendency))

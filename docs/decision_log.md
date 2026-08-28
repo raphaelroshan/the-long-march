@@ -787,3 +787,7 @@ The Ashgate campaign now evaluates otherwise-empty arrival phases through the na
 ## 2026-08-28 — Regional maps share one configurable view
 
 The campaign map now owns named layout data for Ashgate Lowlands and Flooded Veyru rather than assuming every chapter uses Ashgate's ten node IDs. Region configuration rebuilds the same buttons, status colors, route lines, focus behavior, and commit surface from a bounded authored layout. The simulation will still own reachability and route rules; this presentation change only makes a second isolated chapter possible without duplicating the map widget or creating a second game flow.
+
+## 2026-08-28 — Veyru is an isolated region in the existing save envelope
+
+Flooded Veyru begins at Lantern Quay through the same authoritative fortress state rather than a second campaign controller. A stable region ID selects its authored graph and gives the shared pressure value Veyru's Low Water, Flooding, and Breach bands. At Breach, Drowned Registry closes while Pilgrim Gantry joins the graph as a guaranteed recovery route. The medicine contract records the exact installed Refugee Bunk or Parts Crate carrying its sealed cases, and save schema 7 validates the region, path, contract, and carrier before restore. Older schema-6 saves migrate to Ashgate with no Veyru obligation.
