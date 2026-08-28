@@ -66,6 +66,8 @@ The title and Pause footer both label the exact version as **Playtest Build**. I
 
 When a decision advances to route planning, the Marchmaster's Desk should scroll from a clean regional-map heading. Selecting a road should then keep its summary, map, Commit, and Cancel together rather than exposing a clipped fragment of the previous section.
 
+During battle, moving focus into an emergency order should keep the complete Current Order and Encounter Order context visible. The top of the desk should never begin on clipped remnants of the run tracker.
+
 Settings uses three visible sections: **Display & Readability**, **Controls & Feedback**, and **Runs & Local Data**. The fixed breadcrumb follows focused controls even when their section heading scrolls away. Watch whether testers can predict where a preference or reset belongs before reading every row.
 
 ## Building locally

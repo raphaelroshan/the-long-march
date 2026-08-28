@@ -124,6 +124,7 @@ var journey_banner: TextureRect
 var status_label: Label
 var left_scroll: ScrollContainer
 var right_scroll: ScrollContainer
+var desk_scroll_tail: Control
 var pending_desk_scroll_control: Control
 var desk_scroll_queued: bool = false
 var desk_scroll_frames_remaining: int = 0
@@ -1065,6 +1066,11 @@ func _build_ui() -> void:
 	how_to_play_button.tooltip_text = "Review the seven-step Marchmaster briefing without leaving this run."
 	how_to_play_button.pressed.connect(_show_onboarding.bind(true))
 	controls.add_child(how_to_play_button)
+	desk_scroll_tail = Control.new()
+	desk_scroll_tail.name = "DeskScrollTail"
+	desk_scroll_tail.custom_minimum_size = Vector2(0, 32)
+	desk_scroll_tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	controls.add_child(desk_scroll_tail)
 
 	_build_onboarding_overlay()
 	_build_feedback_overlay()

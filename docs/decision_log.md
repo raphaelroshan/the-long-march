@@ -939,3 +939,7 @@ Title and Pause now share a `Playtest Build · v<version>` convention. The title
 ## 2026-08-28 — Focus scrolling begins at a meaningful section boundary
 
 Campaign-node focus now prefers the regional map heading as its scroll anchor, while route confirmation prefers the selected-road summary. The focused action still wins when all context cannot fit, but ordinary 1280×720 route handoffs no longer begin on a clipped fragment of the preceding doctrine explanation. This keeps automatic focus movement legible without making headings sticky or changing route state.
+
+## 2026-08-28 — Lower desk actions need trailing focus room
+
+The Marchmaster's Desk now ends with a small non-interactive margin. This gives automatic scrolling enough range to place lower controls cleanly without leaving a sliver of the prior section at the viewport edge. Emergency-order focus therefore preserves the complete Current Order and Encounter Order context, while ordinary battle entry still begins at the desk header and run tracker.

@@ -398,7 +398,15 @@ func _run() -> void:
 	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("remains available after Advance") and game.intervention_help_label.text.contains("Review CONTACT NEXT") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the pre-contact order panel should explain that waiting preserves the order while pointing back to the arrival forecast")
 	game.intervention_buttons[0].grab_focus()
 	await process_frame
+	await process_frame
 	_expect(game.intervention_help_label.text.begins_with("SHIFT POWER") and game.intervention_help_label.text.contains("Heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "focusing Shift Power should expose its exact heat and attack changes")
+	_expect(game._desk_context_anchor_for(game.intervention_buttons[0]) == game.guidance_label, "emergency-order focus should retain the current battle order as its context anchor")
+	_expect(game.desk_scroll_tail.custom_minimum_size.y >= 32.0 and game.desk_scroll_tail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the desk should reserve non-interactive trailing room for clean lower-section focus")
+	var order_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
+	var current_order_rect: Rect2 = game.guidance_label.get_global_rect()
+	var order_title_rect: Rect2 = game.intervention_title.get_global_rect()
+	var order_button_rect: Rect2 = game.intervention_buttons[0].get_global_rect()
+	_expect(current_order_rect.position.y >= order_viewport_rect.position.y and current_order_rect.end.y <= order_viewport_rect.end.y and order_title_rect.position.y >= order_viewport_rect.position.y and order_title_rect.end.y <= order_viewport_rect.end.y and order_button_rect.position.y >= order_viewport_rect.position.y and order_button_rect.end.y <= order_viewport_rect.end.y, "focused emergency orders should reveal the current battle order, complete Encounter Order heading, and focused action together")
 	game.advance_encounter_button.grab_focus()
 	await process_frame
 	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("Focus or hover"), "leaving the emergency orders before contact should restore the timing-aware comparison prompt")
