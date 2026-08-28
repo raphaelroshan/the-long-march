@@ -731,3 +731,7 @@ The chassis inspector and module description now distinguish a damaged-but-opera
 ## 2026-08-28 — Recovery actions lead the Morrowline desk
 
 At Morrowline, the limited service actions now move ahead of optional doctrine and chassis controls in the command-desk reading order. Programmatic focus also invokes the existing contextual scroll behavior, so keyboard and controller handoffs keep their focused decision visible instead of relying on incidental container scrolling.
+
+## 2026-08-28 — Recovery has an explicit route handoff
+
+Campaign recovery now ends with a Review Next Roads action that moves focus to the first available map route without choosing or committing it. The control states how many service actions remain available, and the resulting message confirms that the handoff spends no service action, fuel, time, or Ashmarks; the existing route preview and explicit commit remain authoritative.

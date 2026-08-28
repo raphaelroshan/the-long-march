@@ -85,6 +85,7 @@ var intervention_buttons: Array[Button] = []
 var settlement_repair_button: Button
 var settlement_refuel_button: Button
 var settlement_hull_button: Button
+var settlement_routes_button: Button
 var final_journey_button: Button
 var refit_label: Label
 var route_preview_label: Label
@@ -591,6 +592,12 @@ func _build_ui() -> void:
 	settlement_hull_button.text = "Repair 2 hull · 10 Ashmarks"
 	settlement_hull_button.pressed.connect(_on_settlement_hull_pressed)
 	settlement_group.add_child(settlement_hull_button)
+	settlement_routes_button = Button.new()
+	settlement_routes_button.text = "REVIEW NEXT ROADS"
+	settlement_routes_button.custom_minimum_size = Vector2(0, 56)
+	settlement_routes_button.tooltip_text = "Move to the next-road map without spending a service action or committing the fortress."
+	settlement_routes_button.pressed.connect(_on_settlement_routes_pressed)
+	settlement_group.add_child(settlement_routes_button)
 	final_journey_button = Button.new()
 	final_journey_button.text = "Depart for Meridian Pass"
 	final_journey_button.tooltip_text = "Begin the final Siege Beast encounter using the selected doctrine."
@@ -866,6 +873,7 @@ func _connect_desk_focus_scrolling() -> void:
 		settlement_repair_button,
 		settlement_refuel_button,
 		settlement_hull_button,
+		settlement_routes_button,
 		final_journey_button,
 		recruit_iven_button,
 		route_option,
@@ -1810,6 +1818,17 @@ func _on_settlement_hull_pressed() -> void:
 	_refresh_ui()
 	encounter_label.text = "%s\n%s" % ["SERVICE COMPLETE" if bool(result.get("ok", false)) else "SERVICE UNAVAILABLE", service_message]
 
+func _on_settlement_routes_pressed() -> void:
+	if state.phase != "settlement" or not state.campaign_active:
+		return
+	for raw_node_id in state.campaign_available_nodes():
+		var node_id := String(raw_node_id)
+		var node_button := campaign_map.button_for(node_id) as Button
+		if _focus_control(node_button):
+			_set_event("Recovery remains open. Select a highlighted road to preview it; no service action has been spent.")
+			_set_route_preview("NEXT ROAD · Select a highlighted node to compare its cost, risk, pressure, and forecast before committing.", "safe")
+			return
+
 func _on_final_journey_pressed() -> void:
 	var result := state.begin_final_journey(_selected_id(doctrine_option))
 	if bool(result.get("ok", false)):
@@ -2220,6 +2239,7 @@ func _refresh_ui() -> void:
 	settlement_repair_button.visible = state.phase == "settlement"
 	settlement_refuel_button.visible = state.phase == "settlement"
 	settlement_hull_button.visible = state.phase == "settlement"
+	settlement_routes_button.visible = state.phase == "settlement" and state.campaign_active
 	final_journey_button.visible = state.phase == "settlement" and not state.campaign_active
 	var action_word := "ACTION" if state.settlement_actions_remaining == 1 else "ACTIONS"
 	settlement_title.text = "MORROWLINE SERVICES · %d %s LEFT" % [state.settlement_actions_remaining, action_word]
@@ -2270,6 +2290,7 @@ func _refresh_ui() -> void:
 	for service_button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
 		var line_breaks: int = service_button.text.count("\n")
 		service_button.custom_minimum_size.y = 72 if line_breaks >= 2 else (56 if line_breaks == 1 else 42)
+	settlement_routes_button.text = "REVIEW NEXT ROADS\nKEEP %d SERVICE ACTION%s AVAILABLE" % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "S"] if state.settlement_actions_remaining > 0 else "RECOVERY COMPLETE · REVIEW NEXT ROADS\nSELECT A ROUTE TO PREVIEW IT"
 	final_journey_button.disabled = state.phase != "settlement"
 	_refresh_planning_focus()
 	load_button.disabled = not FileAccess.file_exists(SAVE_PATH)

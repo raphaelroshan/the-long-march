@@ -529,6 +529,13 @@ func _run() -> void:
 		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
 	else:
 		_expect(game.settlement_hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
+	var handoff_money: int = game.state.money
+	var handoff_actions: int = game.state.settlement_actions_remaining
+	game.settlement_routes_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(game.get_viewport().gui_get_focus_owner() in game.campaign_node_buttons and game.selected_campaign_node_id.is_empty(), "Review Next Roads should move focus to route selection without choosing a road for the player")
+	_expect(game.state.money == handoff_money and game.state.settlement_actions_remaining == handoff_actions and game.event_label.text.contains("no service action has been spent"), "the recovery handoff should preserve resources and explicitly state its no-cost semantics")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY · 2 service actions remain") and game.campaign_commit_intel_label.text.contains("Departing ends access"), "route commitment should warn before both unused Morrowline services become inaccessible")
