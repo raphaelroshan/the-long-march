@@ -2067,7 +2067,11 @@ func _refresh_ui() -> void:
 		if not selected_installed.is_empty():
 			var dependency := state.dependency_status(selected_installed)
 			var reasons: Array = dependency.get("reasons", [])
-			dependency_text = "%s%s" % [String(dependency.get("state", "offline")).capitalize(), ": " + String(reasons[0]) if not reasons.is_empty() else "."]
+			var dependency_state := String(dependency.get("state", "offline"))
+			var current_durability := int(selected_installed.get("durability", 0))
+			var maximum_durability := int(selected_definition.get("durability", 1))
+			var condition_text := "Damaged · %d/%d durability · %s" % [current_durability, maximum_durability, dependency_state] if current_durability > 0 and current_durability < maximum_durability else dependency_state.capitalize()
+			dependency_text = "%s%s" % [condition_text, ": " + String(reasons[0]) if not reasons.is_empty() else "."]
 		var capacity_warning := _stored_module_capacity_warning(selected_definition, selected_installed)
 		refit_label.text = "%s · %dx%d · mass %d · power %s · heat %d · %s. %s %s\nROLE · %s%s" % [
 			String(selected_definition.get("name", "Select a module")),
@@ -2753,6 +2757,23 @@ class FortressPanel extends Control:
 			return "−%d" % draw
 		return "0"
 
+	func selected_system_state_text() -> String:
+		if state == null or selected_cell.x < 0:
+			return "System state unavailable"
+		var selected := state.module_at(selected_cell)
+		if selected.is_empty():
+			return "System state unavailable"
+		var definition := state.module_definition(String(selected.get("id", "")))
+		var dependency := state.dependency_status(selected)
+		var state_name := String(dependency.get("state", "offline"))
+		var current_durability := int(selected.get("durability", 0))
+		var maximum_durability := int(definition.get("durability", 1))
+		if current_durability > 0 and current_durability < maximum_durability:
+			if state_name == "ready":
+				return "System state: Damaged but ready · %d/%d" % [current_durability, maximum_durability]
+			return "System state: %s · damaged %d/%d" % [state_name.capitalize(), current_durability, maximum_durability]
+		return "System state: %s" % state_name.capitalize()
+
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			var next_cell := _cell_from_point(event.position)
@@ -2836,9 +2857,11 @@ class FortressPanel extends Control:
 		if not selected.is_empty():
 			var dependency := state.dependency_status(selected)
 			var state_name := String(dependency.get("state", "offline"))
-			var state_color := Color("#73c99b") if state_name == "ready" else (Color("#e3ad55") if state_name == "strained" else Color("#e06f61"))
+			var definition_maximum_durability := int(definition.get("durability", 1))
+			var selected_is_damaged := int(selected.get("durability", 0)) > 0 and int(selected.get("durability", 0)) < definition_maximum_durability
+			var state_color := Color("#e3ad55") if selected_is_damaged or state_name == "strained" else (Color("#73c99b") if state_name == "ready" else Color("#e06f61"))
 			var reasons: Array = dependency.get("reasons", [])
-			draw_string(ThemeDB.fallback_font, Vector2(x, 154), "System state: " + state_name.capitalize(), HORIZONTAL_ALIGNMENT_LEFT, 320, 13, state_color)
+			draw_string(ThemeDB.fallback_font, Vector2(x, 154), selected_system_state_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 13, state_color)
 			draw_string(ThemeDB.fallback_font, Vector2(x, 178), String(reasons[0]) if not reasons.is_empty() else "All required connections are satisfied.", HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 			draw_multiline_string(ThemeDB.fallback_font, Vector2(x, 200), "ROLE · %s" % selected_capability_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, 2, Color("#8fa3a7"))
 		else:

@@ -723,3 +723,7 @@ When the currently inspected system is healthy, Morrowline's repair action now l
 ## 2026-08-28 — Recovery services preview their complete transaction
 
 Each available Morrowline purchase now shows the relevant fuel, hull, or module durability before and after service alongside the shared action budget before and after use. Affordability and exhaustion locks remain additional lines, keeping the decision's benefit, Ashmark price, and opportunity cost visible on the same control before confirmation.
+
+## 2026-08-28 — Operational damage remains visible
+
+The chassis inspector and module description now distinguish a damaged-but-operational system from a fully healthy one. Dependency readiness still describes whether the module can function, while the adjacent durability fraction explains why repair may remain worthwhile; damaged ready systems use the warning color rather than the healthy green state.

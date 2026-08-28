@@ -553,6 +553,7 @@ func _run() -> void:
 	game.settlement_repair_button.pressed.emit()
 	await process_frame
 	_expect(game.selected_module_id == "field_workshop" and game.settlement_repair_button.has_focus() and game.settlement_repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.settlement_repair_button.text.contains("DURABILITY 1→3") and game.settlement_repair_button.text.contains("ACTIONS 2→1") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact durability and action-budget consequences without spending an action")
+	_expect(game.refit_label.text.contains("Damaged · 1/3 durability · strained") and game.fortress_panel.selected_system_state_text().contains("Strained · damaged 1/3"), "a damaged operational module should disclose its condition alongside its dependency state instead of appearing fully healthy")
 	game.state.modules[damaged_workshop_index]["durability"] = workshop_before
 	game.state._recalculate()
 	game._refresh_ui()
