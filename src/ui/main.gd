@@ -2174,11 +2174,23 @@ func _on_travel_pressed() -> void:
 		_journal_event("route_started", {"route": route_id, "doctrine": _selected_id(doctrine_option), "risk": state.current_route_risk, "pressure": state.encounter_pressure})
 	_refresh_ui()
 
+func _encounter_checkpoint_reason(resolved: bool) -> String:
+	if not resolved:
+		return "encounter_advanced"
+	if state.phase == "results":
+		return "run_ended"
+	if state.phase == "settlement" or state.encounter_outcome in ["protected_arrival", "damaged_arrival"]:
+		return "recovery_reached"
+	if state.encounter_outcome == "route_secured":
+		return "route_secured"
+	return "encounter_resolved"
+
 func _on_advance_encounter_pressed() -> void:
 	var result := state.advance_encounter(1.0)
+	var encounter_resolved := bool(result.get("resolved", false))
 	if not bool(result.get("ok", false)):
 		_set_event("Journey battle blocked: %s." % String(result.get("reason", "unknown")))
-	elif bool(result.get("resolved", false)):
+	elif encounter_resolved:
 		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
 		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})
 		if state.phase == "results" and not result_recorded:
@@ -2188,7 +2200,7 @@ func _on_advance_encounter_pressed() -> void:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
 		_journal_event("encounter_step", {"leg": state.journey_leg, "step": state.encounter_step, "hull": state.hull_condition})
 	if bool(result.get("ok", false)):
-		_checkpoint("encounter_advanced")
+		_checkpoint(_encounter_checkpoint_reason(encounter_resolved))
 	_refresh_ui()
 
 func _on_settlement_repair_pressed() -> void:

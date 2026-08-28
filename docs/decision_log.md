@@ -943,3 +943,7 @@ Campaign-node focus now prefers the regional map heading as its scroll anchor, w
 ## 2026-08-28 — Lower desk actions need trailing focus room
 
 The Marchmaster's Desk now ends with a small non-interactive margin. This gives automatic scrolling enough range to place lower controls cleanly without leaving a sliver of the prior section at the viewport edge. Emergency-order focus therefore preserves the complete Current Order and Encounter Order context, while ordinary battle entry still begins at the desk header and run tracker.
+
+## 2026-08-28 — Checkpoint receipts name the resumable state
+
+Encounter checkpoint reasons now distinguish an intermediate Battle Step from a Road Secured, Recovery Reached, or Run Ended transition. The save still occurs at the same successful advance boundary with the same serialized state and backup behavior; only the receipt and later pause summary use the more accurate player-facing reason. Run Ended remains neutral across decisive, scarred, and failed debriefs.

@@ -59,6 +59,7 @@ func _run() -> void:
 	_expect(app.menu_view.visible, "the application should open on the title menu")
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
 	_expect(app.title_build_label.text.begins_with("TWO PLAYABLE REGIONS · PLAYTEST BUILD") and app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and not app.title_build_label.text.contains("ALPHA · v"), "the title should expose one clear playtest-build identity without duplicating the alpha channel")
+	_expect(app._checkpoint_label("route_secured") == "Road secured" and app._checkpoint_label("recovery_reached") == "Recovery reached" and app._checkpoint_label("run_ended") == "Run ended", "resolved checkpoints should use player-facing transition labels instead of the generic battle-step receipt")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(not app.title_return_notice_panel.visible and app.title_return_notice.is_empty() and app.save_status_label.visible, "a clean launch should show normal save guidance without inventing a prior-session return receipt")
 	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.quick_start_button, "title navigation should move down from Guided Start to Quick Start")

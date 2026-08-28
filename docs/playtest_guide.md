@@ -68,6 +68,8 @@ When a decision advances to route planning, the Marchmaster's Desk should scroll
 
 During battle, moving focus into an emergency order should keep the complete Current Order and Encounter Order context visible. The top of the desk should never begin on clipped remnants of the run tracker.
 
+Autosave receipts name the state that Continue now preserves. **Battle Step** means the encounter is still active; **Road Secured**, **Recovery Reached**, and **Run Ended** mark resolved transitions.
+
 Settings uses three visible sections: **Display & Readability**, **Controls & Feedback**, and **Runs & Local Data**. The fixed breadcrumb follows focused controls even when their section heading scrolls away. Watch whether testers can predict where a preference or reset belongs before reading every row.
 
 ## Building locally

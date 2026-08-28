@@ -558,6 +558,7 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(not game.fortress_panel.hull_under_threat, "the whole-chassis threat treatment should clear when the enemy resumes a module target")
 	await _advance_until_phase("map")
+	_expect(last_checkpoint_reason == "route_secured", "securing a non-recovery road should request a road-secured checkpoint instead of leaving the final battle step as the visible save reason")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	_expect(game.state.campaign_event_pending == "lift_chain_sings" and game.encounter_label.text.begins_with("DECISION REQUIRED · THE LIFT CHAIN SINGS"), "the first eligible seeded occurrence should replace the generic after-action prompt with one primary road decision")
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
@@ -640,6 +641,7 @@ func _run() -> void:
 	await _press_campaign_node("morrowline_camp")
 	await _advance_until_phase("settlement")
 	await process_frame
+	_expect(last_checkpoint_reason == "recovery_reached", "arriving at Morrowline should request a recovery-reached checkpoint instead of a generic battle-step receipt")
 	_expect(game.state.phase == "settlement" and game.state.campaign_encounters_completed == 3, "the third encounter should open Morrowline services")
 	_expect(game.current_run_flow_step == 2 and game.run_flow_labels[2].text.contains("RECOVER"), "reaching Morrowline should advance the tracker to recovery")
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
@@ -800,6 +802,7 @@ func _run() -> void:
 	await _advance_until_phase("results")
 	await process_frame
 	await process_frame
+	_expect(last_checkpoint_reason == "run_ended", "resolving the final encounter should request a neutral run-ended checkpoint for the debrief")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
 	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible and not game.journey_banner.visible, "results should expose final chassis review and follow-up actions while retiring the completed journey's decorative banner")

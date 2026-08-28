@@ -29,7 +29,7 @@ The repository contains an agent-first Godot project with:
 - Consistent **Playtest Build** wording around those identifiers without duplicating the alpha channel or implying release readiness.
 - Visible checkpoint age on the title screen so returning testers can recognize stale local progress.
 - Silent local checkpoints after confirmed contracts, route departures, event choices, encounter steps, interventions, and settlement services.
-- Brief non-blocking checkpoint notices that confirm autosave without replacing gameplay explanations or covering the persistent Pause control at large text.
+- Brief phase-aware checkpoint notices that distinguish battle steps, secured roads, recovery arrivals, and ended runs without replacing gameplay explanations or covering Pause at large text.
 - Full simulation-level save validation on the title screen, with incompatible or malformed saves explained instead of loaded as misleading fresh runs.
 - Contextual title-menu priority: Start is primary for a new player, while a valid Continue save becomes the highlighted default.
 - Confirmation before a new autosaved run can supersede an existing saved march.

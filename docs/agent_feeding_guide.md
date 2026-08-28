@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.265`; Feeds A through AJ are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.266`; Feeds A through AK are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -221,6 +221,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.265` through bounded trailing desk space.
 
 > Give lower Marchmaster's Desk actions enough non-interactive trailing room to enter on a clean section boundary. In battle, emergency-order focus should retain Current Order, the complete Encounter Order heading, and the focused command without showing clipped run-flow fragments.
+
+### Current Feed AK — checkpoint outcome receipts
+
+**Status:** Complete in `0.3.0-alpha.266` through phase-aware encounter checkpoint reasons.
+
+> Keep Battle Step for intermediate encounter saves, but label resolved transitions by the state actually preserved: Road Secured, Recovery Reached, or Run Ended. Do not change checkpoint timing, payloads, backups, or deterministic state.
 
 ## Historical prototype feed sequence
 
