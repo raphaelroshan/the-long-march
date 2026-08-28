@@ -58,6 +58,10 @@ var pause_briefing_button: Button
 var pause_settings_button: Button
 var restart_button: Button
 var title_button: Button
+var pause_eyebrow_label: Label
+var pause_title_label: Label
+var pause_detail_label: Label
+var pause_hint_label: Label
 var title_build_label: Label
 var pause_build_label: Label
 var confirmation_title_label: Label
@@ -618,25 +622,25 @@ func _build_pause_menu() -> void:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 12)
 	panel.add_child(content)
-	var eyebrow := Label.new()
-	eyebrow.text = "THE ROAD WAITS"
-	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	eyebrow.add_theme_font_size_override("font_size", 12)
-	eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
-	content.add_child(eyebrow)
-	var title := Label.new()
-	title.text = "MARCH PAUSED"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 34)
-	title.add_theme_color_override("font_color", Color("#f0d29d"))
-	content.add_child(title)
-	var detail := Label.new()
-	detail.text = "The road is turn-based. Nothing changes while this menu is open."
-	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	detail.custom_minimum_size = Vector2(430, 38)
-	detail.add_theme_color_override("font_color", Color("#b7c1bf"))
-	content.add_child(detail)
+	pause_eyebrow_label = Label.new()
+	pause_eyebrow_label.text = "THE ROAD WAITS"
+	pause_eyebrow_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_eyebrow_label.add_theme_font_size_override("font_size", 12)
+	pause_eyebrow_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	content.add_child(pause_eyebrow_label)
+	pause_title_label = Label.new()
+	pause_title_label.text = "MARCH PAUSED"
+	pause_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_title_label.add_theme_font_size_override("font_size", 34)
+	pause_title_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	content.add_child(pause_title_label)
+	pause_detail_label = Label.new()
+	pause_detail_label.text = "The road is turn-based. Nothing changes while this menu is open."
+	pause_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	pause_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_detail_label.custom_minimum_size = Vector2(430, 38)
+	pause_detail_label.add_theme_color_override("font_color", Color("#b7c1bf"))
+	content.add_child(pause_detail_label)
 	var summary_panel := PanelContainer.new()
 	summary_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#405459"), 1, 5, 12))
 	content.add_child(summary_panel)
@@ -707,12 +711,12 @@ func _build_pause_menu() -> void:
 	title_button.pressed.connect(_request_confirmation.bind("title"))
 	_warning_button(title_button)
 	session_actions.add_child(title_button)
-	var hint := Label.new()
-	hint.text = "B / Esc resumes"
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color("#829092"))
-	content.add_child(hint)
+	pause_hint_label = Label.new()
+	pause_hint_label.text = "B / Esc resumes"
+	pause_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_hint_label.add_theme_font_size_override("font_size", 12)
+	pause_hint_label.add_theme_color_override("font_color", Color("#829092"))
+	content.add_child(pause_hint_label)
 	pause_build_label = Label.new()
 	pause_build_label.text = _build_version()
 	pause_build_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1083,8 +1087,16 @@ func _refresh_pause_summary(message: String = "") -> void:
 		return
 	var run_state = game_view.get("state")
 	var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
-	var phase := String(run_state.get("phase")).replace("_", " ").capitalize()
+	var phase_id := String(run_state.get("phase"))
+	var phase := phase_id.replace("_", " ").capitalize()
+	var viewing_debrief := phase_id == "results"
 	var current_run_saved := _current_run_matches_save()
+	pause_eyebrow_label.text = "FINAL REPORT" if viewing_debrief else "THE ROAD WAITS"
+	pause_title_label.text = "DEBRIEF OPTIONS" if viewing_debrief else "MARCH PAUSED"
+	pause_detail_label.text = "The march has ended. Review the result, save it locally, or adjust settings." if viewing_debrief else "The road is turn-based. Nothing changes while this menu is open."
+	resume_button.text = "RETURN TO DEBRIEF" if viewing_debrief else "RESUME MARCH"
+	pause_save_button.text = "SAVE RESULT" if viewing_debrief else "SAVE MARCH"
+	pause_hint_label.text = "B / Esc returns to debrief" if viewing_debrief else "B / Esc resumes"
 	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
 	title_button.tooltip_text = "Return to the title. The current decision is already saved." if current_run_saved else "Return to the title without updating the local save."
@@ -1094,6 +1106,13 @@ func _refresh_pause_summary(message: String = "") -> void:
 		_warning_button(title_button)
 	if not message.is_empty():
 		pause_save_status_label.text = message
+	elif viewing_debrief:
+		if current_run_saved:
+			pause_save_status_label.text = "This result is saved under Continue."
+		elif FileAccess.file_exists(SAVE_PATH):
+			pause_save_status_label.text = "This result is not saved · Continue still points to an earlier checkpoint."
+		else:
+			pause_save_status_label.text = "This result is not saved yet · use Save Result or Save & Return."
 	elif not autosave_enabled:
 		pause_save_status_label.text = "Current decision is saved · autosave remains off." if current_run_saved else "Autosave is off · use Save March to preserve progress."
 	elif last_checkpoint_reason == "loaded save":
@@ -1146,7 +1165,9 @@ func _save_from_pause() -> bool:
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	var saved := bool(game_view.call("save_run"))
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
-	_refresh_pause_summary("Saved. Continue will resume from this decision." if saved else "Save failed. Return to the stage and review the error message.")
+	var viewing_debrief := String(game_view.get("state").get("phase")) == "results"
+	var success_message := "Result saved. Continue will reopen this debrief." if viewing_debrief else "Saved. Continue will resume from this decision."
+	_refresh_pause_summary(success_message if saved else "Save failed. Return to the stage and review the error message.")
 	if saved:
 		last_checkpoint_reason = "manual save"
 		pause_save_button.grab_focus()

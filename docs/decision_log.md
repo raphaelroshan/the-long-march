@@ -575,3 +575,11 @@ The title no longer exposes expected and discovered schema numbers when a checkp
 ## 2026-08-28 — Save recovery covers every unusable checkpoint
 
 The recovery action now says Remove Unusable Save, and its confirmation explains that the checkpoint cannot be loaded by this build. The same language truthfully covers malformed, incomplete, and version-incompatible files instead of incorrectly calling every case unreadable.
+
+## 2026-08-28 — Session options recognize a completed march
+
+Opening the pause layer from results now presents Final Report and Debrief Options, explains that the march has ended, offers Save Result, and returns to the debrief. The same overlay retains March Paused and Save March during an active run, so shared controls no longer describe a finished campaign as merely waiting on the road.
+
+## 2026-08-28 — Debrief save status describes the result slot
+
+Completed-run options now distinguish an unsaved result, a result already stored under Continue, and an older checkpoint still occupying that slot. Saving from this overlay confirms that Continue will reopen the debrief. Terminal state no longer asks the player to commit another campaign choice or use the active-run Save March label.
