@@ -881,7 +881,7 @@ Add Water Condenser to the Ashgate or a small isolated test scenario. It should 
 
 ### Task 3: Mara Flint recovery chain
 
-**Status:** Next recommended slice.
+**Status:** Complete in `0.3.0-alpha.232`.
 
 Add Mara through an event at Morrowline or a route-side workshop. Her choices should make the player decide between repair efficiency, refuge capacity, and salvage. End the chain with a later report that names the consequence of the first decision. This provides the first bridge from mechanical event to character arc without requiring a campaign overhaul.
 

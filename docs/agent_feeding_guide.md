@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.231`; Feeds A and B are complete, so begin new feature work with Feed C.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.232`; Feeds A through C are complete, so begin new feature work with Feed D.
 
 ### Current Feed A — fortress comprehension
 
@@ -20,11 +20,13 @@ The original prompts below describe the build-up of the prototype and are retain
 
 ### Current Feed C — specialist event chain
 
-**Status:** Next recommended slice.
+**Status:** Complete in `0.3.0-alpha.232` through Mara Flint's Morrowline recovery chain.
 
 > Add Mara Flint or Sela Vonn through a three-event authored chain: meeting, practical repair-versus-refuge or schedule-versus-reliability choice, and later consequence. Use explicit typed commands and stable IDs. Add decline, scarcity, active-event save/load, deterministic replay, UI event-card smoke, and a causal debrief line. Do not create a dialogue-only reputation system.
 
 ### Current Feed D — bounded occurrence scheduler
+
+**Status:** Next recommended slice.
 
 > Implement a seeded occurrence scheduler with one primary event per phase, hard eligibility filters, cooldowns, repeat policy, bounded history, named random stream, and save-safe active state. Start with three operational events and one optional meeting. Preserve at least one visible counter for every tested seed. Do not add procedural prose generation or an unbounded event graph.
 

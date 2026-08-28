@@ -1327,15 +1327,20 @@ func _scroll_action_context_into_view(control: Control) -> void:
 	var viewport_rect := right_scroll.get_global_rect()
 	var previous_scroll := right_scroll.scroll_vertical
 	var guidance_rect := guidance_label.get_global_rect()
+	var context_top := guidance_rect.position.y - viewport_rect.position.y + previous_scroll
 	var control_rect := dependency_card_panel.get_global_rect() if dependency_card_panel.visible and control in [module_option, focus_chassis_button, rotate_button, remove_button] else control.get_global_rect()
-	var guidance_top := guidance_rect.position.y - viewport_rect.position.y + previous_scroll
 	var control_bottom := control_rect.end.y - viewport_rect.position.y + previous_scroll
-	var context_height := control_bottom - guidance_top
+	if control in campaign_event_buttons and campaign_event_title.visible:
+		context_top = campaign_event_title.get_global_rect().position.y - viewport_rect.position.y + previous_scroll
+		for event_button in campaign_event_buttons:
+			if event_button.visible:
+				control_bottom = maxf(control_bottom, event_button.get_global_rect().end.y - viewport_rect.position.y + previous_scroll)
+	var context_height := control_bottom - context_top
 	right_scroll.scroll_vertical = 0
 	if control_bottom <= viewport_rect.size.y - 8.0:
 		return
 	if context_height <= viewport_rect.size.y - 16.0:
-		right_scroll.scroll_vertical = maxi(0, ceili(guidance_top - 8.0))
+		right_scroll.scroll_vertical = maxi(0, ceili(context_top - 8.0))
 	else:
 		right_scroll.scroll_vertical = maxi(0, ceili(control_bottom - viewport_rect.size.y + 8.0))
 
@@ -1478,7 +1483,13 @@ func _on_campaign_event_pressed(index: int) -> void:
 		else:
 			var next_event := state.campaign_event_details()
 			encounter_label.text = "DECISION CONTINUES · %s\n%s" % [String(next_event.get("title", "Local event")).to_upper(), String(result.get("message", "Decision recorded."))]
-			focus_current_action.call_deferred()
+			_focus_first_campaign_event_choice()
+
+func _focus_first_campaign_event_choice() -> void:
+	for button in campaign_event_buttons:
+		if _focus_control(button):
+			_on_desk_control_focused(button)
+			return
 
 func _on_recruit_iven_pressed() -> void:
 	var result := state.recruit_iven_pell()
