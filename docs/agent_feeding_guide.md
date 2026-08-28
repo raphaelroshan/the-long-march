@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.249`; Feeds A through T are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.250`; Feeds A through U are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -125,6 +125,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.249` through the read-only March Record.
 
 > Give a paused or completed run one compact record of its seed identity, current order, secured path, pressure, commitments, authored decisions, occurrences, and fortress condition. Keep the stage suspended, make copy explicit and local-only, return focus to Pause, and include the same identity in debrief and feedback data. Do not change simulation state or imply that a seed alone reproduces player commands.
+
+### Current Feed U — current-order jump
+
+**Status:** Complete in `0.3.0-alpha.250` through the persistent Go to Order control.
+
+> Let players return from any Marchmaster's Desk scroll position to the real mandatory control named by Current Order. Reuse the existing phase-aware focus resolver, update the visible label for contract, routes, commit, event, battle, recovery, and debrief, and never activate the destination automatically. Keep the route Commit/Cancel row readable at 110% text.
 
 ## Historical prototype feed sequence
 

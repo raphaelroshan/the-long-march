@@ -6,6 +6,8 @@ This playtest is about two connected questions: can a player understand how a fo
 
 The build opens with a seven-step Marchmaster briefing that introduces one core dependency or journey decision at a time. **Open Field Briefing** reopens it at any time. The green current-order line on the Marchmaster's Desk follows the active decision—contract, route preview, battle, recovery, or result—without prescribing a winning layout.
 
+If the active control moves out of view while inspecting the desk, use the compact **Go to…** action beside Run Flow. It moves focus and scrolls to the contract, route, commit, event, battle step, recovery service, or feedback action named by the current phase; it never activates that choice for the player.
+
 Before starting, move focus or the pointer across the title's chapter actions. The right-hand journey card should explain the selected obligation, regional pressure, recovery point, and finale. Continue should instead name the exact saved next decision and fortress condition. Ask whether the tester can choose a chapter without relying on tooltips or prior knowledge.
 
 ## Suggested session

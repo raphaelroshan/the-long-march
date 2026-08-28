@@ -20,6 +20,7 @@ The repository contains an agent-first Godot project with:
 - A title-only clean-playtest reset that restores first-launch state while preserving tester-exported feedback reports.
 - A visible in-stage Pause action alongside Escape and the configured controller-cancel shortcut, keeping session controls discoverable for every input method.
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
+- A context-aware Go to Order control that returns focus and scroll position to the required contract, route, event, battle, recovery, or debrief action without activating it.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.
 - Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible together with their current-order context when space allows.
 - Prominent post-run actions for feedback, replaying from Ashgate, or returning to the title screen.

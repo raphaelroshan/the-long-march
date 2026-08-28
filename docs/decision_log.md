@@ -879,3 +879,7 @@ The existing right-hand title card now follows Guided Ashgate, Quick Ashgate, Fl
 ## 2026-08-28 — Reorientation uses an inspectable March Record
 
 Pause now exposes a read-only March Record assembled from the authoritative live state. Its first viewport prioritizes the stable chapter-and-seed run code and current order, followed by path, pressure, commitments, authored decisions, occurrences, resources, and named system damage. Copy is an explicit clipboard-only action; Back or cancel restores the suspended Pause menu and exact entry focus. The same run code enters debrief and feedback summaries so screenshots, notes, and exported reports refer to one deterministic run without claiming that the seed replaces the command history.
+
+## 2026-08-28 — Current Order can return focus but cannot act
+
+The Run Flow heading carries a compact phase-aware jump that delegates to the same `focus_current_action()` resolver used after transitions. Its label names the destination class, while activation only focuses and scrolls to the existing authoritative control. Contract, route, event, battle, recovery, and debrief choices therefore retain their original confirmation and state-change paths. The adjacent route cancel copy is shortened at 110% text so the reversible pointer action remains visible beside Commit.

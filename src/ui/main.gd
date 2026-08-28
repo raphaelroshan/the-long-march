@@ -186,6 +186,7 @@ var recruit_iven_button: Button
 var save_button: Button
 var load_button: Button
 var guidance_label: Label
+var current_order_button: Button
 var run_flow_panels: Array[PanelContainer] = []
 var run_flow_labels: Array[Label] = []
 var current_run_flow_step: int = 0
@@ -341,16 +342,30 @@ func _refresh_planning_focus() -> void:
 	for node_button in campaign_node_buttons:
 		if _control_can_receive_focus(node_button):
 			active_controls.append(node_button)
+	if _control_can_receive_focus(current_order_button):
+		active_controls.append(current_order_button)
 	if _control_can_receive_focus(how_to_play_button):
 		active_controls.append(how_to_play_button)
 	_configure_vertical_focus_cycle(active_controls)
 
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
+	var heading_row := HBoxContainer.new()
+	heading_row.add_theme_constant_override("separation", 8)
+	parent.add_child(heading_row)
 	var heading := Label.new()
 	heading.text = "RUN FLOW"
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	heading.add_theme_font_size_override("font_size", 10)
 	heading.add_theme_color_override("font_color", Color("#89999e"))
-	parent.add_child(heading)
+	heading_row.add_child(heading)
+	current_order_button = Button.new()
+	current_order_button.text = "GO TO ORDER ↓"
+	current_order_button.custom_minimum_size = Vector2(132, 28)
+	current_order_button.add_theme_font_size_override("font_size", 10)
+	current_order_button.tooltip_text = "Move focus to the required control without activating it."
+	current_order_button.pressed.connect(focus_current_action)
+	heading_row.add_child(current_order_button)
 	var tracker := HBoxContainer.new()
 	tracker.add_theme_constant_override("separation", 4)
 	parent.add_child(tracker)
@@ -853,11 +868,11 @@ func _build_ui() -> void:
 	controls.add_child(campaign_action_row)
 	campaign_action_row.add_child(campaign_commit_button)
 	campaign_cancel_button = Button.new()
-	campaign_cancel_button.text = "CANCEL PREVIEW\nRETURN TO MAP"
+	campaign_cancel_button.text = "CANCEL\nBACK TO MAP"
 	campaign_cancel_button.tooltip_text = "Clear this route preview without spending fuel, advancing time, or beginning the encounter."
-	campaign_cancel_button.custom_minimum_size = Vector2(132, 64)
+	campaign_cancel_button.custom_minimum_size = Vector2(110, 64)
 	campaign_cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	campaign_cancel_button.size_flags_stretch_ratio = 0.72
+	campaign_cancel_button.size_flags_stretch_ratio = 0.48
 	campaign_cancel_button.visible = false
 	campaign_cancel_button.pressed.connect(_on_campaign_route_cancelled)
 	campaign_action_row.add_child(campaign_cancel_button)
@@ -1006,7 +1021,9 @@ func _build_ui() -> void:
 	results_title_button.tooltip_text = "Save the completed run to the local Continue slot, then return to the title."
 	results_title_button.pressed.connect(_on_results_title_pressed)
 	results_actions.add_child(results_title_button)
-	feedback_button.focus_neighbor_top = feedback_button.get_path_to(play_again_button)
+	current_order_button.focus_neighbor_top = current_order_button.get_path_to(results_title_button)
+	current_order_button.focus_neighbor_bottom = current_order_button.get_path_to(feedback_button)
+	feedback_button.focus_neighbor_top = feedback_button.get_path_to(current_order_button)
 	feedback_button.focus_neighbor_bottom = feedback_button.get_path_to(march_on_button)
 	march_on_button.focus_neighbor_top = march_on_button.get_path_to(feedback_button)
 	march_on_button.focus_neighbor_bottom = march_on_button.get_path_to(play_again_button)
@@ -1015,8 +1032,8 @@ func _build_ui() -> void:
 	play_again_button.focus_neighbor_bottom = play_again_button.get_path_to(feedback_button)
 	results_title_button.focus_neighbor_top = results_title_button.get_path_to(march_on_button)
 	results_title_button.focus_neighbor_left = results_title_button.get_path_to(play_again_button)
-	results_title_button.focus_neighbor_bottom = results_title_button.get_path_to(feedback_button)
-	_configure_focus_cycle([feedback_button, march_on_button, play_again_button, results_title_button])
+	results_title_button.focus_neighbor_bottom = results_title_button.get_path_to(current_order_button)
+	_configure_focus_cycle([current_order_button, feedback_button, march_on_button, play_again_button, results_title_button])
 	controls.move_child(results_group, guidance_label.get_index() + 1)
 
 	how_to_play_button = Button.new()
@@ -1054,6 +1071,7 @@ func _connect_desk_focus_scrolling() -> void:
 		march_on_button,
 		play_again_button,
 		results_title_button,
+		current_order_button,
 		how_to_play_button
 	]
 	controls.append_array(campaign_event_buttons)
@@ -2535,12 +2553,15 @@ func _refresh_ui() -> void:
 		results_summary_label.text = _result_summary_text()
 		results_record_label.text = _result_record_text()
 		results_replay_label.text = _result_replay_text()
+		_configure_vertical_focus_cycle([current_order_button, feedback_button, march_on_button, play_again_button, results_title_button])
 		var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
 		var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
 		var next_region_result := String(starting_region_results.get(next_region_id, ""))
 		march_on_button.text = "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name]
 		march_on_button.tooltip_text = "Begin a fresh %s run. This result remains in the March Charter; the local Continue slot changes only at the next save." % ("Ashgate" if next_region_id == "ashgate_lowlands" else "Flooded Veyru")
 	guidance_label.text = _current_guidance()
+	current_order_button.text = _current_action_jump_label()
+	current_order_button.tooltip_text = "Move focus to %s without activating it." % _current_action_jump_target().to_lower()
 	_refresh_pause_action_hint()
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()
 	refit_title.visible = is_refit_phase
@@ -2653,7 +2674,7 @@ func _refresh_ui() -> void:
 			intervention_buttons[3].text = "Cut loose %s · %s" % [String(cargo_definition.get("name", cargo_id)), cargo_cost]
 			intervention_buttons[3].tooltip_text = "Permanently remove this installed module for the rest of the run to reduce mass and enemy cargo incentive.%s" % [" Redirects %s." % ", ".join(cut_redirects) if not cut_redirects.is_empty() else " No active threat currently targets it."]
 	if is_battle_phase:
-		var combat_actions: Array = [advance_encounter_button, combat_inspect_button]
+		var combat_actions: Array = [current_order_button, advance_encounter_button, combat_inspect_button]
 		for intervention_button in intervention_buttons:
 			if not intervention_button.disabled:
 				combat_actions.append(intervention_button)
@@ -2897,6 +2918,26 @@ func _current_guidance() -> String:
 	if state.campaign_active and state.phase in ["refit", "map"]:
 		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
 	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
+
+func _current_action_jump_label() -> String:
+	if state.phase == "results":
+		return "GO TO FEEDBACK ↓"
+	if state.phase in ["battle", "final_battle"]:
+		return "GO TO BATTLE STEP ↓"
+	if not state.campaign_event_pending.is_empty():
+		return "GO TO DECISION ↓"
+	if _active_contract_status() == "offered":
+		return "GO TO CONTRACT ↓"
+	if not selected_campaign_node_id.is_empty() and _campaign_departure_block_reason(selected_campaign_node_id).is_empty():
+		return "GO TO COMMIT ↓"
+	if state.phase == "settlement" and state.settlement_actions_remaining > 0:
+		return "GO TO RECOVERY ↓"
+	if state.campaign_active and state.phase in ["refit", "map", "settlement"]:
+		return "GO TO ROUTES ↓"
+	return "GO TO DEPARTURE ↓"
+
+func _current_action_jump_target() -> String:
+	return _current_action_jump_label().trim_prefix("GO TO ").trim_suffix(" ↓").replace("_", " ")
 
 func _critical_combat_warning() -> String:
 	var best_priority := 0
