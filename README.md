@@ -78,7 +78,7 @@ The internal journey slice has been verified locally with Godot 4.4.1. On a deve
 
 ## Agent workflow
 
-Read `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md` before editing. Work in a narrow vertical slice, keep the simulation presentation-independent, update stable content IDs, add deterministic tests, and explain the player-facing result.
+The current post-alpha agent handoff contract is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md). Read it together with `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md` before editing. Work in a narrow vertical slice, keep the simulation presentation-independent, update stable content IDs, add deterministic tests, and explain the player-facing result.
 
 The recommended sequence is:
 
@@ -101,6 +101,8 @@ The tester workflow, privacy contract, and interview questions are in [`docs/pla
 The dungeon-and-shop inventory battler remains a separate follow-up concept. It is not part of this repository. The Long March should first prove that a moving fortress creates a compelling spatial and strategic identity.
 
 ## Expanded design package
+
+The current GPT-agent roadmap is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md); it records the implemented Ashgate Lowlands baseline and the next bounded fortress, specialist, event, occurrence, regional, UX, and campaign tasks.
 
 The broader fortress plan is documented separately so agents can implement it in controlled slices:
 
