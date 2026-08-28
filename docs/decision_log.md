@@ -815,3 +815,7 @@ Campaign map controls rebuilt for a different regional layout now receive the sa
 ## 2026-08-28 — Session actions preserve chapter identity
 
 Continue now names Ashgate or Veyru on the action, summary, and tooltip. Pause summaries, restart confirmations, and replay confirmations derive their chapter and starting settlement from the active run, preventing a Veyru player from being told that a destructive action will restart Ashgate. When a checkpoint exists, the title hides the redundant Ashgate Skip Briefing button and keeps that path in the Field Guide; Continue, one guided Ashgate start, Veyru, utilities, and the complete checkpoint summary therefore remain visible together at 1280×720.
+
+## 2026-08-28 — Help follows the active region
+
+The title Field Guide now explains the shared loop through both implemented chapters instead of presenting Ashgate as the only road. Reopening the in-run briefing derives seven labels and lessons from the active region: Ashgate retains its engine, ammunition, signal, blockade, and Morrowline teaching, while Veyru teaches the condenser, named medicine carrier, water thresholds, Pilgrim Gantry guarantee, and archive commitment. Veyru still starts directly at its contract; the tailored briefing is available on demand and never marks the Ashgate first-run lesson complete.

@@ -72,6 +72,44 @@ const ONBOARDING_STEPS := [
 		"action": "IN CONTACT · Read TARGET, WHY, and NEXT before advancing. At the end, record what felt clear or confusing."
 	}
 ]
+const VEYRU_ONBOARDING_LABELS := ["COMMAND", "ENGINE", "SUSTAIN", "REPAIR", "CARRIER", "WATER", "ARCHIVE"]
+const VEYRU_ONBOARDING_STEPS := [
+	{
+		"title": "Your job is delivery",
+		"body": "You command a walking fortress through five flooded encounters. Success means reaching the Dry Archive with a machine that still moves; the sealed medicines are an obligation you may accept, protect, lose, or refuse.",
+		"action": "FIRST ACTION · Answer Lantern Quay's medicine contract. The accepted cases reserve one named system as their carrier."
+	},
+	{
+		"title": "Keep movement above water",
+		"body": "The Steam Lance Engine needs a working adjacent Coal Cell. If that link is lost, movement stops and departure can be blocked. Select the engine to read its dependency card before changing the prepared layout.",
+		"action": "TRY THIS · Select the Steam Lance Engine and find DEPENDS ON, IF LOST, and COUNTER."
+	},
+	{
+		"title": "Maintain the condenser",
+		"body": "The Water Condenser needs shared power and an adjacent operational Field Workshop to become Ready. A Ready condenser reduces Flood Surge damage away from itself, but its heat and two-cell footprint leave no spare mass in the prepared fortress.",
+		"action": "TRY THIS · Inspect the Water Condenser, then trace its workshop and power requirements."
+	},
+	{
+		"title": "Keep repairs staffed",
+		"body": "The Field Workshop needs adjacent Crew Quarters. After contact it repairs the weakest damaged operational system, which can preserve the medicine carrier or movement chain without erasing every consequence.",
+		"action": "TRY THIS · Inspect the Field Workshop and decide whether its crew link or the exposed carrier needs more protection."
+	},
+	{
+		"title": "Protect the named carrier",
+		"body": "Accepting the contract names the Refugee Bunk or Parts Crate carrying the medicines. Flood contacts and the Civic Guardian value that system. Losing it fails the delivery but does not end the chapter.",
+		"action": "LOOK FOR · Read the carrier beside the contract, then compare Protect Cargo, armor, repair, and Seal Compartment."
+	},
+	{
+		"title": "Read the rising water",
+		"body": "Low Water covers pressure 0–2. Flooding at 3–4 strengthens Flood Surge. Breach at 5 closes Drowned Registry but opens Pilgrim Gantry, the guaranteed recovery road. Selecting a route is only a preview.",
+		"action": "LOOK FOR · Compare fuel, time, water gain, route knowledge, and whether recovery follows before Commit."
+	},
+	{
+		"title": "Choose what the archive says",
+		"body": "Battles advance one readable step at a time and allow one emergency order per encounter. At Dry Archive Gate, broadcasting adds public trust and a final Climber contact; sealing lowers water and protects the carrier.",
+		"action": "IN CONTACT · Read TARGET, WHY, and NEXT before advancing. At the gate, read both complete consequences before choosing."
+	}
+]
 
 var state: LongMarchState
 var metric_labels: Dictionary = {}
@@ -1030,7 +1068,7 @@ func _build_onboarding_overlay() -> void:
 	var stepper := HBoxContainer.new()
 	stepper.add_theme_constant_override("separation", 6)
 	content.add_child(stepper)
-	for step_label in ONBOARDING_LABELS:
+	for step_label in _active_onboarding_labels():
 		var step_panel := PanelContainer.new()
 		step_panel.custom_minimum_size = Vector2(0, 38)
 		step_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1188,26 +1226,35 @@ func _show_onboarding(reopened: bool = false) -> void:
 	if reopened:
 		_journal_event("onboarding_reopened")
 
+func _active_onboarding_labels() -> Array:
+	return VEYRU_ONBOARDING_LABELS if state.campaign_region_id == "flooded_veyru" else ONBOARDING_LABELS
+
+func _active_onboarding_steps() -> Array:
+	return VEYRU_ONBOARDING_STEPS if state.campaign_region_id == "flooded_veyru" else ONBOARDING_STEPS
+
 func _refresh_onboarding() -> void:
-	var step: Dictionary = ONBOARDING_STEPS[onboarding_step]
+	var steps := _active_onboarding_steps()
+	var labels := _active_onboarding_labels()
+	onboarding_step = mini(onboarding_step, steps.size() - 1)
+	var step: Dictionary = steps[onboarding_step]
 	onboarding_title_label.text = String(step.title)
 	onboarding_body_label.text = String(step.body)
 	onboarding_action_label.text = String(step.action)
-	onboarding_progress_label.text = "Briefing %d of %d  ·  D-pad / arrows or Tab move  ·  A / Enter confirms  ·  B / Esc %s" % [onboarding_step + 1, ONBOARDING_STEPS.size(), "closes" if onboarding_reopened else "closes for this run"]
+	onboarding_progress_label.text = "%s briefing %d of %d  ·  D-pad / arrows or Tab move  ·  A / Enter confirms  ·  B / Esc %s" % ["Veyru" if state.campaign_region_id == "flooded_veyru" else "Ashgate", onboarding_step + 1, steps.size(), "closes" if onboarding_reopened else "closes for this run"]
 	for index in range(onboarding_step_panels.size()):
 		var panel := onboarding_step_panels[index]
 		var label := onboarding_step_labels[index]
 		if index < onboarding_step:
 			panel.add_theme_stylebox_override("panel", _flat_style(Color("#183329"), Color("#4e8d72"), 1, 4, 3))
-			label.text = "✓ %s" % ONBOARDING_LABELS[index]
+			label.text = "✓ %s" % labels[index]
 			label.add_theme_color_override("font_color", Color("#9fddbd"))
 		elif index == onboarding_step:
 			panel.add_theme_stylebox_override("panel", _flat_style(Color("#4b405d"), Color("#eee2ff"), 2, 4, 2))
-			label.text = "%02d %s" % [index + 1, ONBOARDING_LABELS[index]]
+			label.text = "%02d %s" % [index + 1, labels[index]]
 			label.add_theme_color_override("font_color", Color("#ffffff"))
 		else:
 			panel.add_theme_stylebox_override("panel", _flat_style(Color("#182127"), Color("#35474d"), 1, 4, 3))
-			label.text = "— %s" % ONBOARDING_LABELS[index]
+			label.text = "— %s" % labels[index]
 			label.add_theme_color_override("font_color", Color("#738286"))
 	onboarding_back_button.disabled = onboarding_step == 0
 	onboarding_skip_button.focus_neighbor_right = onboarding_skip_button.get_path_to(onboarding_next_button if onboarding_back_button.disabled else onboarding_back_button)
@@ -1217,7 +1264,7 @@ func _refresh_onboarding() -> void:
 		active_actions.append(onboarding_back_button)
 	active_actions.append(onboarding_next_button)
 	_configure_focus_cycle(active_actions)
-	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER ASHGATE") if onboarding_step == ONBOARDING_STEPS.size() - 1 else "NEXT"
+	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER %s" % ("VEYRU" if state.campaign_region_id == "flooded_veyru" else "ASHGATE")) if onboarding_step == steps.size() - 1 else "NEXT"
 	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP FOR THIS RUN"
 
 func _on_onboarding_back() -> void:
@@ -1225,7 +1272,7 @@ func _on_onboarding_back() -> void:
 	_refresh_onboarding()
 
 func _on_onboarding_next() -> void:
-	if onboarding_step >= ONBOARDING_STEPS.size() - 1:
+	if onboarding_step >= _active_onboarding_steps().size() - 1:
 		_finish_onboarding(false)
 		return
 	onboarding_step += 1

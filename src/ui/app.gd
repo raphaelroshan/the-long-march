@@ -480,21 +480,21 @@ func _build_guide_overlay() -> void:
 	eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
 	content.add_child(eyebrow)
 	var title := Label.new()
-	title.text = "The road to Meridian Pass"
+	title.text = "Two roads, one fortress"
 	title.add_theme_font_size_override("font_size", 32)
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var intro := Label.new()
-	intro.text = "Learn the complete march once before optimizing a build. Victory and failure both make sense when you can trace what caused the outcome."
+	intro.text = "Ashgate and Flooded Veyru use the same fortress rules but test different weaknesses. Victory and failure make sense when you can trace what caused the outcome."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.custom_minimum_size = Vector2(690, 50)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
-	content.add_child(_flow_step("1", "ASHGATE · REFIT", "Green systems are ready, amber are strained, and red are offline or blocked. Stored parts are finite; inspect dependencies before moving one."))
-	content.add_child(_flow_step("2", "ROUTE · COMMIT", "Known roads name contacts and counters; forecasts reveal a hazard class; unscouted roads stay broad. Watch becomes Closing at 3 pressure and Break at 5. Confirm fuel, time, risk, heat, and doctrine before Commit."))
-	content.add_child(_flow_step("3", "ENCOUNTER · READ", "Each advance resolves one combat step. Read arriving enemies and named targets first; only one emergency order is available per encounter."))
-	content.add_child(_flow_step("4", "MORROWLINE · RECOVER", "Spend at most two service actions, then refit around lasting damage. Disabled services state the exact missing money, damage, or action."))
-	content.add_child(_flow_step("5", "MERIDIAN · DEBRIEF", "Commit to the final road, resolve the Siege Beast, then use the result thresholds and replay goal to plan one deliberate change."))
+	content.add_child(_flow_step("1", "PREP · READ DEPENDENCIES", "Green systems are ready, amber are strained, and red are offline or blocked. Stored parts are finite; inspect dependencies before moving one."))
+	content.add_child(_flow_step("2", "CONTRACT · NAME THE OBLIGATION", "Guard Ashgate's convoy or carry Veyru's medicines. Accepted work changes danger, rewards, recovery, and the exact system the road may target."))
+	content.add_child(_flow_step("3", "ROUTE · READ PRESSURE", "Known roads name contacts and counters; forecasts reveal a hazard class; unscouted roads stay broad. Ashgate reaches Closing at 3 and Break at 5; Veyru reaches Flooding at 3 and Breach at 5."))
+	content.add_child(_flow_step("4", "ENCOUNTER · READ", "Each advance resolves one combat step. Read arriving contacts, TARGET, WHY, and NEXT first; only one emergency order is available per encounter."))
+	content.add_child(_flow_step("5", "RECOVER · COMMIT · DEBRIEF", "Recover at Morrowline or Evacuation Camp, commit to the fifth encounter, then use the named result thresholds and replay goal to plan one deliberate change."))
 	var note := Label.new()
 	note.text = "QUICK START skips only the introductory briefing. The same simulation, seed, route graph, and checkpoint rules apply."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

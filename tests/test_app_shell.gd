@@ -109,7 +109,7 @@ func _run() -> void:
 	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
 	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_left) == app.guide_close_button, "the field guide should have explicit horizontal controller navigation")
 	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_top) == app.guide_quick_start_button and app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_next) == app.guide_close_button, "the field guide should trap directional and Tab focus inside its actions")
-	_expect(_tree_contains_text(app.guide_view, "Known roads name contacts and counters") and _tree_contains_text(app.guide_view, "Closing at 3 pressure and Break at 5") and _tree_contains_text(app.guide_view, "only one emergency order"), "the field guide should explain visibility, pressure, and intervention rules, not only list screens")
+	_expect(_tree_contains_text(app.guide_view, "Known roads name contacts and counters") and _tree_contains_text(app.guide_view, "Ashgate reaches Closing at 3 and Break at 5") and _tree_contains_text(app.guide_view, "Veyru reaches Flooding at 3 and Breach at 5") and _tree_contains_text(app.guide_view, "only one emergency order"), "the field guide should explain both regions' visibility, pressure, and intervention rules, not only list screens")
 	_expect(_tree_contains_text(app.guide_view, "same simulation, seed, route graph, and checkpoint rules apply"), "the Quick Start note should preserve normal save expectations instead of claiming that the save file cannot change")
 	app.guide_close_button.pressed.emit()
 	await process_frame
@@ -124,6 +124,17 @@ func _run() -> void:
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_summary_label.text.begins_with("FLOODED VEYRU · DAY 1 · Lantern Quay") and app.restart_button.tooltip_text.contains("Flooded Veyru"), "Veyru pause context should identify the active chapter before a destructive action")
+	app.pause_briefing_button.pressed.emit()
+	await process_frame
+	_expect(app.game_view.onboarding_overlay.visible and app.game_view.onboarding_title_label.text == "Your job is delivery" and app.game_view.onboarding_body_label.text.contains("Dry Archive") and app.game_view.onboarding_progress_label.text.begins_with("Veyru briefing"), "Veyru's reachable field briefing should open with its own objective and chapter label")
+	_expect(app.game_view.onboarding_step_labels[2].text.contains("SUSTAIN") and app.game_view.onboarding_step_labels[4].text.contains("CARRIER") and app.game_view.onboarding_step_labels[5].text.contains("WATER"), "Veyru's briefing rail should teach its actual sustain, carrier, and water decisions")
+	app.game_view.onboarding_step = app.game_view.VEYRU_ONBOARDING_STEPS.size() - 1
+	app.game_view._refresh_onboarding()
+	_expect(app.game_view.onboarding_title_label.text == "Choose what the archive says" and app.game_view.onboarding_body_label.text.contains("broadcasting") and app.game_view.onboarding_next_button.text == "RETURN TO MARCH", "Veyru's final briefing card should explain the archive commitment and return to the current run")
+	app.game_view._finish_onboarding(true)
+	await process_frame
+	app._show_pause()
+	await process_frame
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Restart Flooded Veyru?" and app.confirmation_body_label.text.contains("reset to Lantern Quay"), "Veyru restart should name the chapter and its actual starting settlement")
