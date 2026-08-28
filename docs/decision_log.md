@@ -759,3 +759,7 @@ The title now identifies Ashgate Lowlands as the current complete test journey, 
 ## 2026-08-28 — Guided onboarding teaches one dependency at a time
 
 The Marchmaster briefing now separates engine fuel, weapon ammunition, workshop staffing and parts, signal visibility, route pressure, and contact response into focused steps. The contract remains first and each page names one concrete inspection or decision. This accepts a slightly longer optional briefing in exchange for avoiding the previous compressed chassis page, where several unrelated dependencies competed for attention.
+
+## 2026-08-28 — Route comparison states confidence and risk bands
+
+Each available-road summary now pairs its numeric risk with the same low, guarded, or high planning band and explicitly labels information as known, forecast, or unscouted. The comparison updates when doctrine changes and still hides exact risk for unscouted roads. This keeps uncertainty meaningful while removing the need to cross-reference map-node shorthand.

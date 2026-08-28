@@ -99,7 +99,7 @@ func _test_dependency_graph() -> void:
 	comparison_state.choose_guard_contract(false)
 	var comparison_before: Dictionary = comparison_state.serialize()
 	var route_comparison := comparison_state.campaign_route_comparison()
-	_expect(route_comparison.size() == 2 and route_comparison[0].has("days") and route_comparison[0].has("fuel") and route_comparison[0].has("pressure_gain") and route_comparison[0].has("next_stops"), "route comparison should expose the required planning facts for every available road")
+	_expect(route_comparison.size() == 2 and route_comparison[0].has("days") and route_comparison[0].has("fuel") and route_comparison[0].has("risk_band") and route_comparison[0].has("pressure_gain") and route_comparison[0].has("next_stops"), "route comparison should expose the required planning facts for every available road")
 	_expect(comparison_state.serialize() == comparison_before, "reading the route comparison must not mutate authoritative campaign state")
 
 	var weapon_state := LongMarchState.new(1107)

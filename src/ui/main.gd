@@ -2039,11 +2039,12 @@ func _refresh_campaign_controls() -> void:
 	var comparison_lines: Array[String] = ["COMPARE AVAILABLE ROADS · CONTRACT %s" % state.guard_contract_status.replace("_", " ").to_upper()]
 	for route in state.campaign_route_comparison(_selected_id(doctrine_option)):
 		var visibility := String(route.get("visibility", "unscouted"))
-		var risk_text := "UNKNOWN RISK" if visibility == "unscouted" else "%.0f%% RISK" % (float(route.get("risk", 0.0)) * 100.0)
+		var confidence_text := visibility.to_upper()
+		var risk_text := "RISK UNKNOWN" if visibility == "unscouted" else "%s %.0f%% RISK" % [String(route.get("risk_band", "high")).to_upper(), float(route.get("risk", 0.0)) * 100.0]
 		var threats: Array = route.get("threats", [])
 		var threat_text := ", ".join(threats) if not threats.is_empty() else String(route.get("threat_hint", "uncertain pressure"))
 		var next_stops: Array = route.get("next_stops", [])
-		comparison_lines.append("%s · %dD · %d FUEL · %s · PRESSURE +%d\n%s · NEXT %s · %s" % [String(route.get("name", "Road")).to_upper(), int(route.get("days", 0)), int(route.get("fuel", 0)), risk_text, int(route.get("pressure_gain", 0)), threat_text.to_upper(), " / ".join(next_stops) if not next_stops.is_empty() else "FINAL", "RECOVERY FOLLOWS" if bool(route.get("settlement_follows", false)) else "NO SETTLEMENT NEXT"])
+		comparison_lines.append("%s · %dD · %d FUEL · %s · %s · PRESSURE +%d\n%s · NEXT %s · %s" % [String(route.get("name", "Road")).to_upper(), int(route.get("days", 0)), int(route.get("fuel", 0)), confidence_text, risk_text, int(route.get("pressure_gain", 0)), threat_text.to_upper(), " / ".join(next_stops) if not next_stops.is_empty() else "FINAL", "RECOVERY FOLLOWS" if bool(route.get("settlement_follows", false)) else "NO SETTLEMENT NEXT"])
 	campaign_comparison_panel.visible = state.campaign_active and planning_phase and not contract_offered and state.campaign_event_pending.is_empty() and options.size() > 1 and selected_campaign_node_id.is_empty()
 	campaign_comparison_label.text = "\n".join(comparison_lines)
 	var departure_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
