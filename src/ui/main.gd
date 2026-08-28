@@ -2483,7 +2483,8 @@ func _result_replay_text() -> String:
 		if state.hull_condition < 7:
 			var hull_needed := 7 - state.hull_condition
 			var contact_note := " Also prepare for %s." % ", ".join(remaining_contacts) if not remaining_contacts.is_empty() else ""
-			return "NEXT RUN · HULL FIRST · Reach Meridian Pass with at least %d more hull; reserve a Morrowline service for hull or armor.%s" % [hull_needed, contact_note]
+			var recovery_note := "%d Morrowline service action%s went unused; spend %s on hull or armor." % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s", "it" if state.settlement_actions_remaining == 1 else "one"] if state.settlement_actions_remaining > 0 else "Reserve a Morrowline service for hull or armor."
+			return "NEXT RUN · HULL FIRST · Reach Meridian Pass with at least %d more hull. %s%s" % [hull_needed, recovery_note, contact_note]
 		if not remaining_contacts.is_empty():
 			var counters: Array[String] = []
 			for enemy in state.encounter_enemies:
@@ -2496,7 +2497,8 @@ func _result_replay_text() -> String:
 			return "NEXT RUN · CONTACTS FIRST · Defeat %s before step 6; prepare %s." % [", ".join(remaining_contacts), " or ".join(counters)]
 		return "NEXT RUN · Review the final causal report and preserve the system that produced the scarred result."
 	if state.hull_condition <= 0:
-		return "NEXT RUN · HULL FIRST · Reserve one Morrowline service for the hull, then inspect active targets before spending the final Seal order."
+		var recovery_note := "%d Morrowline service action%s went unused; spend %s on the hull." % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s", "it" if state.settlement_actions_remaining == 1 else "one"] if state.settlement_actions_remaining > 0 else "Reserve one Morrowline service for the hull."
+		return "NEXT RUN · HULL FIRST · %s Then inspect active targets before spending the final Seal order." % recovery_note
 	return "NEXT RUN · MOVEMENT FIRST · %s Preserve one Seal order for threats targeting that system." % String(_movement_failure_diagnosis().get("action", "Keep one engine fuel-connected."))
 
 func _undefeated_final_contacts() -> Array[String]:
@@ -2550,19 +2552,24 @@ func _result_record_text() -> String:
 	var stopping_line := ""
 	if state.final_result == "march_failed" and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
-	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	return "RUN RECORD · %s%s\nPressure: %s %d · Contract: %s · Specialist: %s\nMorrowline recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		" → ".join(path_names),
 		stopping_line,
 		state.campaign_pressure_band().capitalize(),
 		state.campaign_pressure,
 		state.guard_contract_status.replace("_", " ").capitalize(),
 		specialist_name,
+		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
 		int(dependencies.get("ready", 0)),
 		int(dependencies.get("strained", 0)),
 		int(dependencies.get("offline", 0)),
 		_result_system_condition_text()
 	]
+
+func _unused_recovery_text() -> String:
+	var count := state.settlement_actions_remaining
+	return "%d service action%s left unused" % [count, "" if count == 1 else "s"]
 
 func _result_system_condition_text() -> String:
 	var damaged: Array[String] = []

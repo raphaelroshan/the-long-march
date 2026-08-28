@@ -608,11 +608,12 @@ func _run() -> void:
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
 	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
-	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, doctrine, and named operating condition needed to interpret the run")
-	_expect(game.results_replay_label.text.begins_with("NEXT RUN"), "the result should offer a concrete replay goal")
+	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Pressure:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, unused recovery, doctrine, and named operating condition needed to interpret the run")
+	_expect(game.results_replay_label.text.begins_with("NEXT RUN") and game.results_replay_label.text.contains("1 Morrowline service action went unused") and game.results_replay_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
 	var completed_path: Array[String] = game.state.campaign_path.duplicate()
 	var completed_encounters: int = game.state.campaign_encounters_completed
 	var completed_hull: int = game.state.hull_condition
+	var completed_services: int = game.state.settlement_actions_remaining
 	var completed_result: String = game.state.final_result
 	var completed_outcome: String = game.state.encounter_outcome
 	var completed_enemies: Array[Dictionary] = []
@@ -629,13 +630,16 @@ func _run() -> void:
 	_expect(game.results_summary_label.text.contains("1 final contact remained") and not game.results_summary_label.text.contains("convoy contract failed"), "scarred results should name only thresholds that actually determine the outcome")
 	_expect(game.results_replay_label.text.contains("CONTACTS FIRST") and game.results_replay_label.text.contains("Siege Beast") and game.results_replay_label.text.contains("shell cannon and front armor"), "a contact-only scarred result should recommend the authored counter for the surviving threat")
 	game.state.final_result = "decisive_march"
+	game.state.settlement_actions_remaining = 0
 	game.state.guard_contract_status = "declined"
 	for enemy in game.state.encounter_enemies:
 		enemy["defeated"] = true
 		enemy["hp"] = 0
 	game._refresh_ui()
 	_expect(game.results_summary_label.text.contains("travelled without the guard contract") and not game.results_summary_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
+	_expect(game.results_record_label.text.contains("Morrowline recovery: all service actions spent"), "the debrief should distinguish fully used recovery from services left behind")
 	game.state.guard_contract_status = "completed"
+	game.state.settlement_actions_remaining = completed_services
 	game.state.encounter_enemies = completed_enemies
 	game.state.campaign_path.pop_back()
 	game.state.campaign_encounters_completed = 4

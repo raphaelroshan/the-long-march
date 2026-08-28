@@ -651,3 +651,7 @@ The campaign desk now explains the Watch-to-Closing and Closing-to-Break thresho
 ## 2026-08-28 — Route commitment restates doctrine
 
 The compact context beside Commit now names the selected doctrine and its central offensive and defensive tradeoff. Run Hot becomes a danger-colored summary when its predicted heat exceeds the limit. Route selection therefore confirms the road, available intelligence, and standing combat order in one final decision area.
+
+## 2026-08-28 — Debriefs account for unused recovery
+
+The run record now states whether Morrowline's service actions were fully spent or left unused. When a Scarred March or hull failure follows unused recovery, the replay goal points to that exact missed opportunity instead of generically recommending that a future run reserve a service action.
