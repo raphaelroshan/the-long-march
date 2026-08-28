@@ -869,13 +869,19 @@ The Long Road should grow by making the moving fortress more legible, more conse
 
 ### Task 1: Dependency comprehension card
 
+**Status:** Complete.
+
 Improve one existing module inspector so it names the module’s direct dependency, current state, next likely failure, and one legal counter. Add one UI regression and one state-preservation test. This task is the best immediate UX investment because it strengthens every future module.
 
 ### Task 2: Water Condenser teaching slice
 
+**Status:** Complete in `0.3.0-alpha.231`.
+
 Add Water Condenser to the Ashgate or a small isolated test scenario. It should reduce supply drain, add heat, require maintenance, and open one route option. Pair it with one weather or arid-road threat. Test a cool/light layout and a heavy/safe layout rather than declaring one correct answer.
 
 ### Task 3: Mara Flint recovery chain
+
+**Status:** Next recommended slice.
 
 Add Mara through an event at Morrowline or a route-side workshop. Her choices should make the player decide between repair efficiency, refuge capacity, and salvage. End the chain with a later report that names the consequence of the first decision. This provides the first bridge from mechanical event to character arc without requiring a campaign overhaul.
 

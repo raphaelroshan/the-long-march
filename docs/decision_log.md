@@ -770,7 +770,7 @@ The first post-alpha module is a rotatable two-cell interior system with two hea
 
 ## 2026-08-28 — Gated roads remain visible on the campaign map
 
-Dry Cistern Cut is a one-day Storm Front road from Morrowline to Meridian Pass. Its authored cost is two fuel; a Ready Water Condenser both unlocks it and reduces that cost to one. Without the required system, the node remains visible with a distinct `SYSTEM REQUIRED` state and names shared power plus adjacent operational workshop maintenance. This keeps build-gated content legible and aspirational instead of silently removing it from comparison or presenting an unusable Commit action.
+Dry Cistern Cut is a one-day Storm Front road from Morrowline to Meridian Pass. Its authored cost is two fuel; a Ready Water Condenser both unlocks it and reduces that cost to one. The comparison and route intel name the condenser discount separately from risk modifiers. Without the required system, the node remains visible with a distinct `SYSTEM REQUIRED` state and names shared power plus adjacent operational workshop maintenance. This keeps build-gated content legible and aspirational instead of silently removing it from comparison or presenting an unusable Commit action.
 
 ## 2026-08-28 — Storms pressure the system that enabled the shortcut
 

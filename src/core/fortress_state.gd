@@ -442,8 +442,6 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		risk_factors.append("prior choices %s%dpt" % ["+" if route_risk_modifier > 0.0 else "-", roundi(absf(route_risk_modifier) * 100.0)])
 	if signal_discount > 0.0:
 		risk_factors.append("forecasting -%dpt" % roundi(signal_discount * 100.0))
-	if condenser_discount > 0:
-		risk_factors.append("Water Condenser -%d fuel" % condenser_discount)
 	return {
 		"ok": true,
 		"id": node_id,
@@ -486,6 +484,7 @@ func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dict
 			"visibility": String(preview.get("visibility", "unscouted")),
 			"days": int(preview.get("days", 0)),
 			"fuel": int(preview.get("fuel", 0)),
+			"fuel_discount": int(preview.get("fuel_discount", 0)),
 			"risk": float(preview.get("risk", 0.0)),
 			"risk_band": String(preview.get("risk_band", "high")),
 			"pressure_gain": int(preview.get("pressure_gain", 0)),

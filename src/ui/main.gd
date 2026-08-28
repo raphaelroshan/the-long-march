@@ -2041,10 +2041,13 @@ func _refresh_campaign_controls() -> void:
 		var visibility := String(route.get("visibility", "unscouted"))
 		var confidence_text := visibility.to_upper()
 		var risk_text := "RISK UNKNOWN" if visibility == "unscouted" else "%s %.0f%% RISK" % [String(route.get("risk_band", "high")).to_upper(), float(route.get("risk", 0.0)) * 100.0]
+		var fuel_text := "%d FUEL" % int(route.get("fuel", 0))
+		if int(route.get("fuel_discount", 0)) > 0:
+			fuel_text += " · CONDENSER -%d" % int(route.get("fuel_discount", 0))
 		var threats: Array = route.get("threats", [])
 		var threat_text := ", ".join(threats) if not threats.is_empty() else String(route.get("threat_hint", "uncertain pressure"))
 		var next_stops: Array = route.get("next_stops", [])
-		comparison_lines.append("%s · %dD · %d FUEL · %s · %s · PRESSURE +%d\n%s · NEXT %s · %s" % [String(route.get("name", "Road")).to_upper(), int(route.get("days", 0)), int(route.get("fuel", 0)), confidence_text, risk_text, int(route.get("pressure_gain", 0)), threat_text.to_upper(), " / ".join(next_stops) if not next_stops.is_empty() else "FINAL", "RECOVERY FOLLOWS" if bool(route.get("settlement_follows", false)) else "NO SETTLEMENT NEXT"])
+		comparison_lines.append("%s · %dD · %s · %s · %s · PRESSURE +%d\n%s · NEXT %s · %s" % [String(route.get("name", "Road")).to_upper(), int(route.get("days", 0)), fuel_text, confidence_text, risk_text, int(route.get("pressure_gain", 0)), threat_text.to_upper(), " / ".join(next_stops) if not next_stops.is_empty() else "FINAL", "RECOVERY FOLLOWS" if bool(route.get("settlement_follows", false)) else "NO SETTLEMENT NEXT"])
 	campaign_comparison_panel.visible = state.campaign_active and planning_phase and not contract_offered and state.campaign_event_pending.is_empty() and options.size() > 1 and selected_campaign_node_id.is_empty()
 	campaign_comparison_label.text = "\n".join(comparison_lines)
 	var departure_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)

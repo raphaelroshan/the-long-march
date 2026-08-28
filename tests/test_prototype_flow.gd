@@ -212,6 +212,8 @@ func _run() -> void:
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the campaign should render the full authored node graph")
+	var condenser_picker_index := _module_picker_index("water_condenser")
+	_expect(condenser_picker_index >= 0 and game.module_option.get_item_text(condenser_picker_index).contains("STORED"), "the Water Condenser should appear as a finite stored module in the refit picker")
 	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
 	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and campaign_action_row.get_parent() == game.campaign_map.get_parent() and campaign_action_row.get_index() == game.campaign_commit_intel_label.get_index() + 1 and game.campaign_cancel_button.get_parent() == campaign_action_row, "route commitment and its reversible exit should remain grouped in one row directly below the map and compact intel")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
@@ -602,6 +604,7 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(game.campaign_map.status_for("dry_cistern_cut") == "locked", "Morrowline should keep Dry Cistern Cut visible when the Water Condenser requirement is unmet")
 	_expect(game.campaign_map.detail_for("dry_cistern_cut").contains("Ready Water Condenser") and game.campaign_map.detail_for("dry_cistern_cut").contains("Field Workshop"), "the locked dry road should explain the exact system and maintenance requirement")
+	_expect(game.campaign_map._preview_tooltip({"visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.28, "pressure_gain": 1, "threat_hint": "dry weather line", "fuel_discount": 1}).contains("Water Condenser saves 1 fuel"), "an unlocked dry-road preview should explain why its displayed fuel cost is reduced")
 	var saved_pressure: int = game.state.campaign_pressure
 	game.state.campaign_pressure = 5
 	game._refresh_ui()

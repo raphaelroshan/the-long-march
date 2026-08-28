@@ -665,11 +665,12 @@ func _test_water_condenser_route_unlock() -> void:
 	ready_state.choose_guard_contract(false)
 	ready_state.current_location = "morrowline_camp"
 	ready_state.phase = "settlement"
+	_expect(ready_state.total_mass() == 13 and ready_state.total_heat() == LongMarchState.BASE_HEAT_LIMIT, "the cool condenser fixture should remain within both chassis mass and heat limits by giving up weapon coverage")
 	_expect(ready_state.campaign_available_nodes() == ["lower_ash_road", "dry_cistern_cut", "signal_causeway"], "a Ready Water Condenser should add Dry Cistern Cut as a third Morrowline road")
 	var preview := ready_state.campaign_node_preview("dry_cistern_cut")
-	_expect(int(preview.get("fuel", 0)) == 1 and int(preview.get("fuel_discount", 0)) == 1 and "Water Condenser -1 fuel" in preview.get("risk_factors", []), "the Ready Water Condenser should reduce Dry Cistern Cut from two fuel to one and explain the saving")
+	_expect(int(preview.get("fuel", 0)) == 1 and int(preview.get("fuel_discount", 0)) == 1, "the Ready Water Condenser should reduce Dry Cistern Cut from two fuel to one")
 	var comparison := ready_state.campaign_route_comparison()
-	_expect(comparison.size() == 3 and String(comparison[1].get("id", "")) == "dry_cistern_cut" and int(comparison[1].get("fuel", 0)) == 1, "route comparison should include the unlocked dry road and its discounted fuel cost")
+	_expect(comparison.size() == 3 and String(comparison[1].get("id", "")) == "dry_cistern_cut" and int(comparison[1].get("fuel", 0)) == 1 and int(comparison[1].get("fuel_discount", 0)) == 1, "route comparison should include the unlocked dry road and its explicit condenser fuel discount")
 	var fuel_before := ready_state.fuel
 	var departure := ready_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
 	_expect(bool(departure.get("ok", false)) and ready_state.fuel == fuel_before - 1, "committing to Dry Cistern Cut should charge the discounted fuel cost")
@@ -703,11 +704,14 @@ func _test_water_condenser_threat_and_recovery() -> void:
 	_expect(bool(settlement_repair.get("ok", false)) and int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 3, "Morrowline service should fully restore the damaged Water Condenser")
 
 	var armored := LongMarchState.new(1107)
-	armored.place_module("generator_core", Vector2i(0, 0))
-	armored.place_module("crew_quarters", Vector2i(2, 0))
+	armored.place_module("ash_runner_engine", Vector2i(0, 0))
+	armored.place_module("coal_cell", Vector2i(1, 0))
+	armored.place_module("generator_core", Vector2i(2, 0))
+	armored.place_module("crew_quarters", Vector2i(2, 2))
 	armored.place_module("field_workshop", Vector2i(2, 1))
 	armored.place_module("water_condenser", Vector2i(4, 1))
-	armored.place_module("front_armor_plate", Vector2i(4, 2))
+	armored.place_module("side_armor_skirt", Vector2i(5, 2))
+	_expect(armored.total_mass() == LongMarchState.BASE_MASS_LIMIT and armored.total_heat() > LongMarchState.BASE_HEAT_LIMIT and armored.dependency_status_at(Vector2i(4, 1)).state == "ready", "the heavy condenser fixture should be legal and protected while visibly paying the maximum-mass and overheat costs")
 	var armored_preview := armored.encounter_enemy_impact_preview({"id": "storm_front", "arrived": true, "defeated": false, "target": "water_condenser", "damage_bonus": 0})
 	_expect(int(armored_preview.get("damage", 0)) == 1 and int(armored_preview.get("armor_absorbed", 0)) == 1, "adjacent armor should absorb one point of the condenser's Storm Front hit")
 

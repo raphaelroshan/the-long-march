@@ -4,17 +4,23 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. For the current `0.3.0-alpha.223` baseline, begin with the following bounded feeds:
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.231`; Feeds A and B are complete, so begin new feature work with Feed C.
 
 ### Current Feed A — fortress comprehension
+
+**Status:** Complete through dependency cards, route comparison, and deterministic target explanations.
 
 > Starting from the current Ashgate Lowlands implementation, improve one dependency or route decision’s presentation without changing simulation math. Add a visible inspector or causal explanation, preserve the command boundary, add UI/state assertions, run the full verification script, and capture the affected normal-resolution state. Do not add new content.
 
 ### Current Feed B — Water Condenser teaching slice
 
+**Status:** Complete in `0.3.0-alpha.231`.
+
 > Implement Water Condenser as a complete content slice. Add its stable definition, shape and placement constraints, heat/supply dependency, one visible vulnerability, two counters, one teaching encounter, recovery behavior, save/replay tests, content validation, UI inspector copy, and visual capture. Do not add a generic utility module or a new region in the same change.
 
 ### Current Feed C — specialist event chain
+
+**Status:** Next recommended slice.
 
 > Add Mara Flint or Sela Vonn through a three-event authored chain: meeting, practical repair-versus-refuge or schedule-versus-reliability choice, and later consequence. Use explicit typed commands and stable IDs. Add decline, scarcity, active-event save/load, deterministic replay, UI event-card smoke, and a causal debrief line. Do not create a dialogue-only reputation system.
 
