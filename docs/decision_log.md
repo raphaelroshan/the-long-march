@@ -539,3 +539,7 @@ The persistent Morrowline recovery receipt now derives its action count from the
 ## 2026-08-28 — Route review supersedes the previous encounter
 
 An after-action receipt remains above the fold while the player is deciding what to do next, including after a forced retreat. Once a new route is deliberately selected, the visible receipt switches to that route’s review and cancellation instructions; cancelling the preview restores the prior after-action. This keeps history available without letting it mask the current irreversible decision.
+
+## 2026-08-28 — Authored events own the blocking instruction
+
+When a road event prevents departure, the above-fold receipt now names that event and asks for a response instead of continuing to headline the encounter that has already ended. The exact event consequence still replaces it after the choice, preserving the decision-to-result chain without letting historical combat copy mask the current blocker.

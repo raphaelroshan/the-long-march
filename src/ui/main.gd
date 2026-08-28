@@ -2238,6 +2238,10 @@ func _refresh_ui() -> void:
 	elif not selected_campaign_node_id.is_empty():
 		encounter_label.text = "ROUTE READY FOR REVIEW\n%s" % selected_instruction
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
+	elif not state.campaign_event_pending.is_empty():
+		var pending_event := state.campaign_event_details()
+		encounter_label.text = "DECISION REQUIRED · %s\nChoose one response below before the fortress can depart." % String(pending_event.get("title", "Local event")).to_upper()
+		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
 	elif state.phase == "settlement" and state.encounter_outcome != "forced_retreat":
 		encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
 		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
@@ -2248,8 +2252,6 @@ func _refresh_ui() -> void:
 	else:
 		if state.guard_contract_status == "offered":
 			encounter_label.text = "ASHGATE PREPARATION\nAnswer the convoy contract to open the first roads."
-		elif not state.campaign_event_pending.is_empty():
-			encounter_label.text = "LOCAL DECISION\nResolve the current situation before choosing the next road."
 		elif state.phase == "settlement":
 			encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
 		else:
