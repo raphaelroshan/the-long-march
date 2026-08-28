@@ -145,8 +145,8 @@
   "implemented_journey_slice": {
     "id": "ashgate_lowlands_alpha",
     "status": "vertical_slice",
-    "nodes": ["ashgate_depot", "rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "signal_causeway", "meridian_pass"],
-    "routes": ["rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "signal_causeway", "meridian_pass"],
+    "nodes": ["ashgate_depot", "rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "dry_cistern_cut", "signal_causeway", "meridian_pass"],
+    "routes": ["rill_crossing", "soot_orchard", "broken_relay", "red_wheel_toll_bridge", "morrowline_camp", "lower_ash_road", "dry_cistern_cut", "signal_causeway", "meridian_pass"],
     "encounter_steps": 6,
     "primary_units": ["steam_lance_engine", "shell_cannon", "field_workshop", "signal_coil"],
     "enemy_families": ["road_raiders", "climbers", "burrowers", "siege_beast"],
@@ -161,6 +161,7 @@
       "red_wheel_toll_bridge": ["road_raiders", "climbers"],
       "morrowline_camp": ["road_raiders"],
       "lower_ash_road": ["burrowers"],
+      "dry_cistern_cut": ["storm_front"],
       "signal_causeway": ["storm_front", "climbers"]
     },
     "contract": "morrowline_parts_guard",

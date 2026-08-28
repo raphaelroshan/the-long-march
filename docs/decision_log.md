@@ -767,3 +767,7 @@ Each available-road summary now pairs its numeric risk with the same low, guarde
 ## 2026-08-28 — Water Condenser is a maintained sustain system
 
 The first post-alpha module is a rotatable two-cell interior system with two heat, one power draw, and three durability. Shared power keeps the hardware operational, while an adjacent operational Field Workshop is the soft maintenance dependency that moves it from Strained to Ready. Only Ready state may unlock and discount the Dry Cistern Cut, so layout, workshop staffing, power, damage, and sealing can all remove the benefit through the existing dependency model. The module uses a stable `water_condenser` ID and the existing finite inventory and save schema rather than adding a separate resource or persistence path.
+
+## 2026-08-28 — Gated roads remain visible on the campaign map
+
+Dry Cistern Cut is a one-day Storm Front road from Morrowline to Meridian Pass. Its authored cost is two fuel; a Ready Water Condenser both unlocks it and reduces that cost to one. Without the required system, the node remains visible with a distinct `SYSTEM REQUIRED` state and names shared power plus adjacent operational workshop maintenance. This keeps build-gated content legible and aspirational instead of silently removing it from comparison or presenting an unusable Commit action.

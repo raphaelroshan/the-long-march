@@ -211,7 +211,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
-	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
+	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the campaign should render the full authored node graph")
 	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
 	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and campaign_action_row.get_parent() == game.campaign_map.get_parent() and campaign_action_row.get_index() == game.campaign_commit_intel_label.get_index() + 1 and game.campaign_cancel_button.get_parent() == campaign_action_row, "route commitment and its reversible exit should remain grouped in one row directly below the map and compact intel")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
@@ -600,6 +600,8 @@ func _run() -> void:
 	game.state.hull_condition = recovery_hull
 	game.state.settlement_actions_remaining = recovery_actions
 	game._refresh_ui()
+	_expect(game.campaign_map.status_for("dry_cistern_cut") == "locked", "Morrowline should keep Dry Cistern Cut visible when the Water Condenser requirement is unmet")
+	_expect(game.campaign_map.detail_for("dry_cistern_cut").contains("Ready Water Condenser") and game.campaign_map.detail_for("dry_cistern_cut").contains("Field Workshop"), "the locked dry road should explain the exact system and maintenance requirement")
 	var saved_pressure: int = game.state.campaign_pressure
 	game.state.campaign_pressure = 5
 	game._refresh_ui()

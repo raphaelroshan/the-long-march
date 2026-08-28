@@ -25,6 +25,7 @@ func _init() -> void:
 	_test_campaign_graph_and_visibility()
 	_test_campaign_contract_and_specialist()
 	_test_campaign_events_and_closure()
+	_test_water_condenser_route_unlock()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -640,6 +641,38 @@ func _test_campaign_events_and_closure() -> void:
 	state.specialist_id = "iven_pell"
 	_expect(not state.campaign_node_closed("signal_causeway"), "Iven should keep the Signal Causeway readable at Break pressure")
 	_expect(state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "reliable forecasting should restore both Morrowline departures")
+
+func _test_water_condenser_route_unlock() -> void:
+	var locked_state := LongMarchState.new(1107)
+	locked_state.start_campaign()
+	locked_state.choose_guard_contract(false)
+	locked_state.current_location = "morrowline_camp"
+	locked_state.phase = "settlement"
+	_expect(locked_state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "Dry Cistern Cut should stay unavailable without a Ready Water Condenser")
+	_expect(String(locked_state.campaign_node_lock_reason("dry_cistern_cut")).contains("Ready Water Condenser"), "the locked dry road should name its system requirement")
+	var blocked_departure := locked_state.begin_campaign_route("dry_cistern_cut")
+	_expect(not bool(blocked_departure.get("ok", false)) and String(blocked_departure.get("reason", "")).contains("Field Workshop"), "attempting the locked dry road should return its actionable maintenance requirement")
+
+	var ready_state := LongMarchState.new(1107)
+	ready_state.place_module("steam_lance_engine", Vector2i(0, 0))
+	ready_state.place_module("coal_cell", Vector2i(0, 1))
+	ready_state.place_module("generator_core", Vector2i(2, 0))
+	ready_state.place_module("crew_quarters", Vector2i(2, 2))
+	ready_state.place_module("field_workshop", Vector2i(2, 1))
+	ready_state.place_module("water_condenser", Vector2i(4, 1))
+	ready_state.start_campaign()
+	ready_state.choose_guard_contract(false)
+	ready_state.current_location = "morrowline_camp"
+	ready_state.phase = "settlement"
+	_expect(ready_state.campaign_available_nodes() == ["lower_ash_road", "dry_cistern_cut", "signal_causeway"], "a Ready Water Condenser should add Dry Cistern Cut as a third Morrowline road")
+	var preview := ready_state.campaign_node_preview("dry_cistern_cut")
+	_expect(int(preview.get("fuel", 0)) == 1 and int(preview.get("fuel_discount", 0)) == 1 and "Water Condenser -1 fuel" in preview.get("risk_factors", []), "the Ready Water Condenser should reduce Dry Cistern Cut from two fuel to one and explain the saving")
+	var comparison := ready_state.campaign_route_comparison()
+	_expect(comparison.size() == 3 and String(comparison[1].get("id", "")) == "dry_cistern_cut" and int(comparison[1].get("fuel", 0)) == 1, "route comparison should include the unlocked dry road and its discounted fuel cost")
+	var fuel_before := ready_state.fuel
+	var departure := ready_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
+	_expect(bool(departure.get("ok", false)) and ready_state.fuel == fuel_before - 1, "committing to Dry Cistern Cut should charge the discounted fuel cost")
+	_expect(ready_state.encounter_enemies.size() == 1 and String(ready_state.encounter_enemies[0].get("id", "")) == "storm_front", "Dry Cistern Cut should begin its authored Storm Front encounter")
 
 func _test_complete_five_encounter_campaign() -> void:
 	var state := LongMarchState.new(1107)

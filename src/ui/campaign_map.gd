@@ -5,7 +5,7 @@ signal node_selected(node_id: String)
 signal route_committed(node_id: String)
 signal node_inspected(node_id: String, detail: String)
 
-const MAP_SIZE := Vector2(320, 292)
+const MAP_SIZE := Vector2(320, 340)
 const NODE_SIZE := Vector2(132, 40)
 const NODE_ORDER := [
 	"ashgate_depot",
@@ -15,6 +15,7 @@ const NODE_ORDER := [
 	"red_wheel_toll_bridge",
 	"morrowline_camp",
 	"lower_ash_road",
+	"dry_cistern_cut",
 	"signal_causeway",
 	"meridian_pass"
 ]
@@ -27,7 +28,8 @@ const NODE_POSITIONS := {
 	"morrowline_camp": Vector2(94, 152),
 	"lower_ash_road": Vector2(4, 200),
 	"signal_causeway": Vector2(184, 200),
-	"meridian_pass": Vector2(94, 248)
+	"dry_cistern_cut": Vector2(94, 248),
+	"meridian_pass": Vector2(94, 296)
 }
 const SHORT_NAMES := {
 	"ashgate_depot": "Ashgate Depot",
@@ -37,6 +39,7 @@ const SHORT_NAMES := {
 	"red_wheel_toll_bridge": "Red Wheel Toll",
 	"morrowline_camp": "Morrowline Camp",
 	"lower_ash_road": "Lower Ash Road",
+	"dry_cistern_cut": "Dry Cistern Cut",
 	"signal_causeway": "Signal Causeway",
 	"meridian_pass": "Meridian Pass"
 }
@@ -49,6 +52,7 @@ var current_node: String = ""
 var secured_path: Array[String] = []
 var available_nodes: Array[String] = []
 var closed_nodes: Array[String] = []
+var locked_reasons: Dictionary = {}
 var outgoing_nodes: Array[String] = []
 var current_previews: Dictionary = {}
 var interaction_is_blocked: bool = false
@@ -141,6 +145,10 @@ func _apply_button_style(button: Button, status: String) -> void:
 			fill = Color("#482929")
 			border = Color("#e06f61")
 			text_color = Color("#ffd4cd")
+		"locked":
+			fill = Color("#3b3428")
+			border = Color("#d8a650")
+			text_color = Color("#f1ddb5")
 		"bypassed":
 			fill = Color("#28231f")
 			border = Color("#66584d")
@@ -192,7 +200,7 @@ func intel_tone_for(node_id: String) -> String:
 	var status := status_for(node_id)
 	if status == "closed":
 		return "danger"
-	if status == "blocked":
+	if status in ["blocked", "locked"]:
 		return "warning"
 	if status in ["current", "secured"]:
 		return "safe"
@@ -217,6 +225,8 @@ func _node_state_text(node_id: String, status: String) -> String:
 		return "%s · %s" % ["SELECTED" if status == "selected" else visibility, risk_text]
 	if status == "blocked":
 		return "DECISION REQUIRED"
+	if status == "locked":
+		return "SYSTEM REQUIRED"
 	return status.to_upper()
 
 func _show_node_detail(node_id: String) -> void:
@@ -248,6 +258,8 @@ func detail_for(node_id: String) -> String:
 		return "SELECTED — " + _preview_tooltip(current_previews.get(node_id, {}), false)
 	if status == "closed":
 		return "%s is closed at Break pressure. Ready forecasting gear or Iven Pell can reopen it." % String(SHORT_NAMES.get(node_id, node_id))
+	if status == "locked":
+		return String(locked_reasons.get(node_id, "A required fortress system is not Ready."))
 	if status == "blocked":
 		return "Resolve the current contract or local decision before taking this road."
 	if status == "current":
@@ -264,6 +276,7 @@ func configure(view: Dictionary) -> void:
 	secured_path = _to_string_array(view.get("secured_path", []))
 	available_nodes = _to_string_array(view.get("available_nodes", []))
 	closed_nodes = _to_string_array(view.get("closed_nodes", []))
+	locked_reasons = view.get("locked_reasons", {}).duplicate(true)
 	outgoing_nodes = _to_string_array(view.get("outgoing_nodes", []))
 	selected_node = String(view.get("selected_node", ""))
 	current_fuel = int(view.get("current_fuel", 0))
@@ -285,6 +298,8 @@ func configure(view: Dictionary) -> void:
 			status = "secured"
 		elif node_id in closed_nodes:
 			status = "closed"
+		elif locked_reasons.has(node_id):
+			status = "locked"
 		elif interaction_is_blocked and node_id in outgoing_nodes:
 			status = "blocked"
 		elif node_id == selected_node and node_id in available_nodes:
@@ -299,6 +314,8 @@ func configure(view: Dictionary) -> void:
 			button.tooltip_text = _preview_tooltip(current_previews.get(node_id, {}))
 		elif status == "closed":
 			button.tooltip_text = "Closed by Break pressure. Ready forecasting gear or Iven Pell can reopen this road."
+		elif status == "locked":
+			button.tooltip_text = String(locked_reasons.get(node_id, "A required fortress system is not Ready."))
 		elif status == "blocked":
 			button.tooltip_text = "Resolve the current contract or local decision before departing."
 		elif status == "current":
@@ -395,6 +412,9 @@ func _draw() -> void:
 				width = 4.0
 			elif source == current_node and target in closed_nodes:
 				color = Color("#e06f61")
+				width = 3.0
+			elif source == current_node and locked_reasons.has(target):
+				color = Color("#d8a650")
 				width = 3.0
 			elif source == current_node and target in available_nodes:
 				if target == selected_node:

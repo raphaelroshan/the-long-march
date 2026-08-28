@@ -40,6 +40,7 @@ const JOURNEY_NODES := {
 	"broken_relay": {"name": "Broken Relay", "kind": "relay", "description": "A dead signal mast watched by Climbers and one stubborn operator."},
 	"red_wheel_toll_bridge": {"name": "Red Wheel Toll Bridge", "kind": "ambush", "description": "A fortified crossing where the blockade has learned the fortress silhouette."},
 	"lower_ash_road": {"name": "Lower Ash Road", "kind": "hazard", "description": "A buried service road where Burrowers test the lower hull."},
+	"dry_cistern_cut": {"name": "Dry Cistern Cut", "kind": "hazard", "description": "A short cistern road where a maintained condenser can recover enough water to spare fuel."},
 	"signal_causeway": {"name": "Signal Causeway", "kind": "hazard", "description": "An exposed relay causeway caught inside a moving storm front."}
 }
 const JOURNEY_ENCOUNTERS := {
@@ -62,6 +63,7 @@ const CAMPAIGN_NODES := {
 	"red_wheel_toll_bridge": {"name": "Red Wheel Toll Bridge", "type": "ambush", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.36, "pressure": 2, "reward": 24, "threat_hint": "organized blockade", "encounter": ["road_raiders", "climbers"]},
 	"morrowline_camp": {"name": "Morrowline Camp", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.28, "pressure": 1, "reward": 16, "threat_hint": "raiders on the convoy approach", "encounter": ["road_raiders"]},
 	"lower_ash_road": {"name": "Lower Ash Road", "type": "hazard", "visibility": "forecast", "days": 2, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 24, "mass_sensitive": true, "threat_hint": "movement below the road", "encounter": ["burrowers"]},
+	"dry_cistern_cut": {"name": "Dry Cistern Cut", "type": "hazard", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.28, "pressure": 1, "reward": 18, "threat_hint": "dry weather line", "encounter": ["storm_front"]},
 	"signal_causeway": {"name": "Signal Causeway", "type": "hazard", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.43, "pressure": 2, "reward": 20, "threat_hint": "weather and exposed approaches", "encounter": ["storm_front", "climbers"]},
 	"meridian_pass": {"name": "Meridian Pass", "type": "boss", "visibility": "known", "days": 2, "fuel": 2, "risk": 0.58, "pressure": 2, "reward": 40, "threat_hint": "Siege Beast", "encounter": ["siege_beast"]}
 }
@@ -71,8 +73,9 @@ const CAMPAIGN_EDGES := {
 	"soot_orchard": ["broken_relay", "red_wheel_toll_bridge"],
 	"broken_relay": ["morrowline_camp"],
 	"red_wheel_toll_bridge": ["morrowline_camp"],
-	"morrowline_camp": ["lower_ash_road", "signal_causeway"],
+	"morrowline_camp": ["lower_ash_road", "dry_cistern_cut", "signal_causeway"],
 	"lower_ash_road": ["meridian_pass"],
+	"dry_cistern_cut": ["meridian_pass"],
 	"signal_causeway": ["meridian_pass"]
 }
 const MODULE_DEFS := {
@@ -375,13 +378,18 @@ func campaign_node_closed(node_id: String) -> bool:
 		return true
 	return false
 
+func campaign_node_lock_reason(node_id: String) -> String:
+	if node_id == "dry_cistern_cut" and not _has_ready_tag("water"):
+		return "Requires a Ready Water Condenser: shared power and an adjacent operational Field Workshop."
+	return ""
+
 func campaign_available_nodes() -> Array[String]:
 	var result: Array[String] = []
 	if not campaign_active or encounter_active or not campaign_event_pending.is_empty() or phase == "results":
 		return result
 	for raw_node_id in CAMPAIGN_EDGES.get(current_location, []):
 		var node_id := String(raw_node_id)
-		if not campaign_node_closed(node_id):
+		if not campaign_node_closed(node_id) and campaign_node_lock_reason(node_id).is_empty():
 			result.append(node_id)
 	return result
 
@@ -390,7 +398,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	if node.is_empty():
 		return {"ok": false, "reason": "unknown campaign node"}
 	var mass_penalty := 1 if bool(node.get("mass_sensitive", false)) and total_mass() > BASE_MASS_LIMIT - 2 else 0
-	var fuel_cost := int(node.get("fuel", 0)) + mass_penalty
+	var condenser_discount := 1 if node_id == "dry_cistern_cut" and _has_ready_tag("water") else 0
+	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount)
 	var predicted_heat := maxi(0, total_heat() + (2 if doctrine == "run_hot" else 0))
 	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
 	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
@@ -433,6 +442,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		risk_factors.append("prior choices %s%dpt" % ["+" if route_risk_modifier > 0.0 else "-", roundi(absf(route_risk_modifier) * 100.0)])
 	if signal_discount > 0.0:
 		risk_factors.append("forecasting -%dpt" % roundi(signal_discount * 100.0))
+	if condenser_discount > 0:
+		risk_factors.append("Water Condenser -%d fuel" % condenser_discount)
 	return {
 		"ok": true,
 		"id": node_id,
@@ -441,6 +452,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"visibility": visibility,
 		"days": int(node.get("days", 0)),
 		"fuel": fuel_cost,
+		"fuel_discount": condenser_discount,
 		"risk": risk,
 		"risk_band": "low" if risk <= 0.18 else ("guarded" if risk <= 0.32 else "high"),
 		"risk_factors": risk_factors,
@@ -452,7 +464,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"threats": threat_names,
 		"counter_hints": counter_hints,
 		"ready_counter_names": ready_counter_names,
-		"closed": campaign_node_closed(node_id)
+		"closed": campaign_node_closed(node_id),
+		"locked_reason": campaign_node_lock_reason(node_id)
 	}
 
 func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dictionary]:
@@ -602,6 +615,9 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 		return {"ok": false, "reason": "answer the Ashgate guard contract before departure"}
 	if not campaign_event_pending.is_empty():
 		return {"ok": false, "reason": "resolve the current node decision before leaving"}
+	var lock_reason := campaign_node_lock_reason(node_id)
+	if not lock_reason.is_empty() and node_id in CAMPAIGN_EDGES.get(current_location, []):
+		return {"ok": false, "reason": lock_reason}
 	if node_id not in campaign_available_nodes():
 		return {"ok": false, "reason": "that node is not reachable from the current position"}
 	var preview := campaign_node_preview(node_id, doctrine)

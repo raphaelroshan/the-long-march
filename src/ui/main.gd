@@ -2050,17 +2050,22 @@ func _refresh_campaign_controls() -> void:
 	var departure_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 	var outgoing_nodes: Array[String] = []
 	var closed_nodes: Array[String] = []
+	var locked_reasons: Dictionary = {}
 	for raw_node_id in LongMarchState.CAMPAIGN_EDGES.get(state.current_location, []):
 		var node_id := String(raw_node_id)
 		outgoing_nodes.append(node_id)
 		if state.campaign_node_closed(node_id):
 			closed_nodes.append(node_id)
+		var lock_reason := state.campaign_node_lock_reason(node_id)
+		if not lock_reason.is_empty():
+			locked_reasons[node_id] = lock_reason
 	campaign_map.configure({
 		"edges": LongMarchState.CAMPAIGN_EDGES,
 		"current_node": state.current_location,
 		"secured_path": state.campaign_path,
 		"available_nodes": options,
 		"closed_nodes": closed_nodes,
+		"locked_reasons": locked_reasons,
 		"outgoing_nodes": outgoing_nodes,
 		"selected_node": selected_campaign_node_id,
 		"previews": previews,
