@@ -121,6 +121,7 @@ var campaign_progress_bar: ProgressBar
 var how_to_play_button: Button
 var feedback_button: Button
 var results_group: VBoxContainer
+var results_heading: Label
 var results_summary_label: Label
 var results_record_label: Label
 var results_replay_label: Label
@@ -748,8 +749,8 @@ func _build_ui() -> void:
 	results_group = VBoxContainer.new()
 	results_group.add_theme_constant_override("separation", 8)
 	controls.add_child(results_group)
-	var results_heading := Label.new()
-	results_heading.text = "RUN COMPLETE"
+	results_heading = Label.new()
+	results_heading.text = "MARCH DEBRIEF"
 	results_heading.add_theme_font_size_override("font_size", 17)
 	results_heading.add_theme_color_override("font_color", Color("#e8c58e"))
 	results_group.add_child(results_heading)
@@ -2272,7 +2273,7 @@ func _refresh_ui() -> void:
 
 func _current_guidance() -> String:
 	if state.phase == "results":
-		return "RUN COMPLETE · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
+		return "DEBRIEF · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
 	if state.phase in ["battle", "final_battle"]:
 		var active_targets: Array[String] = []
 		var nearest_enemy := ""

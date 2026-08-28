@@ -527,3 +527,7 @@ The combat panel uses Contact Approaching until an undefeated enemy has actually
 ## 2026-08-28 — Route cancellation is visible without hover
 
 Selecting a route now keeps `B/Esc cancels selection` in both the route-review receipt and the state-derived current order, including when departure is blocked. Controller and keyboard players can therefore discover the reversible preview boundary from visible text instead of relying on the Pause button tooltip.
+
+## 2026-08-28 — Every terminal outcome opens a debrief
+
+The result frame and current order use March Debrief and Debrief rather than the success-coded Run Complete heading. Decisive, scarred, and failed outcomes still state their specific classification and cause inside that neutral frame, so a terminal loss is reviewed rather than accidentally congratulated.
