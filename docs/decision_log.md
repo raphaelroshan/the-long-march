@@ -883,3 +883,7 @@ Pause now exposes a read-only March Record assembled from the authoritative live
 ## 2026-08-28 — Current Order can return focus but cannot act
 
 The Run Flow heading carries a compact phase-aware jump that delegates to the same `focus_current_action()` resolver used after transitions. Its label names the destination class, while activation only focuses and scrolls to the existing authoritative control. Contract, route, event, battle, recovery, and debrief choices therefore retain their original confirmation and state-change paths. The adjacent route cancel copy is shortened at 110% text so the reversible pointer action remains visible beside Commit.
+
+## 2026-08-28 — Reference help opens where the player is working
+
+Reopening Field Briefing now selects the topic implied by the live contract, road, battle, recovery, Mara, or archive state instead of returning to Command unconditionally. The seven-item rail is made of real input controls, so a player can inspect any other topic directly; only visited topics receive a completion mark. First-run guidance still starts at the authored opening and focuses Next. This keeps reference help fast without introducing a second tutorial state machine, changing briefing persistence, or mutating the deterministic run.

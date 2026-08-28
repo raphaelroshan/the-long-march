@@ -271,9 +271,9 @@ func _run() -> void:
 	app.pause_briefing_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.onboarding_overlay.visible and app.game_view.onboarding_title_label.text == "Your job is delivery" and app.game_view.onboarding_body_label.text.contains("Dry Archive") and app.game_view.onboarding_progress_label.text.begins_with("Veyru briefing"), "Veyru's reachable field briefing should open with its own objective and chapter label")
-	_expect(app.game_view.onboarding_step_labels[2].text.contains("SUSTAIN") and app.game_view.onboarding_step_labels[4].text.contains("CARRIER") and app.game_view.onboarding_step_labels[5].text.contains("WATER"), "Veyru's briefing rail should teach its actual sustain, carrier, and water decisions")
-	app.game_view.onboarding_step = app.game_view.VEYRU_ONBOARDING_STEPS.size() - 1
-	app.game_view._refresh_onboarding()
+	_expect(app.game_view.onboarding_step_buttons[2].text.contains("SUSTAIN") and app.game_view.onboarding_step_buttons[4].text.contains("CARRIER") and app.game_view.onboarding_step_buttons[5].text.contains("WATER"), "Veyru's briefing rail should teach its actual sustain, carrier, and water decisions")
+	app.game_view.onboarding_step_buttons[app.game_view.VEYRU_ONBOARDING_STEPS.size() - 1].pressed.emit()
+	await process_frame
 	_expect(app.game_view.onboarding_title_label.text == "Choose what the archive says" and app.game_view.onboarding_body_label.text.contains("broadcasting") and app.game_view.onboarding_next_button.text == "RETURN TO MARCH", "Veyru's final briefing card should explain the archive commitment and return to the current run")
 	app.game_view._finish_onboarding(true)
 	await process_frame
@@ -488,9 +488,9 @@ func _run() -> void:
 	app.pause_briefing_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.onboarding_overlay.visible, "the pause menu should reopen the field briefing without leaving the run")
-	_expect(app.game_view.onboarding_skip_button.text == "CLOSE BRIEFING" and app.game_view.onboarding_progress_label.text.contains("Esc closes"), "a reopened briefing should use reference-mode close language")
-	app.game_view.onboarding_step = app.game_view.ONBOARDING_STEPS.size() - 1
-	app.game_view._refresh_onboarding()
+	_expect(app.game_view.onboarding_step == 0 and app.game_view.onboarding_skip_button.text == "CLOSE BRIEFING" and app.game_view.onboarding_progress_label.text.contains("Esc closes"), "an opening-contract reference should reopen at Command with reference-mode close language")
+	app.game_view.onboarding_step_buttons[app.game_view.ONBOARDING_STEPS.size() - 1].pressed.emit()
+	await process_frame
 	_expect(app.game_view.onboarding_next_button.text == "RETURN TO MARCH", "the final reopened briefing step should return to the active march")
 	app.game_view._finish_onboarding(true)
 	await process_frame

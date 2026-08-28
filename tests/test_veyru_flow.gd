@@ -83,6 +83,13 @@ func _run() -> void:
 	_expect(game.state.phase == "battle" and game.combat_panel.visible and _combat_names_include("Flood Surge") and not _combat_names_include("Climber"), "Pump Gallery should show Flood Surge alone in the combat UI")
 	await _finish_battle()
 	_expect(game.state.campaign_event_pending == "drain_pumps" and game.campaign_event_title.text == "THE GALLERY STILL TURNS", "Pump Gallery should hand off to the authored drain decision")
+	var pump_briefing_state: Dictionary = game.state.serialize()
+	game._show_onboarding(true)
+	await process_frame
+	_expect(game.onboarding_step == 5 and game.onboarding_title_label.text == "Read the rising water", "a Veyru road decision should reopen Field Briefing at its water-and-route topic")
+	game._finish_onboarding(true)
+	await _settle_ui()
+	_expect(game.state.serialize() == pump_briefing_state, "contextual Veyru route guidance should preserve the active decision")
 	await _press_event("drain_gallery")
 
 	await _press_route("veyru_evacuation_camp")
@@ -104,6 +111,11 @@ func _run() -> void:
 	await _press_route("dry_archive_gate")
 	await _finish_battle()
 	_expect(game.state.campaign_event_pending == "archive_broadcast" and game.campaign_event_title.text == "WHAT THE ARCHIVE BROADCASTS", "the fourth encounter should present the final archive commitment in the shared event card")
+	game._show_onboarding(true)
+	await process_frame
+	_expect(game.onboarding_step == 6 and game.onboarding_title_label.text == "Choose what the archive says", "the archive commitment should reopen Field Briefing at its authored finale topic")
+	game._finish_onboarding(true)
+	await _settle_ui()
 	_expect(game.campaign_event_buttons[0].text.contains("Climbers join") and game.campaign_event_buttons[1].text.contains("Carrier damage -1"), "the archive commitment UI should state both mechanical consequences before selection")
 	var decision_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(decision_focus in game.campaign_event_buttons and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "the final commitment should focus its event card with both choices visible")

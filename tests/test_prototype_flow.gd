@@ -134,11 +134,18 @@ func _run() -> void:
 	_expect(combat_receipt.contains("Lower Hull Plate absorbs") and combat_receipt.contains("Burrower hits Coal Cell") and combat_receipt.contains("March Engine is now offline") and combat_receipt.contains("Field Workshop restores"), "the combat receipt should preserve the latest impact from mitigation through dependency failure and repair")
 	_expect(not combat_receipt.contains("Shell Cannon fires"), "the combat receipt should prefer the latest incoming cause-and-effect chain over older outgoing detail")
 	_expect(game.onboarding_overlay.visible, "a first run should open the Marchmaster briefing")
-	_expect(game.ONBOARDING_STEPS.size() == 7 and game.onboarding_step_panels.size() == 7, "the guided briefing should teach each core dependency and journey decision in a separate visible stage")
+	_expect(game.ONBOARDING_STEPS.size() == 7 and game.onboarding_step_buttons.size() == 7, "the guided briefing should teach each core dependency and journey decision through seven directly reachable topics")
 	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_left) == game.onboarding_skip_button, "the first briefing step should route left around its disabled Previous action")
-	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_next) == game.onboarding_skip_button and game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_top) == game.onboarding_next_button, "the briefing should trap Tab and vertical focus inside its actions")
+	_expect(game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_next) == game.onboarding_step_buttons[0] and game.onboarding_next_button.get_node_or_null(game.onboarding_next_button.focus_neighbor_top) == game.onboarding_step_buttons[0], "the briefing should trap Tab and vertical focus while exposing its topic rail")
 	_expect(game.onboarding_progress_label.text.contains("D-pad") and game.onboarding_progress_label.text.contains("A / Enter"), "the briefing should name controller and keyboard navigation together")
 	_expect(game.onboarding_action_label.text.begins_with("FIRST ACTION"), "each briefing page should name a concrete player action")
+	var briefing_state_before_topics: Dictionary = game.state.serialize()
+	game.onboarding_step_buttons[5].pressed.emit()
+	await process_frame
+	_expect(game.onboarding_step == 5 and game.onboarding_title_label.text == "Choose, review, then commit" and game.onboarding_step_buttons[5].has_focus(), "the briefing topic rail should jump directly to route guidance and retain controller focus")
+	_expect(game.state.serialize() == briefing_state_before_topics, "browsing briefing topics should not mutate deterministic campaign state")
+	game.onboarding_step_buttons[0].pressed.emit()
+	await process_frame
 	_expect(game.guidance_label.text.begins_with("CURRENT ORDER") and game.guidance_label.text.contains("convoy"), "the opening objective should identify the contract decision")
 	_expect(game.encounter_label.text.begins_with("ASHGATE LOWLANDS PREPARATION") and not game.encounter_label.text.contains("NO ENCOUNTER"), "the opening status should frame preparation as progress rather than an empty state")
 	_expect(game.how_to_play_button.text == "OPEN FIELD BRIEFING", "the live-stage help action should use the same player-facing name as the pause menu")
@@ -274,6 +281,14 @@ func _run() -> void:
 	_expect(game.event_label.text.begins_with("CONTRACT DECISION") and game.encounter_label.text.begins_with("CONTRACT DECISION") and game.encounter_label.text.contains("each enemy") and game.encounter_label.text.contains("30 Ashmarks") and game.encounter_label.text.contains("2 trust"), "the accepted contract should leave an exact above-fold consequence receipt after its choice cards disappear")
 	_expect(game.guidance_label.text.contains("Select one cyan route"), "the objective should advance immediately after the contract is answered")
 	_expect(game.current_order_button.text == "GO TO ROUTES ↓", "the jump action should advance from contract to the available route choices")
+	var route_briefing_state: Dictionary = game.state.serialize()
+	game._show_onboarding(true)
+	await process_frame
+	_expect(game.onboarding_step == 5 and game.onboarding_title_label.text == "Choose, review, then commit" and game.onboarding_step_buttons[5].text.begins_with("●"), "reopening Field Briefing during route planning should land on the active road topic")
+	game._finish_onboarding(true)
+	await process_frame
+	await process_frame
+	_expect(game.state.serialize() == route_briefing_state, "opening and closing contextual route guidance should preserve the live campaign state")
 	_expect(game.current_run_flow_step == 1 and game.run_flow_labels[0].text.begins_with("✓"), "answering the contract should advance the tracker to the Lowlands roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
 	_expect(game.campaign_comparison_panel.visible and game.campaign_comparison_label.text.contains("RILL CROSSING · 1D · 1 FUEL · KNOWN · LOW 14% RISK") and game.campaign_comparison_label.text.contains("SOOT ORCHARD · 2D · 2 FUEL · FORECAST · GUARDED 27% RISK") and game.campaign_comparison_label.text.contains("PRESSURE +1") and game.campaign_comparison_label.text.contains("NO SETTLEMENT NEXT"), "route planning should compare confidence, days, fuel, risk band, pressure, threat clue, and onward recovery before selection")
@@ -363,6 +378,14 @@ func _run() -> void:
 	_expect(not game.advance_warning_label.visible, "the advance action should not reserve warning space when the next step has no critical consequence")
 	_expect(game.combat_panel.enemy_counters[0].text.contains("Seeks: cargo / exterior") and game.combat_panel.enemy_counters[0].text.contains("Protect Cargo active") and game.combat_panel.enemy_counters[0].text.contains("Counter:"), "enemy cards should expose targeting priorities, active doctrine protection, and counters without relying on a tooltip")
 	_expect(game.combat_panel.order_label.text.contains("Emergency order: 1 available") and game.combat_panel.order_label.text.contains("Next step 1/6") and not game.combat_panel.order_label.text.contains("CP") and not game.combat_panel.order_label.text.contains("Step 0"), "combat status should describe the actual order budget and next timeline step without exposing internal counters")
+	var battle_briefing_state: Dictionary = game.state.serialize()
+	game.how_to_play_button.pressed.emit()
+	await process_frame
+	_expect(game.onboarding_step == 6 and game.onboarding_title_label.text == "Read the contact" and game.onboarding_body_label.text.contains("next hit"), "reopening Field Briefing during battle should land on contact-reading guidance")
+	game._finish_onboarding(true)
+	await process_frame
+	await process_frame
+	_expect(game.state.serialize() == battle_briefing_state and game.advance_encounter_button.has_focus(), "closing contextual battle guidance should return to the next authoritative step without advancing it")
 	var initial_shift_preview: Dictionary = game.state.encounter_shift_power_preview()
 	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("remains available after Advance") and game.intervention_help_label.text.contains("Review CONTACT NEXT") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the pre-contact order panel should explain that waiting preserves the order while pointing back to the arrival forecast")
 	game.intervention_buttons[0].grab_focus()
@@ -607,6 +630,12 @@ func _run() -> void:
 	game._refresh_ui()
 	await process_frame
 	_expect(game.state.campaign_event_pending == "mara_meeting" and game.campaign_event_title.text == "THE FORGE WITHOUT A ROOF", "Mara's meeting should interrupt Morrowline departure through the existing event card")
+	game._show_onboarding(true)
+	await process_frame
+	_expect(game.onboarding_step == 3 and game.onboarding_title_label.text == "Keep repairs staffed", "Mara's settlement decision should reopen Field Briefing at the repair topic")
+	game._finish_onboarding(true)
+	await process_frame
+	await process_frame
 	_expect(game.campaign_event_buttons[0].text.contains("Workshop repairs +1") and game.campaign_event_buttons[1].text.contains("Keep specialist berth open"), "Mara's recruitment choice should expose both its mechanical benefit and opportunity cost")
 	await _press_campaign_event("recruit_mara")
 	await process_frame

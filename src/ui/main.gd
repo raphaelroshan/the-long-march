@@ -208,8 +208,8 @@ var onboarding_title_label: Label
 var onboarding_body_label: Label
 var onboarding_action_label: Label
 var onboarding_progress_label: Label
-var onboarding_step_panels: Array[PanelContainer] = []
-var onboarding_step_labels: Array[Label] = []
+var onboarding_step_buttons: Array[Button] = []
+var onboarding_viewed_steps: Dictionary = {}
 var onboarding_back_button: Button
 var onboarding_next_button: Button
 var onboarding_skip_button: Button
@@ -1159,19 +1159,15 @@ func _build_onboarding_overlay() -> void:
 	var stepper := HBoxContainer.new()
 	stepper.add_theme_constant_override("separation", 6)
 	content.add_child(stepper)
-	for step_label in _active_onboarding_labels():
-		var step_panel := PanelContainer.new()
-		step_panel.custom_minimum_size = Vector2(0, 38)
-		step_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		stepper.add_child(step_panel)
-		var label := Label.new()
-		label.text = String(step_label)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", 10)
-		step_panel.add_child(label)
-		onboarding_step_panels.append(step_panel)
-		onboarding_step_labels.append(label)
+	for index in range(_active_onboarding_labels().size()):
+		var step_button := Button.new()
+		step_button.custom_minimum_size = Vector2(0, 38)
+		step_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		step_button.add_theme_font_size_override("font_size", 10)
+		step_button.tooltip_text = "Open this briefing topic without changing the march."
+		step_button.pressed.connect(_on_onboarding_topic_pressed.bind(index))
+		stepper.add_child(step_button)
+		onboarding_step_buttons.append(step_button)
 	onboarding_title_label = Label.new()
 	onboarding_title_label.add_theme_font_size_override("font_size", 28)
 	onboarding_title_label.add_theme_color_override("font_color", Color("#e8c58e"))
@@ -1334,7 +1330,8 @@ func _configure_feedback_focus() -> void:
 
 func _show_onboarding(reopened: bool = false) -> void:
 	onboarding_reopened = reopened
-	onboarding_step = 0
+	onboarding_step = _contextual_onboarding_step() if reopened else 0
+	onboarding_viewed_steps = {onboarding_step: true}
 	onboarding_overlay.visible = true
 	_refresh_onboarding()
 	onboarding_next_button.grab_focus()
@@ -1347,6 +1344,32 @@ func _active_onboarding_labels() -> Array:
 func _active_onboarding_steps() -> Array:
 	return VEYRU_ONBOARDING_STEPS if state.campaign_region_id == "flooded_veyru" else ONBOARDING_STEPS
 
+func _contextual_onboarding_step() -> int:
+	if state.phase in ["battle", "final_battle", "results"]:
+		return 6
+	if _active_contract_status() == "offered":
+		return 0
+	if not state.campaign_event_pending.is_empty():
+		if state.campaign_event_pending == "archive_broadcast":
+			return 6
+		if state.campaign_event_pending.begins_with("mara_"):
+			return 3
+		return 5
+	if state.phase == "settlement":
+		return 3
+	if state.campaign_active and state.phase in ["refit", "map"]:
+		return 5
+	return 0
+
+func _on_onboarding_topic_pressed(step_index: int) -> void:
+	var steps := _active_onboarding_steps()
+	if step_index < 0 or step_index >= steps.size():
+		return
+	onboarding_step = step_index
+	onboarding_viewed_steps[onboarding_step] = true
+	_refresh_onboarding()
+	onboarding_step_buttons[onboarding_step].grab_focus()
+
 func _refresh_onboarding() -> void:
 	var steps := _active_onboarding_steps()
 	var labels := _active_onboarding_labels()
@@ -1356,34 +1379,45 @@ func _refresh_onboarding() -> void:
 	onboarding_body_label.text = String(step.body)
 	onboarding_action_label.text = String(step.action)
 	onboarding_progress_label.text = "%s briefing %d of %d  ·  D-pad / arrows or Tab move  ·  %s confirms  ·  %s %s" % ["Veyru" if state.campaign_region_id == "flooded_veyru" else "Ashgate", onboarding_step + 1, steps.size(), _confirm_shortcut(), _cancel_shortcut(), "closes" if onboarding_reopened else "closes for this run"]
-	for index in range(onboarding_step_panels.size()):
-		var panel := onboarding_step_panels[index]
-		var label := onboarding_step_labels[index]
-		if index < onboarding_step:
-			panel.add_theme_stylebox_override("panel", _flat_style(Color("#183329"), Color("#4e8d72"), 1, 4, 3))
-			label.text = "✓ %s" % labels[index]
-			label.add_theme_color_override("font_color", Color("#9fddbd"))
-		elif index == onboarding_step:
-			panel.add_theme_stylebox_override("panel", _flat_style(Color("#4b405d"), Color("#eee2ff"), 2, 4, 2))
-			label.text = "%02d %s" % [index + 1, labels[index]]
-			label.add_theme_color_override("font_color", Color("#ffffff"))
-		else:
-			panel.add_theme_stylebox_override("panel", _flat_style(Color("#182127"), Color("#35474d"), 1, 4, 3))
-			label.text = "— %s" % labels[index]
-			label.add_theme_color_override("font_color", Color("#738286"))
+	for index in range(onboarding_step_buttons.size()):
+		var button := onboarding_step_buttons[index]
+		var is_current := index == onboarding_step
+		var was_viewed := onboarding_viewed_steps.has(index)
+		button.text = "%s %02d %s" % ["●" if is_current else ("✓" if was_viewed else "—"), index + 1, labels[index]]
+		button.add_theme_color_override("font_color", Color("#ffffff") if is_current else (Color("#9fddbd") if was_viewed else Color("#87979b")))
+		button.add_theme_color_override("font_hover_color", Color("#ffffff"))
+		button.add_theme_color_override("font_focus_color", Color("#ffffff"))
+		button.add_theme_stylebox_override("normal", _flat_style(Color("#4b405d") if is_current else (Color("#183329") if was_viewed else Color("#182127")), Color("#eee2ff") if is_current else (Color("#4e8d72") if was_viewed else Color("#35474d")), 2 if is_current else 1, 4, 2))
+		button.add_theme_stylebox_override("hover", _flat_style(Color("#354c50"), Color("#9fd2c2"), 2, 4, 2))
+		button.add_theme_stylebox_override("pressed", _flat_style(Color("#283c40"), Color("#f0d29d"), 2, 4, 2))
+		button.add_theme_stylebox_override("focus", _flat_style(Color("#4b405d") if is_current else Color("#25383a"), Color.WHITE, 3, 4, 1))
 	onboarding_back_button.disabled = onboarding_step == 0
 	onboarding_skip_button.focus_neighbor_right = onboarding_skip_button.get_path_to(onboarding_next_button if onboarding_back_button.disabled else onboarding_back_button)
 	onboarding_next_button.focus_neighbor_left = onboarding_next_button.get_path_to(onboarding_skip_button if onboarding_back_button.disabled else onboarding_back_button)
+	var current_topic_button := onboarding_step_buttons[onboarding_step]
+	for index in range(onboarding_step_buttons.size()):
+		var button := onboarding_step_buttons[index]
+		var previous_topic := onboarding_step_buttons[(index - 1 + onboarding_step_buttons.size()) % onboarding_step_buttons.size()]
+		var next_topic := onboarding_step_buttons[(index + 1) % onboarding_step_buttons.size()]
+		button.focus_neighbor_left = button.get_path_to(previous_topic)
+		button.focus_neighbor_right = button.get_path_to(next_topic)
+		button.focus_neighbor_top = button.get_path_to(button)
+		button.focus_neighbor_bottom = button.get_path_to(onboarding_next_button)
+	for button in [onboarding_skip_button, onboarding_back_button, onboarding_next_button]:
+		button.focus_neighbor_top = button.get_path_to(current_topic_button)
 	var active_actions: Array = [onboarding_skip_button]
 	if not onboarding_back_button.disabled:
 		active_actions.append(onboarding_back_button)
 	active_actions.append(onboarding_next_button)
-	_configure_focus_cycle(active_actions)
+	var focus_controls: Array = onboarding_step_buttons.duplicate()
+	focus_controls.append_array(active_actions)
+	_configure_focus_cycle(focus_controls)
 	onboarding_next_button.text = ("RETURN TO MARCH" if onboarding_reopened else "ENTER %s" % ("VEYRU" if state.campaign_region_id == "flooded_veyru" else "ASHGATE")) if onboarding_step == steps.size() - 1 else "NEXT"
 	onboarding_skip_button.text = "CLOSE BRIEFING" if onboarding_reopened else "SKIP FOR THIS RUN"
 
 func _on_onboarding_back() -> void:
 	onboarding_step = maxi(0, onboarding_step - 1)
+	onboarding_viewed_steps[onboarding_step] = true
 	_refresh_onboarding()
 
 func _on_onboarding_next() -> void:
@@ -1391,6 +1425,7 @@ func _on_onboarding_next() -> void:
 		_finish_onboarding(false)
 		return
 	onboarding_step += 1
+	onboarding_viewed_steps[onboarding_step] = true
 	_refresh_onboarding()
 
 func _finish_onboarding(skipped: bool) -> void:
