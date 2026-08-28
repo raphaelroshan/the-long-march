@@ -417,6 +417,7 @@ func _run() -> void:
 	game.advance_encounter_button.pressed.emit()
 	await process_frame
 	_expect(game.combat_panel.enemy_states[0].text.contains("1 STEP OUT") and game.advance_encounter_button.text.contains("STEP 2 OF 6") and game.advance_encounter_button.text.contains("CONTACT NEXT · ROAD RAIDER") and game.combat_panel.order_label.text.contains("Next step 2/6") and game.combat_panel.step_labels[1].text == "CONTACT · 2", "the arrival countdown, timeline, combat status, and advance action should agree and warn before contact")
+	_expect(game.combat_panel.causal_label.text.contains("Repeater Gun") and not game.combat_panel.causal_label.text.contains("repeater_gun"), "the visible causal report should use authored system names rather than internal content IDs")
 	var target_card_preview: Dictionary = game.state.encounter_summary()
 	var target_enemy: Dictionary = target_card_preview.enemies[0]
 	target_enemy["arrived"] = true

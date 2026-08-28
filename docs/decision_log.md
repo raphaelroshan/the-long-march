@@ -691,3 +691,7 @@ Selecting a campaign road now reveals a dedicated Cancel Route Preview action di
 ## 2026-08-28 — The title states the player's control boundary
 
 The first screen now names the four decisions the player owns—chassis, route, doctrine, and one emergency order—and states that battles resolve step by step. This communicates the preparation-driven auto-battle contract before Start without adding another tutorial panel or implying that combat is directly piloted.
+
+## 2026-08-28 — Combat reports use authored names
+
+Encounter attack sources and newly assigned targets are translated through the module and specialist catalogs before entering the causal report. The command desk, saved encounter history, and feedback bundles now say `Repeater Gun`, `Coal Cell`, and `Iven Pell` instead of leaking identifiers such as `repeater_gun` or `coal_cell`.

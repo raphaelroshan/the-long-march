@@ -314,6 +314,7 @@ func _test_spatial_targeting_and_causality() -> void:
 	var causal_preview := causal.encounter_enemy_impact_preview({"id": "road_raiders", "arrived": true, "defeated": false, "target": "coal_cell", "damage_bonus": 1})
 	var predicted_changes: Array = causal_preview.get("dependency_changes", [])
 	_expect(predicted_changes.size() == 1 and String(predicted_changes[0].get("module_id", "")) == "steam_lance_engine" and String(predicted_changes[0].get("to", "")) == "offline", "a disabling fuel hit should preview the downstream engine failure")
+	_expect(causal._encounter_source_names(["repeater_gun", "iven_pell"]) == ["Repeater Gun", "Iven Pell"] and causal._encounter_target_name("coal_cell") == "Coal Cell", "combat reports should translate internal source and target IDs into authored names")
 	_expect(causal.dependency_status_at(Vector2i(0, 0)).state == "ready" and int(causal.module_at(Vector2i(0, 1)).durability) == 2, "dependency impact previews must not mutate live fortress state")
 	causal._encounter_apply_enemy_damage("road_raiders", "coal_cell", 1)
 	_expect(causal.dependency_status_at(Vector2i(0, 0)).state == "offline", "destroyed fuel should disable its adjacent engine")

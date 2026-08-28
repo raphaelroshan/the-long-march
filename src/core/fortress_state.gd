@@ -1299,6 +1299,20 @@ func _encounter_log(message: String) -> void:
 	encounter_report.append(message)
 	log.append(message)
 
+func _encounter_source_names(source_ids: Array) -> Array[String]:
+	var names: Array[String] = []
+	for raw_source_id in source_ids:
+		var source_id := String(raw_source_id)
+		var source_name := "Iven Pell" if source_id == "iven_pell" else String(module_definition(source_id).get("name", source_id.replace("_", " ").capitalize()))
+		if source_name not in names:
+			names.append(source_name)
+	return names
+
+func _encounter_target_name(target_id: String) -> String:
+	if target_id == "hull":
+		return "Hull"
+	return String(module_definition(target_id).get("name", target_id.replace("_", " ").capitalize()))
+
 func encounter_forecast() -> Dictionary:
 	var threat_ids: Array[String] = []
 	var threat_names: Array[String] = []
@@ -1979,10 +1993,11 @@ func _encounter_step() -> Dictionary:
 		if damage > 0:
 			enemy["hp"] = maxi(0, int(enemy.get("hp", 0)) - damage)
 			enemy["damage_taken"] = int(enemy.get("damage_taken", 0)) + damage
+			var source_names := _encounter_source_names(attack_result.get("attackers", []))
 			if enemy_id == "storm_front":
-				_encounter_log("Storm pressure falls by %d through %s." % [damage, ", ".join(attack_result.get("attackers", []))])
+				_encounter_log("Storm pressure falls by %d through %s." % [damage, ", ".join(source_names)])
 			else:
-				_encounter_log("%s takes %d damage from %s." % [ENCOUNTER_ENEMIES[enemy_id].name, damage, ", ".join(attack_result.get("attackers", []))])
+				_encounter_log("%s takes %d damage from %s." % [ENCOUNTER_ENEMIES[enemy_id].name, damage, ", ".join(source_names)])
 			for line in attack_result.get("lines", []):
 				_encounter_log(String(line))
 		if int(enemy.get("hp", 0)) <= 0:
@@ -2002,7 +2017,7 @@ func _encounter_step() -> Dictionary:
 				_encounter_log("%s adapts after its original target becomes unavailable." % ENCOUNTER_ENEMIES[enemy_id].name)
 			if String(enemy.get("target", "")).is_empty():
 				enemy["target"] = _encounter_choose_target(enemy_id)
-				_encounter_log("%s reaches the fortress; target is %s." % [ENCOUNTER_ENEMIES[enemy_id].name, String(enemy.target)])
+				_encounter_log("%s reaches the fortress; target is %s." % [ENCOUNTER_ENEMIES[enemy_id].name, _encounter_target_name(String(enemy.target))])
 			if not String(enemy.get("target", "")).is_empty():
 				enemy["attacks"] = int(enemy.get("attacks", 0)) + 1
 				_encounter_apply_enemy_damage(enemy_id, String(enemy.target), int(enemy.get("damage_bonus", 0)))
