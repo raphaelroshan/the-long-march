@@ -64,6 +64,8 @@ Inside the inspector, **Battle System**, **Final System**, and **Refit Locked** 
 
 The title and Pause footer both label the exact version as **Playtest Build**. Include that full identifier in screenshots or issue reports; it is the same authoritative application version written into saves and exported feedback.
 
+When a decision advances to route planning, the Marchmaster's Desk should scroll from a clean regional-map heading. Selecting a road should then keep its summary, map, Commit, and Cancel together rather than exposing a clipped fragment of the previous section.
+
 Settings uses three visible sections: **Display & Readability**, **Controls & Feedback**, and **Runs & Local Data**. The fixed breadcrumb follows focused controls even when their section heading scrolls away. Watch whether testers can predict where a preference or reset belongs before reading every row.
 
 ## Building locally

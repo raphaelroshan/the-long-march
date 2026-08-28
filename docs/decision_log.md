@@ -935,3 +935,7 @@ The persistent Pause button is pointer-active but focus-neutral. Keyboard and co
 ## 2026-08-28 — Build identity names the artifact once
 
 Title and Pause now share a `Playtest Build · v<version>` convention. The title retains the two-playable-region scope, while the Pause footer stays compact. This removes the previous `ALPHA · v...alpha...` repetition and gives screenshots one recognizable artifact label without changing the raw version used by saves, feedback exports, manifests, or compatibility checks.
+
+## 2026-08-28 — Focus scrolling begins at a meaningful section boundary
+
+Campaign-node focus now prefers the regional map heading as its scroll anchor, while route confirmation prefers the selected-road summary. The focused action still wins when all context cannot fit, but ordinary 1280×720 route handoffs no longer begin on a clipped fragment of the preceding doctrine explanation. This keeps automatic focus movement legible without making headings sticky or changing route state.

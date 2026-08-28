@@ -1624,17 +1624,25 @@ func _focus_control(control: Control) -> bool:
 	control.grab_focus()
 	return true
 
+func _desk_context_anchor_for(control: Control) -> Control:
+	if control in campaign_node_buttons and campaign_title.visible:
+		return campaign_title
+	if control in [campaign_commit_button, campaign_cancel_button] and route_preview_label.visible:
+		return route_preview_label
+	if control in campaign_event_buttons and campaign_event_title.visible:
+		return campaign_event_title
+	return guidance_label
+
 func _scroll_action_context_into_view(control: Control) -> void:
 	if not _control_can_receive_focus(control) or not control.has_focus() or right_scroll == null or not right_scroll.is_ancestor_of(control):
 		return
 	var viewport_rect := right_scroll.get_global_rect()
 	var previous_scroll := right_scroll.scroll_vertical
-	var guidance_rect := guidance_label.get_global_rect()
-	var context_top := guidance_rect.position.y - viewport_rect.position.y + previous_scroll
+	var context_anchor := _desk_context_anchor_for(control)
+	var context_top := context_anchor.get_global_rect().position.y - viewport_rect.position.y + previous_scroll
 	var control_rect := dependency_card_panel.get_global_rect() if dependency_card_panel.visible and control in [module_option, focus_chassis_button, rotate_button, remove_button] else control.get_global_rect()
 	var control_bottom := control_rect.end.y - viewport_rect.position.y + previous_scroll
 	if control in campaign_event_buttons and campaign_event_title.visible:
-		context_top = campaign_event_title.get_global_rect().position.y - viewport_rect.position.y + previous_scroll
 		for event_button in campaign_event_buttons:
 			if event_button.visible:
 				control_bottom = maxf(control_bottom, event_button.get_global_rect().end.y - viewport_rect.position.y + previous_scroll)

@@ -23,7 +23,7 @@ The repository contains an agent-first Godot project with:
 - A persistent five-milestone run tracker, with the current mandatory decision kept above optional controls.
 - A context-aware Go to Order control that returns focus and scroll position to the required contract, route, event, battle, recovery, or debrief action without activating it.
 - Deliberate focus handoff across start, contracts, routes, encounters, results, and pause/resume for keyboard and controller playtests.
-- Automatic viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible together with their current-order context when space allows.
+- Section-aware viewport scrolling that keeps newly focused route, combat, recovery, and feedback actions visible with a clean contextual heading when space allows.
 - Prominent post-run actions for feedback, replaying from Ashgate, or returning to the title screen.
 - Exact build identifiers on title and pause screens for reproducible playtest reports.
 - Consistent **Playtest Build** wording around those identifiers without duplicating the alpha channel or implying release readiness.
