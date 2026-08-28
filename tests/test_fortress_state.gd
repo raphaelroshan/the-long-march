@@ -416,6 +416,18 @@ func _test_save_round_trip() -> void:
 	active_completed_save["final_result"] = "decisive_march"
 	var active_completed_load := LongMarchState.new(0).load_serialized(active_completed_save)
 	_expect(not bool(active_completed_load.get("ok", false)) and String(active_completed_load.get("reason", "")).contains("active campaign phase"), "active-phase saves should reject contradictory completion state")
+	var unknown_phase_save := state.serialize()
+	unknown_phase_save["phase"] = "lost_between_roads"
+	var unknown_phase_load := LongMarchState.new(0).load_serialized(unknown_phase_save)
+	_expect(not bool(unknown_phase_load.get("ok", false)) and String(unknown_phase_load.get("reason", "")).contains("unknown campaign phase"), "unknown campaign phases should be rejected before state mutation")
+	var inactive_battle_save := state.serialize()
+	inactive_battle_save["phase"] = "battle"
+	var inactive_battle_load := LongMarchState.new(0).load_serialized(inactive_battle_save)
+	_expect(not bool(inactive_battle_load.get("ok", false)) and String(inactive_battle_load.get("reason", "")).contains("encounter state"), "battle checkpoints should require an active encounter")
+	var active_refit_save := state.serialize()
+	active_refit_save["encounter_active"] = true
+	var active_refit_load := LongMarchState.new(0).load_serialized(active_refit_save)
+	_expect(not bool(active_refit_load.get("ok", false)) and String(active_refit_load.get("reason", "")).contains("encounter state"), "planning checkpoints should reject a stray active encounter")
 
 func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "campaign engine should install")

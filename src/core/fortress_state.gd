@@ -9,6 +9,7 @@ const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
 const SAVE_VERSION := 4
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed"]
+const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
 const BASE_HEAT_LIMIT := 6
@@ -1028,6 +1029,12 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_final_result := String(data.get("final_result", final_result))
 	var restored_run_complete := bool(data.get("run_complete", run_complete))
 	var restored_journey_complete := bool(data.get("journey_complete", journey_complete))
+	var restored_encounter_active := bool(data.get("encounter_active", encounter_active))
+	if restored_phase not in VALID_PHASES:
+		return {"ok": false, "reason": "checkpoint has an unknown campaign phase"}
+	var restored_battle_phase := restored_phase in ["battle", "final_battle"]
+	if restored_battle_phase != restored_encounter_active:
+		return {"ok": false, "reason": "encounter state conflicts with the campaign phase"}
 	if restored_phase == "results" and restored_final_result not in FINAL_RESULTS:
 		return {"ok": false, "reason": "result checkpoint has no recognized outcome"}
 	if restored_phase == "results" and (not restored_run_complete or not restored_journey_complete):
@@ -1055,7 +1062,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	journey_destination = String(data.get("journey_destination", journey_destination))
 	journey_route = String(data.get("journey_route", journey_route))
 	journey_complete = restored_journey_complete
-	encounter_active = bool(data.get("encounter_active", encounter_active))
+	encounter_active = restored_encounter_active
 	encounter_step = int(data.get("encounter_step", encounter_step))
 	encounter_progress = float(data.get("encounter_progress", encounter_progress))
 	encounter_enemies = data.get("encounter_enemies", []).duplicate(true)

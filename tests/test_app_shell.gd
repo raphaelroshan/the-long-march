@@ -315,6 +315,16 @@ func _run() -> void:
 	incomplete_result_file.close()
 	var incomplete_result_info: Dictionary = app._saved_run_info()
 	_expect(not bool(incomplete_result_info.get("valid", true)) and String(incomplete_result_info.get("summary", "")).contains("completion state"), "the title should reject a named result that was not recorded as a completed run")
+	var unknown_phase_payload: Dictionary = completed_payload.duplicate(true)
+	unknown_phase_payload["phase"] = "lost_between_roads"
+	unknown_phase_payload["final_result"] = ""
+	unknown_phase_payload["run_complete"] = false
+	unknown_phase_payload["journey_complete"] = false
+	var unknown_phase_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	unknown_phase_file.store_string(JSON.stringify(unknown_phase_payload))
+	unknown_phase_file.close()
+	var unknown_phase_info: Dictionary = app._saved_run_info()
+	_expect(not bool(unknown_phase_info.get("valid", true)) and String(unknown_phase_info.get("summary", "")).contains("unknown campaign phase"), "the title should route unknown campaign phases through unusable-save recovery")
 	completed_save = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()

@@ -615,3 +615,7 @@ A results checkpoint is valid only when both the run and journey are marked comp
 ## 2026-08-28 — Critical consequences stay beside Advance
 
 When the next combat step will collapse the hull, disable a system, trigger a dependency cascade, or break protecting armor, the command desk now repeats that forecast directly beneath Advance. The detailed contact card and current-order text remain available, but the irreversible action no longer depends on the player connecting information across opposite sides of the screen.
+
+## 2026-08-28 — Saved phases retain a valid next action
+
+Deserialization now accepts only the six implemented campaign phases and requires encounter activity to agree with battle versus planning states. Unknown phases, inactive battle saves, and stray encounters in refit or map checkpoints are rejected before state mutation, allowing the title's normal recovery action to replace them instead of opening a stage with no trustworthy next command.
