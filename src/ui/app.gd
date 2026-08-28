@@ -1096,6 +1096,8 @@ func _refresh_pause_summary(message: String = "") -> void:
 		pause_save_status_label.text = message
 	elif not autosave_enabled:
 		pause_save_status_label.text = "Current decision is saved · autosave remains off." if current_run_saved else "Autosave is off · use Save March to preserve progress."
+	elif last_checkpoint_reason == "loaded save":
+		pause_save_status_label.text = "Current decision matches the loaded checkpoint." if current_run_saved else "Unsaved changes since the loaded checkpoint."
 	elif not last_checkpoint_reason.is_empty():
 		pause_save_status_label.text = "Current decision saved · %s" % _checkpoint_label(last_checkpoint_reason) if current_run_saved else "Unsaved changes since · %s" % _checkpoint_label(last_checkpoint_reason)
 	elif FileAccess.file_exists(SAVE_PATH):

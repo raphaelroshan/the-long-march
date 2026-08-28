@@ -245,6 +245,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.game_view != null, "Continue should restore the run after a safe return")
 	app._show_pause()
+	_expect(app.pause_save_status_label.text == "Current decision matches the loaded checkpoint.", "pausing immediately after Continue should describe the loaded checkpoint without awkward saved-save wording")
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT, "Resume should restore the stage")

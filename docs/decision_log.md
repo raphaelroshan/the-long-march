@@ -559,3 +559,7 @@ Internal release and playtest instructions describe choosing chassis cells and e
 ## 2026-08-28 — Empty-save copy explains the first autosave
 
 The title now says that autosave begins after the first committed decision. This replaces internal-sounding “progress checkpoints” shorthand and matches the fresh-run pause explanation without implying that merely opening Ashgate has already created a checkpoint.
+
+## 2026-08-28 — Continue identifies the loaded checkpoint cleanly
+
+Pausing immediately after Continue now says that the current decision matches the loaded checkpoint. If that restored state later diverges without another checkpoint, the same branch reports unsaved changes since loading instead of producing the awkward “Current decision saved · Loaded save” construction.
