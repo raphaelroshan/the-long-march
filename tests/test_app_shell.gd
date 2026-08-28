@@ -365,8 +365,14 @@ func _run() -> void:
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_eyebrow_label.text == "FINAL REPORT" and app.pause_title_label.text == "DEBRIEF OPTIONS", "opening session options from results should use completed-run framing")
-	_expect(app.pause_detail_label.text.contains("march has ended") and app.resume_button.text == "RETURN TO DEBRIEF" and app.pause_save_button.text == "SAVE RESULT" and app.pause_hint_label.text.contains("returns to debrief"), "the completed-run overlay should describe its actual return and save actions")
+	_expect(app.pause_detail_label.text.contains("march has ended") and app.resume_button.text == "RETURN TO DEBRIEF" and app.pause_save_button.text == "SAVE RESULT" and app.restart_button.text == "PLAY AGAIN" and app.pause_hint_label.text.contains("returns to debrief"), "the completed-run overlay should describe its actual return, save, and replay actions")
 	_expect(app.pause_save_status_label.text.contains("result is not saved yet") and app.pause_save_status_label.text.contains("Save Result"), "an unsaved debrief should name the result-specific persistence action instead of asking for another campaign decision")
+	app.restart_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.pause_view.visible and app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN", "Play Again from debrief options should use the same result-aware confirmation as the visible result action")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(not app.confirmation_view.visible and app.pause_view.visible and app.restart_button.has_focus() and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "cancelling a debrief-options replay should return focus to the paused overlay")
 	app.resume_button.pressed.emit()
 	await process_frame
 	_expect(not app.pause_view.visible and app.game_view.state.phase == "results", "returning from debrief options should preserve the completed result")

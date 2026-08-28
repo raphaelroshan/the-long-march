@@ -700,7 +700,7 @@ func _build_pause_menu() -> void:
 	restart_button.custom_minimum_size = Vector2(0, 46)
 	restart_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	restart_button.tooltip_text = "Discard the current unsaved stage state and begin again."
-	restart_button.pressed.connect(_request_confirmation.bind("restart"))
+	restart_button.pressed.connect(_on_restart_pressed)
 	_warning_button(restart_button)
 	session_actions.add_child(restart_button)
 	title_button = Button.new()
@@ -1096,6 +1096,8 @@ func _refresh_pause_summary(message: String = "") -> void:
 	pause_detail_label.text = "The march has ended. Review the result, save it locally, or adjust settings." if viewing_debrief else "The road is turn-based. Nothing changes while this menu is open."
 	resume_button.text = "RETURN TO DEBRIEF" if viewing_debrief else "RESUME MARCH"
 	pause_save_button.text = "SAVE RESULT" if viewing_debrief else "SAVE MARCH"
+	restart_button.text = "PLAY AGAIN" if viewing_debrief else "RESTART"
+	restart_button.tooltip_text = "Begin another Ashgate march after confirmation." if viewing_debrief else "Discard the current unsaved stage state and begin again."
 	pause_hint_label.text = "B / Esc returns to debrief" if viewing_debrief else "B / Esc resumes"
 	pause_summary_label.text = "DAY %d · %s\n%s · %d/5 encounters secured\nFUEL %d · HULL %d/10 · HEAT %d/%d" % [int(run_state.get("day")), location, phase, int(run_state.get("campaign_encounters_completed")), int(run_state.get("fuel")), int(run_state.get("hull_condition")), int(run_state.get("heat")), LongMarchState.BASE_HEAT_LIMIT]
 	title_button.text = "RETURN TO TITLE" if current_run_saved else "EXIT UNSAVED"
@@ -1226,6 +1228,12 @@ func _show_in_run_briefing() -> void:
 func _restart_game() -> void:
 	_open_stage(false, false)
 
+func _on_restart_pressed() -> void:
+	if game_view != null and String(game_view.get("state").get("phase")) == "results":
+		_request_confirmation("replay")
+	else:
+		_request_confirmation("restart")
+
 func _request_replay_confirmation() -> void:
 	if game_view == null:
 		return
@@ -1290,7 +1298,9 @@ func _cancel_confirmation() -> void:
 	if previous_action == "restart":
 		restart_button.grab_focus()
 	elif previous_action == "replay":
-		if game_view != null:
+		if pause_view.visible:
+			restart_button.grab_focus()
+		elif game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.play_again_button.grab_focus()
 	elif previous_action == "clear_save":
@@ -1312,6 +1322,8 @@ func _confirm_pending_action() -> void:
 		_restart_game()
 	elif action == "replay":
 		if game_view != null:
+			pause_view.visible = false
+			paused_stage_focus = null
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call("start_replay_from_results")
 	elif action == "title":

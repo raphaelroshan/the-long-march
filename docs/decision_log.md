@@ -583,3 +583,7 @@ Opening the pause layer from results now presents Final Report and Debrief Optio
 ## 2026-08-28 — Debrief save status describes the result slot
 
 Completed-run options now distinguish an unsaved result, a result already stored under Continue, and an older checkpoint still occupying that slot. Saving from this overlay confirms that Continue will reopen the debrief. Terminal state no longer asks the player to commit another campaign choice or use the active-run Save March label.
+
+## 2026-08-28 — Debrief replay uses one lifecycle path
+
+The session-options Restart action becomes Play Again after a completed run and opens the same result-aware confirmation as the main debrief action. Cancelling returns to the options overlay with focus intact; confirming closes that overlay and creates the same fresh Ashgate replay checkpoint. Active-run Restart retains its existing behavior.
