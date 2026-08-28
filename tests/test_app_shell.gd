@@ -26,6 +26,20 @@ func _init() -> void:
 
 func _run() -> void:
 	_remove_local_test_files()
+	root.size = Vector2i(1280, 720)
+	var persisted_scale_config := ConfigFile.new()
+	persisted_scale_config.set_value("accessibility", "text_scale_percent", 110)
+	persisted_scale_config.save(SETTINGS_PATH)
+	var restored_scale_app = load("res://scenes/App.tscn").instantiate()
+	root.add_child(restored_scale_app)
+	await process_frame
+	await process_frame
+	_expect(restored_scale_app.text_scale_percent == 110 and restored_scale_app.theme.default_font_size == 18 and not restored_scale_app.title_control_contract_label.visible and not restored_scale_app.title_right_spacer.visible, "a new application shell should restore and apply the persisted large-text layout")
+	restored_scale_app.queue_free()
+	await process_frame
+	var invalid_scale_config := ConfigFile.new()
+	invalid_scale_config.set_value("accessibility", "text_scale_percent", 175)
+	invalid_scale_config.save(SETTINGS_PATH)
 	app = load("res://scenes/App.tscn").instantiate()
 	var quit_probe := {"count": 0}
 	app.application_quit_requested.connect(func() -> void: quit_probe["count"] = int(quit_probe["count"]) + 1)
@@ -89,9 +103,27 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")
 	_expect(app.settings_context_label.text.begins_with("TITLE MENU") and app.settings_close_button.text == "BACK TO TITLE", "title Settings should identify and return to the title menu")
-	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose consequences without requiring mouse-only tooltips")
+	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, and save consequences without requiring mouse-only tooltips")
+	_expect(app.text_scale_button.text == "TEXT SIZE · 100%" and app.theme.default_font_size == 16, "Settings should safely normalize an unsupported stored text size to the standard interface size")
+	_expect(app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_bottom) == app.text_scale_button and app.text_scale_button.get_node_or_null(app.text_scale_button.focus_neighbor_bottom) == app.motion_button, "controller navigation should place text size between display mode and motion")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should skip unavailable one-shot actions")
 	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
+	app.text_scale_button.pressed.emit()
+	await process_frame
+	await process_frame
+	var scale_config := ConfigFile.new()
+	scale_config.load(SETTINGS_PATH)
+	_expect(app.text_scale_percent == 110 and app.text_scale_button.text == "TEXT SIZE · 110%" and app.theme.default_font_size == 18 and app.title_build_label.get_theme_font_size("font_size") == 14, "the larger text size should apply immediately to inherited and explicit interface text")
+	_expect(int(scale_config.get_value("accessibility", "text_scale_percent", 0)) == 110, "text size should persist as a local accessibility preference")
+	var scale_scroll_rect: Rect2 = app.settings_scroll.get_global_rect()
+	var scale_button_rect: Rect2 = app.text_scale_button.get_global_rect()
+	_expect(scale_button_rect.position.y >= scale_scroll_rect.position.y and scale_button_rect.end.y <= scale_scroll_rect.end.y, "changing text size should keep its focused control inside the visible Settings viewport")
+	var title_view_rect: Rect2 = app.menu_view.get_global_rect()
+	_expect(title_view_rect.encloses(app.start_button.get_global_rect()) and title_view_rect.encloses(app.quit_button.get_global_rect()) and not app.title_control_contract_label.visible and not app.title_right_spacer.visible, "larger text should preserve the complete title action stack while collapsing secondary title spacing at 1280×720")
+	app.text_scale_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.text_scale_percent == 100 and app.theme.default_font_size == 16 and app.title_build_label.get_theme_font_size("font_size") == 13 and app.title_control_contract_label.visible and app.title_right_spacer.visible, "text size should return to the complete standard layout without restarting")
 	app.display_mode_button.pressed.emit()
 	await process_frame
 	var display_config := ConfigFile.new()
@@ -283,6 +315,11 @@ func _run() -> void:
 	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
 	_expect(not app.game_view.save_button.visible and not app.game_view.load_button.visible, "pause-owned persistence controls should not be duplicated in the live stage")
 	_expect(app.game_view.onboarding_skip_button.text == "SKIP FOR THIS RUN" and app.game_view.onboarding_progress_label.text.contains("closes for this run"), "the first-run briefing should describe Skip and B/Esc as temporary choices")
+	app.text_scale_percent = 110
+	app._apply_text_scale()
+	_expect(app.game_view.theme.default_font_size == 15 and app.game_view.phase_badge.get_theme_font_size("font_size") == 13, "the selected text size should apply to a newly created playable stage and its explicit status text")
+	app.text_scale_percent = 100
+	app._apply_text_scale()
 	app.game_view._finish_onboarding(true)
 	await process_frame
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "skipping should not permanently mark an unread briefing complete")
@@ -346,6 +383,17 @@ func _run() -> void:
 	_expect(app.reset_charter_button.disabled and app.reset_charter_button.text.contains("RETURN TO TITLE"), "paused Settings should not erase persistent history beneath an active run snapshot")
 	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include available one-shot actions in order")
+	app.text_scale_button.pressed.emit()
+	await process_frame
+	await process_frame
+	app.clear_save_button.grab_focus()
+	await process_frame
+	var lower_scroll_rect: Rect2 = app.settings_scroll.get_global_rect()
+	var lower_button_rect: Rect2 = app.clear_save_button.get_global_rect()
+	_expect(app.text_scale_percent == 110 and lower_button_rect.position.y >= lower_scroll_rect.position.y and lower_button_rect.end.y <= lower_scroll_rect.end.y, "large-text controller focus should scroll the lowest available Settings action fully into view")
+	app.text_scale_button.pressed.emit()
+	await process_frame
+	await process_frame
 	app.autosave_button.grab_focus()
 	app._request_application_close()
 	await process_frame

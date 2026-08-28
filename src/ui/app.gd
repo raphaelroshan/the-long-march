@@ -32,6 +32,7 @@ const CHECKPOINT_LABELS := {
 var menu_view: Control
 var guide_view: Control
 var settings_view: Control
+var settings_scroll: ScrollContainer
 var pause_view: Control
 var confirmation_view: Control
 var checkpoint_toast: PanelContainer
@@ -50,6 +51,7 @@ var guide_quick_start_button: Button
 var settings_context_label: Label
 var settings_close_button: Button
 var display_mode_button: Button
+var text_scale_button: Button
 var motion_button: Button
 var autosave_button: Button
 var reset_briefing_button: Button
@@ -72,6 +74,8 @@ var pause_detail_label: Label
 var pause_hint_label: Label
 var title_build_label: Label
 var pause_build_label: Label
+var title_control_contract_label: Label
+var title_right_spacer: Control
 var confirmation_title_label: Label
 var confirmation_body_label: Label
 var confirmation_confirm_button: Button
@@ -85,6 +89,7 @@ var close_request_focus: Control
 var close_request_was_paused: bool = false
 var close_request_process_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
 var fullscreen_enabled: bool = false
+var text_scale_percent: int = 100
 var reduced_motion: bool = false
 var autosave_enabled: bool = true
 var settings_opened_from_pause: bool = false
@@ -137,6 +142,7 @@ func _ready() -> void:
 	_build_pause_menu()
 	_build_confirmation_overlay()
 	_build_checkpoint_toast()
+	_apply_text_scale()
 	_configure_overlay_focus()
 	_refresh_title_state()
 	_focus_title_primary()
@@ -198,11 +204,11 @@ func _build_title_menu() -> void:
 	promise.add_theme_color_override("font_color", Color("#d7dfd9"))
 	left.add_child(promise)
 
-	var control_contract := Label.new()
-	control_contract.text = "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER\nBATTLES RESOLVE STEP BY STEP."
-	control_contract.add_theme_font_size_override("font_size", 12)
-	control_contract.add_theme_color_override("font_color", Color("#d8a650"))
-	left.add_child(control_contract)
+	title_control_contract_label = Label.new()
+	title_control_contract_label.text = "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER\nBATTLES RESOLVE STEP BY STEP."
+	title_control_contract_label.add_theme_font_size_override("font_size", 12)
+	title_control_contract_label.add_theme_color_override("font_color", Color("#d8a650"))
+	left.add_child(title_control_contract_label)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -292,9 +298,9 @@ func _build_title_menu() -> void:
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	columns.add_child(right)
-	var right_spacer := Control.new()
-	right_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(right_spacer)
+	title_right_spacer = Control.new()
+	title_right_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(title_right_spacer)
 
 	var stage_panel := PanelContainer.new()
 	stage_panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191de8"), Color("#4d6263"), 1, 8, 22))
@@ -390,8 +396,10 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 func _configure_overlay_focus() -> void:
 	_configure_focus_pair(guide_close_button, guide_quick_start_button)
 	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
-	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(motion_button)
-	motion_button.focus_neighbor_top = motion_button.get_path_to(display_mode_button)
+	display_mode_button.focus_neighbor_bottom = display_mode_button.get_path_to(text_scale_button)
+	text_scale_button.focus_neighbor_top = text_scale_button.get_path_to(display_mode_button)
+	text_scale_button.focus_neighbor_bottom = text_scale_button.get_path_to(motion_button)
+	motion_button.focus_neighbor_top = motion_button.get_path_to(text_scale_button)
 	motion_button.focus_neighbor_bottom = motion_button.get_path_to(autosave_button)
 	autosave_button.focus_neighbor_top = autosave_button.get_path_to(motion_button)
 	resume_button.focus_neighbor_bottom = resume_button.get_path_to(pause_save_button)
@@ -600,7 +608,7 @@ func _build_settings_overlay() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	settings_view.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(620, 640)
+	panel.custom_minimum_size = Vector2(620, 620)
 	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#688587"), 2, 8, 20))
 	center.add_child(panel)
 	var content := VBoxContainer.new()
@@ -622,12 +630,25 @@ func _build_settings_overlay() -> void:
 	intro.custom_minimum_size = Vector2(550, 36)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
-	display_mode_button = _settings_action(content, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
-	motion_button = _settings_action(content, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
-	autosave_button = _settings_action(content, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
-	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
-	reset_charter_button = _settings_action(content, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
-	clear_save_button = _settings_action(content, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
+	settings_scroll = ScrollContainer.new()
+	settings_scroll.name = "SettingsScroll"
+	settings_scroll.custom_minimum_size = Vector2(550, 0)
+	settings_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	settings_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	settings_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	content.add_child(settings_scroll)
+	var settings_actions := VBoxContainer.new()
+	settings_actions.custom_minimum_size = Vector2(550, 0)
+	settings_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_actions.add_theme_constant_override("separation", 6)
+	settings_scroll.add_child(settings_actions)
+	display_mode_button = _settings_action(settings_actions, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
+	text_scale_button = _settings_action(settings_actions, "TEXT SIZE", "Increase interface text while preserving the complete 1280×720 decision layout.", _toggle_text_scale)
+	motion_button = _settings_action(settings_actions, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
+	autosave_button = _settings_action(settings_actions, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
+	reset_briefing_button = _settings_action(settings_actions, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
+	reset_charter_button = _settings_action(settings_actions, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
+	clear_save_button = _settings_action(settings_actions, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
 	settings_status_label = Label.new()
 	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	settings_status_label.custom_minimum_size = Vector2(550, 28)
@@ -655,8 +676,14 @@ func _settings_action(parent: VBoxContainer, title: String, detail: String, call
 	button.custom_minimum_size = Vector2(0, 38)
 	button.tooltip_text = detail
 	button.pressed.connect(callback)
+	button.focus_entered.connect(_ensure_settings_control_visible.bind(button))
 	group.add_child(button)
 	return button
+
+func _ensure_settings_control_visible(control: Control) -> void:
+	if settings_scroll == null or control == null or not is_instance_valid(control):
+		return
+	settings_scroll.ensure_control_visible(control)
 
 func _build_pause_menu() -> void:
 	pause_view = Control.new()
@@ -862,6 +889,8 @@ func _load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
 		fullscreen_enabled = bool(config.get_value("display", "fullscreen", false))
+		var stored_scale := int(config.get_value("accessibility", "text_scale_percent", 100))
+		text_scale_percent = stored_scale if stored_scale in [100, 110] else 100
 		reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
 		autosave_enabled = bool(config.get_value("gameplay", "autosave_enabled", true))
 
@@ -871,6 +900,7 @@ func _build_version() -> String:
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
 	config.set_value("display", "fullscreen", fullscreen_enabled)
+	config.set_value("accessibility", "text_scale_percent", text_scale_percent)
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
 	config.set_value("gameplay", "autosave_enabled", autosave_enabled)
 	config.save(SETTINGS_PATH)
@@ -897,6 +927,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_context_label.text = "PAUSED MARCH · SETTINGS" if settings_opened_from_pause else "TITLE MENU · SETTINGS"
 	settings_close_button.text = "BACK TO PAUSE" if settings_opened_from_pause else "BACK TO TITLE"
 	display_mode_button.text = "FULLSCREEN · ON" if fullscreen_enabled else "FULLSCREEN · OFF"
+	text_scale_button.text = "TEXT SIZE · %d%%" % text_scale_percent
 	motion_button.text = "REDUCED MOTION · ON" if reduced_motion else "REDUCED MOTION · OFF"
 	autosave_button.text = "AUTOSAVE · ON" if autosave_enabled else "AUTOSAVE · OFF"
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
@@ -911,7 +942,7 @@ func _refresh_settings(message: String = "") -> void:
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
-	var active_controls: Array = [display_mode_button, motion_button, autosave_button]
+	var active_controls: Array = [display_mode_button, text_scale_button, motion_button, autosave_button]
 	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button]:
 		if not optional_button.disabled:
 			active_controls.append(optional_button)
@@ -927,6 +958,37 @@ func _toggle_display_mode() -> void:
 
 func _apply_display_mode() -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen_enabled else DisplayServer.WINDOW_MODE_WINDOWED)
+
+func _toggle_text_scale() -> void:
+	text_scale_percent = 110 if text_scale_percent == 100 else 100
+	_apply_text_scale()
+	_save_preferences()
+	_refresh_settings("Text size increased to 110%. Settings scroll to keep focused controls visible." if text_scale_percent == 110 else "Text size returned to 100%.")
+	text_scale_button.grab_focus()
+	call_deferred("_ensure_settings_control_visible", text_scale_button)
+
+func _apply_text_scale() -> void:
+	_apply_text_scale_to_tree(self)
+	if title_control_contract_label != null:
+		title_control_contract_label.visible = text_scale_percent == 100
+	if title_right_spacer != null:
+		title_right_spacer.visible = text_scale_percent == 100
+
+func _apply_text_scale_to_tree(node: Node) -> void:
+	if node is Control:
+		var control := node as Control
+		if control.theme != null:
+			if not control.has_meta("long_march_base_theme_font_size"):
+				control.set_meta("long_march_base_theme_font_size", control.theme.default_font_size)
+			var base_theme_font_size := int(control.get_meta("long_march_base_theme_font_size"))
+			control.theme.default_font_size = roundi(float(base_theme_font_size) * float(text_scale_percent) / 100.0)
+		if control.has_theme_font_size_override("font_size"):
+			if not control.has_meta("long_march_base_font_size"):
+				control.set_meta("long_march_base_font_size", control.get_theme_font_size("font_size"))
+			var base_font_size := int(control.get_meta("long_march_base_font_size"))
+			control.add_theme_font_size_override("font_size", roundi(float(base_font_size) * float(text_scale_percent) / 100.0))
+	for child in node.get_children():
+		_apply_text_scale_to_tree(child)
 
 func _toggle_reduced_motion() -> void:
 	reduced_motion = not reduced_motion
@@ -1234,6 +1296,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.connect("pause_requested", Callable(self, "_show_pause"))
 	game_view.connect("playtest_notes_closed", Callable(self, "_return_from_playtest_notes"))
 	add_child(game_view)
+	_apply_text_scale_to_tree(game_view)
 	move_child(game_view, 0)
 	menu_view.visible = false
 	guide_view.visible = false

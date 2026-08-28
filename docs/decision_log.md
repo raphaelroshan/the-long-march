@@ -843,3 +843,7 @@ Before a valid primary checkpoint is overwritten, the stage preserves and valida
 ## 2026-08-28 — Playtest notes are available at the decision
 
 The existing local-only feedback form is reachable from Pause as well as the final debrief. A paused handoff names the active region, day, location, and phase, preserves unfinished text for the current stage, and returns to the suspended pause menu without mutating campaign state or losing the pre-pause focus target. This was chosen over background telemetry or automatic uploads because early tests need authentic explanation in the tester's own words and an explicit sharing boundary.
+
+## 2026-08-28 — Large text preserves the decision canvas
+
+Settings offers a bounded 100%/110% text-size preference rather than scaling the whole viewport. Whole-canvas scaling made the fixed chassis and command desk exceed the 1280×720 logical width; enlarging inherited and explicit font sizes keeps that decision surface intact. At 110%, the title removes one redundant small control-summary line and its decorative right spacer, while the visible input guide remains. Settings scrolls its preference rows independently so context, status, and return controls stay fixed and controller focus never lands below the viewport.
