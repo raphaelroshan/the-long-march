@@ -285,7 +285,7 @@ func _build_title_menu() -> void:
 	scope.add_theme_font_size_override("font_size", 11)
 	scope.add_theme_color_override("font_color", Color("#d8a650"))
 	stage.add_child(scope)
-	stage.add_child(_stage_rule("01", "Inspect the chassis", "Keep fuel, ammunition, crew, and power connected."))
+	stage.add_child(_stage_rule("01", "Prepare at Ashgate", "Inspect connected systems, then answer the convoy contract."))
 	stage.add_child(_stage_rule("02", "Choose the first road", "Compare risk, fuel, time, pressure, and what your signal crew can see."))
 	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once, and recover at Morrowline."))
 
