@@ -567,3 +567,7 @@ Pausing immediately after Continue now says that the current decision matches th
 ## 2026-08-28 — Manual save receipts hide serialization internals
 
 Saving from Pause now leaves “March saved locally” in the stage receipt instead of exposing the prototype label and schema version. Schema metadata remains in the file and validation path where it is useful; the player sees only where the march was saved and what Continue will do.
+
+## 2026-08-28 — Incompatible saves use recovery language
+
+The title no longer exposes expected and discovered schema numbers when a checkpoint cannot be loaded. It identifies an incompatible save format and offers the existing remove-or-new-run recovery path, while the underlying validator continues to enforce the exact version boundary.

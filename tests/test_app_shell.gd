@@ -67,6 +67,13 @@ func _run() -> void:
 	app.confirmation_confirm_button.pressed.emit()
 	await process_frame
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.save_recovery_button.visible and app.start_button.has_focus(), "confirmed recovery should remove the invalid save and restore the primary start action")
+	var incompatible_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	incompatible_save.store_string(JSON.stringify({"save_version": 999}))
+	incompatible_save.close()
+	app._refresh_title_state()
+	_expect(app.save_status_label.text.contains("incompatible save format") and not app.save_status_label.text.contains("schema"), "an incompatible checkpoint should use player-facing recovery language rather than raw schema numbers")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	app._refresh_title_state()
 	app.settings_button.pressed.emit()
 	await process_frame
 	_expect(app.settings_view.visible and app.display_mode_button.has_focus(), "Settings should open without starting a run")

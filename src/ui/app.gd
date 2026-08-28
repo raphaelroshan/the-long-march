@@ -956,7 +956,7 @@ func _saved_run_info() -> Dictionary:
 		return {"exists": true, "valid": false, "summary": "Save unavailable · Invalid data. Start a new run to replace it."}
 	var schema_version := int(parsed.get("save_version", -1))
 	if schema_version != LongMarchState.SAVE_VERSION:
-		return {"exists": true, "valid": false, "summary": "Save unavailable · Expected schema %d, found %d." % [LongMarchState.SAVE_VERSION, schema_version]}
+		return {"exists": true, "valid": false, "summary": "Save unavailable · This checkpoint uses an incompatible save format. Remove it or start a new run."}
 	if not parsed.has("phase") or not parsed.has("current_location") or not parsed.has("modules"):
 		return {"exists": true, "valid": false, "summary": "Save unavailable · Required campaign state is missing."}
 	var validation_state := LongMarchState.new(0)
