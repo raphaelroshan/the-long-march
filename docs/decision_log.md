@@ -643,3 +643,7 @@ Runnable Windows and macOS packaging now goes through `scripts/export_playtest.s
 ## 2026-08-28 — Release metadata creates its own destination
 
 The tagged release workflow now creates the artifact directory immediately before writing its manifest. Export setup no longer owns that unrelated side effect, so refactoring or replacing the build script cannot leave an otherwise successful desktop package without its provenance metadata.
+
+## 2026-08-28 — Blockade pressure predicts its consequence
+
+The campaign desk now explains the Watch-to-Closing and Closing-to-Break thresholds before they are crossed. At Break it reports whether Signal Causeway is closed or being held open by forecasting, and it names both ways to reopen a closure. Color severity supports the text rather than carrying the rule alone.

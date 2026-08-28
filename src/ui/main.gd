@@ -631,6 +631,8 @@ func _build_ui() -> void:
 	campaign_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	controls.add_child(campaign_title)
 	campaign_pressure_label = Label.new()
+	campaign_pressure_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_pressure_label.custom_minimum_size = Vector2(320, 36)
 	campaign_pressure_label.add_theme_color_override("font_color", Color("#e89270"))
 	controls.add_child(campaign_pressure_label)
 	campaign_path_label = Label.new()
@@ -1891,7 +1893,20 @@ func _refresh_campaign_controls() -> void:
 	campaign_pressure_label.visible = state.campaign_active
 	campaign_path_label.visible = state.campaign_active
 	campaign_map.visible = state.campaign_active and planning_phase
-	campaign_pressure_label.text = "Blockade — %s · pressure %d · secured %d/5" % [state.campaign_pressure_band().capitalize(), state.campaign_pressure, state.campaign_encounters_completed]
+	var pressure_band := state.campaign_pressure_band()
+	var pressure_effect := "Closing begins at 3 · Break at 5 can close Signal Causeway."
+	var pressure_color := Color("#d8b568")
+	if pressure_band == "closing":
+		pressure_effect = "Break begins at 5 and can close Signal Causeway without forecasting."
+		pressure_color = Color("#e89270")
+	elif pressure_band == "break":
+		if state.campaign_node_closed("signal_causeway"):
+			pressure_effect = "Signal Causeway is closed · ready forecasting gear or Iven Pell can reopen it."
+		else:
+			pressure_effect = "Forecasting keeps Signal Causeway open despite Break pressure."
+		pressure_color = Color("#ef8375")
+	campaign_pressure_label.text = "Blockade — %s · pressure %d · secured %d/5\n%s" % [pressure_band.capitalize(), state.campaign_pressure, state.campaign_encounters_completed, pressure_effect]
+	campaign_pressure_label.add_theme_color_override("font_color", pressure_color)
 	campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [state.guard_contract_status.replace("_", " ").capitalize(), "Iven Pell" if state.specialist_id == "iven_pell" else "none"]
 
 	var contract_offered := state.campaign_active and state.guard_contract_status == "offered" and state.current_location == "ashgate_depot"

@@ -211,6 +211,7 @@ func _run() -> void:
 	_expect(game.guidance_label.text.contains("Select one cyan route"), "the objective should advance immediately after the contract is answered")
 	_expect(game.current_run_flow_step == 1 and game.run_flow_labels[0].text.begins_with("✓"), "answering the contract should advance the tracker to the Lowlands roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
+	_expect(game.campaign_pressure_label.text.contains("Closing begins at 3") and game.campaign_pressure_label.text.contains("Break at 5"), "Watch pressure should explain both upcoming closure thresholds before route choice")
 	_expect(game.campaign_map.button_for("rill_crossing").text.contains("KNOWN · LOW") and game.campaign_map.button_for("soot_orchard").text.contains("FORECAST · GUARDED"), "available map nodes should expose compact scouting and risk comparisons before focus")
 	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
 	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
@@ -563,6 +564,7 @@ func _run() -> void:
 	game._refresh_ui()
 	_expect(game.campaign_map.status_for("signal_causeway") == "closed" and game.campaign_map.status_for("lower_ash_road") == "available", "the visual map should show Break closing only the optional causeway")
 	_expect(game.campaign_map.detail_for("signal_causeway").contains("Ready forecasting gear or Iven Pell"), "a closed route should name both ways to restore access")
+	_expect(game.campaign_pressure_label.text.contains("Signal Causeway is closed") and game.campaign_pressure_label.text.contains("can reopen it"), "Break pressure should explain the live closure and both recovery paths")
 	game.state.campaign_pressure = saved_pressure
 	game._refresh_ui()
 	var saved_money: int = game.state.money
