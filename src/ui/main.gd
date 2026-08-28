@@ -2232,6 +2232,9 @@ func _refresh_ui() -> void:
 	if state.phase == "results":
 		encounter_label.text = "RUN RESULT — %s\nDay %d · Hull %d/10 · Ashmarks %d · Trust %d · Contract %s · %d systems offline" % [state.final_result.replace("_", " ").capitalize(), state.day, state.hull_condition, state.money, state.settlement_trust, state.guard_contract_status.replace("_", " ").capitalize(), int(dependencies.offline)]
 		encounter_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	elif state.phase == "settlement" and state.encounter_outcome != "forced_retreat":
+		encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
+		encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
 	elif not state.encounter_outcome.is_empty():
 		var last_consequence := state.encounter_report[-1] if not state.encounter_report.is_empty() else "The road is clear."
 		encounter_label.text = "AFTER-ACTION — %s · resolved in %d step%s\n%s" % [state.encounter_outcome.replace("_", " ").to_upper(), state.encounter_step, "" if state.encounter_step == 1 else "s", String(last_consequence)]
@@ -2245,7 +2248,7 @@ func _refresh_ui() -> void:
 		elif not state.campaign_event_pending.is_empty():
 			encounter_label.text = "LOCAL DECISION\nResolve the current situation before choosing the next road."
 		elif state.phase == "settlement":
-			encounter_label.text = "MORROWLINE RECOVERY\nUse up to two service actions, refit freely, then prepare for the final road."
+			encounter_label.text = "MORROWLINE RECOVERY\n%s. Refit freely, then prepare for the final road." % _service_action_status_text()
 		elif selected_campaign_node_id.is_empty():
 			encounter_label.text = "ROUTE PLANNING\nSelect a cyan route and review its costs."
 		else:

@@ -531,3 +531,7 @@ Selecting a route now keeps `B/Esc cancels selection` in both the route-review r
 ## 2026-08-28 — Every terminal outcome opens a debrief
 
 The result frame and current order use March Debrief and Debrief rather than the success-coded Run Complete heading. Decisive, scarred, and failed outcomes still state their specific classification and cause inside that neutral frame, so a terminal loss is reviewed rather than accidentally congratulated.
+
+## 2026-08-28 — Recovery copy retains the live service budget
+
+The persistent Morrowline recovery receipt now derives its action count from the current settlement state. After a service or any later interface refresh, it says zero, one, or two actions remain instead of reverting to the original “up to two” allowance.

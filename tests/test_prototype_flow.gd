@@ -544,6 +544,8 @@ func _run() -> void:
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	_expect(game.settlement_title.text.contains("1 ACTION LEFT"), "the service budget should update immediately after use")
 	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action remains"), "settlement services should report cost, effect, and remaining budget above the fold")
+	game._refresh_ui()
+	_expect(game.encounter_label.text.begins_with("MORROWLINE RECOVERY") and game.encounter_label.text.contains("1 service action remains") and not game.encounter_label.text.contains("up to two"), "ordinary recovery refreshes should retain the live remaining service budget")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
 	var high_risk_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat

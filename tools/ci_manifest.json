@@ -1,7 +1,7 @@
 {
   "slug": "the-long-march",
   "display_name": "The Long March",
-  "prototype_version": "0.3.0-alpha.172",
+  "prototype_version": "0.3.0-alpha.173",
   "playtest_ready": true,
   "godot_test": "res://tests/test_fortress_state.gd",
   "primary_repo": "raphaelroshan/the-long-march",
