@@ -679,3 +679,7 @@ Threat definitions now carry explicit counter-module IDs in addition to player-f
 ## 2026-08-28 — Saved decision history is validated
 
 Campaign deserialization now checks every persisted event and choice against the authored Soot Orchard, Broken Relay, and Red Wheel option sets. Malformed containers and unknown choices are rejected before state mutation, so a damaged checkpoint cannot manufacture a plausible but false debrief history.
+
+## 2026-08-28 — Saved routes must exist on the authored map
+
+Campaign deserialization now validates journey locations, destinations, route IDs, target nodes, and every secured path step before changing live state. Active campaigns must begin at Ashgate, follow real map edges, and keep their recovery node aligned with the last secured stop, preventing damaged checkpoints from loading into dead ends or inventing impossible travel history.

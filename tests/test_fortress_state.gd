@@ -437,6 +437,26 @@ func _test_save_round_trip() -> void:
 	malformed_decision_save["campaign_decisions"] = ["move_silent"]
 	var malformed_decision_load := LongMarchState.new(0).load_serialized(malformed_decision_save)
 	_expect(not bool(malformed_decision_load.get("ok", false)) and String(malformed_decision_load.get("reason", "")).contains("malformed"), "saved campaign history should reject a non-dictionary decision record")
+	var unknown_location_save := state.serialize()
+	unknown_location_save["current_location"] = "the_road_beyond_the_map"
+	var unknown_location_load := LongMarchState.new(0).load_serialized(unknown_location_save)
+	_expect(not bool(unknown_location_load.get("ok", false)) and String(unknown_location_load.get("reason", "")).contains("unknown journey location"), "saved journeys should reject locations outside the authored map")
+	var malformed_path_save := state.serialize()
+	malformed_path_save["campaign_path"] = "ashgate_depot"
+	var malformed_path_load := LongMarchState.new(0).load_serialized(malformed_path_save)
+	_expect(not bool(malformed_path_load.get("ok", false)) and String(malformed_path_load.get("reason", "")).contains("path record is malformed"), "saved campaigns should reject a non-array path record")
+	var impossible_path_save := state.serialize()
+	impossible_path_save["campaign_active"] = true
+	impossible_path_save["campaign_path"] = ["ashgate_depot", "signal_causeway"]
+	impossible_path_save["campaign_last_safe_node"] = "signal_causeway"
+	var impossible_path_load := LongMarchState.new(0).load_serialized(impossible_path_save)
+	_expect(not bool(impossible_path_load.get("ok", false)) and String(impossible_path_load.get("reason", "")).contains("impossible route"), "saved campaigns should reject paths that jump between disconnected nodes")
+	var mismatched_safe_node_save := state.serialize()
+	mismatched_safe_node_save["campaign_active"] = true
+	mismatched_safe_node_save["campaign_path"] = ["ashgate_depot", "rill_crossing"]
+	mismatched_safe_node_save["campaign_last_safe_node"] = "ashgate_depot"
+	var mismatched_safe_node_load := LongMarchState.new(0).load_serialized(mismatched_safe_node_save)
+	_expect(not bool(mismatched_safe_node_load.get("ok", false)) and String(mismatched_safe_node_load.get("reason", "")).contains("secured path"), "saved campaigns should keep the recovery node aligned with the secured path")
 
 func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "campaign engine should install")

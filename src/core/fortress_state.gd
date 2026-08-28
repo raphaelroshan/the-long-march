@@ -1054,6 +1054,38 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_run_complete := bool(data.get("run_complete", run_complete))
 	var restored_journey_complete := bool(data.get("journey_complete", journey_complete))
 	var restored_encounter_active := bool(data.get("encounter_active", encounter_active))
+	var restored_campaign_active := bool(data.get("campaign_active", campaign_active))
+	var restored_current_location := String(data.get("current_location", current_location))
+	var restored_journey_node := String(data.get("journey_node", journey_node))
+	var restored_journey_destination := String(data.get("journey_destination", journey_destination))
+	var restored_journey_route := String(data.get("journey_route", journey_route))
+	var restored_campaign_target_node := String(data.get("campaign_target_node", campaign_target_node))
+	var restored_campaign_last_safe_node := String(data.get("campaign_last_safe_node", campaign_last_safe_node))
+	var raw_campaign_path: Variant = data.get("campaign_path", [])
+	if restored_current_location not in JOURNEY_NODES or restored_journey_node not in JOURNEY_NODES:
+		return {"ok": false, "reason": "checkpoint contains an unknown journey location"}
+	if not restored_journey_destination.is_empty() and restored_journey_destination not in JOURNEY_NODES:
+		return {"ok": false, "reason": "checkpoint contains an unknown journey destination"}
+	if not restored_journey_route.is_empty() and restored_journey_route not in ROUTES and restored_journey_route not in CAMPAIGN_NODES:
+		return {"ok": false, "reason": "checkpoint contains an unknown journey route"}
+	if not restored_campaign_target_node.is_empty() and restored_campaign_target_node not in CAMPAIGN_NODES:
+		return {"ok": false, "reason": "checkpoint contains an unknown campaign target"}
+	if restored_campaign_last_safe_node not in CAMPAIGN_NODES:
+		return {"ok": false, "reason": "checkpoint contains an unknown safe campaign node"}
+	if not raw_campaign_path is Array:
+		return {"ok": false, "reason": "campaign path record is malformed"}
+	var restored_campaign_path := _string_array(raw_campaign_path)
+	for node_id in restored_campaign_path:
+		if node_id not in CAMPAIGN_NODES:
+			return {"ok": false, "reason": "campaign path contains an unknown node"}
+	if restored_campaign_active:
+		if restored_campaign_path.is_empty() or restored_campaign_path[0] != "ashgate_depot":
+			return {"ok": false, "reason": "campaign path does not begin at Ashgate Depot"}
+		for index in range(1, restored_campaign_path.size()):
+			if restored_campaign_path[index] not in CAMPAIGN_EDGES.get(restored_campaign_path[index - 1], []):
+				return {"ok": false, "reason": "campaign path contains an impossible route"}
+		if restored_campaign_last_safe_node != restored_campaign_path.back():
+			return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
 	var restored_decisions = data.get("campaign_decisions", {})
 	if not restored_decisions is Dictionary:
 		return {"ok": false, "reason": "campaign decision record is malformed"}
@@ -1078,7 +1110,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	command_points = int(data.get("command_points", command_points))
 	heat = int(data.get("heat", heat))
 	hull_condition = int(data.get("hull_condition", hull_condition))
-	current_location = String(data.get("current_location", current_location))
+	current_location = restored_current_location
 	route_risk_modifier = float(data.get("route_risk_modifier", route_risk_modifier))
 	current_route_risk = float(data.get("current_route_risk", current_route_risk))
 	encounter_pressure = int(data.get("encounter_pressure", encounter_pressure))
@@ -1088,9 +1120,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	heat_relief = int(data.get("heat_relief", heat_relief))
 	heat_surge = int(data.get("heat_surge", heat_surge))
 	vent_exposure = bool(data.get("vent_exposure", vent_exposure))
-	journey_node = String(data.get("journey_node", journey_node))
-	journey_destination = String(data.get("journey_destination", journey_destination))
-	journey_route = String(data.get("journey_route", journey_route))
+	journey_node = restored_journey_node
+	journey_destination = restored_journey_destination
+	journey_route = restored_journey_route
 	journey_complete = restored_journey_complete
 	encounter_active = restored_encounter_active
 	encounter_step = int(data.get("encounter_step", encounter_step))
@@ -1106,11 +1138,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	final_result = restored_final_result
 	settlement_actions_remaining = int(data.get("settlement_actions_remaining", settlement_actions_remaining))
 	settlement_report = _string_array(data.get("settlement_report", []))
-	campaign_active = bool(data.get("campaign_active", campaign_active))
+	campaign_active = restored_campaign_active
 	campaign_encounters_completed = int(data.get("campaign_encounters_completed", campaign_encounters_completed))
-	campaign_path = _string_array(data.get("campaign_path", []))
-	campaign_target_node = String(data.get("campaign_target_node", campaign_target_node))
-	campaign_last_safe_node = String(data.get("campaign_last_safe_node", campaign_last_safe_node))
+	campaign_path = restored_campaign_path
+	campaign_target_node = restored_campaign_target_node
+	campaign_last_safe_node = restored_campaign_last_safe_node
 	campaign_pressure = int(data.get("campaign_pressure", campaign_pressure))
 	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
 	campaign_event_pending = String(data.get("campaign_event_pending", campaign_event_pending))

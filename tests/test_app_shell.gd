@@ -332,6 +332,14 @@ func _run() -> void:
 	invalid_decision_file.close()
 	var invalid_decision_info: Dictionary = app._saved_run_info()
 	_expect(not bool(invalid_decision_info.get("valid", true)) and String(invalid_decision_info.get("summary", "")).contains("unknown choice"), "the title should reject a checkpoint whose authored decision history cannot be trusted")
+	var impossible_path_payload: Dictionary = completed_payload.duplicate(true)
+	impossible_path_payload["campaign_path"] = ["ashgate_depot", "signal_causeway", "meridian_pass"]
+	impossible_path_payload["campaign_last_safe_node"] = "meridian_pass"
+	var impossible_path_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	impossible_path_file.store_string(JSON.stringify(impossible_path_payload))
+	impossible_path_file.close()
+	var impossible_path_info: Dictionary = app._saved_run_info()
+	_expect(not bool(impossible_path_info.get("valid", true)) and String(impossible_path_info.get("summary", "")).contains("impossible route"), "the title should reject a checkpoint whose secured route could not occur on the authored map")
 	completed_save = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()
