@@ -1006,6 +1006,37 @@ func _test_flooded_veyru_threats_and_contract() -> void:
 	var failed_restore := LongMarchState.new(0)
 	_expect(bool(failed_restore.load_serialized(teaching.serialize()).get("ok", false)) and failed_restore.veyru_contract_status == "failed" and failed_restore.veyru_medicine_carrier_id == "parts_crate", "a failed medicine contract should preserve its named carrier even when that carrier was cut loose")
 
+	var sunken := LongMarchState.new(2204)
+	_install_veyru_loadout(sunken)
+	sunken.start_flooded_veyru()
+	sunken.choose_veyru_medicine_contract(true)
+	var route_choice_restore := LongMarchState.new(0)
+	_expect(bool(route_choice_restore.load_serialized(sunken.serialize()).get("ok", false)) and route_choice_restore.campaign_available_nodes() == ["pump_gallery", "sunken_tramworks"], "the answered Veyru contract and opening route choice should survive save/load")
+	var sunken_result := _veyru_battle(sunken, "sunken_tramworks", "protect_crew")
+	_expect(bool(sunken_result.get("resolved", false)) and sunken.phase == "map" and sunken.hull_condition == 9 and sunken.campaign_path.has("sunken_tramworks"), "the prepared layout should survive Sunken Tramworks while paying its visible heavy-build hull cost")
+
+	var combination := LongMarchState.new(2204)
+	_install_veyru_loadout(combination)
+	combination.start_flooded_veyru()
+	combination.choose_veyru_medicine_contract(false)
+	combination.current_location = "veyru_evacuation_camp"
+	combination.journey_node = "veyru_evacuation_camp"
+	combination.phase = "settlement"
+	combination.campaign_path = ["lantern_quay", "pump_gallery", "veyru_evacuation_camp"]
+	combination.campaign_last_safe_node = "veyru_evacuation_camp"
+	combination.campaign_pressure = 2
+	var registry := combination.begin_campaign_route("drowned_registry", "protect_crew")
+	_expect(bool(registry.get("ok", false)) and combination.encounter_enemies.size() == 2 and String(combination.encounter_enemies[0].get("id", "")) == "flood_surge" and String(combination.encounter_enemies[1].get("id", "")) == "climbers", "Drowned Registry should expose the authored Flood Surge and Climbers combination")
+
+	var replay_a := LongMarchState.new(2204)
+	var replay_b := LongMarchState.new(2204)
+	for replay_state in [replay_a, replay_b]:
+		_install_veyru_loadout(replay_state)
+		replay_state.start_flooded_veyru()
+		replay_state.choose_veyru_medicine_contract(true)
+		_veyru_battle(replay_state, "pump_gallery", "protect_cargo")
+	_expect(replay_a.encounter_report == replay_b.encounter_report and replay_a.modules == replay_b.modules and replay_a.hull_condition == replay_b.hull_condition and replay_a.campaign_pressure == replay_b.campaign_pressure, "the Veyru teaching route should replay deterministically from the same seed, layout, contract, doctrine, and order")
+
 func _test_complete_flooded_veyru_campaign() -> void:
 	var state := LongMarchState.new(2204)
 	_install_veyru_loadout(state)

@@ -8,7 +8,8 @@
     "player_role": "The newly appointed marchmaster responsible for keeping the fortress moving and useful.",
     "regional_objective": "Reach the Meridian Refuge before the ash season closes the eastern passes.",
     "content_extensions": [
-      "content/gameplay_framework.json"
+      "content/gameplay_framework.json",
+      "content/flooded_veyru.json"
     ],
     "chapters": [
       {

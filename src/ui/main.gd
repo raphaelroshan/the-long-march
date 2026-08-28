@@ -277,7 +277,7 @@ func _refresh_planning_focus() -> void:
 	if state.phase not in ["refit", "map", "settlement"]:
 		return
 	var active_controls: Array = []
-	for control in [contract_accept_button, contract_decline_button, doctrine_option, campaign_commit_button, module_option, focus_chassis_button, rotate_button, remove_button, settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
+	for control in [contract_accept_button, contract_decline_button, doctrine_option, campaign_commit_button, module_option, focus_chassis_button, rotate_button, remove_button, settlement_repair_button, settlement_refuel_button, settlement_hull_button, settlement_routes_button]:
 		if _control_can_receive_focus(control):
 			active_controls.append(control)
 	for event_button in campaign_event_buttons:
@@ -949,7 +949,16 @@ func _connect_desk_focus_scrolling() -> void:
 	controls.append_array(campaign_node_buttons)
 	controls.append_array(intervention_buttons)
 	for control in controls:
-		control.focus_entered.connect(_on_desk_control_focused.bind(control))
+		_connect_desk_focus_scroll(control)
+
+func _connect_desk_focus_scroll(control: Control) -> void:
+	var callback := _on_desk_control_focused.bind(control)
+	if not control.focus_entered.is_connected(callback):
+		control.focus_entered.connect(callback)
+
+func _connect_campaign_node_focus_scrolling() -> void:
+	for control in campaign_node_buttons:
+		_connect_desk_focus_scroll(control)
 
 func _on_desk_control_focused(control: Control) -> void:
 	pending_desk_scroll_control = control
@@ -1387,6 +1396,8 @@ func focus_current_action() -> void:
 		for button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
 			if _focus_control(button):
 				return
+		if _focus_control(settlement_routes_button):
+			return
 	for button in campaign_node_buttons:
 		if _focus_control(button):
 			return
@@ -2169,6 +2180,7 @@ func _refresh_campaign_controls() -> void:
 		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})
+	_connect_campaign_node_focus_scrolling()
 	campaign_cancel_button.visible = planning_phase and not selected_campaign_node_id.is_empty()
 	var selected_preview: Dictionary = previews.get(selected_campaign_node_id, {})
 	campaign_commit_intel_label.visible = planning_phase and not selected_preview.is_empty()
@@ -2220,7 +2232,8 @@ func _refresh_campaign_controls() -> void:
 		var choice_text := "%s\n%s" % [String(choice.label), effect]
 		button.text = choice_text if choice_enabled else "%s\nLOCKED · %s" % [choice_text, locked_reason.to_upper()]
 		button.tooltip_text = "" if choice_enabled else locked_reason
-		button.custom_minimum_size = Vector2(0, 56 if choice_enabled else 72)
+		var line_count := choice_text.count("\n") + 1
+		button.custom_minimum_size = Vector2(0, 72 if line_count >= 3 and choice_enabled else (88 if line_count >= 3 else (56 if choice_enabled else 72)))
 		button.disabled = not choice_enabled
 		button.set_meta("choice_id", String(choice.id))
 

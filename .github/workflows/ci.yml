@@ -33,6 +33,8 @@ jobs:
         run: python tools/validate_content.py --manifest content/content_manifest.json
       - name: Validate gameplay framework
         run: python tools/validate_gameplay_framework.py --data content/gameplay_framework.json
+      - name: Validate Flooded Veyru chapter
+        run: python tools/validate_flooded_veyru.py --data content/flooded_veyru.json
       - name: Validate build versions
         run: python tools/validate_versions.py --repo .
 

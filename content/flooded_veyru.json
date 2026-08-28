@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "region": {
+    "id": "flooded_veyru",
+    "name": "Flooded Veyru",
+    "start_node": "lantern_quay",
+    "final_node": "dry_archive",
+    "encounter_count": 5,
+    "pressure": {
+      "id": "rising_water",
+      "bands": [
+        {"id": "low_water", "minimum": 0, "maximum": 2},
+        {"id": "flooding", "minimum": 3, "maximum": 4},
+        {"id": "breach", "minimum": 5}
+      ],
+      "breach_closes": ["drowned_registry"],
+      "breach_opens": ["pilgrim_gantry"],
+      "guaranteed_recovery_node": "pilgrim_gantry"
+    }
+  },
+  "contract": {
+    "id": "veyru_medicine_delivery",
+    "offer_node": "lantern_quay",
+    "delivery_node": "dry_archive",
+    "carrier_priority": ["refugee_bunk", "parts_crate"],
+    "reward": {"ashmarks": 28, "trust": 2},
+    "failure_ends_run": false,
+    "camp_action_bonus": 1
+  },
+  "prepared_loadout": {
+    "mass_limit": 14,
+    "heat_limit": 6,
+    "modules": [
+      {"id": "steam_lance_engine", "position": [0, 0]},
+      {"id": "coal_cell", "position": [0, 1]},
+      {"id": "generator_core", "position": [2, 0]},
+      {"id": "crew_quarters", "position": [2, 1]},
+      {"id": "field_workshop", "position": [2, 2]},
+      {"id": "water_condenser", "position": [2, 3]},
+      {"id": "parts_crate", "position": [4, 2]}
+    ]
+  },
+  "nodes": [
+    {"id": "lantern_quay", "kind": "settlement", "encounter": [], "next": ["pump_gallery", "sunken_tramworks"]},
+    {"id": "pump_gallery", "kind": "hazard", "encounter": ["flood_surge"], "next": ["veyru_evacuation_camp"], "decision": "drain_pumps"},
+    {"id": "sunken_tramworks", "kind": "hazard", "encounter": ["burrowers"], "next": ["veyru_evacuation_camp"], "mass_sensitive": true},
+    {"id": "veyru_evacuation_camp", "kind": "settlement", "encounter": ["flood_surge"], "next": ["archive_causeway", "drowned_registry", "pilgrim_gantry"], "base_service_actions": 1},
+    {"id": "archive_causeway", "kind": "relay", "encounter": ["flood_surge"], "next": ["dry_archive_gate"]},
+    {"id": "drowned_registry", "kind": "salvage", "encounter": ["flood_surge", "climbers"], "next": ["dry_archive_gate"], "decision": "registry_salvage"},
+    {"id": "pilgrim_gantry", "kind": "recovery", "encounter": ["flood_surge"], "next": ["dry_archive_gate"], "pressure_change": -1},
+    {"id": "dry_archive_gate", "kind": "choice", "encounter": ["flood_surge", "climbers"], "next": ["dry_archive"], "decision": "archive_broadcast"},
+    {"id": "dry_archive", "kind": "finale", "encounter": ["civic_guardian"], "next": []}
+  ],
+  "regional_threats": [
+    {
+      "id": "flood_surge",
+      "role": "ordinary_hazard",
+      "targets": ["lower_hull", "cargo", "sustain"],
+      "counters": ["water_condenser", "side_armor_skirt", "field_workshop", "seal_compartment"]
+    },
+    {
+      "id": "civic_guardian",
+      "role": "final_contact",
+      "targets": ["cargo", "signal", "crew", "armor"],
+      "counters": ["shell_cannon", "protect_cargo", "seal_archive"]
+    }
+  ],
+  "decisions": [
+    {"id": "drain_pumps", "choices": ["drain_gallery", "leave_gallery"]},
+    {"id": "registry_salvage", "choices": ["recover_records", "abandon_records"]},
+    {"id": "archive_broadcast", "choices": ["broadcast_archive", "seal_archive"]}
+  ],
+  "results": [
+    {"id": "archive_kept", "requires": ["fortress_mobile", "medicine_carrier_operational", "hull_at_least_6"]},
+    {"id": "archive_scarred", "requires": ["fortress_mobile"]},
+    {"id": "veyru_lost", "requires": ["final_mobility_or_hull_failure"]}
+  ]
+}

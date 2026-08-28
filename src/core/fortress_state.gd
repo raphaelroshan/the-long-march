@@ -976,8 +976,8 @@ func campaign_event_details() -> Dictionary:
 			]}
 		"archive_broadcast":
 			return {"id": "archive_broadcast", "title": "What the Archive Broadcasts", "body": "The gate can open its civic signal to every flooded district, or seal the archive and hide the medicine carrier's approach.", "choices": [
-				{"id": "broadcast_archive", "label": "Broadcast the archive", "effect": "Knowledge +1 · Trust +1 · Climbers join the final contact", "enabled": true, "reason": ""},
-				{"id": "seal_archive", "label": "Seal the archive", "effect": "Rising water -1 · Medicine carrier damage -1 · Final contact forecast only", "enabled": true, "reason": ""}
+				{"id": "broadcast_archive", "label": "Broadcast the archive", "effect": "Knowledge +1 · Trust +1\nClimbers join the final contact", "enabled": true, "reason": ""},
+				{"id": "seal_archive", "label": "Seal the archive", "effect": "Rising water -1 · Carrier damage -1\nFinal targeting stays forecast", "enabled": true, "reason": ""}
 			]}
 	return {}
 
