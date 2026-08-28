@@ -417,6 +417,27 @@ func _run() -> void:
 	_expect(game.route_preview_label.text.contains("ready forecasting gear or Iven Pell"), "an unscouted road should teach the player how to reveal its hidden information")
 	_expect(game.route_preview_label.text.contains("Visible risk factors:") and game.route_preview_label.text.contains("blockade +"), "unscouted intel should expose player-created risk without revealing the hidden route baseline")
 	_expect(game.route_preview_label.get_theme_color("font_color") == Color("#cbb8e8"), "unscouted route intel should carry a distinct unknown-information tone")
+	var before_retreat: Dictionary = game.state.serialize()
+	game.state.campaign_last_safe_node = "rill_crossing"
+	game.state.campaign_target_node = "red_wheel_toll_bridge"
+	game.state.current_location = "red_wheel_toll_bridge"
+	game.state.phase = "battle"
+	game.state.hull_condition = 0
+	game.state.fuel = 0
+	var retreat_result: Dictionary = game.state._campaign_recover_from_failure()
+	game._refresh_ui()
+	await process_frame
+	_expect(bool(retreat_result.get("ok", false)) and game.state.phase == "map", "a non-final loss should return the campaign to its last safe planning node")
+	_expect(game.guidance_label.text.begins_with("RETREAT RECOVERED") and game.guidance_label.text.contains("patched movement chain"), "post-retreat guidance should acknowledge recovery before asking for another road")
+	_expect(game.encounter_label.text.begins_with("AFTER-ACTION — FORCED RETREAT") and game.encounter_label.text.contains("Crew repair:"), "the retreat receipt should remain above the fold beside its next action")
+	var retreat_focus_is_route := false
+	for route_button in game.campaign_node_buttons:
+		if route_button.has_focus() and not route_button.disabled:
+			retreat_focus_is_route = true
+			break
+	_expect(retreat_focus_is_route, "forced-retreat recovery should hand controller focus to an available route")
+	game.state.load_serialized(before_retreat)
+	game._refresh_ui()
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and game.campaign_commit_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel - int(game.state.campaign_node_preview("red_wheel_toll_bridge", game._selected_id(game.doctrine_option)).get("fuel", 0))]) and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should show known resource balances without revealing hidden risk")

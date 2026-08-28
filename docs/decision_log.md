@@ -503,3 +503,7 @@ When Meridian Pass ends in March Failed, the Final stage uses a red failed marke
 ## 2026-08-28 — Recovery budgets use one shared grammatical status
 
 Morrowline guidance and completed-service receipts derive “0 service actions remain,” “1 service action remains,” and “2 service actions remain” from one helper. The campaign route preview also keeps the recovery budget visible until a road is selected, rather than immediately reverting to generic map-selection copy at the settlement.
+
+## 2026-08-28 — Retreat recovery remains the current order
+
+After a non-final forced retreat, the command desk tells the player to review the exact losses and patched movement chain before refitting or choosing another road. A retreat to Morrowline also retains the remaining service budget in that instruction. Selecting a new route still advances guidance to the normal route-ready state, so the recovery explanation persists only until the player deliberately moves on.

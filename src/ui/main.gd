@@ -2297,6 +2297,10 @@ func _current_guidance() -> String:
 		if not block_reason.is_empty():
 			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again." % block_reason
 		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit." % node_name
+	if state.encounter_outcome == "forced_retreat":
+		if state.phase == "settlement":
+			return "RETREAT TO MORROWLINE · %s. Review the after-action losses, recover, and refit before choosing another road." % _service_action_status_text()
+		return "RETREAT RECOVERED · Review the exact losses at left and the patched movement chain, refit if needed, then choose another road."
 	if state.phase == "settlement":
 		return "RECOVERY · %s. Repair or refuel, refit freely, then choose the next road." % _service_action_status_text()
 	if state.campaign_active and state.phase in ["refit", "map"]:
