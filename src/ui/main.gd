@@ -64,6 +64,7 @@ var right_scroll: ScrollContainer
 var journey_label: Label
 var encounter_label: Label
 var combat_panel: CombatPanel
+var advance_warning_label: Label
 var event_label: Label
 var log_label: Label
 var route_option: OptionButton
@@ -694,6 +695,12 @@ func _build_ui() -> void:
 	advance_encounter_button.pressed.connect(_on_advance_encounter_pressed)
 	_accent_button(advance_encounter_button, Color("#593e28"), Color("#e8c58e"))
 	controls.add_child(advance_encounter_button)
+	advance_warning_label = Label.new()
+	advance_warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	advance_warning_label.add_theme_font_size_override("font_size", 11)
+	advance_warning_label.add_theme_color_override("font_color", Color("#ff9d8f"))
+	advance_warning_label.visible = false
+	controls.add_child(advance_warning_label)
 	combat_inspect_button = Button.new()
 	combat_inspect_button.text = "INSPECT CHASSIS · CHOOSE SEAL TARGET"
 	combat_inspect_button.custom_minimum_size = Vector2(0, 44)
@@ -2036,6 +2043,9 @@ func _refresh_ui() -> void:
 	encounter_label.visible = not is_battle_phase
 	advance_encounter_button.visible = is_battle_phase
 	advance_encounter_button.disabled = not state.encounter_active
+	var advance_warning := _critical_combat_warning() if is_battle_phase else ""
+	advance_warning_label.visible = is_battle_phase and not advance_warning.is_empty()
+	advance_warning_label.text = "NEXT STEP WARNING · %s" % advance_warning
 	if is_battle_phase:
 		advance_encounter_button.text = _advance_encounter_action_text()
 	combat_inspect_button.visible = is_battle_phase
@@ -2359,7 +2369,7 @@ func _critical_combat_warning() -> String:
 					var change: Dictionary = dependency_changes[index]
 					cascade_names.append("%s → %s" % [String(change.get("name", "System")), String(change.get("to", "offline")).capitalize()])
 				var hidden_count := dependency_changes.size() - cascade_names.size()
-				warning = "%s Cascade: %s%s." % [warning.trim_suffix("."), ", ".join(cascade_names), ", and %d more" % hidden_count if hidden_count > 0 else ""]
+				warning = "%s · Cascade: %s%s." % [warning.trim_suffix("."), ", ".join(cascade_names), ", and %d more" % hidden_count if hidden_count > 0 else ""]
 		elif int(impact.get("armor_absorbed", 0)) > 0 and int(impact.get("armor_remaining_durability", 1)) <= 0:
 			priority = 1
 			var armor_id := String(impact.get("armor_id", ""))

@@ -611,3 +611,7 @@ Deserialization rejects a results-phase checkpoint unless its outcome is Decisiv
 ## 2026-08-28 — Completion state must agree with the saved phase
 
 A results checkpoint is valid only when both the run and journey are marked complete, while active campaign phases reject terminal flags or outcomes. This keeps recovery strict at the state boundary and prevents a contradictory save from appearing to be either a resumable march or a trustworthy debrief.
+
+## 2026-08-28 — Critical consequences stay beside Advance
+
+When the next combat step will collapse the hull, disable a system, trigger a dependency cascade, or break protecting armor, the command desk now repeats that forecast directly beneath Advance. The detailed contact card and current-order text remain available, but the irreversible action no longer depends on the player connecting information across opposite sides of the screen.

@@ -282,6 +282,7 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_panels[0].visible and game.combat_panel.enemy_names[0].text == "ROAD RAIDER", "battle state should expose a readable enemy card")
 	_expect(game.combat_panel.step_labels[0].text == "NEXT · 1" and game.advance_encounter_button.text.contains("STEP 1 OF 6"), "combat controls should identify the exact next timeline step")
 	_expect(game.combat_panel.enemy_states[0].text.contains("2 STEPS OUT") and game.guidance_label.text.contains("2 steps out"), "approaching enemies should use a live countdown before contact")
+	_expect(not game.advance_warning_label.visible, "the advance action should not reserve warning space when the next step has no critical consequence")
 	_expect(game.combat_panel.enemy_counters[0].text.contains("Seeks: cargo / exterior") and game.combat_panel.enemy_counters[0].text.contains("Protect Cargo active") and game.combat_panel.enemy_counters[0].text.contains("Counter:"), "enemy cards should expose targeting priorities, active doctrine protection, and counters without relying on a tooltip")
 	_expect(game.combat_panel.order_label.text.contains("Emergency order: 1 available") and game.combat_panel.order_label.text.contains("Next step 1/6") and not game.combat_panel.order_label.text.contains("CP") and not game.combat_panel.order_label.text.contains("Step 0"), "combat status should describe the actual order budget and next timeline step without exposing internal counters")
 	var initial_shift_preview: Dictionary = game.state.encounter_shift_power_preview()
@@ -324,6 +325,7 @@ func _run() -> void:
 	var displayed_redirect_text: String = "%s → %s" % [String(displayed_redirects[0].get("enemy_name", "")), String(displayed_redirects[0].get("target_name", ""))] if not displayed_redirects.is_empty() else ""
 	_expect(displayed_redirects.size() == 1 and game.intervention_help_label.text.begins_with("SEAL COMPARTMENT") and game.intervention_help_label.text.contains(displayed_redirect_text) and game.intervention_buttons[1].text.contains(displayed_redirect_text), "the only Seal order should preview its replacement target before commitment")
 	_expect(game.guidance_label.text.contains("Coal Cell will be disabled") and game.guidance_label.text.contains("Steam Lance Engine → Offline") and game.guidance_label.text.contains("Review the emergency orders"), "the current order should promote a predicted dependency cascade before the player advances")
+	_expect(game.advance_warning_label.visible and game.advance_warning_label.text.contains("Coal Cell will be disabled") and game.advance_warning_label.text.contains("Steam Lance Engine → Offline"), "a critical next-step consequence should remain adjacent to the Advance action")
 	var pre_seal_state: Dictionary = game.state.serialize()
 	game.intervention_buttons[1].pressed.emit()
 	await process_frame
@@ -413,12 +415,16 @@ func _run() -> void:
 	_expect(game.combat_panel.title_label.text.begins_with("ACTIVE CONTACT"), "the battle heading should change when an undefeated enemy reaches the fortress")
 	_expect(game.combat_panel.enemy_states[0].text.contains("TARGET · COAL CELL") and game.combat_panel.enemy_states[0].text.contains("NEXT · 1 DAMAGE · 1→0 · DISABLES SYSTEM") and game.combat_panel.enemy_states[0].text.contains("ARMOR · FRONT ARMOR PLATE · 1→0 · BREAKS") and game.combat_panel.enemy_states[0].text.contains("CASCADE · STEAM LANCE ENGINE → OFFLINE") and not game.combat_panel.enemy_states[0].text.contains("coal_cell"), "contact cards should translate target IDs and expose target, armor, and downstream dependency consequences")
 	var pre_hull_preview_enemy: Dictionary = game.state.encounter_enemies[0].duplicate(true)
+	var pre_hull_preview_condition: int = game.state.hull_condition
 	game.state.encounter_enemies[0]["arrived"] = true
 	game.state.encounter_enemies[0]["target"] = "hull"
+	game.state.hull_condition = 1
 	game._refresh_ui()
 	game.intervention_buttons[1].grab_focus()
 	await process_frame
 	_expect(game.combat_inspect_button.text.contains("HULL EXPOSED") and game.intervention_help_label.text.contains("does not prevent the hull-directed hit"), "a hull-directed contact should explain that Seal cannot prevent its current attack")
+	_expect(game.advance_warning_label.visible and game.advance_warning_label.text.contains("Hull collapse is predicted"), "a terminal hull forecast should be repeated beside the Advance action")
+	game.state.hull_condition = pre_hull_preview_condition
 	game.state.encounter_enemies[0] = pre_hull_preview_enemy
 	game._refresh_ui()
 	await _advance_until_phase("map")
