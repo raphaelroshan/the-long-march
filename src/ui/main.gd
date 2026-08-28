@@ -1717,7 +1717,7 @@ func _on_settlement_repair_pressed() -> void:
 		_focus_control(settlement_repair_button)
 		return
 	var result := state.settlement_repair(String(selected.get("id", "")))
-	var service_message := "%s restored +%d durability for %d Ashmarks. %s remains." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
+	var service_message := "%s restored +%d durability for %d Ashmarks. %s." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -1727,7 +1727,7 @@ func _on_settlement_repair_pressed() -> void:
 
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
-	var service_message := "+2 fuel loaded for %d Ashmarks. %s remains." % [int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
+	var service_message := "+2 fuel loaded for %d Ashmarks. %s." % [int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -1737,7 +1737,7 @@ func _on_settlement_refuel_pressed() -> void:
 
 func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
-	var service_message := "+%d hull restored for %d Ashmarks. %s remains." % [int(result.get("hull_added", 0)), int(result.get("cost", 0)), _service_action_count_text()] if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown"))
+	var service_message := "+%d hull restored for %d Ashmarks. %s." % [int(result.get("hull_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown"))
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -2158,6 +2158,8 @@ func _refresh_ui() -> void:
 			_set_route_preview("The first map branches are visible after the Ashgate contract is answered.")
 		elif not selected_campaign_node_id.is_empty():
 			_show_selected_route_preview(selected_campaign_node_id)
+		elif state.phase == "settlement":
+			_set_route_preview("Morrowline recovery — %s. Refit freely, then choose a doctrine and the next road." % _service_action_status_text(), "safe")
 		else:
 			_set_route_preview("Select a forward node to review it. Signal readiness and Iven Pell improve how much each route reveals.")
 	elif state.phase == "refit":
@@ -2166,7 +2168,7 @@ func _refresh_ui() -> void:
 			var risk := float(departure.risk)
 			_set_route_preview("Departure forecast — %d day(s), %d fuel, %.0f%% risk, pressure %d, predicted heat %d/%d." % [int(departure.days), int(departure.fuel), risk * 100.0, int(departure.pressure), int(departure.predicted_heat), LongMarchState.BASE_HEAT_LIMIT], "safe" if risk <= 0.18 else ("warning" if risk <= 0.32 else "danger"))
 	elif state.phase == "settlement":
-		_set_route_preview("Morrowline recovery — %d service action(s) remain. Refit freely, then choose a doctrine for Meridian Pass." % state.settlement_actions_remaining, "safe")
+		_set_route_preview("Morrowline recovery — %s. Refit freely, then choose a doctrine for Meridian Pass." % _service_action_status_text(), "safe")
 	elif state.phase == "results":
 		_set_route_preview("Run complete — %s." % state.final_result.replace("_", " ").capitalize(), "safe")
 	else:
@@ -2296,7 +2298,7 @@ func _current_guidance() -> String:
 			return "DEPARTURE BLOCKED · %s. Refit or recover, then review this route again." % block_reason
 		return "ROUTE READY · %s is selected. Review its costs and doctrine, then press Commit." % node_name
 	if state.phase == "settlement":
-		return "RECOVERY · %s remains. Repair or refuel, refit freely, then choose the next road." % _service_action_count_text()
+		return "RECOVERY · %s. Repair or refuel, refit freely, then choose the next road." % _service_action_status_text()
 	if state.campaign_active and state.phase in ["refit", "map"]:
 		return "CURRENT ORDER · Select one cyan route on the map. Selection previews it; Commit begins travel."
 	return "CURRENT ORDER · Prepare the fortress, review the route forecast, then depart when movement is ready."
@@ -2489,8 +2491,9 @@ func _result_system_condition_text() -> String:
 		unavailable.append("%s — %s" % [module_name, reason])
 	return "Damage: %s\nUnavailable: %s" % [", ".join(damaged) if not damaged.is_empty() else "none", "; ".join(unavailable) if not unavailable.is_empty() else "none"]
 
-func _service_action_count_text() -> String:
-	return "%d service action%s" % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s"]
+func _service_action_status_text() -> String:
+	var count := state.settlement_actions_remaining
+	return "%d service action%s %s" % [count, "" if count == 1 else "s", "remains" if count == 1 else "remain"]
 
 class FortressPanel extends Control:
 	signal grid_cell_pressed(cell: Vector2i)

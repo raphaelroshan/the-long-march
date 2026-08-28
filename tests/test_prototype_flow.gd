@@ -446,6 +446,7 @@ func _run() -> void:
 	_expect(game.current_run_flow_step == 2 and game.run_flow_labels[2].text.contains("RECOVER"), "reaching Morrowline should advance the tracker to recovery")
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
+	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
 	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
 	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
 	var recovery_previous := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) as BaseButton
@@ -480,6 +481,7 @@ func _run() -> void:
 	game.state.settlement_actions_remaining = 0
 	game._refresh_ui()
 	_expect(game.settlement_repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
+	_expect(game.guidance_label.text.contains("0 service actions remain") and not game.guidance_label.text.contains("actions remains"), "exhausted recovery guidance should retain correct plural grammar")
 	game.state.hull_condition = recovery_hull
 	game.state.settlement_actions_remaining = recovery_actions
 	game._refresh_ui()
@@ -502,7 +504,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	_expect(game.settlement_title.text.contains("1 ACTION LEFT"), "the service budget should update immediately after use")
-	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action"), "settlement services should report cost, effect, and remaining budget above the fold")
+	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action remains"), "settlement services should report cost, effect, and remaining budget above the fold")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
 	var high_risk_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat

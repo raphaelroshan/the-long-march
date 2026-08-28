@@ -499,3 +499,7 @@ Play Again confirmation distinguishes a result already saved under Continue, an 
 ## 2026-08-28 — Terminal failure remains visible in the run rail
 
 When Meridian Pass ends in March Failed, the Final stage uses a red failed marker while Result remains the current step. Decisive and scarred crossings still show Final as completed. The persistent run-flow summary therefore no longer contradicts the failure debrief by awarding a green completion check to the terminal battle.
+
+## 2026-08-28 — Recovery budgets use one shared grammatical status
+
+Morrowline guidance and completed-service receipts derive “0 service actions remain,” “1 service action remains,” and “2 service actions remain” from one helper. The campaign route preview also keeps the recovery budget visible until a road is selected, rather than immediately reverting to generic map-selection copy at the settlement.
