@@ -591,3 +591,7 @@ The session-options Restart action becomes Play Again after a completed run and 
 ## 2026-08-28 — Title recovery explanations wrap safely
 
 The title’s save-status region now word-wraps inside its action card. Longer malformed, incomplete, or incompatible-checkpoint explanations remain readable alongside the recovery action instead of depending on a single line wide enough for the shortest no-save message.
+
+## 2026-08-28 — Passed branches are marked bypassed
+
+The route map now derives whether an unvisited node is still reachable from the fortress’s current position. Unchosen branches behind the march are labelled Bypassed with a muted treatment and an explicit cannot-revisit explanation, while genuinely upcoming nodes remain Future and failed roads that are still connected remain available for another attempt.

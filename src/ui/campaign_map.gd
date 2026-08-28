@@ -141,6 +141,10 @@ func _apply_button_style(button: Button, status: String) -> void:
 			fill = Color("#482929")
 			border = Color("#e06f61")
 			text_color = Color("#ffd4cd")
+		"bypassed":
+			fill = Color("#28231f")
+			border = Color("#66584d")
+			text_color = Color("#a99a8d")
 		"blocked":
 			fill = Color("#403725")
 			border = Color("#d8a650")
@@ -214,6 +218,24 @@ func _node_state_text(node_id: String, status: String) -> String:
 func _show_node_detail(node_id: String) -> void:
 	node_inspected.emit(node_id, detail_for(node_id))
 
+func _is_reachable_from_current(target_id: String) -> bool:
+	if current_node.is_empty():
+		return false
+	var pending: Array[String] = [current_node]
+	var visited := {}
+	while not pending.is_empty():
+		var node_id: String = pending.pop_back()
+		if node_id == target_id:
+			return true
+		if visited.has(node_id):
+			continue
+		visited[node_id] = true
+		for raw_next_id in campaign_edges.get(node_id, []):
+			var next_id := String(raw_next_id)
+			if not visited.has(next_id):
+				pending.append(next_id)
+	return false
+
 func detail_for(node_id: String) -> String:
 	var status := status_for(node_id)
 	if status == "available":
@@ -228,6 +250,8 @@ func detail_for(node_id: String) -> String:
 		return "%s is the fortress's current position." % String(SHORT_NAMES.get(node_id, node_id))
 	if status == "secured":
 		return "%s is secured behind the fortress." % String(SHORT_NAMES.get(node_id, node_id))
+	if status == "bypassed":
+		return "%s was bypassed and cannot be revisited in this run." % String(SHORT_NAMES.get(node_id, node_id))
 	return "%s is charted but not yet reachable." % String(SHORT_NAMES.get(node_id, node_id))
 
 func configure(view: Dictionary) -> void:
@@ -250,7 +274,7 @@ func configure(view: Dictionary) -> void:
 	node_statuses.clear()
 	for node_id in NODE_ORDER:
 		var button: Button = buttons_by_id[node_id]
-		var status := "future"
+		var status := "future" if _is_reachable_from_current(node_id) else "bypassed"
 		if node_id == current_node:
 			status = "current"
 		elif node_id in secured_path:
@@ -277,6 +301,8 @@ func configure(view: Dictionary) -> void:
 			button.tooltip_text = "The fortress's current position."
 		elif status == "secured":
 			button.tooltip_text = "Secured earlier in this run."
+		elif status == "bypassed":
+			button.tooltip_text = "The march passed this branch; it cannot be revisited in this run."
 		else:
 			button.tooltip_text = "This node is visible on the regional chart but is not yet reachable."
 		_apply_button_style(button, status)

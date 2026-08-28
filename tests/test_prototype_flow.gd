@@ -428,6 +428,7 @@ func _run() -> void:
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
+	_expect(game.campaign_map.status_for("soot_orchard") == "bypassed" and game.campaign_map.button_for("soot_orchard").text.contains("BYPASSED") and game.campaign_map.detail_for("soot_orchard").contains("cannot be revisited"), "the unchosen opening branch should be marked bypassed rather than presented as a future destination")
 	_expect(game.campaign_map.button_for("red_wheel_toll_bridge").text.contains("UNSCOUTED · UNKNOWN"), "an available unscouted node should advertise uncertainty without exposing its hidden risk")
 	game.campaign_map.button_for("red_wheel_toll_bridge").grab_focus()
 	await process_frame
