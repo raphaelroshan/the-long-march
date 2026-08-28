@@ -211,7 +211,7 @@ func _build_title_menu() -> void:
 	actions.add_child(continue_button)
 	save_recovery_button = Button.new()
 	save_recovery_button.name = "SaveRecoveryButton"
-	save_recovery_button.text = "REMOVE UNREADABLE SAVE"
+	save_recovery_button.text = "REMOVE UNUSABLE SAVE"
 	save_recovery_button.custom_minimum_size = Vector2(0, 44)
 	save_recovery_button.tooltip_text = "Remove the local save that cannot be loaded."
 	save_recovery_button.visible = false
@@ -1244,7 +1244,7 @@ func _request_confirmation(action: String) -> void:
 		confirmation_confirm_button.text = "RETURN"
 	elif action in ["clear_save", "clear_invalid_save"]:
 		confirmation_title_label.text = "Clear the local save?"
-		confirmation_body_label.text = "This unreadable local file will be permanently removed. Your settings and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
+		confirmation_body_label.text = "This local checkpoint cannot be loaded by this build and will be permanently removed. Your settings and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
 		confirmation_confirm_button.text = "REMOVE SAVE" if action == "clear_invalid_save" else "CLEAR SAVE"
 	else:
 		var save_info := _saved_run_info()

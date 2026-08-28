@@ -571,3 +571,7 @@ Saving from Pause now leaves “March saved locally” in the stage receipt inst
 ## 2026-08-28 — Incompatible saves use recovery language
 
 The title no longer exposes expected and discovered schema numbers when a checkpoint cannot be loaded. It identifies an incompatible save format and offers the existing remove-or-new-run recovery path, while the underlying validator continues to enforce the exact version boundary.
+
+## 2026-08-28 — Save recovery covers every unusable checkpoint
+
+The recovery action now says Remove Unusable Save, and its confirmation explains that the checkpoint cannot be loaded by this build. The same language truthfully covers malformed, incomplete, and version-incompatible files instead of incorrectly calling every case unreadable.

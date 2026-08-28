@@ -56,14 +56,14 @@ func _run() -> void:
 	app._refresh_title_state()
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "invalid save data should never expose Continue as an actionable choice")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
-	_expect(app.save_recovery_button.visible and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose a direct recovery action in the title flow")
+	_expect(app.save_recovery_button.visible and app.save_recovery_button.text == "REMOVE UNUSABLE SAVE" and app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose an accurately named recovery action in the title flow")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save Tab navigation should include the recovery action")
 	app._continue_game()
 	await process_frame
 	_expect(app.save_recovery_button.has_focus(), "a failed Continue attempt should focus the newly available recovery action")
 	app.save_recovery_button.pressed.emit()
 	await process_frame
-	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "REMOVE SAVE" and app.confirmation_cancel_button.text == "KEEP FILE", "invalid-save removal should require a specific confirmation")
+	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "REMOVE SAVE" and app.confirmation_cancel_button.text == "KEEP FILE" and app.confirmation_body_label.text.contains("cannot be loaded by this build"), "invalid-save removal should require an accurate, specific confirmation")
 	app.confirmation_confirm_button.pressed.emit()
 	await process_frame
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.save_recovery_button.visible and app.start_button.has_focus(), "confirmed recovery should remove the invalid save and restore the primary start action")
