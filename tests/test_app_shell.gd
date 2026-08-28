@@ -43,6 +43,7 @@ func _run() -> void:
 	_expect(_tree_contains_text(app.menu_view, "CURRENT BUILD · TWO TEST JOURNEYS") and _tree_contains_text(app.menu_view, "Ashgate") and _tree_contains_text(app.menu_view, "Flooded Veyru"), "the title should state both playable chapters without implying that the wider campaign is implemented")
 	_expect(_tree_contains_text(app.menu_view, "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER") and _tree_contains_text(app.menu_view, "BATTLES RESOLVE STEP BY STEP"), "the title should state the boundary between player decisions and automatic battle resolution before starting")
 	_expect(_tree_contains_text(app.menu_view, "TWO PLAYABLE CHAPTERS") and _tree_contains_text(app.menu_view, "5 ENCOUNTERS EACH") and _tree_contains_text(app.menu_view, "FINALE AT 5"), "the title should make clear that both playable chapters reach a fifth-encounter finale")
+	_expect(app.title_charter_label.text.contains("MARCH CHARTER · 0/2 REGIONS SURVIVED") and app.title_charter_label.text.contains("Choose either chapter"), "a fresh title should present the bounded two-chapter charter without inventing progress")
 	_expect(_tree_contains_text(app.menu_view, "D-pad / arrows move") and _tree_contains_text(app.menu_view, "B / Esc closes panels"), "the title should describe its own navigation behavior instead of claiming that cancel pauses the game")
 	var completed_briefing := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
 	completed_briefing.store_string("completed for title test")
@@ -153,7 +154,15 @@ func _run() -> void:
 	app.game_view._refresh_ui()
 	_expect(app.game_view.results_record_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.game_view.results_record_label.text.contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief should state the regional development and its later route effect")
 	app._on_checkpoint_reached("encounter_advanced")
-	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.has_development("veyru_public_archive_signal"), "surviving after the public broadcast should persist the regional development outside the replaceable Continue slot")
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.has_development("veyru_public_archive_signal") and app.campaign_progress.result_for_region("flooded_veyru") == "archive_scarred", "surviving after the public broadcast should persist the regional development and Veyru result outside the replaceable Continue slot")
+	_expect(app.game_view.march_on_button.text == "MARCH ON · ASHGATE LOWLANDS", "the Veyru debrief should offer the other unfinished chapter as its primary onward path")
+	app.game_view.march_on_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Continue to Ashgate Lowlands?" and app.confirmation_confirm_button.text == "MARCH ON" and app.confirmation_cancel_button.text == "STAY AT DEBRIEF", "March On should use a chapter-aware, result-preserving confirmation")
+	_expect(app.confirmation_body_label.text.contains("result is recorded in the March Charter") and app.confirmation_body_label.text.contains("Continue keeps its current checkpoint"), "March On confirmation should distinguish durable Charter history from the replaceable Continue slot")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(not app.confirmation_view.visible and app.game_view.march_on_button.has_focus() and app.game_view.state.phase == "results", "cancelling March On should restore the intact debrief and onward action")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Replay Flooded Veyru?" and app.confirmation_body_label.text.contains("fresh Flooded Veyru"), "Veyru replay should not describe the replacement run as Ashgate")
@@ -180,6 +189,7 @@ func _run() -> void:
 	_expect(app.menu_view.visible and app.game_view == null, "returning from an unsaved Veyru inspection should restore the shared title menu")
 	_expect(app.continue_button.text.contains("VEYRU") and app.save_status_label.text.contains("Flooded Veyru") and app.continue_button.tooltip_text.contains("Flooded Veyru"), "a Veyru checkpoint should identify its chapter in the title action, summary, and tooltip")
 	_expect(app.title_region_briefing_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.title_region_briefing_label.text.contains("Drowned Registry contacts are Known") and app.veyru_start_button.tooltip_text.contains("Public Archive Signal is active"), "the title should explain the unlocked regional development before the next Veyru run")
+	_expect(app.title_charter_label.text.contains("MARCH CHARTER · 1/2 REGIONS SURVIVED") and app.title_charter_label.text.contains("Veyru Archive Scarred") and app.title_charter_label.text.contains("Next: Ashgate Lowlands"), "the title Charter should retain the best Veyru outcome and direct the player toward the unfinished chapter")
 	_expect(not app.quick_start_button.visible, "a returning-player title should collapse the redundant Ashgate quick-start action while the Field Guide retains that path")
 	if FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
@@ -549,6 +559,20 @@ func _run() -> void:
 	var replay_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(app.last_checkpoint_reason == "new_run_started", "the application shell should identify the replay checkpoint")
 	_expect(replay_payload is Dictionary and String(replay_payload.get("phase", "")) == "refit" and String(replay_payload.get("guard_contract_status", "")) == "offered", "Play Again should replace a completed autosave with the fresh Ashgate state immediately")
+	app.game_view.state.phase = "results"
+	app.game_view.state.final_result = "scarred_march"
+	app.game_view.state.run_complete = true
+	app.game_view.state.journey_complete = true
+	app._on_checkpoint_reached("encounter_advanced")
+	app.game_view._refresh_ui()
+	_expect(app.campaign_progress.survived_region_count() == 2 and app.campaign_progress.result_for_region("ashgate_lowlands") == "scarred_march", "surviving both chapters should complete the bounded March Charter")
+	_expect(app.game_view.march_on_button.text == "REVISIT · FLOODED VEYRU", "after both regions survive, the debrief should frame March On as a deliberate revisit")
+	app.game_view.march_on_button.pressed.emit()
+	await process_frame
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay" and app.game_view.state.has_regional_development("veyru_public_archive_signal"), "confirming March On should open the other chapter and carry durable regional developments into it")
 
 	_remove_local_test_files()
 	if failures.is_empty():

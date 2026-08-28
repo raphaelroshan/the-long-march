@@ -73,6 +73,7 @@ var confirmation_confirm_button: Button
 var confirmation_cancel_button: Button
 var save_status_label: Label
 var title_region_briefing_label: Label
+var title_charter_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
 var fullscreen_enabled: bool = false
@@ -308,6 +309,14 @@ func _build_title_menu() -> void:
 	title_region_briefing_label.custom_minimum_size = Vector2(330, 72)
 	title_region_briefing_label.add_theme_color_override("font_color", Color("#d0d8d5"))
 	stage.add_child(title_region_briefing_label)
+	var charter_panel := PanelContainer.new()
+	charter_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 8))
+	stage.add_child(charter_panel)
+	title_charter_label = Label.new()
+	title_charter_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_charter_label.add_theme_font_size_override("font_size", 12)
+	title_charter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	charter_panel.add_child(title_charter_label)
 	var scope := Label.new()
 	scope.text = "TWO PLAYABLE CHAPTERS   ·   5 ENCOUNTERS EACH   ·   RECOVERY MID-RUN   ·   FINALE AT 5"
 	scope.add_theme_font_size_override("font_size", 11)
@@ -931,6 +940,7 @@ func _refresh_title_state() -> void:
 		title_region_briefing_label.text = "Ashgate teaches route pressure and convoy recovery. Flooded Veyru now carries the PUBLIC ARCHIVE SIGNAL: Drowned Registry contacts are Known on later runs."
 	else:
 		title_region_briefing_label.text = "Ashgate teaches route pressure, signal, and convoy recovery. Flooded Veyru tests lower-hull condition, rising water, and a medicine carrier bound for the Dry Archive."
+	title_charter_label.text = _march_charter_text()
 	if briefing_complete:
 		start_button.text = "PLAY AGAIN · ASHGATE DEPOT" if has_completed_save else ("NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT")
 		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
@@ -976,6 +986,26 @@ func _refresh_title_state() -> void:
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
 	_accent_button(continue_button if has_valid_save else start_button)
+
+func _march_charter_text() -> String:
+	if not campaign_progress_error.is_empty():
+		return "MARCH CHARTER · RECORD UNAVAILABLE\nBoth chapters remain playable; the next terminal result can rebuild this local record."
+	var ashgate_result := campaign_progress.result_for_region("ashgate_lowlands")
+	var veyru_result := campaign_progress.result_for_region("flooded_veyru")
+	var survived := campaign_progress.survived_region_count()
+	var next_road := "Choose either chapter"
+	if survived > 0 and not campaign_progress.survived_region("ashgate_lowlands"):
+		next_road = "Ashgate Lowlands"
+	elif survived > 0 and not campaign_progress.survived_region("flooded_veyru"):
+		next_road = "Flooded Veyru"
+	elif survived == 2:
+		next_road = "Both roads remain open for replay"
+	return "MARCH CHARTER · %d/2 REGIONS SURVIVED\nAshgate %s · Veyru %s · Next: %s" % [survived, _charter_result_label(ashgate_result), _charter_result_label(veyru_result), next_road]
+
+func _charter_result_label(result_id: String) -> String:
+	if result_id.is_empty():
+		return "—"
+	return result_id.replace("_", " ").capitalize()
 
 func _focus_title_primary() -> void:
 	if not continue_button.disabled:
@@ -1122,9 +1152,11 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.set("show_onboarding_on_ready", show_briefing)
 	game_view.set("starting_region_id", region_id)
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
+	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))
 	game_view.connect("play_again_requested", Callable(self, "_request_replay_confirmation"))
+	game_view.connect("march_on_requested", Callable(self, "_request_march_on_confirmation"))
 	game_view.connect("pause_requested", Callable(self, "_show_pause"))
 	add_child(game_view)
 	move_child(game_view, 0)
@@ -1146,7 +1178,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 		(save_recovery_button if save_recovery_button.visible else start_button).grab_focus()
 		return
 	if load_saved:
-		_record_regional_development()
+		_record_campaign_progress()
 	last_checkpoint_reason = "loaded save" if load_saved else ""
 	game_view.call_deferred("focus_current_action")
 	if not reduced_motion:
@@ -1262,27 +1294,35 @@ func _save_from_pause() -> bool:
 func _on_checkpoint_reached(reason: String) -> void:
 	if game_view == null:
 		return
-	_record_regional_development()
+	_record_campaign_progress()
 	if not autosave_enabled:
 		return
 	if bool(game_view.call("save_run", true)):
 		last_checkpoint_reason = reason
 		_show_checkpoint_toast(reason)
 
-func _record_regional_development() -> void:
+func _record_campaign_progress() -> void:
 	if game_view == null:
 		return
 	var run_state = game_view.get("state")
+	var errors: Array[String] = []
+	var attempted_write := false
 	var development_id := String(run_state.call("earned_regional_development"))
-	if development_id.is_empty():
-		return
-	var result := campaign_progress.unlock(development_id)
-	if not bool(result.get("ok", false)):
-		campaign_progress_error = String(result.get("reason", "regional record could not be saved"))
-		return
-	campaign_progress_error = ""
+	if not development_id.is_empty():
+		attempted_write = true
+		var development_result := campaign_progress.unlock(development_id)
+		if not bool(development_result.get("ok", false)):
+			errors.append(String(development_result.get("reason", "regional development could not be saved")))
+	if String(run_state.get("phase")) == "results":
+		attempted_write = true
+		var chapter_result := campaign_progress.record_region_result(String(run_state.get("campaign_region_id")), String(run_state.get("final_result")))
+		if not bool(chapter_result.get("ok", false)):
+			errors.append(String(chapter_result.get("reason", "chapter result could not be saved")))
+	if attempted_write:
+		campaign_progress_error = "; ".join(errors)
 	run_state.call("set_regional_developments", campaign_progress.developments)
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
+	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
 
 func _show_checkpoint_toast(reason: String) -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
@@ -1343,8 +1383,16 @@ func _request_replay_confirmation() -> void:
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
 	_request_confirmation("replay")
 
+func _request_march_on_confirmation(region_id: String) -> void:
+	if game_view == null or region_id not in ["ashgate_lowlands", "flooded_veyru"]:
+		return
+	if String(game_view.get("state").get("phase")) != "results":
+		return
+	game_view.process_mode = Node.PROCESS_MODE_DISABLED
+	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else "march_on_veyru")
+
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1376,6 +1424,13 @@ func _request_confirmation(action: String) -> void:
 		else:
 			confirmation_body_label.text = "This result is not saved under Continue. Play Again will create a fresh %s checkpoint immediately." % replay_menu_name if autosave_enabled else "This result is not saved under Continue. Play Again starts a fresh %s run without creating a checkpoint until you save manually." % replay_menu_name
 		confirmation_confirm_button.text = "PLAY AGAIN"
+	elif action in ["march_on_ashgate", "march_on_veyru"]:
+		var next_region_id := "ashgate_lowlands" if action == "march_on_ashgate" else "flooded_veyru"
+		var next_region_name := _region_display_name(next_region_id)
+		var current_region_name := _region_display_name(_active_region_id())
+		confirmation_title_label.text = "Continue to %s?" % next_region_name
+		confirmation_body_label.text = "The %s result is recorded in the March Charter. Begin a fresh %s chapter now; Continue keeps its current checkpoint until the next automatic save." % [current_region_name, next_region_name] if autosave_enabled else "The %s result is recorded in the March Charter. Begin a fresh %s chapter now; Continue changes only when you save manually." % [current_region_name, next_region_name]
+		confirmation_confirm_button.text = "MARCH ON"
 	elif action == "title":
 		confirmation_title_label.text = "Return without saving?"
 		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
@@ -1396,7 +1451,18 @@ func _request_confirmation(action: String) -> void:
 			confirmation_title_label.text = "Begin a new march?"
 			confirmation_body_label.text = ("Your %s save remains intact until the new run reaches its first automatic checkpoint. After that, Continue will follow the new march." if autosave_enabled else "Your %s save remains intact. This run replaces it only if you save manually or enable autosave and reach a checkpoint.") % saved_context
 			confirmation_confirm_button.text = "START NEW"
-	confirmation_cancel_button.text = "KEEP FILE" if action == "clear_invalid_save" else (("KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE") if action in ["new_guided", "new_quick", "new_veyru"] else ("KEEP SAVE" if action == "clear_save" else ("KEEP RESULT" if action == "replay" else "KEEP PLAYING")))
+	if action == "clear_invalid_save":
+		confirmation_cancel_button.text = "KEEP FILE"
+	elif action in ["new_guided", "new_quick", "new_veyru"]:
+		confirmation_cancel_button.text = "KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE"
+	elif action == "clear_save":
+		confirmation_cancel_button.text = "KEEP SAVE"
+	elif action in ["march_on_ashgate", "march_on_veyru"]:
+		confirmation_cancel_button.text = "STAY AT DEBRIEF"
+	elif action == "replay":
+		confirmation_cancel_button.text = "KEEP RESULT"
+	else:
+		confirmation_cancel_button.text = "KEEP PLAYING"
 	confirmation_view.visible = true
 	confirmation_cancel_button.grab_focus()
 
@@ -1412,6 +1478,10 @@ func _cancel_confirmation() -> void:
 		elif game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.play_again_button.grab_focus()
+	elif previous_action in ["march_on_ashgate", "march_on_veyru"]:
+		if game_view != null:
+			game_view.process_mode = Node.PROCESS_MODE_INHERIT
+			game_view.march_on_button.grab_focus()
 	elif previous_action == "clear_save":
 		clear_save_button.grab_focus()
 	elif previous_action == "clear_invalid_save":
@@ -1437,6 +1507,10 @@ func _confirm_pending_action() -> void:
 			paused_stage_focus = null
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call("start_replay_from_results")
+	elif action in ["march_on_ashgate", "march_on_veyru"]:
+		pause_view.visible = false
+		paused_stage_focus = null
+		_open_stage(false, false, "ashgate_lowlands" if action == "march_on_ashgate" else "flooded_veyru")
 	elif action == "title":
 		_return_to_title()
 	elif action in ["clear_save", "clear_invalid_save"]:

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.235`; Feeds A through F are complete, so begin new feature work with a bounded campaign/replay slice after reviewing playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.236`; Feeds A through G are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -41,6 +41,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.235` through Public Archive Signal.
 
 > Connect one completed Ashgate or Flooded Veyru decision to one visible regional development. Persist one small migration-safe consequence, show its cause on the map and in the debrief, and make it change a later option rather than grant a flat permanent stat bonus. Do not build the full campaign layer in the same change.
+
+### Current Feed G — two-chapter replay flow
+
+**Status:** Complete in `0.3.0-alpha.236` through the March Charter and March On flow.
+
+> Record each proven region's best terminal result outside the Continue slot, show the bounded two-chapter Charter on the title, and let a debrief continue into the other region through an explicit save-aware confirmation. Preserve normal chapter seeds and starting state. Do not carry numerical run resources between regions or imply that the five-region campaign exists.
 
 ## Historical prototype feed sequence
 

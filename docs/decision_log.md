@@ -823,3 +823,7 @@ The title Field Guide now explains the shared loop through both implemented chap
 ## 2026-08-28 — Public information creates information, not power
 
 Surviving Flooded Veyru after broadcasting the Dry Archive establishes `veyru_public_archive_signal` in a small local progression record. Later Veyru runs copy that stable ID into their save-safe simulation state and reveal Drowned Registry's Flood Surge and Climber composition as Known. The development does not reduce route risk, pressure, damage, fuel, or time, preserving the value of live signal equipment and avoiding a permanent-stat treadmill. The earning debrief, title overview, active run status, route comparison, and map detail all name the prior decision that changed the later option.
+
+## 2026-08-28 — The first campaign shell connects results, not resources
+
+The March Charter stores each playable region's best terminal result separately from the single Continue checkpoint. A debrief can now March On directly to the other chapter through a confirmation that explains what persists and when Continue changes. This creates a readable two-chapter itinerary and a replay reason without carrying fuel, damage, modules, or money between isolated deterministic chapters, and without presenting the planned five-region campaign as finished.

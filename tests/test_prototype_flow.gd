@@ -732,7 +732,7 @@ func _run() -> void:
 	await _advance_until_phase("results")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
-	_expect(game.results_group.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose replay and return-to-title actions")
+	_expect(game.results_group.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible, "results should expose onward, replay, and return-to-title actions")
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
 	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
 	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
@@ -800,8 +800,14 @@ func _run() -> void:
 	game.state._recalculate()
 	game._refresh_ui()
 	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")
-	_expect(game.feedback_button.get_node_or_null(game.feedback_button.focus_neighbor_bottom) == game.play_again_button and game.play_again_button.get_node_or_null(game.play_again_button.focus_neighbor_right) == game.results_title_button, "the result actions should follow their visible controller layout")
+	_expect(game.feedback_button.get_node_or_null(game.feedback_button.focus_neighbor_bottom) == game.march_on_button and game.march_on_button.get_node_or_null(game.march_on_button.focus_neighbor_bottom) == game.play_again_button and game.play_again_button.get_node_or_null(game.play_again_button.focus_neighbor_right) == game.results_title_button, "the result actions should follow their visible controller layout")
 	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.results_title_button, "the result actions should form a closed Tab cycle")
+	game.march_on_button.grab_focus()
+	await process_frame
+	await process_frame
+	await process_frame
+	_expect(game.right_scroll.get_global_rect().encloses(game.march_on_button.get_global_rect()), "focusing March On should scroll its full destination label into the 720p desk viewport")
+	game.feedback_button.grab_focus()
 	game.feedback_button.pressed.emit()
 	await process_frame
 	var feedback_panel := game.feedback_overlay.find_child("FeedbackPanel", true, false) as PanelContainer

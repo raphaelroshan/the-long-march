@@ -3,6 +3,7 @@ extends Control
 signal return_to_title_requested
 signal checkpoint_reached(reason: String)
 signal play_again_requested
+signal march_on_requested(region_id: String)
 signal pause_requested
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
@@ -194,6 +195,7 @@ var results_heading: Label
 var results_summary_label: Label
 var results_record_label: Label
 var results_replay_label: Label
+var march_on_button: Button
 var play_again_button: Button
 var results_title_button: Button
 var onboarding_overlay: Control
@@ -226,6 +228,7 @@ var last_synced_combat_target_id: String = ""
 var show_onboarding_on_ready: bool = true
 var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
+var starting_region_results: Dictionary = {}
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -924,6 +927,13 @@ func _build_ui() -> void:
 	feedback_button.pressed.connect(_show_feedback)
 	_accent_button(feedback_button, Color("#285348"), Color("#73c99b"))
 	results_group.add_child(feedback_button)
+	march_on_button = Button.new()
+	march_on_button.text = "MARCH ON"
+	march_on_button.custom_minimum_size = Vector2(0, 54)
+	march_on_button.tooltip_text = "Begin a fresh journey in the other playable region after confirmation."
+	march_on_button.pressed.connect(_on_march_on_pressed)
+	_accent_button(march_on_button, Color("#5a4528"), Color("#e3b963"))
+	results_group.add_child(march_on_button)
 	var results_actions := HBoxContainer.new()
 	results_actions.add_theme_constant_override("separation", 8)
 	results_group.add_child(results_actions)
@@ -939,14 +949,16 @@ func _build_ui() -> void:
 	results_title_button.pressed.connect(_on_results_title_pressed)
 	results_actions.add_child(results_title_button)
 	feedback_button.focus_neighbor_top = feedback_button.get_path_to(play_again_button)
-	feedback_button.focus_neighbor_bottom = feedback_button.get_path_to(play_again_button)
-	play_again_button.focus_neighbor_top = play_again_button.get_path_to(feedback_button)
+	feedback_button.focus_neighbor_bottom = feedback_button.get_path_to(march_on_button)
+	march_on_button.focus_neighbor_top = march_on_button.get_path_to(feedback_button)
+	march_on_button.focus_neighbor_bottom = march_on_button.get_path_to(play_again_button)
+	play_again_button.focus_neighbor_top = play_again_button.get_path_to(march_on_button)
 	play_again_button.focus_neighbor_right = play_again_button.get_path_to(results_title_button)
 	play_again_button.focus_neighbor_bottom = play_again_button.get_path_to(feedback_button)
-	results_title_button.focus_neighbor_top = results_title_button.get_path_to(feedback_button)
+	results_title_button.focus_neighbor_top = results_title_button.get_path_to(march_on_button)
 	results_title_button.focus_neighbor_left = results_title_button.get_path_to(play_again_button)
 	results_title_button.focus_neighbor_bottom = results_title_button.get_path_to(feedback_button)
-	_configure_focus_cycle([feedback_button, play_again_button, results_title_button])
+	_configure_focus_cycle([feedback_button, march_on_button, play_again_button, results_title_button])
 	controls.move_child(results_group, guidance_label.get_index() + 1)
 
 	how_to_play_button = Button.new()
@@ -981,6 +993,7 @@ func _connect_desk_focus_scrolling() -> void:
 		advance_encounter_button,
 		combat_inspect_button,
 		feedback_button,
+		march_on_button,
 		play_again_button,
 		results_title_button,
 		how_to_play_button
@@ -2083,6 +2096,13 @@ func _on_play_again_pressed() -> void:
 		return
 	start_replay_from_results()
 
+func _on_march_on_pressed() -> void:
+	if state.phase != "results":
+		return
+	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
+	_journal_event("march_on_requested", {"from_region": state.campaign_region_id, "to_region": next_region_id, "result": state.final_result})
+	march_on_requested.emit(next_region_id)
+
 func start_replay_from_results() -> void:
 	_reset_state()
 	fortress_panel.state = state
@@ -2349,6 +2369,11 @@ func _refresh_ui() -> void:
 		results_summary_label.text = _result_summary_text()
 		results_record_label.text = _result_record_text()
 		results_replay_label.text = _result_replay_text()
+		var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
+		var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
+		var next_region_result := String(starting_region_results.get(next_region_id, ""))
+		march_on_button.text = "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name]
+		march_on_button.tooltip_text = "Begin a fresh %s run. This result remains in the March Charter; the local Continue slot changes only at the next save." % ("Ashgate" if next_region_id == "ashgate_lowlands" else "Flooded Veyru")
 	guidance_label.text = _current_guidance()
 	_refresh_pause_action_hint()
 	phase_badge.text = "PHASE · %s" % state.phase.replace("_", " ").to_upper()

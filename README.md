@@ -49,6 +49,7 @@ The repository contains an agent-first Godot project with:
 - A complete five-encounter Ashgate Lowlands chapter with branching routes through Rill Crossing, The Soot Orchard, Broken Relay, Red Wheel Toll Bridge, Morrowline Camp, Lower Ash Road, and Signal Causeway.
 - A separate five-encounter Flooded Veyru chapter with rising-water closures, a named medicine carrier, Evacuation Camp recovery, Flood Surge and Civic Guardian contacts, and a Dry Archive commitment.
 - One bounded regional development: surviving after broadcasting the Dry Archive establishes a persistent Public Archive Signal that reveals Drowned Registry contacts on later Veyru runs without reducing their risk.
+- A local two-chapter March Charter records each region's best terminal result and lets a debrief continue directly into the other playable chapter without conflating durable history with the Continue slot.
 - Stepwise encounter battle behavior for Road Raiders, Climbers, Burrowers, and Siege Beasts, including module counters, target selection, intervention, repair, and arrival/retreat outcomes.
 - An Ashgate guard contract, three local route decisions, recruitable signal officer Iven Pell, and persistent settlement trust.
 - Recoverable non-final defeats that retreat to the last secured node with explicit costs and a viable limping state.

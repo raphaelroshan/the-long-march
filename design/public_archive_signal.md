@@ -28,7 +28,7 @@ On later Flooded Veyru runs, Drowned Registry changes from **Unscouted** to **Kn
 
 ## Persistence and failure behavior
 
-- Profile schema: `1`.
+- Profile schema: `2`; schema 1 migrates the development with no invented chapter result.
 - Run save schema: `8`; schema 4–7 saves migrate with no invented development.
 - Unknown, duplicate, malformed, or future profile entries are rejected without partially restoring progress.
 - A corrupt profile does not block either chapter. The title explains that the regional record is unavailable, and a later qualifying completion can rebuild it.

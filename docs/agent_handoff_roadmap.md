@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.235`
+**Current code baseline:** `0.3.0-alpha.236`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -515,6 +515,8 @@ A settlement, route, or faction should change because of a previous contract, re
 **Exit gate:** A tester can explain how a prior decision changed the next regional option without consulting hidden variables.
 
 ### Long Road 7 — Campaign structure and replay
+
+**Status:** First bounded two-chapter shell complete in `0.3.0-alpha.236`; broader campaign structure remains future work.
 
 **Objective:** Add a small campaign layer over at least two proven regions.
 
