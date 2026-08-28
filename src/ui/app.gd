@@ -1012,7 +1012,7 @@ func _save_age_label(saved_at_unix: int) -> String:
 	return "Saved earlier"
 
 func _empty_save_summary() -> String:
-	return "No saved march · Progress checkpoints after committed decisions." if autosave_enabled else "No saved march · Use Save March from the pause menu."
+	return "No saved march · Autosave begins after your first committed decision." if autosave_enabled else "No saved march · Use Save March from the pause menu."
 
 func _start_new_game() -> void:
 	_request_new_game(true)

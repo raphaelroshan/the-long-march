@@ -555,3 +555,7 @@ The first chapter step is Prepare at Ashgate: inspect connected systems, then an
 ## 2026-08-28 — Test instructions mirror the live input model
 
 Internal release and playtest instructions describe choosing chassis cells and event responses rather than assuming a pointer click. They also name the live CURRENT ORDER guidance instead of the retired NEXT label, so facilitators do not teach controls or terminology the build no longer presents.
+
+## 2026-08-28 — Empty-save copy explains the first autosave
+
+The title now says that autosave begins after the first committed decision. This replaces internal-sounding “progress checkpoints” shorthand and matches the fresh-run pause explanation without implying that merely opening Ashgate has already created a checkpoint.
