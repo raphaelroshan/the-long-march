@@ -178,6 +178,12 @@ func _build_title_menu() -> void:
 	promise.add_theme_color_override("font_color", Color("#d7dfd9"))
 	left.add_child(promise)
 
+	var control_contract := Label.new()
+	control_contract.text = "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER\nBATTLES RESOLVE STEP BY STEP."
+	control_contract.add_theme_font_size_override("font_size", 12)
+	control_contract.add_theme_color_override("font_color", Color("#d8a650"))
+	left.add_child(control_contract)
+
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(spacer)

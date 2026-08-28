@@ -687,3 +687,7 @@ Campaign deserialization now validates journey locations, destinations, route ID
 ## 2026-08-28 — Route previews have a visible reversible exit
 
 Selecting a campaign road now reveals a dedicated Cancel Route Preview action directly beneath Commit. It clears the selection, restores focus to the inspected map node, and confirms that no fuel, time, or blockade pressure was spent, giving mouse players the same explicit escape already available through B or Escape.
+
+## 2026-08-28 — The title states the player's control boundary
+
+The first screen now names the four decisions the player owns—chassis, route, doctrine, and one emergency order—and states that battles resolve step by step. This communicates the preparation-driven auto-battle contract before Start without adding another tutorial panel or implying that combat is directly piloted.
