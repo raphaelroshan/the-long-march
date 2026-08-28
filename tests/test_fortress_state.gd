@@ -25,6 +25,7 @@ func _init() -> void:
 	_test_campaign_contract_and_specialist()
 	_test_campaign_events_and_closure()
 	_test_complete_five_encounter_campaign()
+	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
 	if failures.is_empty():
 		print("PASS: The Long March fortress-state tests")
@@ -555,6 +556,28 @@ func _test_complete_five_encounter_campaign() -> void:
 	_expect(bool(fifth.get("resolved", false)) and state.phase == "results", "the fifth campaign encounter should resolve at Meridian Pass")
 	_expect(state.campaign_encounters_completed == 5 and state.run_complete, "the alpha chapter should complete exactly five encounters")
 	_expect(state.final_result in ["decisive_march", "scarred_march"], "a surviving five-encounter campaign should produce a final result")
+
+func _test_alternate_five_encounter_campaign() -> void:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	_expect(bool(state.deploy_stored_module("wall_lamp", Vector2i(5, 2)).get("ok", false)), "the alternate complete route should prepare an exterior signal counter")
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	var first := _campaign_battle(state, "soot_orchard", "protect_crew")
+	_expect(bool(first.get("resolved", false)) and state.phase == "map", "the Soot Orchard opening should survive as part of a complete route")
+	_expect(bool(state.resolve_campaign_event("take_fuel").get("ok", false)), "the alternate route should convert the orchard into fuel")
+	var second := _campaign_battle(state, "red_wheel_toll_bridge", "protect_cargo")
+	_expect(bool(second.get("resolved", false)) and state.phase == "map", "the Red Wheel branch should survive as part of a complete route")
+	_expect(bool(state.resolve_campaign_event("pay_toll").get("ok", false)), "the alternate route should be able to reduce pressure at the toll")
+	var third := _campaign_battle(state, "morrowline_camp", "protect_cargo")
+	_expect(bool(third.get("resolved", false)) and state.phase == "settlement", "the alternate first half should reach Morrowline recovery")
+	_expect(bool(state.settlement_repair("wall_lamp").get("ok", false)), "the alternate route should restore its storm counter at Morrowline")
+	state.settlement_refuel()
+	var fourth := _campaign_battle(state, "signal_causeway", "protect_crew")
+	_expect(bool(fourth.get("resolved", false)) and state.phase == "map", "ready signal equipment should keep the alternate route viable through Signal Causeway")
+	var fifth := _campaign_battle(state, "meridian_pass", "protect_crew")
+	_expect(bool(fifth.get("resolved", false)) and state.phase == "results" and state.run_complete, "the alternate five-encounter route should reach a terminal debrief")
+	_expect(state.campaign_encounters_completed == 5 and state.final_result in ["decisive_march", "scarred_march"], "the alternate route should complete all five encounters without relying on the relay branch or Iven")
 
 func _test_campaign_recoverable_failure() -> void:
 	var state := LongMarchState.new(1107)

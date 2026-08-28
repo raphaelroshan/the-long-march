@@ -655,3 +655,7 @@ The compact context beside Commit now names the selected doctrine and its centra
 ## 2026-08-28 — Debriefs account for unused recovery
 
 The run record now states whether Morrowline's service actions were fully spent or left unused. When a Scarred March or hull failure follows unused recovery, the replay goal points to that exact missed opportunity instead of generically recommending that a future run reserve a service action.
+
+## 2026-08-28 — The alternate first half is proven finishable
+
+Deterministic coverage now completes a second full campaign through Soot Orchard, Red Wheel Toll Bridge, Morrowline, Signal Causeway, and Meridian Pass without the Broken Relay or Iven Pell. This guards the alpha's route-choice promise against balance changes that leave an alternate branch technically selectable but unable to finish.
