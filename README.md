@@ -38,7 +38,7 @@ The repository contains an agent-first Godot project with:
 - A directly navigable Field Briefing that reopens at the live contract, route, battle, recovery, or finale topic and preserves the run while players browse.
 - A deterministic `LongMarchState` simulation.
 - A 6-by-4 chassis grid and two exterior mount slots.
-- Interactive Ashgate refitting: an installed/stored durability-aware module picker that marks lost systems, plus a visible chassis-edit mode for place, rotate, move, and remove actions with mouse, keyboard, or controller navigation.
+- Interactive refitting with a passive chassis-inspection state, an installed/stored durability-aware module picker that marks lost systems, and an explicit chassis-edit mode for place, rotate, move, and remove actions with mouse, keyboard, or controller navigation.
 - Explicit dependency states for fuel-fed engines, ammunition-fed weapons, crew/parts-supported workshops, shared power, and signal visibility.
 - Module placement, overlap checks, mass, power, heat, durability, and dependencies.
 - An interactive visual campaign map showing current position, secured paths, available roads, closures, and known, forecast, or unscouted information, with route previews available even when fuel or movement blocks commitment.

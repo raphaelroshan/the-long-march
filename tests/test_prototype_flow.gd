@@ -179,6 +179,8 @@ func _run() -> void:
 	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
 	_expect(game.current_order_button.text == "GO TO CONTRACT ↓" and game.current_order_button.tooltip_text.contains("without activating it"), "the persistent jump action should name the opening contract without implying activation")
+	_expect(not game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS OVERVIEW") and game.fortress_panel.placement_status_text().begins_with("INSPECT") and game.fortress_panel.placement_status_text().contains("EDIT CHASSIS TO MOVE"), "the untouched opening should present the selected engine as passive inspection rather than an active move command")
+	_expect(game.refit_label.text.contains("On chassis for inspection") and game.refit_label.text.contains("Use Edit Chassis or click the grid to move it"), "the opening module summary should explain how inspection becomes an intentional refit action")
 	game.how_to_play_button.grab_focus()
 	await process_frame
 	await process_frame
@@ -209,7 +211,7 @@ func _run() -> void:
 	game.module_option.item_selected.emit(cannon_index)
 	await process_frame
 	_expect(game.selected_module_cell.x < 0 and game.module_option.get_item_text(cannon_index).contains("STORED"), "the module picker should distinguish stored modules ready for placement")
-	_expect(game.refit_label.text.contains("power −2") and game.refit_label.text.contains("Deals 3 damage to Raiders and Siege Beasts") and game.refit_label.text.contains("adjacent ammunition"), "stored module planning should show Shell Cannon consumption and explain its exact combat role and dependency")
+	_expect(game.refit_label.text.contains("power −2") and game.refit_label.text.contains("Stored for placement") and game.refit_label.text.contains("Deals 3 damage to Raiders and Siege Beasts") and game.refit_label.text.contains("adjacent ammunition"), "stored module planning should distinguish inspection from placement while showing Shell Cannon consumption, role, and dependency")
 	_expect(game.fortress_panel.cursor_cell == Vector2i(0, 2) and game.fortress_panel.placement_status_text().contains("MASS LIMIT") and game.refit_label.text.contains("CAPACITY · Remove at least 3 mass"), "selecting a stored module should move its preview to the first open footprint and disclose a global capacity blocker immediately")
 	var stored_cannon: Dictionary = {}
 	for index in range(game.state.stored_modules.size()):
@@ -242,6 +244,7 @@ func _run() -> void:
 	game.focus_chassis_button.pressed.emit()
 	await process_frame
 	await process_frame
+	game._refresh_ui()
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.cursor_cell == game.selected_module_cell and game.fortress_panel.interaction_heading().contains("EDIT MODE") and game.fortress_panel.interaction_heading().contains("MOUNTS 1/2"), "Edit Chassis should focus the selected module cell and expose current exterior-mount capacity in its mode heading")
 	_expect(game.pause_button.text.contains("CHASSIS ACTIVE") and game.pause_button.tooltip_text.contains("leaves chassis inspection first"), "the persistent pause action should not claim that B or Escape pauses while chassis controls own cancel")
 	_expect(game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "entering chassis edit mode should reveal the complete grid")

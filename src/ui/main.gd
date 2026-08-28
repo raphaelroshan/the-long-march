@@ -478,6 +478,7 @@ func _cancel_shortcut(spaced: bool = true) -> String:
 
 func _refresh_controller_copy() -> void:
 	if focus_chassis_button != null:
+		focus_chassis_button.text = "EDIT CHASSIS · ARROWS + %s" % _controller_confirm_label()
 		focus_chassis_button.tooltip_text = "Move keyboard or controller focus to the chassis. Use arrows to move, %s to select or place, and %s to return." % [_confirm_shortcut(), _cancel_shortcut()]
 	if combat_inspect_button != null:
 		combat_inspect_button.tooltip_text = "Move keyboard or controller focus to the chassis. Choose a system with %s to return directly to Seal Compartment." % _confirm_shortcut()
@@ -705,7 +706,7 @@ func _build_ui() -> void:
 	module_group = _labeled_control("Module", module_option)
 	controls.add_child(module_group)
 	focus_chassis_button = Button.new()
-	focus_chassis_button.text = "EDIT CHASSIS · ARROWS + A"
+	focus_chassis_button.text = "EDIT CHASSIS"
 	focus_chassis_button.tooltip_text = "Move keyboard or controller focus to the chassis. Use arrows to move, A or Enter to select or place, and B or Escape to return."
 	focus_chassis_button.pressed.connect(_focus_chassis_for_refit)
 	controls.add_child(focus_chassis_button)
@@ -2567,7 +2568,7 @@ func _refresh_ui() -> void:
 			_module_power_text(selected_definition),
 			int(selected_definition.get("heat", 0)),
 			mount_text,
-			"Selected on chassis; choose an empty cell to move it." if not selected_installed.is_empty() else "Choose an empty cell to place it.",
+			"On chassis for inspection. Use Edit Chassis or click the grid to move it." if not selected_installed.is_empty() else "Stored for placement. Use Edit Chassis or click an empty grid cell.",
 			dependency_text,
 			String(selected_definition.get("capability", "No field capability recorded.")),
 			capacity_warning
@@ -2811,7 +2812,7 @@ func _refresh_ui() -> void:
 		var active_risk := state.current_route_risk
 		_set_route_preview("On the road — risk %.0f%%, pressure %d, doctrine %s." % [active_risk * 100.0, state.encounter_pressure, state.encounter_target_doctrine.replace("_", " ").capitalize()], "safe" if active_risk <= 0.18 else ("warning" if active_risk <= 0.32 else "danger"))
 	var focus_owner := get_viewport().gui_get_focus_owner()
-	if campaign_map.visible and focus_owner in campaign_node_buttons:
+	if campaign_map.visible and focus_owner is Button and focus_owner in campaign_node_buttons:
 		var focused_node_id := String(focus_owner.get_meta("node_id", ""))
 		_on_campaign_node_inspected(focused_node_id, campaign_map.detail_for(focused_node_id))
 	var dependencies: Dictionary = snapshot.dependencies
@@ -3297,6 +3298,7 @@ class FortressPanel extends Control:
 	var hull_under_threat: bool = false
 	var controller_confirm_label: String = "A"
 	var controller_cancel_label: String = "B"
+	var pointer_inside: bool = false
 	var family_colors := {
 		"engine": Color("#b86f4b"),
 		"weapon": Color("#b44949"),
@@ -3315,6 +3317,12 @@ class FortressPanel extends Control:
 		_refresh_controller_tooltip()
 		focus_entered.connect(queue_redraw)
 		focus_exited.connect(queue_redraw)
+		mouse_entered.connect(_set_pointer_inside.bind(true))
+		mouse_exited.connect(_set_pointer_inside.bind(false))
+
+	func _set_pointer_inside(value: bool) -> void:
+		pointer_inside = value
+		queue_redraw()
 
 	func set_controller_labels(confirm_label: String, cancel_label: String) -> void:
 		controller_confirm_label = confirm_label
@@ -3349,9 +3357,25 @@ class FortressPanel extends Control:
 			if not hovered.is_empty():
 				var hovered_name := String(state.module_definition(String(hovered.get("id", ""))).get("name", "module")).to_upper()
 				if selected_cell in state.occupied_cells(hovered):
-					return "SELECTED · %s · MOVE TO AN EMPTY CELL" % hovered_name
-				return "SELECT %s · %s / ENTER TO INSPECT" % [hovered_name, controller_confirm_label]
+					if has_focus():
+						return "SELECTED · %s · MOVE TO AN EMPTY CELL" % hovered_name
+					return "INSPECT · %s · EDIT CHASSIS TO MOVE" % hovered_name
+				if has_focus():
+					return "SELECT %s · %s / ENTER TO INSPECT" % [hovered_name, controller_confirm_label]
+				return "CLICK TO INSPECT · %s" % hovered_name
 		var validation := _placement_validation()
+		if not has_focus():
+			if not pointer_inside:
+				var selected_name := String(state.module_definition(placement_module_id).get("name", "module")).to_upper()
+				if selected_cell.x < 0:
+					if bool(validation.get("ok", false)):
+						return "STORED · %s · OPEN EDIT CHASSIS TO PLACE" % selected_name
+					return "PLACEMENT BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
+				return "INSPECT · %s · OPEN EDIT CHASSIS" % selected_name
+			var pointer_action := "MOVE HERE" if selected_cell.x >= 0 else "PLACE HERE"
+			if bool(validation.get("ok", false)):
+				return "CLICK TO %s" % pointer_action
+			return "PREVIEW BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
 		if bool(validation.get("ok", false)):
 			return "PLACEMENT READY · %s / ENTER TO APPLY" % controller_confirm_label
 		return "BLOCKED · %s" % String(validation.get("reason", "invalid placement")).to_upper()
@@ -3368,7 +3392,7 @@ class FortressPanel extends Control:
 	func interaction_heading() -> String:
 		var mount_status := "MOUNTS %d/%d" % [exterior_mount_count(), LongMarchState.MAX_EXTERIOR_MOUNTS]
 		if not has_focus():
-			return "CHASSIS GRID · %s — exterior mounts use a bright edge" % mount_status
+			return "CHASSIS OVERVIEW · %s — read-only until Edit Chassis" % mount_status
 		if state != null and state.can_refit():
 			return "CHASSIS EDIT MODE · %s — arrows move · %s acts · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
 		return "CHASSIS INSPECTION · %s — arrows move · %s selects · %s returns" % [mount_status, controller_confirm_label, controller_cancel_label]
@@ -3487,7 +3511,10 @@ class FortressPanel extends Control:
 
 	func _draw_refit_details() -> void:
 		var x := 370.0
-		draw_string(ThemeDB.fallback_font, Vector2(x, 40), "REFIT STATUS" if state != null and state.can_refit() else "SYSTEM STATUS", HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
+		var detail_heading := "SYSTEM STATUS"
+		if state != null and state.can_refit():
+			detail_heading = "REFIT STATUS" if has_focus() else "INSPECTED SYSTEM"
+		draw_string(ThemeDB.fallback_font, Vector2(x, 40), detail_heading, HORIZONTAL_ALIGNMENT_LEFT, 300, 16, Color("#e8c58e"))
 		if state == null or placement_module_id.is_empty():
 			return
 		var definition := state.module_definition(placement_module_id)
@@ -3514,7 +3541,8 @@ class FortressPanel extends Control:
 			var placement_validation := _placement_validation()
 			var status_color := Color("#f0cf96") if not hovered.is_empty() else (Color("#73c99b") if bool(placement_validation.get("ok", false)) else Color("#ef8375"))
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), placement_status_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, status_color)
-			draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · %s confirms · %s returns" % [controller_confirm_label, controller_cancel_label], HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
+			if has_focus():
+				draw_string(ThemeDB.fallback_font, Vector2(x, 246), "Arrows move · %s confirms · %s returns" % [controller_confirm_label, controller_cancel_label], HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#8fa3a7"))
 		else:
 			draw_string(ThemeDB.fallback_font, Vector2(x, 228), locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, 320, 11, Color("#b9c3bf"))
 
@@ -3558,7 +3586,8 @@ class FortressPanel extends Control:
 			if String(instance.get("id", "")) in combat_target_ids:
 				draw_rect(rect.grow(3), Color("#ff806f"), false, 4.0)
 			if selected_cell in state.occupied_cells(instance):
-				draw_rect(rect.grow(2), Color("#69d8cf"), false, 3.0)
-		var cursor_rect := Rect2(ORIGIN + Vector2(cursor_cell.x * CELL, cursor_cell.y * CELL), Vector2(CELL - 3, CELL - 3))
-		draw_rect(cursor_rect, Color("#e8c58e") if has_focus() else Color("#7d8f93"), false, 2.0)
+				draw_rect(rect.grow(2), Color("#69d8cf") if has_focus() else Color("#568d8c"), false, 3.0 if has_focus() else 2.0)
+		if has_focus() or pointer_inside:
+			var cursor_rect := Rect2(ORIGIN + Vector2(cursor_cell.x * CELL, cursor_cell.y * CELL), Vector2(CELL - 3, CELL - 3))
+			draw_rect(cursor_rect, Color("#e8c58e") if has_focus() else Color("#7d8f93"), false, 2.0)
 		_draw_refit_details()

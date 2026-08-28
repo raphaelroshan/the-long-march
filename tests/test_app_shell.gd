@@ -261,7 +261,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the Field Guide should open Flooded Veyru directly as a separate chapter at Lantern Quay")
 	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across controls, map, and combat presentation")
-	_expect(app.game_view.controller_layout_id == "east_confirm" and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.focus_chassis_button.tooltip_text.contains("B / Enter") and app.game_view.fortress_panel.controller_cancel_label == "A", "a newly opened playable stage should inherit the remapped face buttons and matching visible instructions")
+	_expect(app.game_view.controller_layout_id == "east_confirm" and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.focus_chassis_button.text.contains("ARROWS + B") and app.game_view.focus_chassis_button.tooltip_text.contains("B / Enter") and app.game_view.fortress_panel.controller_cancel_label == "A", "a newly opened playable stage should inherit the remapped face buttons in both its visible edit action and detailed instructions")
 	var controller_copy_phase: String = app.game_view.state.phase
 	app.game_view.state.phase = "results"
 	app._refresh_controller_copy()
