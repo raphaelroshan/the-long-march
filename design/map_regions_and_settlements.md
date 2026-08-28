@@ -100,6 +100,26 @@ Each settlement has three persistent values: **trust**, **capacity**, and **scar
 
 Settlement state should change through explicit player choices. A broken contract might reduce trust but create a salvage opportunity. Delivering a heavy machine may increase capacity while consuming the player’s own mass budget. The map is therefore a network of reciprocal obligations, not a sequence of vendors.
 
+## Settlement bazaar interface
+
+A settlement should open as a recognizable illustrated place rather than a single scrolling stack of unrelated controls. Each hub exposes a small set of labelled people or stations—typically a quartermaster, workshop, information broker, hiring post, assignment board, and departure gate. Activating one station opens one focused task panel; Back returns to the same station in the hub.
+
+The bazaar is not a hidden-object scene. Every interactive location needs a visible label, input focus state, and short purpose. Pointer, keyboard, and controller users must reach the same actions. The persistent header shows only common settlement resources; detailed prices, requirements, and consequences appear inside the selected station.
+
+The first trade model should use small authored stock. Buying previews money, storage, mass, and dependency effects. Selling begins with stored, uninstalled modules so a market action cannot silently dismantle the working fortress. Information purchases reveal named route facts with a visible source and confidence rather than purchasing complete certainty.
+
+## Assignment-aware departure map
+
+Assignments are accepted at the settlement and planned on the map, but they do not choose a route automatically. A potential assignment destination uses a hollow grey marker labelled `OFFER`; an accepted destination uses a filled color marker labelled `ACCEPTED`. Completed and failed assignments retain distinct historical markers. Shape and text must preserve the distinction without color.
+
+Focusing or hovering a reachable location opens a compact card containing route days, fuel, visibility, current news, source confidence, assignment relevance, closure or deadline consequence, and downstream recovery. Inspection never selects the node. Selection moves the route into a review state, and one explicit Commit action is still required to leave.
+
+## In-between roads
+
+Committing to a destination starts a road, not an arrival. The fortress remains at its origin in authoritative state until departure, at least one visible in-between beat, mandatory events or hostile contacts, and arrival have resolved. Longer routes may contain several landmarks, meetings, hazards, or quiet operational beats.
+
+Skipping presentation may accelerate a non-interactive beat but cannot bypass an event, battle, assignment check, or arrival receipt. A battle or event that does not cause retreat returns to the same committed road. This keeps travel meaningful while allowing players to shorten repeated animation.
+
 ## Route archetypes
 
 Every chapter should present a familiar set of route questions:
