@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.254`; Feeds A through Y are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.255`; Feeds A through Z are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -155,6 +155,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.254` through direct Ashgate and Flooded Veyru actions.
 
 > Let the shared title Field Guide launch either playable chapter without returning to the title action stack. Reuse the existing start and save-replacement paths, restore focus to the exact guide action after cancellation, derive replay wording per regional Charter result, and keep all three footer actions readable at 110% text.
+
+### Current Feed Z — title return receipt
+
+**Status:** Complete in `0.3.0-alpha.255` through saved-versus-discarded title feedback.
+
+> After leaving a live stage, show a temporary title receipt that names whether the exact checkpoint or debrief was saved, whether live changes were discarded while an older Continue checkpoint remains, or whether no checkpoint exists. Derive it from the existing full-state save comparison, clear it on the next launch, and keep the title readable at 110% text without changing persistence behavior.
 
 ## Historical prototype feed sequence
 

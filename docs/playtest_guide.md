@@ -14,6 +14,8 @@ Before starting, move focus or the pointer across the title's chapter actions. T
 
 The title **Field Guide** can launch either prepared chapter directly after explaining their shared rules. If Continue exists, both guide actions use the same explicit replacement warning as their title equivalents; cancelling must return to the chapter action the tester chose.
 
+After returning from a live stage, the title briefly prioritizes a return receipt over the generic save summary. It should name the exact saved checkpoint or debrief, or state that unsaved chapter changes were discarded and whether Continue still points to an older decision. Starting or continuing a chapter clears the receipt.
+
 ## Suggested session
 
 1. At Ashgate, compare Rill Crossing and The Soot Orchard before choosing; ask what the player believes each visibility label promises.

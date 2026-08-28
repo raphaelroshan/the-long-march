@@ -60,6 +60,7 @@ func _run() -> void:
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
 	_expect(app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should expose the exact build version for playtest reports")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
+	_expect(not app.title_return_notice_panel.visible and app.title_return_notice.is_empty() and app.save_status_label.visible, "a clean launch should show normal save guidance without inventing a prior-session return receipt")
 	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.quick_start_button, "title navigation should move down from Guided Start to Quick Start")
 	_expect(app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_left) == app.guide_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_right) != null, "title navigation should traverse the utility row explicitly")
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "Continue should stay out of the action stack when no local save exists")
@@ -231,6 +232,16 @@ func _run() -> void:
 	await process_frame
 	_expect(not app.settings_view.visible and app.settings_button.has_focus(), "closing Settings should restore title-menu focus")
 
+	app._open_stage(false, false)
+	await process_frame
+	await process_frame
+	app.game_view.state.money += 1
+	app._return_to_title()
+	await process_frame
+	await process_frame
+	_expect(app.title_return_notice_kind == "discarded" and app.title_return_notice_label.text.contains("UNSAVED ASHGATE LOWLANDS CHANGES DISCARDED") and app.title_return_notice_label.text.contains("No Continue checkpoint was created"), "leaving a never-saved run should state plainly that no resumable checkpoint exists")
+	_expect(not app.continue_button.visible and app.start_button.has_focus(), "an unsaved no-checkpoint return should preserve the normal first-run title action and focus")
+
 	app.guide_button.pressed.emit()
 	await process_frame
 	_expect(app.guide_view.visible, "Field Guide should open without starting a run")
@@ -304,6 +315,9 @@ func _run() -> void:
 	_expect(app.game_view.results_record_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.game_view.results_record_label.text.contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief should state the regional development and its later route effect")
 	app._on_checkpoint_reached("encounter_advanced")
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.has_development("veyru_public_archive_signal") and app.campaign_progress.result_for_region("flooded_veyru") == "archive_scarred", "surviving after the public broadcast should persist the regional development and Veyru result outside the replaceable Continue slot")
+	app._capture_title_return_notice()
+	_expect(app.title_return_notice_kind == "saved" and app.title_return_notice.contains("RESULT SAVED") and app.title_return_notice.contains("Flooded Veyru debrief remains available under Continue"), "a saved terminal state should produce a debrief-specific title receipt rather than a generic checkpoint message")
+	app._clear_title_return_notice()
 	_expect(app.game_view.march_on_button.text == "MARCH ON · ASHGATE LOWLANDS", "the Veyru debrief should offer the other unfinished chapter as its primary onward path")
 	app.game_view.march_on_button.pressed.emit()
 	await process_frame
@@ -336,6 +350,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "returning from an unsaved Veyru inspection should restore the shared title menu")
+	_expect(app.title_return_notice_panel.visible and not app.save_status_label.visible and app.title_return_notice_kind == "discarded" and app.title_return_notice_label.text.contains("UNSAVED FLOODED VEYRU CHANGES DISCARDED") and app.title_return_notice_label.text.contains("Continue still holds the earlier Flooded Veyru · Day 1 at Lantern Quay"), "an unsaved return should prioritize a receipt that distinguishes discarded live changes from the older checkpoint still available under Continue")
 	_expect(app.continue_button.text.contains("VEYRU") and app.save_status_label.text.contains("Flooded Veyru") and app.continue_button.tooltip_text.contains("Flooded Veyru"), "a Veyru checkpoint should identify its chapter in the title action, summary, and tooltip")
 	app.veyru_start_button.grab_focus()
 	await process_frame
@@ -582,10 +597,12 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.menu_view.visible and not app.confirmation_view.visible, "a fully saved run should return to title without a redundant warning")
+	_expect(app.title_return_notice_panel.visible and not app.save_status_label.visible and app.title_return_notice_kind == "saved" and app.title_return_notice_label.text.contains("CHECKPOINT SAVED") and app.title_return_notice_label.text.contains("Ashgate Lowlands · Day 1 at Ashgate Depot"), "a safe return should prioritize an immediate receipt naming the checkpoint that Continue will restore")
 	app.continue_button.pressed.emit()
 	await process_frame
 	await process_frame
 	_expect(app.game_view != null, "Continue should restore the run after a safe return")
+	_expect(not app.title_return_notice_panel.visible and app.title_return_notice.is_empty(), "entering a stage should clear the previous title return receipt")
 	_expect(app.game_view.event_label.text == "March restored from the local checkpoint.", "Continue should confirm restoration in player-facing campaign language")
 	app._show_pause()
 	_expect(app.pause_save_status_label.text == "Current decision matches the loaded checkpoint.", "pausing immediately after Continue should describe the loaded checkpoint without awkward saved-save wording")
@@ -599,6 +616,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.menu_view.visible and app.game_view == null, "Save & Return should close the stage and restore the menu")
+	_expect(app.title_return_notice_panel.visible and app.title_return_notice_kind == "saved" and app.title_return_notice_label.text.contains("CHECKPOINT SAVED") and app.title_return_notice_label.text.contains("Ashgate Lowlands · Day 1 at Ashgate Depot"), "Save & Return should provide the same explicit title checkpoint receipt as a safe return")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
 	_expect(app.save_status_label.text.contains("Next · Answer convoy contract") and app.save_status_label.text.contains("Fuel 6"), "the active checkpoint summary should identify the exact decision waiting after Continue without losing resource context")
 	_expect(app.continue_button.get_index() < app.start_button.get_index() and app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.start_button, "a valid save should place Continue first visually and route downward into fresh-start actions")

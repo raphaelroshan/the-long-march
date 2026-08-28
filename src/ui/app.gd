@@ -115,6 +115,8 @@ var confirmation_title_label: Label
 var confirmation_body_label: Label
 var confirmation_confirm_button: Button
 var confirmation_cancel_button: Button
+var title_return_notice_panel: PanelContainer
+var title_return_notice_label: Label
 var save_status_label: Label
 var title_region_briefing_label: Label
 var title_charter_label: Label
@@ -138,6 +140,8 @@ var campaign_progress_error: String = ""
 var interface_audio: LongMarchInterfaceAudio
 var title_preview_id: String = "ashgate_guided"
 var focused_title_preview_id: String = "ashgate_guided"
+var title_return_notice: String = ""
+var title_return_notice_kind: String = ""
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -342,6 +346,15 @@ func _build_title_menu() -> void:
 	quit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	quit_button.pressed.connect(_quit_game)
 	utility_actions.add_child(quit_button)
+
+	title_return_notice_panel = PanelContainer.new()
+	title_return_notice_panel.visible = false
+	title_return_notice_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 8))
+	actions.add_child(title_return_notice_panel)
+	title_return_notice_label = Label.new()
+	title_return_notice_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_return_notice_label.add_theme_font_size_override("font_size", 11)
+	title_return_notice_panel.add_child(title_return_notice_label)
 
 	save_status_label = Label.new()
 	save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1528,6 +1541,7 @@ func _refresh_title_state() -> void:
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
 	save_status_label.text = String(save_info.get("summary", _empty_save_summary()))
+	_refresh_title_return_notice()
 	var checkpoint_condition := String(save_info.get("condition", ""))
 	if not has_valid_save and bool(save_info.get("exists", false)):
 		save_status_label.add_theme_color_override("font_color", Color("#e98b72"))
@@ -1818,10 +1832,14 @@ func _restore_save_backup() -> Dictionary:
 	primary_file.close()
 	if not bool(_saved_run_info_at(SAVE_PATH).get("valid", false)):
 		return {"ok": false, "reason": "restored checkpoint failed validation"}
+	_clear_title_return_notice()
 	return {"ok": true}
 
 func _clear_local_save_files() -> Dictionary:
-	return _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH])
+	var result := _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH])
+	if bool(result.get("ok", false)):
+		_clear_title_return_notice()
+	return result
 
 func _reset_playtest_data() -> Dictionary:
 	var removal := _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH])
@@ -1835,6 +1853,7 @@ func _reset_playtest_data() -> Dictionary:
 	var progress_result := campaign_progress.load_progress()
 	campaign_progress_error = "" if bool(progress_result.get("ok", false)) else String(progress_result.get("reason", "regional record could not be read"))
 	last_checkpoint_reason = ""
+	_clear_title_return_notice()
 	return removal
 
 func _remove_local_files(paths: Array) -> Dictionary:
@@ -1849,6 +1868,7 @@ func _remove_local_files(paths: Array) -> Dictionary:
 	return {"ok": errors.is_empty(), "reason": "; ".join(errors)}
 
 func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
+	_clear_title_return_notice()
 	if game_view != null:
 		game_view.queue_free()
 	game_view = GAME_SCENE.instantiate()
@@ -2394,6 +2414,7 @@ func _hide_guide() -> void:
 	guide_button.grab_focus()
 
 func _return_to_title() -> void:
+	_capture_title_return_notice()
 	pause_view.visible = false
 	guide_view.visible = false
 	settings_view.visible = false
@@ -2412,6 +2433,54 @@ func _return_to_title() -> void:
 	menu_view.visible = true
 	_refresh_title_state()
 	_focus_title_primary()
+
+func _capture_title_return_notice() -> void:
+	if game_view == null:
+		return
+	var run_state = game_view.get("state")
+	var region_name := _region_display_name(String(run_state.get("campaign_region_id")))
+	var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
+	var day := int(run_state.get("day"))
+	var viewing_debrief := String(run_state.get("phase")) == "results"
+	if _current_run_matches_save():
+		title_return_notice_kind = "saved"
+		if viewing_debrief:
+			title_return_notice = "RETURN RECEIPT · RESULT SAVED\n%s debrief remains available under Continue." % region_name
+		else:
+			title_return_notice = "RETURN RECEIPT · CHECKPOINT SAVED\n%s · Day %d at %s remains available under Continue." % [region_name, day, location]
+		return
+	var prior_save := _saved_run_info()
+	title_return_notice_kind = "discarded"
+	if bool(prior_save.get("valid", false)):
+		var prior_context := "%s result" % String(prior_save.get("result", "completed"))
+		if not bool(prior_save.get("completed", false)):
+			prior_context = "%s · Day %d at %s" % [String(prior_save.get("region", "Campaign")), int(prior_save.get("day", 1)), String(prior_save.get("location", "the previous decision"))]
+		title_return_notice = "RETURN RECEIPT · UNSAVED %s CHANGES DISCARDED\nContinue still holds the earlier %s." % [region_name.to_upper(), prior_context]
+	else:
+		title_return_notice = "RETURN RECEIPT · UNSAVED %s CHANGES DISCARDED\nNo Continue checkpoint was created." % region_name.to_upper()
+
+func _refresh_title_return_notice() -> void:
+	if title_return_notice_panel == null:
+		return
+	title_return_notice_panel.visible = not title_return_notice.is_empty()
+	save_status_label.visible = not title_return_notice_panel.visible
+	if not title_return_notice_panel.visible:
+		return
+	title_return_notice_label.text = title_return_notice
+	if title_return_notice_kind == "discarded":
+		title_return_notice_label.add_theme_color_override("font_color", Color("#ffd2c5"))
+		title_return_notice_panel.add_theme_stylebox_override("panel", _flat_style(Color("#2a1715"), Color("#d77864"), 1, 5, 8))
+	else:
+		title_return_notice_label.add_theme_color_override("font_color", Color("#dcf7e8"))
+		title_return_notice_panel.add_theme_stylebox_override("panel", _flat_style(Color("#173027"), Color("#76c99d"), 1, 5, 8))
+
+func _clear_title_return_notice() -> void:
+	title_return_notice = ""
+	title_return_notice_kind = ""
+	if title_return_notice_panel != null:
+		title_return_notice_panel.visible = false
+	if save_status_label != null:
+		save_status_label.visible = true
 
 func _quit_game() -> void:
 	_perform_application_quit()

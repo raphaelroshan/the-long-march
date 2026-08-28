@@ -899,3 +899,7 @@ Settings now groups its existing controls under Display & Readability, Controls 
 ## 2026-08-28 — The shared guide launches either proven chapter
 
 The title Field Guide now offers direct Ashgate and Flooded Veyru starts beside Back to Title. Both delegate to the existing chapter launch and Continue-replacement confirmation paths; cancelling restores the exact guide action. Replay wording derives from each region's March Charter record rather than treating any completed Continue file as proof that both chapters were completed. This closes the mismatch between a two-chapter guide and an Ashgate-only footer without introducing another chapter selector or save slot.
+
+## 2026-08-28 — Returning to title leaves a persistence receipt
+
+Before releasing a live stage, the shell now compares its complete serialized state with the validated Continue checkpoint and creates one temporary title receipt. Saved decisions name their chapter, day, and location; saved results name the retained debrief; unsaved exits distinguish an older retained checkpoint from no checkpoint. The receipt temporarily replaces the longer generic save summary so the 1280×720 title remains intact at 110% text, while Continue focus still exposes full checkpoint details. It clears on the next launch and never enters saves, preferences, the journal, or the March Charter. This was chosen over a notification history or second save model because the ambiguity exists only at the immediate stage-to-title boundary.
