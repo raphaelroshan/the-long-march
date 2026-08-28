@@ -831,3 +831,7 @@ The March Charter stores each playable region's best terminal result separately 
 ## 2026-08-28 — Window close respects the save boundary
 
 The shell disables automatic acceptance of operating-system close requests. A safe title or an exactly checkpointed stage exits immediately; unsaved live state opens a chapter- and location-specific Save & Quit confirmation. Cancelling restores the previous live or paused focus context, repeated close requests cannot bypass the modal, and a failed write leaves the application open. The existing Continue format remains the only run save.
+
+## 2026-08-28 — Persistent data resets stay separate
+
+Title Settings exposes March Charter reset independently from Continue clearing and briefing reset. Its confirmation explicitly names regional results and Public Archive Signal as the deleted data, and names Continue, settings, and briefing progress as preserved. The action is disabled during a live run because that stage holds a deterministic regional-development snapshot; reset therefore cannot make active state disagree with its profile mid-journey.

@@ -314,6 +314,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")
 	_expect(app.settings_context_label.text.begins_with("PAUSED MARCH") and app.settings_close_button.text == "BACK TO PAUSE", "in-run Settings should identify and return to the paused march")
+	_expect(app.reset_charter_button.disabled and app.reset_charter_button.text.contains("RETURN TO TITLE"), "paused Settings should not erase persistent history beneath an active run snapshot")
 	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include available one-shot actions in order")
 	app.autosave_button.grab_focus()
@@ -530,7 +531,7 @@ func _run() -> void:
 		await process_frame
 		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.continue_button.visible and app.continue_button.disabled, "confirmed save clearing should remove Continue from the title action stack")
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
-		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should collapse cleanly after the last one-shot action is consumed")
+		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_charter_button and app.reset_charter_button.get_node_or_null(app.reset_charter_button.focus_neighbor_bottom) == app.settings_close_button, "clearing Continue should leave the independent March Charter reset in the Settings focus path")
 
 	app._open_stage(false, false)
 	await process_frame
@@ -610,6 +611,28 @@ func _run() -> void:
 	_expect(int(quit_probe["count"]) == 2 and close_payload is Dictionary and String(close_payload.get("campaign_region_id", "")) == "flooded_veyru" and int(close_payload.get("money", 0)) == app.game_view.state.money, "Save & Quit should flush the exact live state before requesting application exit")
 	app._request_application_close()
 	_expect(int(quit_probe["count"]) == 3 and not app.confirmation_view.visible, "a close request should quit immediately once the live stage matches the durable checkpoint")
+	app._return_to_title()
+	await process_frame
+	await process_frame
+	app.settings_button.pressed.emit()
+	await process_frame
+	_expect(not app.reset_charter_button.disabled and app.reset_charter_button.text.contains("AVAILABLE"), "title Settings should expose Charter reset when persistent regional history exists")
+	app.reset_charter_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_title_label.text == "Reset the March Charter?" and app.confirmation_body_label.text.contains("Public Archive Signal") and app.confirmation_body_label.text.contains("Continue, settings, and briefing progress remain unchanged") and app.confirmation_confirm_button.text == "RESET CHARTER" and app.confirmation_cancel_button.text == "KEEP CHARTER", "Charter reset should require a precise confirmation that distinguishes every local data category")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.settings_view.visible and app.reset_charter_button.has_focus() and FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)), "cancelling Charter reset should preserve the record and return focus to its Settings action")
+	app.reset_charter_button.pressed.emit()
+	await process_frame
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.developments.is_empty() and app.campaign_progress.region_results.is_empty(), "confirmed Charter reset should clear both regional developments and chapter results")
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and FileAccess.file_exists(ProjectSettings.globalize_path(SETTINGS_PATH)), "Charter reset should preserve the independent Continue save and settings file")
+	_expect(app.reset_charter_button.disabled and app.settings_status_label.text.contains("Continue, settings, and briefing progress were kept") and app.settings_close_button.has_focus(), "successful Charter reset should report what was preserved and move focus to an enabled action")
+	app.settings_close_button.pressed.emit()
+	await process_frame
+	_expect(app.title_charter_label.text.contains("MARCH CHARTER · 0/2 REGIONS SURVIVED") and not app.veyru_start_button.tooltip_text.contains("Public Archive Signal is active"), "the title should immediately return to a clean Charter and remove development-specific guidance")
 
 	_remove_local_test_files()
 	if failures.is_empty():

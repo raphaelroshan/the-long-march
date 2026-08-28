@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.237`; Feeds A through H are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.238`; Feeds A through I are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -53,6 +53,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.237` through save-aware window-close handling.
 
 > Intercept operating-system close requests. Quit immediately only from the title or an exactly checkpointed run; otherwise pause, name the current chapter and location, and offer Save & Quit or Keep Playing. Flush the existing save before exit, restore exact focus on cancel, and keep the app open after save failure. Do not add background timers or another save slot.
+
+### Current Feed I — explicit Charter reset
+
+**Status:** Complete in `0.3.0-alpha.238` through title-only March Charter reset.
+
+> Give testers an explicit way to clear persistent chapter results and regional developments without touching Continue, settings, briefing progress, or exported feedback. Require exact confirmation copy, disable the action during an active run, restore focus on cancel, and refresh the title immediately on success.
 
 ## Historical prototype feed sequence
 

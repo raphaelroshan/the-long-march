@@ -83,6 +83,17 @@ func record_region_result(region_id: String, result_id: String) -> Dictionary:
 	return {"ok": true, "recorded": true, "region": region_id, "result": result_id, "path": saved.get("path", "")}
 
 
+func clear_progress() -> Dictionary:
+	var absolute_path := ProjectSettings.globalize_path(progress_path)
+	if FileAccess.file_exists(absolute_path):
+		var removal_error := DirAccess.remove_absolute(absolute_path)
+		if removal_error != OK:
+			return {"ok": false, "reason": error_string(removal_error)}
+	developments.clear()
+	region_results.clear()
+	return {"ok": true, "cleared": true}
+
+
 func save() -> Dictionary:
 	var file := FileAccess.open(progress_path, FileAccess.WRITE)
 	if file == null:

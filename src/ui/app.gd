@@ -52,6 +52,7 @@ var display_mode_button: Button
 var motion_button: Button
 var autosave_button: Button
 var reset_briefing_button: Button
+var reset_charter_button: Button
 var clear_save_button: Button
 var settings_status_label: Label
 var resume_button: Button
@@ -435,6 +436,15 @@ func _configure_focus_cycle(controls: Array) -> void:
 		control.focus_previous = control.get_path_to(previous)
 		control.focus_next = control.get_path_to(next)
 
+func _configure_vertical_focus_cycle(controls: Array) -> void:
+	_configure_focus_cycle(controls)
+	for index in range(controls.size()):
+		var control: Control = controls[index]
+		var previous: Control = controls[(index - 1 + controls.size()) % controls.size()]
+		var next: Control = controls[(index + 1) % controls.size()]
+		control.focus_neighbor_top = control.get_path_to(previous)
+		control.focus_neighbor_bottom = control.get_path_to(next)
+
 func _accent_button(button: Button) -> void:
 	button.add_theme_stylebox_override("normal", _flat_style(Color("#285348f2"), Color("#89d9b1"), 2, 6, 12))
 	button.add_theme_stylebox_override("hover", _flat_style(Color("#35695cf7"), Color("#adf0ce"), 2, 6, 12))
@@ -586,11 +596,11 @@ func _build_settings_overlay() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	settings_view.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(620, 660)
-	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#688587"), 2, 8, 28))
+	panel.custom_minimum_size = Vector2(620, 640)
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#10191df7"), Color("#688587"), 2, 8, 20))
 	center.add_child(panel)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 9)
+	content.add_theme_constant_override("separation", 6)
 	panel.add_child(content)
 	settings_context_label = Label.new()
 	settings_context_label.text = "TITLE MENU · SETTINGS"
@@ -605,23 +615,24 @@ func _build_settings_overlay() -> void:
 	var intro := Label.new()
 	intro.text = "Adjust display, accessibility, save behavior, and the guided briefing. These preferences stay on this device."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro.custom_minimum_size = Vector2(550, 44)
+	intro.custom_minimum_size = Vector2(550, 36)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
 	display_mode_button = _settings_action(content, "DISPLAY MODE", "Switch between a window and borderless fullscreen.", _toggle_display_mode)
 	motion_button = _settings_action(content, "TRANSITION MOTION", "Reduced motion removes the title-to-stage fade.", _toggle_reduced_motion)
 	autosave_button = _settings_action(content, "AUTOMATIC CHECKPOINTS", "Save after committed decisions, refits, and encounter progress.", _toggle_autosave)
 	reset_briefing_button = _settings_action(content, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
+	reset_charter_button = _settings_action(content, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
 	clear_save_button = _settings_action(content, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
 	settings_status_label = Label.new()
 	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	settings_status_label.custom_minimum_size = Vector2(550, 34)
+	settings_status_label.custom_minimum_size = Vector2(550, 28)
 	settings_status_label.add_theme_font_size_override("font_size", 12)
 	settings_status_label.add_theme_color_override("font_color", Color("#d8c389"))
 	content.add_child(settings_status_label)
 	settings_close_button = Button.new()
 	settings_close_button.text = "BACK TO TITLE"
-	settings_close_button.custom_minimum_size = Vector2(0, 52)
+	settings_close_button.custom_minimum_size = Vector2(0, 46)
 	settings_close_button.pressed.connect(_hide_settings)
 	_accent_button(settings_close_button)
 	content.add_child(settings_close_button)
@@ -637,7 +648,7 @@ func _settings_action(parent: VBoxContainer, title: String, detail: String, call
 	label.add_theme_color_override("font_color", Color("#98a8aa"))
 	group.add_child(label)
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(0, 42)
+	button.custom_minimum_size = Vector2(0, 38)
 	button.tooltip_text = detail
 	button.pressed.connect(callback)
 	group.add_child(button)
@@ -881,28 +892,21 @@ func _refresh_settings(message: String = "") -> void:
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
 	reset_briefing_button.text = "RESET COMPLETED BRIEFING" if briefing_complete else "BRIEFING · ENABLED FOR NEXT RUN"
 	reset_briefing_button.disabled = not briefing_complete
+	var progress_exists := FileAccess.file_exists(PROGRESS_PATH)
+	reset_charter_button.text = "RESET MARCH CHARTER · " + ("RETURN TO TITLE" if settings_opened_from_pause else ("AVAILABLE" if progress_exists else "NO RECORD"))
+	reset_charter_button.disabled = settings_opened_from_pause or not progress_exists
 	clear_save_button.text = "CLEAR LOCAL SAVE · " + ("AVAILABLE" if FileAccess.file_exists(SAVE_PATH) else "NO SAVE")
 	clear_save_button.disabled = not FileAccess.file_exists(SAVE_PATH)
 	_refresh_settings_focus()
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
-	var first_optional: Button = reset_briefing_button if not reset_briefing_button.disabled else (clear_save_button if not clear_save_button.disabled else settings_close_button)
-	var last_optional: Button = clear_save_button if not clear_save_button.disabled else (reset_briefing_button if not reset_briefing_button.disabled else autosave_button)
 	var active_controls: Array = [display_mode_button, motion_button, autosave_button]
-	if not reset_briefing_button.disabled:
-		active_controls.append(reset_briefing_button)
-	if not clear_save_button.disabled:
-		active_controls.append(clear_save_button)
+	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button]:
+		if not optional_button.disabled:
+			active_controls.append(optional_button)
 	active_controls.append(settings_close_button)
-	_configure_focus_cycle(active_controls)
-	autosave_button.focus_neighbor_bottom = autosave_button.get_path_to(first_optional)
-	reset_briefing_button.focus_neighbor_top = reset_briefing_button.get_path_to(autosave_button)
-	reset_briefing_button.focus_neighbor_bottom = reset_briefing_button.get_path_to(clear_save_button if not clear_save_button.disabled else settings_close_button)
-	clear_save_button.focus_neighbor_top = clear_save_button.get_path_to(reset_briefing_button if not reset_briefing_button.disabled else autosave_button)
-	clear_save_button.focus_neighbor_bottom = clear_save_button.get_path_to(settings_close_button)
-	settings_close_button.focus_neighbor_top = settings_close_button.get_path_to(last_optional)
-	settings_close_button.focus_neighbor_bottom = settings_close_button.get_path_to(display_mode_button)
+	_configure_vertical_focus_cycle(active_controls)
 
 func _toggle_display_mode() -> void:
 	fullscreen_enabled = not fullscreen_enabled
@@ -1398,7 +1402,9 @@ func _request_march_on_confirmation(region_id: String) -> void:
 	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else "march_on_veyru")
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "clear_progress", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
+		return
+	if action == "clear_progress" and game_view != null:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1448,9 +1454,13 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Return without saving?"
 		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
 		confirmation_confirm_button.text = "RETURN"
+	elif action == "clear_progress":
+		confirmation_title_label.text = "Reset the March Charter?"
+		confirmation_body_label.text = "Regional results and Public Archive Signal will be permanently removed. Continue, settings, and briefing progress remain unchanged."
+		confirmation_confirm_button.text = "RESET CHARTER"
 	elif action in ["clear_save", "clear_invalid_save"]:
 		confirmation_title_label.text = "Clear the local save?"
-		confirmation_body_label.text = "This local checkpoint cannot be loaded by this build and will be permanently removed. Your settings and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress on this device will be permanently removed. This does not reset the briefing preference."
+		confirmation_body_label.text = "This local checkpoint cannot be loaded by this build and will be permanently removed. Your March Charter, settings, and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress on this device will be permanently removed. Your March Charter, settings, and briefing preference remain unchanged."
 		confirmation_confirm_button.text = "REMOVE SAVE" if action == "clear_invalid_save" else "CLEAR SAVE"
 	else:
 		var save_info := _saved_run_info()
@@ -1470,6 +1480,8 @@ func _request_confirmation(action: String) -> void:
 		confirmation_cancel_button.text = "KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE"
 	elif action == "clear_save":
 		confirmation_cancel_button.text = "KEEP SAVE"
+	elif action == "clear_progress":
+		confirmation_cancel_button.text = "KEEP CHARTER"
 	elif action in ["march_on_ashgate", "march_on_veyru"]:
 		confirmation_cancel_button.text = "STAY AT DEBRIEF"
 	elif action == "quit_save":
@@ -1513,6 +1525,8 @@ func _cancel_confirmation() -> void:
 		close_request_process_mode = Node.PROCESS_MODE_INHERIT
 	elif previous_action == "clear_save":
 		clear_save_button.grab_focus()
+	elif previous_action == "clear_progress":
+		reset_charter_button.grab_focus()
 	elif previous_action == "clear_invalid_save":
 		save_recovery_button.grab_focus()
 	elif previous_action == "new_quick":
@@ -1544,6 +1558,16 @@ func _confirm_pending_action() -> void:
 		_save_and_quit()
 	elif action == "title":
 		_return_to_title()
+	elif action == "clear_progress":
+		var clear_result := campaign_progress.clear_progress()
+		if bool(clear_result.get("ok", false)):
+			campaign_progress_error = ""
+			_refresh_title_state()
+			_refresh_settings("March Charter reset. Continue, settings, and briefing progress were kept.")
+			settings_close_button.grab_focus()
+		else:
+			_refresh_settings("Could not reset the March Charter: %s" % String(clear_result.get("reason", "unknown error")))
+			reset_charter_button.grab_focus()
 	elif action in ["clear_save", "clear_invalid_save"]:
 		var absolute_path := ProjectSettings.globalize_path(SAVE_PATH)
 		if FileAccess.file_exists(absolute_path):

@@ -35,6 +35,10 @@ func _init() -> void:
 	var restored := CampaignProgress.new(TEST_PATH)
 	var restored_result := restored.load_progress()
 	_expect(bool(restored_result.get("ok", false)) and restored.has_development("veyru_public_archive_signal") and restored.result_for_region("ashgate_lowlands") == "scarred_march", "valid developments and best regional results should survive a profile reload")
+	var cleared := restored.clear_progress()
+	_expect(bool(cleared.get("ok", false)) and restored.developments.is_empty() and restored.region_results.is_empty() and not FileAccess.file_exists(absolute_path), "clearing the March Charter should remove its file and in-memory developments and results together")
+	restored.unlock("veyru_public_archive_signal")
+	restored.record_region_result("ashgate_lowlands", "scarred_march")
 
 	var legacy := FileAccess.open(TEST_PATH, FileAccess.WRITE)
 	legacy.store_string(JSON.stringify({"schema_version": 1, "developments": ["veyru_public_archive_signal"]}))

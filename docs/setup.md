@@ -37,6 +37,8 @@ The UI writes a versioned prototype save to `user://the_long_march_prototype.sav
 
 The application intercepts operating-system close requests. A title screen or fully checkpointed march closes immediately; an unsaved live march offers **Save & Quit** and writes the existing Continue save before exit. If that write fails, the application remains open.
 
+Title Settings treats local data categories separately: **Clear Local Save** removes only Continue, **Reset March Charter** removes regional results and developments, and **Reset Completed Briefing** restores first-run guidance. Charter reset is unavailable while a run is active so its deterministic snapshot cannot diverge from the profile underneath it.
+
 ## Release staging
 
 The repository contains reviewed Windows and unsigned macOS playtest export presets. Run `bash scripts/export_playtest.sh windows` or `bash scripts/export_playtest.sh macos` after installing matching Godot export templates. Tags matching `v*` produce both artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.
