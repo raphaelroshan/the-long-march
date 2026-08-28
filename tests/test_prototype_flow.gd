@@ -319,6 +319,7 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["damage_bonus"] = 1
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
+	_expect(not game.fortress_panel.hull_under_threat and "coal_cell" in game.fortress_panel.combat_target_ids, "a module-directed contact should highlight only its chassis target")
 	game.intervention_buttons[1].grab_focus()
 	await process_frame
 	var displayed_seal_preview: Dictionary = game.state.encounter_seal_preview("coal_cell")
@@ -425,9 +426,11 @@ func _run() -> void:
 	await process_frame
 	_expect(game.combat_inspect_button.text.contains("HULL EXPOSED") and game.intervention_help_label.text.contains("does not prevent the hull-directed hit"), "a hull-directed contact should explain that Seal cannot prevent its current attack")
 	_expect(game.advance_warning_label.visible and game.advance_warning_label.text.contains("Hull collapse is predicted"), "a terminal hull forecast should be repeated beside the Advance action")
+	_expect(game.fortress_panel.hull_under_threat and game.fortress_panel.combat_target_ids.is_empty(), "a hull-directed contact should mark the whole chassis instead of implying one module is targeted")
 	game.state.hull_condition = pre_hull_preview_condition
 	game.state.encounter_enemies[0] = pre_hull_preview_enemy
 	game._refresh_ui()
+	_expect(not game.fortress_panel.hull_under_threat, "the whole-chassis threat treatment should clear when the enemy resumes a module target")
 	await _advance_until_phase("map")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	var resolved_step_text := "%d step%s" % [game.state.encounter_step, "" if game.state.encounter_step == 1 else "s"]

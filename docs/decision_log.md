@@ -631,3 +631,7 @@ Known routes now reveal each contact's authored counter alongside its name, both
 ## 2026-08-28 — Departure discloses unused recovery
 
 Selecting a road from Morrowline now adds the live unused service budget beside Commit and states that departure ends access to it. The warning disappears after all services are spent and uses natural singular or plural wording, preserving the choice to leave early without silently discarding a scarce recovery opportunity.
+
+## 2026-08-28 — Hull threats mark the whole chassis
+
+Module-directed attacks retain their red target outline, while a hull-directed contact now outlines the entire chassis grid and adds a `HULL TARGETED` text marker. The treatment clears as soon as targeting returns to a system, ensuring both color and wording communicate that no individual compartment can absorb the forecasted hull hit.

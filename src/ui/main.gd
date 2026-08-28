@@ -2307,6 +2307,7 @@ func _refresh_ui() -> void:
 	fortress_panel.placement_rotated = placement_rotated
 	fortress_panel.selected_cell = selected_module_cell
 	fortress_panel.combat_target_ids.clear()
+	fortress_panel.hull_under_threat = is_battle_phase and hull_under_threat
 	if is_battle_phase:
 		for enemy in state.encounter_enemies:
 			var target_id := String(enemy.get("target", ""))
@@ -2575,6 +2576,7 @@ class FortressPanel extends Control:
 	var selected_cell := Vector2i(-1, -1)
 	var cursor_cell := Vector2i(0, 0)
 	var combat_target_ids: Array[String] = []
+	var hull_under_threat: bool = false
 	var family_colors := {
 		"engine": Color("#b86f4b"),
 		"weapon": Color("#b44949"),
@@ -2778,6 +2780,9 @@ class FortressPanel extends Control:
 				draw_rect(Rect2(ORIGIN + Vector2(x * CELL, y * CELL), Vector2(CELL - 3, CELL - 3)), Color("#4a5c61"), false, 1.0)
 		if state == null:
 			return
+		if hull_under_threat:
+			draw_rect(_grid_rect().grow(5), Color("#ff806f"), false, 4.0)
+			draw_string(ThemeDB.fallback_font, Vector2(size.x - 152, 14), "HULL TARGETED", HORIZONTAL_ALIGNMENT_RIGHT, 128, 12, Color("#ff9d8f"))
 		_draw_preview()
 		for instance in state.modules:
 			var definition := state.module_definition(String(instance.get("id", "")))
