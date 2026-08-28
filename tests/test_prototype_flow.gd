@@ -38,7 +38,7 @@ func _press_campaign_node(node_id: String) -> void:
 			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
 			_expect(game.campaign_map.commit_button.has_focus(), "route selection should move keyboard or controller focus to confirmation")
-			_expect(game.right_scroll.get_global_rect().encloses(game.route_preview_label.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_map.get_global_rect()), "route confirmation should keep its intel and map visible with the adjacent Commit action")
+			_expect(game.right_scroll.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action visible together")
 			game.campaign_map.commit_button.pressed.emit()
 			await process_frame
 			return
@@ -199,7 +199,7 @@ func _run() -> void:
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
 	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 9, "the campaign should render the full authored node graph")
-	_expect(game.campaign_commit_button.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_button.get_index() == game.campaign_map.get_index() + 1, "route commitment should remain directly below the map it confirms")
+	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and game.campaign_commit_button.get_index() == game.campaign_commit_intel_label.get_index() + 1, "route commitment should remain grouped directly below its map and compact intel")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
 	game.contract_accept_button.pressed.emit()
@@ -221,6 +221,7 @@ func _run() -> void:
 	game.doctrine_option.item_selected.emit(2)
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
+	_expect(game.campaign_commit_intel_label.visible and game.campaign_commit_intel_label.text.contains("KNOWN CONTACTS") and game.campaign_commit_intel_label.text.contains("Road Raider"), "route commitment should keep known contacts adjacent to the final action")
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
 	_expect(game.encounter_label.text.contains("Rill Crossing selected") and game.encounter_label.text.contains("B/Esc cancels selection"), "the route-review status should name the road being considered and expose its controller-safe exit")
 	_expect(game.route_preview_label.text.contains("ROUTE READY · RILL CROSSING") and not game.route_preview_label.text.contains("SOOT ORCHARD"), "route selection should replace stale focus intel with the road being committed")
@@ -477,6 +478,7 @@ func _run() -> void:
 	game.campaign_map.button_for("red_wheel_toll_bridge").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_button.text.contains("RISK UNKNOWN") and game.campaign_commit_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel - int(game.state.campaign_node_preview("red_wheel_toll_bridge", game._selected_id(game.doctrine_option)).get("fuel", 0))]) and not game.campaign_commit_button.text.contains("36%"), "selecting an unscouted road should show known resource balances without revealing hidden risk")
+	_expect(game.campaign_commit_intel_label.visible and game.campaign_commit_intel_label.text.contains("BROAD WARNING") and game.campaign_commit_intel_label.text.contains("organized blockade") and game.campaign_commit_intel_label.text.contains("exact contacts are unknown"), "unscouted commitment should retain its broad warning without leaking hidden contacts")
 	_expect(not game.route_preview_label.text.contains("Visible risk factors:") and not game.route_preview_label.text.contains("Intel upgrade:"), "selected-route confirmation should collapse optional scouting guidance to keep Commit adjacent to the map")
 	var unknown_commit_style := game.campaign_commit_button.get_theme_stylebox("normal") as StyleBoxFlat
 	_expect(unknown_commit_style != null and unknown_commit_style.border_color == Color("#cbb8e8"), "an unscouted commitment should use the same unknown-information tone as its intel")

@@ -619,3 +619,7 @@ When the next combat step will collapse the hull, disable a system, trigger a de
 ## 2026-08-28 — Saved phases retain a valid next action
 
 Deserialization now accepts only the six implemented campaign phases and requires encounter activity to agree with battle versus planning states. Unknown phases, inactive battle saves, and stray encounters in refit or map checkpoints are rejected before state mutation, allowing the title's normal recovery action to replace them instead of opening a stage with no trustworthy next command.
+
+## 2026-08-28 — Route intel remains beside commitment
+
+Selecting a road now places its known contacts, forecast hazard, or unscouted broad warning directly above the Commit action. This preserves the information boundary for uncertain roads while keeping the most important threat context visible after keyboard or controller focus scrolls past the regional map.

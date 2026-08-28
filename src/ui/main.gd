@@ -101,6 +101,7 @@ var campaign_path_label: Label
 var campaign_map: CampaignMapView
 var campaign_node_buttons: Array[Button] = []
 var campaign_commit_button: Button
+var campaign_commit_intel_label: Label
 var selected_campaign_node_id: String = ""
 var contract_title: Label
 var contract_label: Label
@@ -665,6 +666,12 @@ func _build_ui() -> void:
 	recruit_iven_button.pressed.connect(_on_recruit_iven_pressed)
 	controls.add_child(recruit_iven_button)
 	controls.add_child(campaign_map)
+	campaign_commit_intel_label = Label.new()
+	campaign_commit_intel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_commit_intel_label.add_theme_font_size_override("font_size", 11)
+	campaign_commit_intel_label.add_theme_color_override("font_color", Color("#aab6ba"))
+	campaign_commit_intel_label.visible = false
+	controls.add_child(campaign_commit_intel_label)
 	controls.add_child(campaign_commit_button)
 
 	route_option = OptionButton.new()
@@ -1933,6 +1940,20 @@ func _refresh_campaign_controls() -> void:
 		"show_commit": state.campaign_active and planning_phase,
 		"interaction_blocked": contract_offered or not state.campaign_event_pending.is_empty()
 	})
+	var selected_preview: Dictionary = previews.get(selected_campaign_node_id, {})
+	campaign_commit_intel_label.visible = planning_phase and not selected_preview.is_empty()
+	if not selected_preview.is_empty():
+		var visibility := String(selected_preview.get("visibility", "unscouted"))
+		var threat_hint := String(selected_preview.get("threat_hint", "uncertain pressure"))
+		if visibility == "known":
+			campaign_commit_intel_label.text = "KNOWN CONTACTS · %s" % ", ".join(selected_preview.get("threats", []))
+			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#9fddbd"))
+		elif visibility == "forecast":
+			campaign_commit_intel_label.text = "EXPECTED HAZARD · %s · Exact contacts remain uncertain." % threat_hint
+			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#e8c58e"))
+		else:
+			campaign_commit_intel_label.text = "BROAD WARNING · %s · Risk, reward, and exact contacts are unknown." % threat_hint
+			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#cbb8e8"))
 
 	var event := state.campaign_event_details()
 	var event_pending := not event.is_empty()
