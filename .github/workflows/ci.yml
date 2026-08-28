@@ -138,9 +138,8 @@ jobs:
       - name: Export Windows build when presets exist
         run: |
           mkdir -p build artifacts
-          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           if [ -f export_presets.cfg ]; then
-            godot --headless --path . --export-release "Windows Desktop" "build/${slug}.exe"
+            bash scripts/export_playtest.sh windows
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi

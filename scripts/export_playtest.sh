@@ -12,18 +12,54 @@ else
 fi
 
 mkdir -p build
-"$engine" --headless --path . --import
+engine_version="$("$engine" --version | head -n 1)"
+echo "Using ${engine_version}"
 
 case "$platform" in
 	windows)
-		"$engine" --headless --path . --export-release "Windows Desktop" "build/the-long-march-windows.exe"
+		rm -f build/the-long-march-windows.exe
 		;;
 	macos)
-		"$engine" --headless --path . --export-release "macOS Playtest" "build/the-long-march-macos.zip"
+		rm -f build/the-long-march-macos.zip
 		;;
 	all)
-		"$engine" --headless --path . --export-release "Windows Desktop" "build/the-long-march-windows.exe"
-		"$engine" --headless --path . --export-release "macOS Playtest" "build/the-long-march-macos.zip"
+		rm -f build/the-long-march-windows.exe build/the-long-march-macos.zip
+		;;
+	*)
+		echo "Usage: scripts/export_playtest.sh [windows|macos|all]" >&2
+		exit 2
+		;;
+esac
+
+"$engine" --headless --path . --import
+
+export_playtest() {
+	local preset="$1"
+	local output="$2"
+	if ! "$engine" --headless --path . --export-release "$preset" "$output"; then
+		rm -f "$output"
+		echo "Export failed for ${preset}. Install export templates matching ${engine_version}, then retry." >&2
+		exit 3
+	fi
+	if [ ! -s "$output" ]; then
+		echo "Export reported success but did not create ${output}." >&2
+		exit 3
+	fi
+	local bytes
+	bytes="$(wc -c < "$output" | tr -d ' ')"
+	echo "Created ${output} (${bytes} bytes)"
+}
+
+case "$platform" in
+	windows)
+		export_playtest "Windows Desktop" "build/the-long-march-windows.exe"
+		;;
+	macos)
+		export_playtest "macOS Playtest" "build/the-long-march-macos.zip"
+		;;
+	all)
+		export_playtest "Windows Desktop" "build/the-long-march-windows.exe"
+		export_playtest "macOS Playtest" "build/the-long-march-macos.zip"
 		;;
 	*)
 		echo "Usage: scripts/export_playtest.sh [windows|macos|all]" >&2

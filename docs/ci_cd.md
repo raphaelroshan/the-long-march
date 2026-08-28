@@ -28,6 +28,8 @@ bash scripts/verify.sh
 
 A missing local Godot executable is an environment limitation and causes `scripts/verify.sh` to exit with status `2`. The verifier requires each suite's explicit PASS marker and rejects Godot `ERROR:` or `SCRIPT ERROR:` output even if the engine process exits zero. GitHub Actions installs Godot 4.4.1 and runs the actual test suite on both operating systems.
 
+Runnable desktop artifacts use `scripts/export_playtest.sh` both locally and in GitHub Actions. The workflow installs matching export templates before calling the script; locally, an absent or mismatched template set fails with status `3`, removes the incomplete target, and explains the required remedy.
+
 The policy scanner checks tracked files and untracked files that Git would include, while respecting `.gitignore`. Local export folders and downloaded release artifacts therefore do not create false large-file or secret-pattern failures, but any newly introduced publishable file is still scanned before commit.
 
 ## AI review roles

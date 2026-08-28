@@ -635,3 +635,7 @@ Selecting a road from Morrowline now adds the live unused service budget beside 
 ## 2026-08-28 — Hull threats mark the whole chassis
 
 Module-directed attacks retain their red target outline, while a hull-directed contact now outlines the entire chassis grid and adds a `HULL TARGETED` text marker. The treatment clears as soon as targeting returns to a system, ensuring both color and wording communicate that no individual compartment can absorb the forecasted hull hit.
+
+## 2026-08-28 — CI and local exports share one checked path
+
+Runnable Windows and macOS packaging now goes through `scripts/export_playtest.sh` in both developer and GitHub Actions environments. The script reports its engine version, deletes stale target files before export, verifies a non-empty artifact, and gives a specific matching-template error, preventing an old executable from being mistaken for the current build after a failed export.

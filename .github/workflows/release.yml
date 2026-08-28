@@ -18,13 +18,11 @@ jobs:
         include:
           - name: Windows
             os: windows-latest
-            preset: Windows Desktop
-            output: build/the-long-march-windows.exe
+            target: windows
             artifact: windows-playtest
           - name: macOS
             os: macos-latest
-            preset: macOS Playtest
-            output: build/the-long-march-macos.zip
+            target: macos
             artifact: macos-playtest
     runs-on: ${{ matrix.os }}
     defaults:
@@ -47,10 +45,7 @@ jobs:
       - name: Require export presets for release builds
         run: test -f export_presets.cfg
       - name: Export desktop playtest
-        run: |
-          mkdir -p build artifacts
-          godot --headless --path . --editor --quit
-          godot --headless --path . --export-release "${{ matrix.preset }}" "${{ matrix.output }}"
+        run: bash scripts/export_playtest.sh "${{ matrix.target }}"
       - name: Create release manifest
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")

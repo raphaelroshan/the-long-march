@@ -38,3 +38,5 @@ The UI writes a versioned prototype save to `user://the_long_march_prototype.sav
 ## Release staging
 
 The repository contains reviewed Windows and unsigned macOS playtest export presets. Run `bash scripts/export_playtest.sh windows` or `bash scripts/export_playtest.sh macos` after installing matching Godot export templates. Tags matching `v*` produce both artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.
+
+The export script prints the detected Godot version, removes any stale target before building, and verifies that a non-empty artifact was created. A missing or mismatched export-template installation exits with status `3` and names the prerequisite instead of leaving an old build that appears current.
