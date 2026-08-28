@@ -1026,8 +1026,14 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save is missing fortress modules"}
 	var restored_phase := String(data.get("phase", phase))
 	var restored_final_result := String(data.get("final_result", final_result))
+	var restored_run_complete := bool(data.get("run_complete", run_complete))
+	var restored_journey_complete := bool(data.get("journey_complete", journey_complete))
 	if restored_phase == "results" and restored_final_result not in FINAL_RESULTS:
 		return {"ok": false, "reason": "result checkpoint has no recognized outcome"}
+	if restored_phase == "results" and (not restored_run_complete or not restored_journey_complete):
+		return {"ok": false, "reason": "result checkpoint is missing completion state"}
+	if restored_phase != "results" and (restored_run_complete or restored_journey_complete or restored_final_result in FINAL_RESULTS):
+		return {"ok": false, "reason": "completion state conflicts with the active campaign phase"}
 	seed = int(data.get("seed", seed))
 	day = int(data.get("day", day))
 	fuel = int(data.get("fuel", fuel))
@@ -1048,7 +1054,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	journey_node = String(data.get("journey_node", journey_node))
 	journey_destination = String(data.get("journey_destination", journey_destination))
 	journey_route = String(data.get("journey_route", journey_route))
-	journey_complete = bool(data.get("journey_complete", journey_complete))
+	journey_complete = restored_journey_complete
 	encounter_active = bool(data.get("encounter_active", encounter_active))
 	encounter_step = int(data.get("encounter_step", encounter_step))
 	encounter_progress = float(data.get("encounter_progress", encounter_progress))
@@ -1059,7 +1065,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	encounter_target_doctrine = String(data.get("encounter_target_doctrine", encounter_target_doctrine))
 	phase = restored_phase
 	journey_leg = int(data.get("journey_leg", journey_leg))
-	run_complete = bool(data.get("run_complete", run_complete))
+	run_complete = restored_run_complete
 	final_result = restored_final_result
 	settlement_actions_remaining = int(data.get("settlement_actions_remaining", settlement_actions_remaining))
 	settlement_report = _string_array(data.get("settlement_report", []))

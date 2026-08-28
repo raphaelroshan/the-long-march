@@ -405,6 +405,17 @@ func _test_save_round_trip() -> void:
 	invalid_result_save["final_result"] = "unknown_result"
 	var invalid_result_load := LongMarchState.new(0).load_serialized(invalid_result_save)
 	_expect(not bool(invalid_result_load.get("ok", false)) and String(invalid_result_load.get("reason", "")).contains("recognized outcome"), "result saves with an unknown terminal outcome should be rejected safely")
+	var incomplete_result_save := state.serialize()
+	incomplete_result_save["phase"] = "results"
+	incomplete_result_save["final_result"] = "scarred_march"
+	var incomplete_result_load := LongMarchState.new(0).load_serialized(incomplete_result_save)
+	_expect(not bool(incomplete_result_load.get("ok", false)) and String(incomplete_result_load.get("reason", "")).contains("completion state"), "result saves without completed run flags should be rejected safely")
+	var active_completed_save := state.serialize()
+	active_completed_save["run_complete"] = true
+	active_completed_save["journey_complete"] = true
+	active_completed_save["final_result"] = "decisive_march"
+	var active_completed_load := LongMarchState.new(0).load_serialized(active_completed_save)
+	_expect(not bool(active_completed_load.get("ok", false)) and String(active_completed_load.get("reason", "")).contains("active campaign phase"), "active-phase saves should reject contradictory completion state")
 
 func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "campaign engine should install")

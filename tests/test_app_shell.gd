@@ -308,6 +308,13 @@ func _run() -> void:
 	invalid_result_file.close()
 	var invalid_result_info: Dictionary = app._saved_run_info()
 	_expect(not bool(invalid_result_info.get("valid", true)) and String(invalid_result_info.get("summary", "")).contains("recognized outcome"), "the title should reject a result checkpoint whose terminal outcome cannot be interpreted")
+	var incomplete_result_payload: Dictionary = completed_payload.duplicate(true)
+	incomplete_result_payload["run_complete"] = false
+	var incomplete_result_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	incomplete_result_file.store_string(JSON.stringify(incomplete_result_payload))
+	incomplete_result_file.close()
+	var incomplete_result_info: Dictionary = app._saved_run_info()
+	_expect(not bool(incomplete_result_info.get("valid", true)) and String(incomplete_result_info.get("summary", "")).contains("completion state"), "the title should reject a named result that was not recorded as a completed run")
 	completed_save = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()
@@ -371,6 +378,7 @@ func _run() -> void:
 	app.game_view.state.phase = "results"
 	app.game_view.state.final_result = "scarred_march"
 	app.game_view.state.run_complete = true
+	app.game_view.state.journey_complete = true
 	app.game_view._refresh_ui()
 	app._show_pause()
 	await process_frame

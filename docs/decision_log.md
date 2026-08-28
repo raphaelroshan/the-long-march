@@ -607,3 +607,7 @@ Selecting Meridian Pass promotes its terminal rule into both the route-review re
 ## 2026-08-28 — Result checkpoints require a recognized outcome
 
 Deserialization rejects a results-phase checkpoint unless its outcome is Decisive March, Scarred March, or March Failed. The title therefore routes malformed terminal saves through normal unusable-save recovery instead of presenting them as an active Continue slot, while the defensive in-stage fallback calls the state an Unclassified Debrief rather than a successful completion.
+
+## 2026-08-28 — Completion state must agree with the saved phase
+
+A results checkpoint is valid only when both the run and journey are marked complete, while active campaign phases reject terminal flags or outcomes. This keeps recovery strict at the state boundary and prevents a contradictory save from appearing to be either a resumable march or a trustworthy debrief.
