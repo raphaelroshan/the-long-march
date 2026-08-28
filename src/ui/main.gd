@@ -766,12 +766,12 @@ func _build_ui() -> void:
 		controls.add_child(intervention)
 
 	save_button = Button.new()
-	save_button.text = "Save prototype state"
+	save_button.text = "Save march"
 	save_button.visible = false
 	save_button.pressed.connect(_on_save_pressed)
 	controls.add_child(save_button)
 	load_button = Button.new()
-	load_button.text = "Load prototype state"
+	load_button.text = "Load march"
 	load_button.visible = false
 	load_button.pressed.connect(_on_load_pressed)
 	controls.add_child(load_button)
@@ -1853,7 +1853,7 @@ func _on_save_pressed() -> void:
 
 func load_saved_run() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
-		_set_event("No prototype save exists yet.")
+		_set_event("No local march checkpoint exists yet.")
 		return false
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
@@ -1877,7 +1877,7 @@ func load_saved_run() -> bool:
 		placement_rotated = bool(state.modules[0].get("rotated", false))
 		_select_module_option(selected_module_id)
 	fortress_panel.state = state
-	_set_event("Prototype state loaded.")
+	_set_event("March restored from the local checkpoint.")
 	result_recorded = state.phase == "results"
 	_journal_event("run_loaded", {"phase": state.phase, "day": state.day})
 	_refresh_ui()

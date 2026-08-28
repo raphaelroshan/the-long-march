@@ -504,6 +504,7 @@ func _test_campaign_contract_and_specialist() -> void:
 	_expect(state.campaign_event_pending == "lost_signal", "the Broken Relay should require an authored local decision")
 	_expect(bool(state.resolve_campaign_event("restore_relay").get("ok", false)), "an operational signal should restore the relay")
 	_expect(bool(state.recruit_iven_pell().get("ok", false)), "Iven Pell should join a fortress with crew quarters after the relay is restored")
+	_expect(String(state.iven_recruitment_status().get("reason", "")).contains("specialist is already assigned") and not String(state.iven_recruitment_status().get("reason", "")).contains("prototype"), "filled specialist capacity should use in-world language")
 	var preview := state.campaign_node_preview("signal_causeway")
 	_expect(String(preview.visibility) == "known" and not preview.get("threats", []).is_empty() and not preview.get("counter_hints", []).is_empty(), "Iven should reveal exact immediate-node threats and actionable counters")
 	var restored := LongMarchState.new(0)

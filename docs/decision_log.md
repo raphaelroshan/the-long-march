@@ -695,3 +695,7 @@ The first screen now names the four decisions the player owns—chassis, route, 
 ## 2026-08-28 — Combat reports use authored names
 
 Encounter attack sources and newly assigned targets are translated through the module and specialist catalogs before entering the causal report. The command desk, saved encounter history, and feedback bundles now say `Repeater Gun`, `Coal Cell`, and `Iven Pell` instead of leaking identifiers such as `repeater_gun` or `coal_cell`.
+
+## 2026-08-28 — Runtime receipts stay inside the fiction
+
+Continue now reports that the march was restored from a local checkpoint, and filled specialist capacity says another specialist is already assigned to the fortress. Dormant diagnostic controls use the same vocabulary. Player-facing runtime text no longer calls the active campaign or its crew slots a prototype.

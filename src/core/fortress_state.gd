@@ -547,7 +547,7 @@ func iven_recruitment_status() -> Dictionary:
 	if not relay_repaired:
 		return {"available": false, "reason": "Iven will not leave until the relay is restored"}
 	if not specialist_id.is_empty():
-		return {"available": false, "reason": "the prototype crew station is already assigned"}
+		return {"available": false, "reason": "a specialist is already assigned to the fortress"}
 	if not _has_operational_tag("crew"):
 		return {"available": false, "reason": "an operational Crew Quarters is required"}
 	if money < 12:
