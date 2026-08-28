@@ -1101,7 +1101,7 @@ func _refresh_pause_summary(message: String = "") -> void:
 	elif FileAccess.file_exists(SAVE_PATH):
 		pause_save_status_label.text = "Current decision is saved." if current_run_saved else "A previous local save is available. Save to capture this decision."
 	else:
-		pause_save_status_label.text = "This run has not been saved yet."
+		pause_save_status_label.text = "No decision checkpoint yet · commit a choice or use Save March."
 
 func _current_run_matches_save() -> bool:
 	if game_view == null or not FileAccess.file_exists(SAVE_PATH):

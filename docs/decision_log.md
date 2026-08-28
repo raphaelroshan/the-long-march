@@ -511,3 +511,7 @@ After a non-final forced retreat, the command desk tells the player to review th
 ## 2026-08-28 — Shared instructions stay input-neutral and natural
 
 Removing a module now asks the player to choose an empty chassis cell rather than assuming a mouse click. Route intel and after-action reports also render real singular and plural day and step counts instead of exposing placeholder forms such as `day(s)` and `step(s)`. Tooltips, keyboard focus, and visible receipts therefore use the same natural language across input methods.
+
+## 2026-08-28 — A fresh run explains its first checkpoint
+
+Before the player commits any decision, the pause menu now states that there is no decision checkpoint yet and names both ways forward: commit a choice for the automatic checkpoint or use Save March immediately. This preserves the deliberate committed-decision autosave boundary without leaving a new player to interpret a bare unsaved warning.

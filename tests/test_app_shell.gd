@@ -117,6 +117,7 @@ func _run() -> void:
 	app.game_view.pause_button.pressed.emit()
 	await process_frame
 	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the visible stage pause action should open and suspend the march")
+	_expect(app.pause_save_status_label.text.contains("No decision checkpoint yet") and app.pause_save_status_label.text.contains("Save March"), "pause should explain how a fresh run receives its first checkpoint instead of only reporting that it is unsaved")
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_body_label.text.contains("no usable checkpoint to return to"), "restart should not promise recovery when the current run has never been saved")
