@@ -12,6 +12,8 @@ Pause preserves two different intentions. **Resume Here** and the cancel shortcu
 
 Before starting, move focus or the pointer across the title's chapter actions. The right-hand journey card should explain the selected obligation, regional pressure, recovery point, and finale. Continue should instead name the exact saved next decision and fortress condition. Ask whether the tester can choose a chapter without relying on tooltips or prior knowledge.
 
+The title **Field Guide** can launch either prepared chapter directly after explaining their shared rules. If Continue exists, both guide actions use the same explicit replacement warning as their title equivalents; cancelling must return to the chapter action the tester chose.
+
 ## Suggested session
 
 1. At Ashgate, compare Rill Crossing and The Soot Orchard before choosing; ask what the player believes each visibility label promises.

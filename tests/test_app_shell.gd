@@ -66,7 +66,7 @@ func _run() -> void:
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.settings_button, "no-save navigation should include both playable regions while routing around disabled Continue")
 	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should include Veyru, skip Continue, and wrap through visible title actions")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("Autosave begins after your first committed decision"), "the title should explain the first automatic checkpoint in player-facing language")
-	_expect(app.guide_quick_start_button.text == "QUICK START ASHGATE", "the no-save Field Guide should offer a direct quick start")
+	_expect(app.guide_quick_start_button.text == "QUICK START · ASHGATE" and app.guide_veyru_start_button.text == "START · FLOODED VEYRU", "the no-save Field Guide should offer direct starts for both playable chapters")
 	_expect(app.title_preview_id == "ashgate_guided" and app.title_preview_title_label.text == "Learn the machine" and app.title_preview_eyebrow_label.text.contains("GUIDED FIRST JOURNEY"), "initial title focus should preview the guided Ashgate journey rather than leaving the chapter choice abstract")
 	_expect(app.title_region_briefing_label.text.contains("seven short Marchmaster cards") and app.title_preview_scope_label.text.contains("BLOCKADE WATCH") and app.title_preview_scope_label.text.contains("SIEGE BEAST"), "the guided preview should name its teaching path, regional pressure, recovery, and finale")
 	_expect(app.title_preview_rule_title_labels[0].text == "Build around a promise" and app.title_preview_rule_detail_labels[1].text.contains("known, forecast, and unscouted"), "the Ashgate preview should explain its opening obligation and information model")
@@ -235,18 +235,20 @@ func _run() -> void:
 	await process_frame
 	_expect(app.guide_view.visible, "Field Guide should open without starting a run")
 	_expect(app.guide_quick_start_button.has_focus(), "the field guide should focus its Quick Start action")
-	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_left) == app.guide_close_button, "the field guide should have explicit horizontal controller navigation")
-	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_top) == app.guide_quick_start_button and app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_next) == app.guide_close_button, "the field guide should trap directional and Tab focus inside its actions")
+	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_left) == app.guide_close_button and app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_right) == app.guide_veyru_start_button, "the field guide should expose both chapter starts through horizontal controller navigation")
+	_expect(app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_neighbor_top) == app.guide_quick_start_button and app.guide_quick_start_button.get_node_or_null(app.guide_quick_start_button.focus_next) == app.guide_veyru_start_button and app.guide_veyru_start_button.get_node_or_null(app.guide_veyru_start_button.focus_next) == app.guide_close_button, "the field guide should trap directional and Tab focus across all three actions")
 	_expect(_tree_contains_text(app.guide_view, "Known roads name contacts and counters") and _tree_contains_text(app.guide_view, "Ashgate reaches Closing at 3 and Break at 5") and _tree_contains_text(app.guide_view, "Veyru reaches Flooding at 3 and Breach at 5") and _tree_contains_text(app.guide_view, "only one emergency order"), "the field guide should explain both regions' visibility, pressure, and intervention rules, not only list screens")
-	_expect(_tree_contains_text(app.guide_view, "same simulation, seed, route graph, and checkpoint rules apply"), "the Quick Start note should preserve normal save expectations instead of claiming that the save file cannot change")
+	_expect(_tree_contains_text(app.guide_view, "both chapters keep the normal simulation, seed, route graph, and checkpoint rules"), "the chapter-start note should preserve normal save expectations instead of claiming that the save file cannot change")
 	app.guide_close_button.pressed.emit()
 	await process_frame
 	_expect(not app.guide_view.visible and app.guide_button.has_focus(), "closing the field guide should restore title-menu focus")
 
-	app.veyru_start_button.pressed.emit()
+	app.guide_button.pressed.emit()
+	await process_frame
+	app.guide_veyru_start_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the title should open Flooded Veyru as a separate chapter at Lantern Quay")
+	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the Field Guide should open Flooded Veyru directly as a separate chapter at Lantern Quay")
 	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across controls, map, and combat presentation")
 	_expect(app.game_view.controller_layout_id == "east_confirm" and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.focus_chassis_button.tooltip_text.contains("B / Enter") and app.game_view.fortress_panel.controller_cancel_label == "A", "a newly opened playable stage should inherit the remapped face buttons and matching visible instructions")
 	var controller_copy_phase: String = app.game_view.state.phase
@@ -610,8 +612,14 @@ func _run() -> void:
 	_expect(app.continue_button.tooltip_text.contains(String(ProjectSettings.get_setting("application/config/version"))), "Continue should expose the build that created the checkpoint")
 	_expect(app.title_preview_id == "continue" and app.title_preview_title_label.text == "Resume the march" and app.title_region_briefing_label.text.contains("Continue restores this exact validated decision"), "default Continue focus should turn the title overview into a checkpoint-specific resume preview")
 	_expect(app.title_preview_rule_detail_labels[0].text == "Answer convoy contract" and app.title_preview_rule_detail_labels[1].text.contains("Fuel 6") and app.title_preview_rule_detail_labels[2].text.contains("ask before they can replace"), "the Continue preview should expose the next decision, fortress condition, and replacement boundary")
-	_expect(app.guide_quick_start_button.text == "START NEW ASHGATE RUN", "the Field Guide should identify that Quick Start begins a different run when progress exists")
+	_expect(app.guide_quick_start_button.text == "START NEW · ASHGATE" and app.guide_veyru_start_button.text == "REPLAY · FLOODED VEYRU", "the Field Guide should distinguish a fresh Ashgate start from the completed Veyru chapter while both protect the active Continue checkpoint")
 	app.guide_button.pressed.emit()
+	app.guide_veyru_start_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.guide_view.visible and app.pending_confirmation == "new_veyru", "Flooded Veyru from the Field Guide should protect the existing checkpoint")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.guide_view.visible and app.guide_veyru_start_button.has_focus(), "cancelling a guide-launched Veyru start should restore focus to that guide action")
 	app.guide_quick_start_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.guide_view.visible, "Quick Start from the Field Guide should protect the existing checkpoint")
@@ -737,7 +745,7 @@ func _run() -> void:
 	completed_save.close()
 	app._refresh_title_state()
 	_expect(app.start_button.text == "PLAY ASHGATE · GUIDED BRIEFING" and app.quick_start_button.text == "REPLAY ASHGATE · SKIP BRIEFING", "a completed checkpoint should offer Ashgate replay actions instead of implying an unfinished new game")
-	_expect(app.guide_quick_start_button.text == "QUICK REPLAY ASHGATE", "the Field Guide action should use the same completed-run vocabulary as the title")
+	_expect(app.guide_quick_start_button.text == "START NEW · ASHGATE" and app.guide_veyru_start_button.text == "REPLAY · FLOODED VEYRU", "the Field Guide should derive replay vocabulary from each chapter's March Charter result rather than the unrelated Continue result")
 	app.start_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Begin another march?" and app.confirmation_confirm_button.text == "PLAY AGAIN", "starting from a completed title checkpoint should use replay confirmation language")

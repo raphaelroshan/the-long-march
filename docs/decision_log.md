@@ -895,3 +895,7 @@ The primary Pause row now distinguishes Resume Here, which restores the exact va
 ## 2026-08-28 — Settings exposes its hierarchy while scrolling
 
 Settings now groups its existing controls under Display & Readability, Controls & Feedback, and Runs & Local Data. Compact headings make pointer scanning easier, while the fixed context line follows keyboard/controller focus so the category remains visible after scrolling. Opening Settings resets to the first heading, and Build & Local Data returns to its original section. Headings remain non-interactive, avoiding extra focus stops or a second settings state model; preferences, defaults, storage, and confirmation behavior are unchanged.
+
+## 2026-08-28 — The shared guide launches either proven chapter
+
+The title Field Guide now offers direct Ashgate and Flooded Veyru starts beside Back to Title. Both delegate to the existing chapter launch and Continue-replacement confirmation paths; cancelling restores the exact guide action. Replay wording derives from each region's March Charter record rather than treating any completed Continue file as proof that both chapters were completed. This closes the mismatch between a two-chapter guide and an Ashgate-only footer without introducing another chapter selector or save slot.

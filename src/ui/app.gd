@@ -57,6 +57,7 @@ var settings_button: Button
 var quit_button: Button
 var guide_close_button: Button
 var guide_quick_start_button: Button
+var guide_veyru_start_button: Button
 var settings_context_label: Label
 var settings_close_button: Button
 var display_mode_button: Button
@@ -448,7 +449,16 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 		utility.focus_neighbor_bottom = utility.get_path_to(first_action)
 
 func _configure_overlay_focus() -> void:
-	_configure_focus_pair(guide_close_button, guide_quick_start_button)
+	guide_close_button.focus_neighbor_left = guide_close_button.get_path_to(guide_veyru_start_button)
+	guide_close_button.focus_neighbor_right = guide_close_button.get_path_to(guide_quick_start_button)
+	guide_quick_start_button.focus_neighbor_left = guide_quick_start_button.get_path_to(guide_close_button)
+	guide_quick_start_button.focus_neighbor_right = guide_quick_start_button.get_path_to(guide_veyru_start_button)
+	guide_veyru_start_button.focus_neighbor_left = guide_veyru_start_button.get_path_to(guide_quick_start_button)
+	guide_veyru_start_button.focus_neighbor_right = guide_veyru_start_button.get_path_to(guide_close_button)
+	for button in [guide_close_button, guide_quick_start_button, guide_veyru_start_button]:
+		button.focus_neighbor_top = button.get_path_to(button)
+		button.focus_neighbor_bottom = button.get_path_to(button)
+	_configure_focus_cycle([guide_close_button, guide_quick_start_button, guide_veyru_start_button])
 	_configure_focus_pair(data_info_close_button, data_info_copy_button)
 	_configure_focus_pair(run_record_close_button, run_record_copy_button)
 	display_mode_button.focus_neighbor_top = display_mode_button.get_path_to(settings_close_button)
@@ -645,7 +655,7 @@ func _build_guide_overlay() -> void:
 	content.add_child(_flow_step("4", "ENCOUNTER · READ", "Each advance resolves one combat step. Read arriving contacts, TARGET, WHY, and NEXT first; only one emergency order is available per encounter."))
 	content.add_child(_flow_step("5", "RECOVER · COMMIT · DEBRIEF", "Recover at Morrowline or Evacuation Camp, commit to the fifth encounter, then use the named result thresholds and replay goal to plan one deliberate change."))
 	var note := Label.new()
-	note.text = "QUICK START skips only the introductory briefing. The same simulation, seed, route graph, and checkpoint rules apply."
+	note.text = "CHAPTER STARTS open the prepared fortress directly. Ashgate skips its introductory overlay; both chapters keep the normal simulation, seed, route graph, and checkpoint rules."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color("#d8c389"))
@@ -655,18 +665,23 @@ func _build_guide_overlay() -> void:
 	content.add_child(actions)
 	guide_close_button = Button.new()
 	guide_close_button.text = "BACK TO TITLE"
-	guide_close_button.custom_minimum_size = Vector2(180, 50)
+	guide_close_button.custom_minimum_size = Vector2(150, 50)
+	guide_close_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	guide_close_button.pressed.connect(_hide_guide)
 	actions.add_child(guide_close_button)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(spacer)
 	guide_quick_start_button = Button.new()
-	guide_quick_start_button.text = "QUICK START ASHGATE"
-	guide_quick_start_button.custom_minimum_size = Vector2(220, 50)
+	guide_quick_start_button.text = "QUICK START · ASHGATE"
+	guide_quick_start_button.custom_minimum_size = Vector2(190, 50)
+	guide_quick_start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	guide_quick_start_button.pressed.connect(_quick_start_game)
 	_accent_button(guide_quick_start_button)
 	actions.add_child(guide_quick_start_button)
+	guide_veyru_start_button = Button.new()
+	guide_veyru_start_button.text = "START · FLOODED VEYRU"
+	guide_veyru_start_button.custom_minimum_size = Vector2(210, 50)
+	guide_veyru_start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	guide_veyru_start_button.pressed.connect(_start_veyru_game)
+	actions.add_child(guide_veyru_start_button)
 
 func _flow_step(number: String, title: String, detail: String) -> Control:
 	var row := HBoxContainer.new()
@@ -1482,8 +1497,12 @@ func _refresh_title_state() -> void:
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
 	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
 	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay.%s" % (" Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else "")
-	guide_quick_start_button.text = "QUICK REPLAY ASHGATE" if has_completed_save else ("START NEW ASHGATE RUN" if has_valid_save else "QUICK START ASHGATE")
+	var ashgate_completed := not campaign_progress.result_for_region("ashgate_lowlands").is_empty()
+	var veyru_completed := not campaign_progress.result_for_region("flooded_veyru").is_empty()
+	guide_quick_start_button.text = "REPLAY · ASHGATE" if ashgate_completed else ("START NEW · ASHGATE" if has_valid_save else "QUICK START · ASHGATE")
 	guide_quick_start_button.tooltip_text = "Begin a fresh Ashgate run without opening the introductory briefing."
+	guide_veyru_start_button.text = "REPLAY · FLOODED VEYRU" if veyru_completed else ("START NEW · FLOODED VEYRU" if has_valid_save else "START · FLOODED VEYRU")
+	guide_veyru_start_button.tooltip_text = "Begin a fresh Flooded Veyru run at Lantern Quay.%s" % (" Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else "")
 	continue_button.visible = has_valid_save
 	continue_button.disabled = not has_valid_save
 	save_recovery_button.visible = has_invalid_save
@@ -2293,7 +2312,7 @@ func _cancel_confirmation() -> void:
 	elif previous_action == "new_guided":
 		start_button.grab_focus()
 	elif previous_action == "new_veyru":
-		veyru_start_button.grab_focus()
+		(guide_veyru_start_button if guide_view.visible else veyru_start_button).grab_focus()
 	else:
 		title_button.grab_focus()
 
