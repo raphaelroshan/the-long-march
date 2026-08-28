@@ -342,6 +342,13 @@ func _run() -> void:
 	impossible_path_file.close()
 	var impossible_path_info: Dictionary = app._saved_run_info()
 	_expect(not bool(impossible_path_info.get("valid", true)) and String(impossible_path_info.get("summary", "")).contains("impossible route"), "the title should reject a checkpoint whose secured route could not occur on the authored map")
+	var invalid_chassis_payload: Dictionary = completed_payload.duplicate(true)
+	invalid_chassis_payload["modules"][0]["id"] = "miracle_engine"
+	var invalid_chassis_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	invalid_chassis_file.store_string(JSON.stringify(invalid_chassis_payload))
+	invalid_chassis_file.close()
+	var invalid_chassis_info: Dictionary = app._saved_run_info()
+	_expect(not bool(invalid_chassis_info.get("valid", true)) and String(invalid_chassis_info.get("summary", "")).contains("unknown system"), "the title should reject a checkpoint containing a system that does not exist")
 	completed_save = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()

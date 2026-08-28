@@ -703,3 +703,7 @@ Continue now reports that the march was restored from a local checkpoint, and fi
 ## 2026-08-28 — Pre-contact order timing is explicit
 
 Before any hostile target is assigned, the encounter-order panel now states that an unused order survives Advance unless the encounter ends, while directing attention to the Contact Next forecast. Players can deliberately wait for a target instead of spending Seal or Cut Loose early because they fear the order will expire on the next step.
+
+## 2026-08-28 — Saved chassis layouts are validated before use
+
+Checkpoint loading now validates every installed and stored system against the authored module catalog before mutating live state. Installed layouts must also respect chassis bounds, overlap, mount, durability, and mass limits. Corrupt layouts are routed to title-screen recovery instead of rendering an impossible fortress or failing later during combat.

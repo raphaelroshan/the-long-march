@@ -1043,12 +1043,58 @@ func _deserialized_modules(value: Variant) -> Array:
 				result.append(instance)
 	return result
 
+func _validated_module_records(value: Variant, installed: bool) -> Dictionary:
+	if not value is Array:
+		return {"ok": false, "reason": "fortress module record is malformed"}
+	var restored := _deserialized_modules(value)
+	if restored.size() != value.size():
+		return {"ok": false, "reason": "fortress module record contains a malformed entry"}
+	var occupied: Dictionary = {}
+	var exterior_count := 0
+	var restored_mass := 0
+	for instance in restored:
+		var module_id := String(instance.get("id", ""))
+		var definition := module_definition(module_id)
+		if definition.is_empty():
+			return {"ok": false, "reason": "fortress module record contains an unknown system"}
+		var durability := int(instance.get("durability", definition.get("durability", 1)))
+		if durability < 0 or durability > int(definition.get("durability", 1)):
+			return {"ok": false, "reason": "fortress module record contains invalid durability"}
+		if not installed:
+			continue
+		var exterior := bool(instance.get("exterior", false))
+		var requires_exterior: bool = "exterior" in definition.get("tags", [])
+		if exterior != requires_exterior:
+			return {"ok": false, "reason": "fortress module record conflicts with mount requirements"}
+		if exterior:
+			exterior_count += 1
+		restored_mass += int(definition.get("mass", 0))
+		for cell in occupied_cells(instance):
+			if cell.x < 0 or cell.x >= GRID_WIDTH or cell.y < 0 or cell.y >= GRID_HEIGHT:
+				return {"ok": false, "reason": "fortress module record places a system outside the chassis"}
+			if occupied.has(cell):
+				return {"ok": false, "reason": "fortress module record contains overlapping systems"}
+			occupied[cell] = true
+	if installed and exterior_count > MAX_EXTERIOR_MOUNTS:
+		return {"ok": false, "reason": "fortress module record exceeds exterior mount capacity"}
+	if installed and restored_mass > BASE_MASS_LIMIT:
+		return {"ok": false, "reason": "fortress module record exceeds chassis mass capacity"}
+	return {"ok": true, "modules": restored}
+
 func load_serialized(data: Dictionary) -> Dictionary:
 	var save_version := int(data.get("save_version", 1))
 	if save_version > SAVE_VERSION:
 		return {"ok": false, "reason": "save was created by a newer version"}
 	if not data.has("modules"):
 		return {"ok": false, "reason": "save is missing fortress modules"}
+	var restored_modules_result := _validated_module_records(data.get("modules", []), true)
+	if not bool(restored_modules_result.get("ok", false)):
+		return restored_modules_result
+	var restored_stored_modules_result := {"ok": true, "modules": []}
+	if data.has("stored_modules"):
+		restored_stored_modules_result = _validated_module_records(data.get("stored_modules", []), false)
+		if not bool(restored_stored_modules_result.get("ok", false)):
+			return restored_stored_modules_result
 	var restored_phase := String(data.get("phase", phase))
 	var restored_final_result := String(data.get("final_result", final_result))
 	var restored_run_complete := bool(data.get("run_complete", run_complete))
@@ -1155,8 +1201,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	specialist_id = String(data.get("specialist_id", specialist_id))
 	relay_repaired = bool(data.get("relay_repaired", relay_repaired))
 	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
-	modules = _deserialized_modules(data.get("modules", []))
-	stored_modules = _deserialized_modules(data.get("stored_modules", []))
+	modules = restored_modules_result.get("modules", []).duplicate(true)
+	stored_modules = restored_stored_modules_result.get("modules", []).duplicate(true)
 	if not data.has("stored_modules"):
 		seed_starter_inventory()
 	log = _string_array(data.get("log", []))

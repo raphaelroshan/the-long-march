@@ -438,6 +438,18 @@ func _test_save_round_trip() -> void:
 	malformed_decision_save["campaign_decisions"] = ["move_silent"]
 	var malformed_decision_load := LongMarchState.new(0).load_serialized(malformed_decision_save)
 	_expect(not bool(malformed_decision_load.get("ok", false)) and String(malformed_decision_load.get("reason", "")).contains("malformed"), "saved campaign history should reject a non-dictionary decision record")
+	var unknown_module_save := state.serialize()
+	unknown_module_save["modules"][0]["id"] = "miracle_engine"
+	var unknown_module_load := LongMarchState.new(0).load_serialized(unknown_module_save)
+	_expect(not bool(unknown_module_load.get("ok", false)) and String(unknown_module_load.get("reason", "")).contains("unknown system"), "saved chassis layouts should reject unknown module IDs")
+	var overlapping_module_save := state.serialize()
+	overlapping_module_save["modules"].append(overlapping_module_save["modules"][0].duplicate(true))
+	var overlapping_module_load := LongMarchState.new(0).load_serialized(overlapping_module_save)
+	_expect(not bool(overlapping_module_load.get("ok", false)) and String(overlapping_module_load.get("reason", "")).contains("overlapping systems"), "saved chassis layouts should reject overlapping installed modules")
+	var out_of_bounds_module_save := state.serialize()
+	out_of_bounds_module_save["modules"][0]["position"] = [LongMarchState.GRID_WIDTH, 0]
+	var out_of_bounds_module_load := LongMarchState.new(0).load_serialized(out_of_bounds_module_save)
+	_expect(not bool(out_of_bounds_module_load.get("ok", false)) and String(out_of_bounds_module_load.get("reason", "")).contains("outside the chassis"), "saved chassis layouts should reject out-of-bounds systems")
 	var unknown_location_save := state.serialize()
 	unknown_location_save["current_location"] = "the_road_beyond_the_map"
 	var unknown_location_load := LongMarchState.new(0).load_serialized(unknown_location_save)
