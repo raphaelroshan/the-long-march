@@ -1807,7 +1807,7 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		phase = "map"
 		campaign_event_pending = _campaign_event_for_node(arrived_node)
 		encounter_outcome = "route_secured"
-		_encounter_log("Outcome: %s is secured. Choose the next visible node%s." % [String(JOURNEY_NODES.get(arrived_node, {}).get("name", arrived_node)), " after resolving the local decision" if not campaign_event_pending.is_empty() else ""])
+		_encounter_log("Outcome: %s is secured. Choose the next available route%s." % [String(JOURNEY_NODES.get(arrived_node, {}).get("name", arrived_node)), " after resolving the local decision" if not campaign_event_pending.is_empty() else ""])
 	campaign_target_node = ""
 	_clear_temporary_seals()
 	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}

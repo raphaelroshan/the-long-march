@@ -595,3 +595,7 @@ The title’s save-status region now word-wraps inside its action card. Longer m
 ## 2026-08-28 — Passed branches are marked bypassed
 
 The route map now derives whether an unvisited node is still reachable from the fortress’s current position. Unchosen branches behind the march are labelled Bypassed with a muted treatment and an explicit cannot-revisit explanation, while genuinely upcoming nodes remain Future and failed roads that are still connected remain available for another attempt.
+
+## 2026-08-28 — After-action guidance names selectable routes
+
+Securing a road now asks the player to choose the next available route rather than the next visible node. The map deliberately keeps future and bypassed locations visible for context, so the receipt now points to the same availability concept and cyan treatment used by the actual controls.

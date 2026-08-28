@@ -425,6 +425,7 @@ func _run() -> void:
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	var resolved_step_text := "%d step%s" % [game.state.encounter_step, "" if game.state.encounter_step == 1 else "s"]
 	_expect(game.encounter_label.text.contains("resolved in %s" % resolved_step_text) and not game.encounter_label.text.contains("step(s)"), "after-action summaries should use the actual natural singular or plural step count")
+	_expect(game.encounter_label.text.contains("Choose the next available route") and not game.encounter_label.text.contains("visible node"), "after-action guidance should distinguish selectable routes from every node shown on the regional chart")
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
