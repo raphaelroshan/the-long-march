@@ -299,13 +299,13 @@ func _run() -> void:
 	_expect(game.combat_panel.enemy_counters[0].text.contains("Seeks: cargo / exterior") and game.combat_panel.enemy_counters[0].text.contains("Protect Cargo active") and game.combat_panel.enemy_counters[0].text.contains("Counter:"), "enemy cards should expose targeting priorities, active doctrine protection, and counters without relying on a tooltip")
 	_expect(game.combat_panel.order_label.text.contains("Emergency order: 1 available") and game.combat_panel.order_label.text.contains("Next step 1/6") and not game.combat_panel.order_label.text.contains("CP") and not game.combat_panel.order_label.text.contains("Step 0"), "combat status should describe the actual order budget and next timeline step without exposing internal counters")
 	var initial_shift_preview: Dictionary = game.state.encounter_shift_power_preview()
-	_expect(game.intervention_help_label.text.contains("Focus or hover") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the order panel should stay concise until a player requests exact detail")
+	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("remains available after Advance") and game.intervention_help_label.text.contains("Review CONTACT NEXT") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the pre-contact order panel should explain that waiting preserves the order while pointing back to the arrival forecast")
 	game.intervention_buttons[0].grab_focus()
 	await process_frame
 	_expect(game.intervention_help_label.text.begins_with("SHIFT POWER") and game.intervention_help_label.text.contains("Heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "focusing Shift Power should expose its exact heat and attack changes")
 	game.advance_encounter_button.grab_focus()
 	await process_frame
-	_expect(game.intervention_help_label.text.contains("Focus or hover"), "leaving the emergency orders should restore the concise comparison prompt")
+	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("Focus or hover"), "leaving the emergency orders before contact should restore the timing-aware comparison prompt")
 	_expect(game.intervention_buttons[3].text.contains("Coal Cell") and game.intervention_buttons[3].text.contains("fuel feed"), "cutting loose cargo should disclose the exact module and dependency cost before use")
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
 	game.combat_inspect_button.pressed.emit()

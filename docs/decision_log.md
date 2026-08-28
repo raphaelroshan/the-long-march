@@ -699,3 +699,7 @@ Encounter attack sources and newly assigned targets are translated through the m
 ## 2026-08-28 — Runtime receipts stay inside the fiction
 
 Continue now reports that the march was restored from a local checkpoint, and filled specialist capacity says another specialist is already assigned to the fortress. Dormant diagnostic controls use the same vocabulary. Player-facing runtime text no longer calls the active campaign or its crew slots a prototype.
+
+## 2026-08-28 — Pre-contact order timing is explicit
+
+Before any hostile target is assigned, the encounter-order panel now states that an unused order survives Advance unless the encounter ends, while directing attention to the Contact Next forecast. Players can deliberately wait for a target instead of spending Seal or Cut Loose early because they fear the order will expire on the next step.
