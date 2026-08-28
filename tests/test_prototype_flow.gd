@@ -523,6 +523,7 @@ func _run() -> void:
 	_expect(game.state.guard_contract_status == "completed", "the protected convoy should complete the guard contract")
 	_expect(game.settlement_title.text.contains("2 ACTIONS LEFT"), "the settlement should expose its limited service budget")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
+	_expect(game.settlement_group.get_index() < game.doctrine_group.get_index(), "Morrowline should place its primary recovery actions before optional doctrine and chassis controls")
 	_expect(game.settlement_refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.settlement_refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
 	if game.state.hull_condition < 10:
 		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")

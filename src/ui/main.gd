@@ -1256,6 +1256,8 @@ func _focus_control(control: Control) -> bool:
 	if not _control_can_receive_focus(control):
 		return false
 	control.grab_focus()
+	if right_scroll != null and right_scroll.is_ancestor_of(control):
+		_scroll_action_context_into_view(control)
 	return true
 
 func _scroll_action_context_into_view(control: Control) -> void:
@@ -2111,6 +2113,8 @@ func _refresh_ui() -> void:
 	focus_chassis_button.visible = is_refit_phase
 	refit_actions.visible = is_refit_phase
 	refit_label.visible = is_refit_phase
+	if state.phase == "settlement" and settlement_group.get_index() > doctrine_group.get_index():
+		settlement_group.get_parent().move_child(settlement_group, doctrine_group.get_index())
 	route_group.visible = state.phase == "refit" and not state.campaign_active
 	doctrine_group.visible = state.phase in ["refit", "map", "settlement"]
 	doctrine_detail_label.visible = doctrine_group.visible
