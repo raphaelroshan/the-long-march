@@ -1472,6 +1472,8 @@ func _pause_cancel_hint() -> String:
 
 func _toggle_reduced_motion() -> void:
 	reduced_motion = not reduced_motion
+	if game_view != null:
+		game_view.call("set_reduced_motion", reduced_motion)
 	_save_preferences()
 	_refresh_settings("Reduced motion enabled." if reduced_motion else "Standard transition motion enabled.")
 	motion_button.grab_focus()
@@ -1887,6 +1889,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
 	game_view.set("high_contrast_enabled", high_contrast_enabled)
+	game_view.set("reduced_motion_enabled", reduced_motion)
 	game_view.set("controller_layout_id", controller_layout_id)
 	game_view.connect("return_to_title_requested", Callable(self, "_return_to_title"))
 	game_view.connect("checkpoint_reached", Callable(self, "_on_checkpoint_reached"))

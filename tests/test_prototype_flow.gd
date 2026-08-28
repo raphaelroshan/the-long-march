@@ -43,6 +43,9 @@ func _press_campaign_node(node_id: String) -> void:
 			_expect(game.right_scroll.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action visible together")
 			game.campaign_map.commit_button.pressed.emit()
 			await process_frame
+			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "committing a route should present the road before exposing combat controls")
+			game.journey_transition.continue_button.pressed.emit()
+			await process_frame
 			return
 	_expect(false, "campaign node button should be available: " + node_id)
 
@@ -55,6 +58,9 @@ func _press_campaign_event(choice_id: String) -> void:
 	_expect(false, "campaign event choice should be available: " + choice_id)
 
 func _advance_until_phase(expected_phase: String) -> void:
+	if game.journey_transition.visible:
+		game.journey_transition.continue_button.pressed.emit()
+		await process_frame
 	if game.state.encounter_active:
 		game.advance_encounter_button.pressed.emit()
 		await process_frame
@@ -171,26 +177,31 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	_expect(game.settlement_hub.visible and not game.main_columns.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "the playable opening should enter Ashgate's bazaar with the required assignment focused")
+	_expect(game.settlement_hub.value_labels["fuel"].text == "6" and game.settlement_hub.value_labels["hull"].text == "10/10", "the bazaar should keep critical fortress values visible beside the centered fortress")
 	_expect(game.current_run_code() == "ASH-1107", "the playable stage should expose a stable chapter-and-seed run identity")
 	var opening_record: String = game.current_run_record_text()
 	_expect(opening_record.contains("RUN ID · ASH-1107") and opening_record.contains("ASHGATE LOWLANDS · DAY 1 · Ashgate Depot · Refit") and opening_record.contains("Contract · Offered"), "the live March Record should identify the opening run and its unresolved obligation")
 	_expect(opening_record.contains("Systems · 6 ready · 1 strained · 0 offline") and opening_record.contains("NEXT ORDER") and opening_record.contains("guard Morrowline"), "the live March Record should preserve current system condition and the authoritative next order")
-	_expect(game.contract_accept_button.text.contains("EACH ENEMY +1 HP") and game.contract_accept_button.text.contains("+30 ASHMARKS · +2 TRUST") and game.contract_decline_button.text.contains("NO EXTRA ENEMY HP") and game.contract_decline_button.text.contains("NO CONTRACT PAYOUT OR TRUST"), "the opening contract actions should disclose both sides of the combat and reward tradeoff before commitment")
-	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
-	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
-	_expect(game.current_order_button.text == "GO TO CONTRACT ↓" and game.current_order_button.tooltip_text.contains("without activating it"), "the persistent jump action should name the opening contract without implying activation")
+	_expect(game.settlement_hub.detail_body.text.contains("Each enemy") and game.settlement_hub.detail_body.text.contains("30 Ashmarks") and game.settlement_hub.primary_action_button.text == "ACCEPT ASSIGNMENT" and game.settlement_hub.secondary_action_button.text.contains("TRAVEL UNBOUND"), "the assignment station should disclose both sides of the combat and reward tradeoff before commitment")
 	_expect(not game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS OVERVIEW") and game.fortress_panel.placement_status_text().begins_with("INSPECT") and game.fortress_panel.placement_status_text().contains("EDIT CHASSIS TO MOVE"), "the untouched opening should present the selected engine as passive inspection rather than an active move command")
 	_expect(game.refit_label.text.contains("On chassis for inspection") and game.refit_label.text.contains("Use Edit Chassis or click the grid to move it"), "the opening module summary should explain how inspection becomes an intentional refit action")
+	game.settlement_hub.station_buttons["workshop"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(not game.settlement_hub.visible and game.main_columns.visible and game.settlement_detail_mode == "workshop" and not game.campaign_map.visible, "entering the workshop should replace the bazaar with a focused chassis workspace")
 	game.how_to_play_button.grab_focus()
 	await process_frame
 	await process_frame
-	_expect(game.right_scroll.get_global_rect().encloses(game.how_to_play_button.get_global_rect()), "manual focus navigation should scroll the field briefing action fully into view")
+	_expect(game.right_scroll.get_global_rect().encloses(game.how_to_play_button.get_global_rect()), "manual focus navigation should scroll the workshop briefing action fully into view")
 	var state_before_order_jump: Dictionary = game.state.serialize()
 	game.current_order_button.grab_focus()
 	game.current_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(game.contract_accept_button.has_focus() and game.right_scroll.get_global_rect().encloses(game.contract_accept_button.get_global_rect()), "Go to Contract should focus and reveal the mandatory choice")
+	_expect(game.focus_chassis_button.has_focus() and game.right_scroll.get_global_rect().encloses(game.focus_chassis_button.get_global_rect()), "Go to Chassis should focus and reveal the workshop's primary action")
 	_expect(game.state.serialize() == state_before_order_jump, "jumping to the current order should never activate or mutate the decision")
 	_expect(game.doctrine_detail_label.text.contains("Raiders") and game.doctrine_detail_label.text.contains("−1 damage"), "the default doctrine should explain its real targeting and mitigation effects")
 	game.doctrine_option.select(2)
@@ -270,21 +281,34 @@ func _run() -> void:
 	await process_frame
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
-	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the campaign should render the full authored node graph")
+	_expect(not game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the workshop should keep the authored route graph prepared but out of the focused refit workspace")
 	var condenser_picker_index := _module_picker_index("water_condenser")
 	_expect(condenser_picker_index >= 0 and game.module_option.get_item_text(condenser_picker_index).contains("STORED"), "the Water Condenser should appear as a finite stored module in the refit picker")
 	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
 	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and campaign_action_row.get_parent() == game.campaign_map.get_parent() and campaign_action_row.get_index() == game.campaign_commit_intel_label.get_index() + 1 and game.campaign_cancel_button.get_parent() == campaign_action_row, "route commitment and its reversible exit should remain grouped in one row directly below the map and compact intel")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
-	game.contract_accept_button.pressed.emit()
+	game.settlement_hub_return_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "leaving the workshop should return to the unresolved assignment in the bazaar")
+	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
 	await process_frame
 	await process_frame
 	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
 	_expect(game.event_label.text.begins_with("CONTRACT DECISION") and game.encounter_label.text.begins_with("CONTRACT DECISION") and game.encounter_label.text.contains("each enemy") and game.encounter_label.text.contains("30 Ashmarks") and game.encounter_label.text.contains("2 trust"), "the accepted contract should leave an exact above-fold consequence receipt after its choice cards disappear")
-	_expect(game.guidance_label.text.contains("Select one cyan route"), "the objective should advance immediately after the contract is answered")
-	_expect(game.current_order_button.text == "GO TO ROUTES ↓", "the jump action should advance from contract to the available route choices")
+	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["departure_gate"].has_focus(), "the bazaar should advance from the answered assignment to departure planning")
+	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(game.campaign_map.visible and game.settlement_detail_mode == "journey" and not game.refit_title.visible, "Plan Journey should open a focused route table without retaining workshop controls")
+	_expect(game.guidance_label.text.contains("Select one highlighted destination"), "the objective should advance immediately to route inspection")
+	_expect(game.current_order_button.text == "GO TO ROUTES ↓", "the jump action should advance from assignment to the available route choices")
 	var route_briefing_state: Dictionary = game.state.serialize()
 	game._show_onboarding(true)
 	await process_frame
@@ -298,7 +322,7 @@ func _run() -> void:
 	_expect(game.campaign_comparison_panel.visible and game.campaign_comparison_label.text.contains("RILL CROSSING · 1D · 1 FUEL · KNOWN · LOW 14% RISK") and game.campaign_comparison_label.text.contains("SOOT ORCHARD · 2D · 2 FUEL · FORECAST · GUARDED 27% RISK") and game.campaign_comparison_label.text.contains("PRESSURE +1") and game.campaign_comparison_label.text.contains("NO SETTLEMENT NEXT"), "route planning should compare confidence, days, fuel, risk band, pressure, threat clue, and onward recovery before selection")
 	_expect(game.campaign_pressure_label.text.contains("Closing begins at 3") and game.campaign_pressure_label.text.contains("Break at 5"), "Watch pressure should explain both upcoming closure thresholds before route choice")
 	_expect(game.campaign_map.button_for("rill_crossing").text.contains("KNOWN · LOW") and game.campaign_map.button_for("soot_orchard").text.contains("FORECAST · GUARDED"), "available map nodes should expose compact scouting and risk comparisons before focus")
-	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
+	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "opening the departure table should hand controller focus to the first route")
 	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
 	var route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
 	var route_asset_rect: Rect2 = game.asset_row.get_global_rect()
@@ -965,7 +989,7 @@ func _run() -> void:
 	_expect(game.save_run(true) and FileAccess.get_file_as_string(backup_path) == protected_backup_text, "saving over an invalid primary should preserve the last validated backup instead of promoting corrupt bytes")
 	game.play_again_button.pressed.emit()
 	await process_frame
-	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.contract_accept_button.has_focus(), "Play Again should create a fresh focused Ashgate stage")
+	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "Play Again should create a fresh Ashgate bazaar focused on its assignment")
 	_expect(last_checkpoint_reason == "new_run_started", "Play Again should request a fresh checkpoint instead of leaving Continue on the completed result")
 	for path in [save_path, backup_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):

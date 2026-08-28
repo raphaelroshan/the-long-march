@@ -8,7 +8,9 @@ The build opens with a seven-step Marchmaster briefing that introduces one core 
 
 If the active control moves out of view while inspecting the desk, use the compact **Go to…** action beside Run Flow. It moves focus and scrolls to the contract, route, commit, event, battle step, recovery service, or feedback action named by the current phase; it never activates that choice for the player.
 
-The chassis opens as a passive overview while the current contract or route action keeps focus. Its cyan outline identifies the system described by the inspector; it does not mean the module is being moved. **Edit Chassis** deliberately switches to the gold cursor, movement instructions, and placement language. Pointer users may click the grid directly to enter the same editing context.
+The playable stage now opens in a settlement bazaar. Move among the six named stations and confirm that only the selected station's explanation and actions occupy the right dock. The **Assignment Board** owns the opening obligation, **Workshop** opens the chassis tools, and **Departure Gate** opens route planning only after the assignment is answered. Returning to the bazaar must not change the run.
+
+Inside the workshop, the chassis opens as a passive overview. Its cyan outline identifies the system described by the inspector; it does not mean the module is being moved. **Edit Chassis** deliberately switches to the gold cursor, movement instructions, and placement language. Pointer users may click the grid directly to enter the same editing context.
 
 Pause preserves two different intentions. **Resume Here** and the cancel shortcut return to the exact control the tester left. The adjacent phase-labelled **Go to…** action returns to the required decision instead. Ask testers which they expect before activation; both paths must leave the run unchanged.
 
@@ -20,17 +22,18 @@ After returning from a live stage, the title briefly prioritizes a return receip
 
 ## Suggested session
 
-1. At Ashgate, compare Rill Crossing and The Soot Orchard before choosing; ask what the player believes each visibility label promises.
-2. Accept or decline the guard contract without coaching, then complete one route through Broken Relay or Red Wheel Toll Bridge.
-3. During battle, stop after each step and explain aloud why an enemy chose its target. Compare the card's exact next-hit damage with the applied result. With keyboard or controller, use **Inspect Chassis** and confirm that active targets are reached without a mouse.
-4. Resolve the local event or seeded road occurrence and ask whether its cost and consequence were clear before choosing. Across repeat runs, note whether quiet phases and event phases both feel intentional.
-5. At Morrowline, inspect Mara Flint's workshop and crew requirements. If she joins, compare rebuilding the named weakest system against bracing the Refugee Bunk; ask whether the immediate benefit and later obligation are both clear.
-6. Decide whether repairing, refueling, changing the layout, or preserving money is more valuable. If Mara is aboard, confirm her extra repair point is visible before paying. Compare all available roads, including Dry Cistern Cut when a maintained Water Condenser unlocks it.
-7. Complete the fourth encounter and resolve Mara's **What Held** callback if active. Ask whether the result clearly follows from the earlier physical commitment.
-8. Complete Meridian Pass. On a second attempt, change at least one dependency and take the other branch or deliberately test a recoverable retreat.
-9. At the result screen, verify that the debrief card itself retains the secured path, pressure, contract, specialist, resolved road occurrences, Mara's consequence when applicable, and surviving systems, then choose **Record Playtest Notes**.
-10. Choose **March On**, read the destination and save explanation, cancel once, then confirm. Verify the other chapter starts normally and the title March Charter later retains the best result from each region.
-11. Make one unsaved change and close the window. Verify the game pauses for **Save & Quit**, that **Keep Playing** restores the exact context, and that saving before close can be resumed from Continue after relaunch.
+1. At Ashgate, explore the bazaar without coaching. Ask whether the player can find the assignment, workshop, and departure gate and whether unavailable services are described honestly.
+2. Accept or decline the guard contract, enter Plan Journey, compare Rill Crossing and The Soot Orchard, and ask what each visibility label promises.
+3. Commit the route and stop at the moving-fortress road screen. Ask whether the exact resource receipt and pending arrival are clear before continuing to contact.
+4. During battle, stop after each step and explain aloud why an enemy chose its target. Compare the card's exact next-hit damage with the applied result. With keyboard or controller, use **Inspect Chassis** and confirm that active targets are reached without a mouse.
+5. Resolve the local event or seeded road occurrence and ask whether its cost and consequence were clear before choosing. Across repeat runs, note whether quiet phases and event phases both feel intentional.
+6. At Morrowline, inspect Mara Flint's workshop and crew requirements. If she joins, compare rebuilding the named weakest system against bracing the Refugee Bunk; ask whether the immediate benefit and later obligation are both clear.
+7. Decide whether repairing, refueling, changing the layout, or preserving money is more valuable. If Mara is aboard, confirm her extra repair point is visible before paying. Compare all available roads, including Dry Cistern Cut when a maintained Water Condenser unlocks it.
+8. Complete the fourth encounter and resolve Mara's **What Held** callback if active. Ask whether the result clearly follows from the earlier physical commitment.
+9. Complete Meridian Pass. On a second attempt, change at least one dependency and take the other branch or deliberately test a recoverable retreat.
+10. At the result screen, verify that the debrief card itself retains the secured path, pressure, contract, specialist, resolved road occurrences, Mara's consequence when applicable, and surviving systems, then choose **Record Playtest Notes**.
+11. Choose **March On**, read the destination and save explanation, cancel once, then confirm. Verify the other chapter starts normally and the title March Charter later retains the best result from each region.
+12. Make one unsaved change and close the window. Verify the game pauses for **Save & Quit**, that **Keep Playing** restores the exact context, and that saving before close can be resumed from Continue after relaunch.
 
 Do not coach testers toward the intended answer. Record where they hesitate, what they expect a control to do, and whether the battle report changes their next decision. A tester may pause and choose **Record Playtest Notes** at any decision; closing the form returns to the still-suspended pause menu with the run unchanged.
 

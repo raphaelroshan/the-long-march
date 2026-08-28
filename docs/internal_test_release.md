@@ -6,12 +6,12 @@ This is a testable two-chapter alpha for The Long March. It proves separate five
 
 ## Ashgate test flow
 
-1. Start at Ashgate Depot with the prepared fortress modules visible in the chassis grid.
-2. Select an installed module to move, rotate, or remove it. Select a module from the palette, then choose an empty cell with the pointer or with arrows and the configured controller confirm button/Enter to install it. Exterior-tagged modules consume one of two mount slots.
+1. Start at Ashgate Depot and confirm the bazaar shows the fortress at rest, seven critical values on the left, six named stations in the center, and one focused station detail on the right.
+2. Open the Workshop, then select an installed module to move, rotate, or remove it. Select a module from the palette, then choose an empty cell with the pointer or with arrows and the configured controller confirm button/Enter to install it. Exterior-tagged modules consume one of two mount slots.
 3. Confirm that invalid overlap, bounds, mass, and exterior-capacity placements show a blocked preview without changing the old layout.
 4. Move the Coal Cell away from the Steam Lance Engine and confirm the engine turns offline; reconnect it before departure. Move the Ammunition Lift away from the weapon and confirm the weapon becomes strained rather than silently retaining full damage.
-5. Accept or decline the **Morrowline Parts Guard**, then compare the known/forecast/unscouted information for **Rill Crossing** and **The Soot Orchard**.
-6. Select a doctrine—protect cargo, protect crew, or run hot—and begin the first encounter. Refit controls lock during travel and battle.
+5. Return to the bazaar, accept or decline the **Morrowline Parts Guard**, then use the Departure Gate to compare the known/forecast/unscouted information for **Rill Crossing** and **The Soot Orchard**.
+6. Select a doctrine—protect cargo, protect crew, or run hot—and commit the road. Confirm the mandatory moving-fortress screen reports exact time, fuel, pressure, and heat changes while Ashgate remains the last secured location. Continue into the first contact; refit controls stay locked during travel and battle.
 7. Advance the battle one step at a time. Compare each active contact's **Next Hit** value with the result. Use **Inspect Chassis** to select a Seal Compartment target without a mouse, or use **Shift power to weapons** once if the weapon system needs priority, then read the causal report.
 8. If a seeded road occurrence appears, verify that its complete cost is visible, resolve it, and confirm the debrief later records the chosen response. A quiet phase is also a valid deterministic result.
 9. Choose **Broken Relay** or **Red Wheel Toll Bridge** for the second encounter. Resolve the node decision and verify its money, trust, risk, or pressure consequence.

@@ -226,7 +226,7 @@ func _test_city_journey_and_battle() -> void:
 	var started := state.begin_journey("safe_road", "protect_cargo")
 	_expect(bool(started.get("ok", false)), "safe road should begin the Ashgate-to-Morrowline journey")
 	_expect(not state.can_refit(), "refit should lock after departure")
-	_expect(state.current_location == "rill_crossing", "safe road should place the fortress at Rill Crossing during the encounter")
+	_expect(state.current_location == "rill_crossing", "safe road should place the fortress at Rill Crossing during the legacy encounter")
 	_expect(state.encounter_enemies.size() == 2, "safe road should create two Road Raider contacts")
 	_expect(String(started.get("forecast", {}).get("target_class", "")).contains("cargo"), "safe road forecast should identify cargo pressure")
 	var first_step := state.advance_encounter(1.0)
@@ -571,9 +571,11 @@ func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	state.seed_starter_inventory()
 
 func _campaign_battle(state: LongMarchState, node_id: String, doctrine: String = "protect_crew") -> Dictionary:
+	var origin_id := state.current_location
 	var begun := state.begin_campaign_route(node_id, doctrine)
 	if not bool(begun.get("ok", false)):
 		return begun
+	_expect(state.current_location == origin_id and state.campaign_target_node == node_id, "campaign departure should retain the last secured location until its road contact resolves")
 	state.advance_encounter(1.0)
 	state.use_encounter_intervention("shift_power")
 	return state.advance_encounter(6.0)

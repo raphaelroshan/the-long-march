@@ -1265,7 +1265,6 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 	journey_destination = node_id
 	journey_route = node_id
 	journey_node = node_id
-	current_location = node_id
 	journey_leg = campaign_encounters_completed + 1
 	command_points = 2
 	power_priority = "balanced"
@@ -3011,6 +3010,8 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		return _campaign_recover_from_failure()
 
 	campaign_encounters_completed += 1
+	current_location = arrived_node
+	journey_node = arrived_node
 	if arrived_node not in campaign_path:
 		campaign_path.append(arrived_node)
 	campaign_last_safe_node = arrived_node
@@ -3080,6 +3081,8 @@ func _finish_veyru_encounter(engine_alive: bool) -> Dictionary:
 		return _campaign_recover_from_failure()
 
 	campaign_encounters_completed += 1
+	current_location = arrived_node
+	journey_node = arrived_node
 	if arrived_node not in campaign_path:
 		campaign_path.append(arrived_node)
 	if arrived_node == "veyru_evacuation_camp":

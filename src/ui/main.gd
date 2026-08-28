@@ -13,6 +13,8 @@ const VisualContrast = preload("res://src/support/visual_contrast.gd")
 const ControllerLayout = preload("res://src/support/controller_layout.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const CombatPanel = preload("res://src/ui/combat_panel.gd")
+const SettlementHubScene = preload("res://scenes/settlement/SettlementHub.tscn")
+const JourneyTransitionScene = preload("res://scenes/journey/JourneyTransition.tscn")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -117,6 +119,14 @@ const VEYRU_ONBOARDING_STEPS := [
 ]
 
 var state: LongMarchState
+var main_columns: HBoxContainer
+var settlement_hub: SettlementHubView
+var settlement_hub_active: bool = true
+var settlement_detail_mode: String = "hub"
+var settlement_hub_return_button: Button
+var journey_transition: JourneyTransitionView
+var journey_transition_active: bool = false
+var journey_transition_view: Dictionary = {}
 var metric_labels: Dictionary = {}
 var subtitle_label: Label
 var pause_button: Button
@@ -178,6 +188,7 @@ var campaign_commit_intel_label: Label
 var selected_campaign_node_id: String = ""
 var contract_title: Label
 var contract_label: Label
+var contract_group: Control
 var contract_accept_button: Button
 var contract_decline_button: Button
 var campaign_event_title: Label
@@ -242,6 +253,7 @@ var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
 var starting_region_results: Dictionary = {}
 var high_contrast_enabled: bool = false
+var reduced_motion_enabled: bool = false
 var controller_layout_id: String = ControllerLayout.DEFAULT_LAYOUT
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
@@ -392,6 +404,8 @@ func _run_flow_step() -> int:
 		return 4
 	if state.phase == "final_battle" or state.current_location == state.campaign_final_node_id() or state.campaign_encounters_completed >= 4:
 		return 3
+	if state.phase == "battle" and state.campaign_encounters_completed >= 3:
+		return 3
 	if state.campaign_region_id == "flooded_veyru":
 		if state.current_location == "veyru_evacuation_camp" or state.campaign_encounters_completed >= 2:
 			if state.current_location != "veyru_evacuation_camp" and state.campaign_encounters_completed >= 3:
@@ -438,6 +452,9 @@ func _ready() -> void:
 	_build_ui()
 	campaign_map.set_high_contrast(high_contrast_enabled)
 	combat_panel.set_high_contrast(high_contrast_enabled)
+	settlement_hub.set_high_contrast(high_contrast_enabled)
+	journey_transition.set_high_contrast(high_contrast_enabled)
+	journey_transition.set_reduced_motion(reduced_motion_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
@@ -453,6 +470,10 @@ func set_high_contrast(enabled: bool) -> void:
 		campaign_map.set_high_contrast(high_contrast_enabled)
 	if combat_panel != null:
 		combat_panel.set_high_contrast(high_contrast_enabled)
+	if settlement_hub != null:
+		settlement_hub.set_high_contrast(high_contrast_enabled)
+	if journey_transition != null:
+		journey_transition.set_high_contrast(high_contrast_enabled)
 	for button_data in [
 		[contract_accept_button, Color("#285348"), Color("#73c99b")],
 		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
@@ -490,6 +511,15 @@ func _refresh_controller_copy() -> void:
 		results_inspect_button.tooltip_text = "Move keyboard or controller focus to the final chassis. Use arrows to review systems, %s to inspect one, and %s to return to the debrief." % [_confirm_shortcut(), _cancel_shortcut()]
 	if fortress_panel != null:
 		fortress_panel.set_controller_labels(_controller_confirm_label(), _controller_cancel_label())
+	if settlement_hub != null:
+		settlement_hub.set_controller_cancel_label(_controller_cancel_label())
+	if journey_transition != null:
+		journey_transition.set_controller_cancel_label(_controller_cancel_label())
+
+func set_reduced_motion(enabled: bool) -> void:
+	reduced_motion_enabled = enabled
+	if journey_transition != null:
+		journey_transition.set_reduced_motion(enabled)
 
 func _reset_state() -> void:
 	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)
@@ -522,6 +552,10 @@ func _reset_state() -> void:
 	result_recorded = false
 	results_chassis_reviewed = false
 	last_rendered_phase = ""
+	settlement_hub_active = true
+	settlement_detail_mode = "hub"
+	journey_transition_active = false
+	journey_transition_view = {}
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -537,18 +571,18 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 22)
 	add_child(margin)
 
-	var columns := HBoxContainer.new()
-	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	columns.add_theme_constant_override("separation", 18)
-	margin.add_child(columns)
+	main_columns = HBoxContainer.new()
+	main_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_columns.add_theme_constant_override("separation", 18)
+	margin.add_child(main_columns)
 
 	var left_column := VBoxContainer.new()
 	left_column.custom_minimum_size = Vector2(760, 0)
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_column.add_theme_constant_override("separation", 10)
-	columns.add_child(left_column)
+	main_columns.add_child(left_column)
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
@@ -656,7 +690,7 @@ func _build_ui() -> void:
 	right_scroll.custom_minimum_size = Vector2(370, 0)
 	right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	columns.add_child(right_scroll)
+	main_columns.add_child(right_scroll)
 	var right := PanelContainer.new()
 	right.custom_minimum_size = Vector2(370, 760)
 	right.add_theme_stylebox_override("panel", _flat_style(Color("#151d21"), Color("#2c3a40"), 1, 6, 10))
@@ -670,6 +704,13 @@ func _build_ui() -> void:
 	control_title.add_theme_font_size_override("font_size", 20)
 	control_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	controls.add_child(control_title)
+	settlement_hub_return_button = Button.new()
+	settlement_hub_return_button.text = "RETURN TO SETTLEMENT BAZAAR"
+	settlement_hub_return_button.custom_minimum_size = Vector2(0, 46)
+	settlement_hub_return_button.tooltip_text = "Leave the detailed workbench or map and return to the settlement overview."
+	settlement_hub_return_button.visible = false
+	settlement_hub_return_button.pressed.connect(_on_return_to_settlement_hub)
+	controls.add_child(settlement_hub_return_button)
 	asset_row = HBoxContainer.new()
 	asset_row.add_theme_constant_override("separation", 5)
 	for asset in [ENGINE_ICON, CANNON_ICON, WORKSHOP_ICON, SIGNAL_ICON]:
@@ -790,7 +831,7 @@ func _build_ui() -> void:
 	settlement_group.add_child(final_journey_button)
 	controls.add_child(settlement_group)
 
-	var contract_group := VBoxContainer.new()
+	contract_group = VBoxContainer.new()
 	contract_group.add_theme_constant_override("separation", 8)
 	controls.add_child(contract_group)
 	contract_title = Label.new()
@@ -1071,6 +1112,15 @@ func _build_ui() -> void:
 	desk_scroll_tail.custom_minimum_size = Vector2(0, 32)
 	desk_scroll_tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	controls.add_child(desk_scroll_tail)
+
+	settlement_hub = SettlementHubScene.instantiate()
+	settlement_hub.pause_requested.connect(func() -> void: pause_requested.emit())
+	settlement_hub.action_requested.connect(_on_settlement_hub_action)
+	margin.add_child(settlement_hub)
+	journey_transition = JourneyTransitionScene.instantiate()
+	journey_transition.pause_requested.connect(func() -> void: pause_requested.emit())
+	journey_transition.continue_requested.connect(_on_journey_transition_continued)
+	margin.add_child(journey_transition)
 
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
@@ -1668,6 +1718,21 @@ func focus_current_action() -> void:
 	if feedback_overlay != null and feedback_overlay.visible:
 		_focus_control(feedback_clear_text)
 		return
+	if journey_transition != null and journey_transition.visible:
+		journey_transition.focus_default()
+		return
+	if settlement_hub != null and settlement_hub.visible:
+		settlement_hub.focus_default()
+		return
+	if _settlement_hub_available() and not settlement_hub_active:
+		if settlement_detail_mode == "workshop" and _focus_control(focus_chassis_button):
+			return
+		if settlement_detail_mode == "journey":
+			if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
+				return
+			for button in campaign_node_buttons:
+				if _focus_control(button):
+					return
 	if state.phase == "results":
 		if not results_chassis_reviewed and _focus_control(results_inspect_button):
 			return
@@ -1714,6 +1779,45 @@ func _on_guard_contract_pressed(accept: bool) -> void:
 	if bool(result.get("ok", false)):
 		encounter_label.text = "CONTRACT DECISION\n%s" % String(result.get("message", "Contract decision recorded."))
 		focus_current_action.call_deferred()
+
+func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
+	match action_id:
+		"accept_assignment":
+			_on_guard_contract_pressed(true)
+		"decline_assignment":
+			_on_guard_contract_pressed(false)
+		"open_workshop":
+			settlement_hub_active = false
+			settlement_detail_mode = "workshop"
+			_set_event("The fortress enters the workshop. Inspect dependencies and refit the chassis; return to the bazaar when ready.")
+			_refresh_ui()
+			_focus_control.call_deferred(focus_chassis_button)
+		"review_supplies":
+			settlement_hub_active = false
+			settlement_detail_mode = "workshop"
+			_set_event("The quartermaster opens the fortress stores. Review carried modules, fuel, and current capacity.")
+			_refresh_ui()
+			_focus_control.call_deferred(module_option)
+		"plan_journey":
+			if _active_contract_status() == "offered":
+				_set_event("Answer the settlement assignment before planning the first road.")
+				_refresh_ui()
+				return
+			settlement_hub_active = false
+			settlement_detail_mode = "journey"
+			_set_event("The departure gate opens the route table. Inspect a highlighted destination, then confirm the journey separately.")
+			_refresh_ui()
+			focus_current_action.call_deferred()
+
+func _on_return_to_settlement_hub() -> void:
+	if not _settlement_hub_available():
+		return
+	selected_campaign_node_id = ""
+	settlement_hub_active = true
+	settlement_detail_mode = "hub"
+	_set_event("Returned to the settlement bazaar. No route, fuel, or time was committed.")
+	_refresh_ui()
+	settlement_hub.focus_default.call_deferred()
 
 func _on_campaign_node_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_node_buttons.size():
@@ -1775,15 +1879,63 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		_set_event("Select a route before committing the fortress.")
 		return
 	var doctrine := _selected_id(doctrine_option)
+	var origin_id := state.current_location
+	var day_before := state.day
+	var fuel_before := state.fuel
+	var pressure_before := state.campaign_pressure
+	var route_preview := state.campaign_node_preview(node_id, doctrine)
 	var result := state.begin_campaign_route(node_id, doctrine)
 	if bool(result.get("ok", false)):
 		selected_campaign_node_id = ""
+		settlement_hub_active = true
+		settlement_detail_mode = "hub"
+		journey_transition_active = true
+		journey_transition_view = _build_journey_transition_view(origin_id, node_id, route_preview, day_before, fuel_before, pressure_before)
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
 		_checkpoint("route_started")
 	else:
 		_set_event("Route blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
+
+func _build_journey_transition_view(origin_id: String, destination_id: String, preview: Dictionary, day_before: int, fuel_before: int, pressure_before: int) -> Dictionary:
+	var origin_name := String(LongMarchState.JOURNEY_NODES.get(origin_id, {}).get("name", origin_id))
+	var destination_name := String(LongMarchState.JOURNEY_NODES.get(destination_id, {}).get("name", destination_id))
+	var visibility := String(preview.get("visibility", "unscouted"))
+	var threats: Array = preview.get("threats", [])
+	var contact_text := ", ".join(threats) if not threats.is_empty() else String(preview.get("threat_hint", "uncertain movement ahead"))
+	var detail := "%s intelligence: %s. The fortress is moving through this road now; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, destination_name]
+	return {
+		"region_id": state.campaign_region_id,
+		"origin_id": origin_id,
+		"origin_name": origin_name,
+		"destination_id": destination_id,
+		"destination_name": destination_name,
+		"status": "%s CONTACT AHEAD" % visibility.to_upper(),
+		"detail": detail,
+		"day_receipt": "DAY %d → %d  ·  +%d" % [day_before, state.day, state.day - day_before],
+		"fuel_receipt": "%d → %d  ·  −%d" % [fuel_before, state.fuel, fuel_before - state.fuel],
+		"pressure_receipt": "%d → %d  ·  +%d" % [pressure_before, state.campaign_pressure, state.campaign_pressure - pressure_before],
+		"heat_receipt": "%d/%d" % [state.heat, LongMarchState.BASE_HEAT_LIMIT],
+		"action_label": "CONTINUE TO CONTACT"
+	}
+
+func _restore_journey_transition_view() -> Dictionary:
+	var destination_id := state.campaign_target_node
+	var origin_id := String(state.campaign_path[-1]) if not state.campaign_path.is_empty() else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
+	var preview := state.campaign_node_preview(destination_id, state.encounter_target_doctrine)
+	var days := int(preview.get("days", 0))
+	var fuel_cost := int(preview.get("fuel", 0))
+	var pressure_gain := int(preview.get("pressure_gain", 0))
+	return _build_journey_transition_view(origin_id, destination_id, preview, state.day - days, state.fuel + fuel_cost, state.campaign_pressure - pressure_gain)
+
+func _on_journey_transition_continued() -> void:
+	if not journey_transition_active:
+		return
+	journey_transition_active = false
+	_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
+	_refresh_ui()
+	_focus_control.call_deferred(advance_encounter_button)
 
 func _on_campaign_event_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_event_buttons.size():
@@ -2072,6 +2224,143 @@ func _campaign_departure_block_reason(node_id: String) -> String:
 
 func current_location_is_region_start() -> bool:
 	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
+
+func _settlement_hub_available() -> bool:
+	return state != null and state.campaign_active and state.phase == "refit" and current_location_is_region_start()
+
+func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
+	var is_veyru := state.campaign_region_id == "flooded_veyru"
+	var contract_status := _active_contract_status()
+	var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+	var contract_name := "SEALED MEDICINE DELIVERY" if is_veyru else "MORROWLINE CONVOY GUARD"
+	var assignment_body := "Carry sealed medicine cases to the Dry Archive. Flood contacts will value the reserved carrier, but successful delivery pays 28 Ashmarks and 2 trust."
+	var assignment_accept_enabled := true
+	if is_veyru:
+		var medicine_status := state.veyru_medicine_contract_status()
+		var carrier_name := String(medicine_status.get("carrier_name", "No carrier"))
+		assignment_body += "\n\nReserved carrier: %s." % carrier_name
+		assignment_accept_enabled = bool(medicine_status.get("available", false))
+	else:
+		assignment_body = "Guard Morrowline's exposed parts wagon. Each enemy on the approach gains 1 HP; arrival pays 30 Ashmarks and 2 trust."
+	var assignment_station := {
+		"title": contract_name,
+		"status": "DECISION REQUIRED" if contract_status == "offered" else contract_status.replace("_", " ").to_upper(),
+		"button_status": "CHOOSE" if contract_status == "offered" else contract_status.replace("_", " ").to_upper(),
+		"body": assignment_body if contract_status == "offered" else ("The fortress accepted this assignment. Its consequences now travel with the march." if contract_status == "accepted" else "The fortress declined this assignment. The first roads are open without its obligation."),
+		"tone": "warning" if contract_status == "offered" else ("safe" if contract_status == "accepted" else "neutral")
+	}
+	if contract_status == "offered":
+		assignment_station["primary"] = {
+			"id": "accept_assignment",
+			"label": "ACCEPT ASSIGNMENT",
+			"enabled": assignment_accept_enabled,
+			"tooltip": "Accept the obligation and its stated consequences."
+		}
+		assignment_station["secondary"] = {
+			"id": "decline_assignment",
+			"label": "DECLINE · TRAVEL UNBOUND",
+			"enabled": true,
+			"tooltip": "Decline without spending fuel or time."
+		}
+	var departure_ready := contract_status != "offered"
+	return {
+		"location_id": state.current_location,
+		"location_name": location_name,
+		"context": "FORTRESS AT REST · %s" % ("Choose an assignment or inspect a bazaar station." if contract_status == "offered" else "Prepare the fortress, then plan the first road."),
+		"preferred_station": "assignment_board" if contract_status == "offered" else "departure_gate",
+		"values": {
+			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
+			"fuel": str(snapshot.get("fuel", state.fuel)),
+			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
+			"heat": "%d/%d" % [int(snapshot.get("heat", 0)), int(snapshot.get("heat_limit", LongMarchState.BASE_HEAT_LIMIT))],
+			"mass": "%d/%d" % [int(snapshot.get("mass", 0)), int(snapshot.get("mass_limit", LongMarchState.BASE_MASS_LIMIT))],
+			"money": str(snapshot.get("money", state.money)),
+			"context": "TRUST %d" % state.settlement_trust
+		},
+		"stations": {
+			"workshop": {
+				"title": "Chassis Workshop",
+				"status": "REFIT AVAILABLE",
+				"button_status": "REFIT",
+				"body": "Inspect the walking fortress, trace system dependencies, rotate stored modules, and repair the layout before departure.",
+				"tone": "safe",
+				"primary": {"id": "open_workshop", "label": "ENTER WORKSHOP", "enabled": true, "tooltip": "Open the detailed chassis workbench."}
+			},
+			"quartermaster": {
+				"title": "Quartermaster Stores",
+				"status": "%d ASHMARKS · %d FUEL" % [state.money, state.fuel],
+				"button_status": "STORES",
+				"body": "Review carried modules and current capacity. Trading inventory is not yet available in this settlement slice.",
+				"tone": "neutral",
+				"primary": {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}
+			},
+			"signal_broker": {
+				"title": "Signal Broker",
+				"status": "NO LOCAL REPORTS",
+				"button_status": "QUIET",
+				"body": "Route intelligence comes from working signal equipment and people met on the road. No report is for sale here yet.",
+				"tone": "muted"
+			},
+			"hiring_post": {
+				"title": "Hiring Post",
+				"status": "NO CREW AVAILABLE",
+				"button_status": "EMPTY",
+				"body": "Specialists are encountered through authored locations and events. The hiring board is empty at this stop.",
+				"tone": "muted"
+			},
+			"assignment_board": assignment_station,
+			"departure_gate": {
+				"title": "Departure Gate",
+				"status": "ROUTES READY" if departure_ready else "ASSIGNMENT BLOCKS DEPARTURE",
+				"button_status": "PLAN JOURNEY" if departure_ready else "LOCKED",
+				"body": "Open the regional route table. Selecting a destination only previews its cost and intelligence; a separate commit starts travel." if departure_ready else "The settlement requires an answer at the assignment board before it will clear the fortress to leave.",
+				"tone": "safe" if departure_ready else "warning",
+				"primary": {"id": "plan_journey", "label": "PLAN JOURNEY", "enabled": departure_ready, "tooltip": "Open the regional map without committing a route."}
+			}
+		}
+	}
+
+func _refresh_settlement_hub(snapshot: Dictionary) -> void:
+	if settlement_hub == null or main_columns == null:
+		return
+	var available := _settlement_hub_available()
+	var show_hub := available and settlement_hub_active
+	settlement_hub.visible = show_hub
+	main_columns.visible = not show_hub
+	settlement_hub_return_button.visible = available and not show_hub
+	if available:
+		var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", "settlement"))
+		settlement_hub_return_button.text = "RETURN TO %s BAZAAR" % location_name.to_upper()
+		settlement_hub.configure(_settlement_hub_view(snapshot))
+
+func _refresh_journey_transition() -> void:
+	if journey_transition == null:
+		return
+	if state.encounter_step > 0 or state.phase not in ["battle", "final_battle"]:
+		journey_transition_active = false
+	var show_transition := journey_transition_active and state.encounter_active
+	journey_transition.visible = show_transition
+	if not show_transition:
+		return
+	if journey_transition_view.is_empty():
+		journey_transition_view = _restore_journey_transition_view()
+	settlement_hub.visible = false
+	main_columns.visible = false
+	journey_transition.configure(journey_transition_view)
+
+func _apply_start_detail_visibility() -> void:
+	if not _settlement_hub_available() or settlement_hub_active:
+		return
+	var show_workshop := settlement_detail_mode == "workshop"
+	var show_journey := settlement_detail_mode == "journey"
+	contract_group.visible = false
+	for control in [refit_title, module_group, focus_chassis_button, refit_actions, refit_label, dependency_card_panel]:
+		control.visible = show_workshop
+	for control in [campaign_title, campaign_pressure_label, campaign_path_label, campaign_map, campaign_commit_button.get_parent(), doctrine_group, doctrine_detail_label, route_preview_label]:
+		control.visible = show_journey
+	campaign_comparison_panel.visible = show_journey and campaign_comparison_panel.visible
+	campaign_commit_intel_label.visible = show_journey and campaign_commit_intel_label.visible
+	asset_row.visible = show_workshop
 
 func _active_contract_status() -> String:
 	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
@@ -2363,6 +2652,10 @@ func load_saved_run() -> bool:
 		return false
 	state = restored
 	starting_region_id = state.campaign_region_id
+	settlement_hub_active = true
+	settlement_detail_mode = "hub"
+	journey_transition_active = state.phase in ["battle", "final_battle"] and state.encounter_active and state.encounter_step == 0
+	journey_transition_view = _restore_journey_transition_view() if journey_transition_active else {}
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
@@ -2985,6 +3278,9 @@ func _refresh_ui() -> void:
 			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull" and target_id not in fortress_panel.combat_target_ids:
 				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
+	_apply_start_detail_visibility()
+	_refresh_settlement_hub(snapshot)
+	_refresh_journey_transition()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
 	_ensure_current_focus()
@@ -3023,6 +3319,11 @@ func _current_guidance() -> String:
 		return "CURRENT ORDER · Advance the encounter and watch for a new target. %s" % order_status
 	if not state.campaign_event_pending.is_empty():
 		return "DECISION REQUIRED · Resolve the local event below before the fortress can depart."
+	if _settlement_hub_available() and not settlement_hub_active:
+		if settlement_detail_mode == "workshop":
+			return "WORKSHOP · Inspect dependencies and refit the chassis. Return to the bazaar when preparation is complete."
+		if settlement_detail_mode == "journey" and selected_campaign_node_id.is_empty():
+			return "ROUTE TABLE · Select one highlighted destination to inspect it; Commit is a separate action."
 	if _active_contract_status() == "offered":
 		return "CURRENT ORDER · Decide whether to carry Lantern Quay's sealed medicines. This unlocks the first roads." if state.campaign_region_id == "flooded_veyru" else "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
 	if not selected_campaign_node_id.is_empty():
@@ -3050,6 +3351,8 @@ func _current_action_jump_label() -> String:
 		return "GO TO BATTLE STEP ↓"
 	if not state.campaign_event_pending.is_empty():
 		return "GO TO DECISION ↓"
+	if _settlement_hub_available() and not settlement_hub_active and (settlement_detail_mode == "workshop" or selected_campaign_node_id.is_empty()):
+		return "GO TO CHASSIS ↓" if settlement_detail_mode == "workshop" else "GO TO ROUTES ↓"
 	if _active_contract_status() == "offered":
 		return "GO TO CONTRACT ↓"
 	if not selected_campaign_node_id.is_empty() and _campaign_departure_block_reason(selected_campaign_node_id).is_empty():

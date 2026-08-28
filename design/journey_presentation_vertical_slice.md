@@ -1,5 +1,9 @@
 # Journey Presentation Vertical Slice
 
+## Implementation status
+
+`0.3.0-alpha.268` implements the first two presentation checkpoints: Ashgate Depot and Lantern Quay open as six-station bazaars, workshop and route planning no longer share one undifferentiated control stack, route commitment shows a mandatory side-on moving-fortress road bridge, and `current_location` remains the last secured node until contact resolution. The full-frame Plan Journey composition, purchasable information, marketplace inventory, threat-to-module approach animation, roadside event tableau, and arrival tableau remain follow-up slices.
+
 ## Purpose
 
 The next vertical slice should make the fortress feel as though it is crossing a dangerous place rather than moving instantly from a route button to a combat report. The player should use a settlement, choose an assignment, plan a journey, understand the commitment, watch the machine cross every road segment, see road events where they occur, face threats approaching the part of the fortress they intend to attack, and only then arrive at the destination.

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.267`; Feeds A through AL are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.268`; Feeds A through AL are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -230,7 +230,7 @@ The original prompts below describe the build-up of the prototype and are retain
 
 ### Current Feed AL — event consequence handoff
 
-**Status:** Complete in `0.3.0-alpha.267` through authoritative next-action copy.
+**Status:** Complete in `0.3.0-alpha.268` through authoritative next-action copy.
 
 > Keep each completed event's exact mechanical consequence above the fold, then append the next route or recovery instruction from the same guidance source as the Marchmaster's Desk. Chained events should continue to name the next decision instead of skipping ahead.
 

@@ -28,6 +28,9 @@ func _press_route(node_id: String) -> void:
 	_expect(game.selected_campaign_node_id == node_id and game.campaign_commit_button.has_focus(), "Veyru route selection should wait at the shared Commit boundary: " + node_id)
 	game.campaign_commit_button.pressed.emit()
 	await process_frame
+	_expect(game.journey_transition.visible and game.journey_transition.detail_label.text.contains("resolve the contact before"), "committing a Veyru route should preserve its in-between road presentation")
+	game.journey_transition.continue_button.pressed.emit()
+	await process_frame
 
 
 func _press_event(choice_id: String) -> void:
@@ -72,12 +75,19 @@ func _run() -> void:
 	await process_frame
 
 	_expect(game.state.campaign_region_id == "flooded_veyru" and game.state.current_location == "lantern_quay", "the Veyru UI flow should begin at Lantern Quay")
-	_expect(game.contract_accept_button.has_focus() and game.contract_accept_button.text.contains("PARTS CRATE"), "the opening UI should focus and name the medicine carrier")
-	game.contract_accept_button.pressed.emit()
+	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus() and game.settlement_hub.detail_body.text.contains("Parts Crate"), "the opening bazaar should focus and name the medicine carrier")
+	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
 	await _settle_ui()
 	_expect(game.state.veyru_contract_status == "accepted" and game.campaign_path_label.text.contains("Carrier: Parts Crate"), "accepting through the UI should persist the exact medicine carrier")
+	_expect(game.settlement_hub.station_buttons["departure_gate"].has_focus(), "answering the Veyru contract should focus the departure gate")
+	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await _settle_ui()
 	var opening_focus := game.get_viewport().gui_get_focus_owner()
-	_expect(opening_focus in game.campaign_node_buttons and game.right_scroll.get_global_rect().encloses(opening_focus.get_global_rect()), "answering the Veyru contract should focus a visible opening route")
+	_expect(opening_focus in game.campaign_node_buttons and game.right_scroll.get_global_rect().encloses(opening_focus.get_global_rect()), "opening the Veyru route table should focus a visible opening road")
 
 	await _press_route("pump_gallery")
 	_expect(game.state.phase == "battle" and game.combat_panel.visible and _combat_names_include("Flood Surge") and not _combat_names_include("Climber"), "Pump Gallery should show Flood Surge alone in the combat UI")

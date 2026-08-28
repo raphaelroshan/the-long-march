@@ -36,6 +36,8 @@ The repository contains an agent-first Godot project with:
 - Local playtest settings, reachable from title or pause, for fullscreen, reduced transition motion, autosave, briefing reset, and confirmed save clearing.
 - Settings grouped into Display & Readability, Controls & Feedback, and Runs & Local Data, with a fixed section breadcrumb that follows keyboard/controller focus.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
+- A fortress-centered settlement bazaar at Ashgate Depot and Lantern Quay with six stable stations, a left value rail, one right-side detail dock, and separate workshop and departure workspaces.
+- A mandatory side-on road presentation after route commitment that shows exact day, fuel, pressure, and heat receipts before the player enters the deterministic contact.
 - A seven-step guided briefing that teaches command, engine/fuel, weapon/ammunition, workshop staffing/parts, signal visibility, routes, and contact response one relationship at a time.
 - A directly navigable Field Briefing that reopens at the live contract, route, battle, recovery, or finale topic and preserves the run while players browse.
 - A deterministic `LongMarchState` simulation.
@@ -116,7 +118,7 @@ The recommended sequence is:
 The current build contains two isolated five-encounter test journeys. Ashgate begins at Ashgate Depot, recovers at Morrowline Camp, and ends at Meridian Pass. Flooded Veyru begins at Lantern Quay, recovers at Evacuation Camp, and ends at the Dry Archive. Their contracts are in [`design/ashgate_lowlands_alpha.md`](design/ashgate_lowlands_alpha.md) and [`design/flooded_veyru_alpha.md`](design/flooded_veyru_alpha.md); the release checklist is in [`docs/internal_test_release.md`](docs/internal_test_release.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
 
 The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
-The next presentation vertical slice—separate journey planning, committed travel, moving-fortress scenes, and readable threat approach—is specified in [`design/journey_presentation_vertical_slice.md`](design/journey_presentation_vertical_slice.md).
+The active presentation vertical slice—settlement hubs and committed travel now implemented, with the dedicated map, contact staging, roadside events, and arrival tableaux still in progress—is specified in [`design/journey_presentation_vertical_slice.md`](design/journey_presentation_vertical_slice.md).
 Its shared fortress layout and at-rest, map, moving, and encounter modes are specified in [`design/fortress_visual_modes.md`](design/fortress_visual_modes.md).
 The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
 
