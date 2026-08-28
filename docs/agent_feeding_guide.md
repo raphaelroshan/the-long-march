@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.251`; Feeds A through V are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.252`; Feeds A through W are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -137,6 +137,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.251` through phase-aware help and a directly navigable topic rail.
 
 > Reopen Field Briefing at the topic matching the live contract, road, battle, recovery, or finale decision. Turn every visible topic into a mouse, keyboard, and controller action; distinguish viewed from untouched topics without claiming skipped pages were read; preserve first-run sequencing and deterministic state.
+
+### Current Feed W — pause order return
+
+**Status:** Complete in `0.3.0-alpha.252` through distinct Resume Here and Go to Order actions.
+
+> Preserve exact pre-pause focus through Resume Here, while offering a second phase-labelled action that returns directly to the authoritative contract, route, event, battle, recovery, or feedback control. Keep both actions in one row at 110% text, maintain a closed controller focus graph, and never activate or mutate the destination.
 
 ## Historical prototype feed sequence
 

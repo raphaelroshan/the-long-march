@@ -887,3 +887,7 @@ The Run Flow heading carries a compact phase-aware jump that delegates to the sa
 ## 2026-08-28 — Reference help opens where the player is working
 
 Reopening Field Briefing now selects the topic implied by the live contract, road, battle, recovery, Mara, or archive state instead of returning to Command unconditionally. The seven-item rail is made of real input controls, so a player can inspect any other topic directly; only visited topics receive a completion mark. First-run guidance still starts at the authored opening and focuses Next. This keeps reference help fast without introducing a second tutorial state machine, changing briefing persistence, or mutating the deterministic run.
+
+## 2026-08-28 — Pause separates continuity from reorientation
+
+The primary Pause row now distinguishes Resume Here, which restores the exact valid pre-pause control, from a phase-labelled Go to action, which delegates to the authoritative current-order resolver. Cancel remains Resume Here. Sharing one row preserves the 1280×720 layout and makes the choice explicit without adding another overlay. The resolver now prioritizes phase and pending-decision state before testing visible controls, so stale presentation cannot redirect a debrief or battle order. Neither path activates a control or changes serialized state.

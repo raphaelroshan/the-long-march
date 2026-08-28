@@ -8,6 +8,8 @@ The build opens with a seven-step Marchmaster briefing that introduces one core 
 
 If the active control moves out of view while inspecting the desk, use the compact **Go to…** action beside Run Flow. It moves focus and scrolls to the contract, route, commit, event, battle step, recovery service, or feedback action named by the current phase; it never activates that choice for the player.
 
+Pause preserves two different intentions. **Resume Here** and the cancel shortcut return to the exact control the tester left. The adjacent phase-labelled **Go to…** action returns to the required decision instead. Ask testers which they expect before activation; both paths must leave the run unchanged.
+
 Before starting, move focus or the pointer across the title's chapter actions. The right-hand journey card should explain the selected obligation, regional pressure, recovery point, and finale. Continue should instead name the exact saved next decision and fortress condition. Ask whether the tester can choose a chapter without relying on tooltips or prior knowledge.
 
 ## Suggested session

@@ -77,6 +77,7 @@ var data_info_status_label: Label
 var data_info_copy_button: Button
 var data_info_close_button: Button
 var resume_button: Button
+var pause_order_button: Button
 var pause_record_button: Button
 var pause_summary_label: Label
 var pause_save_status_label: Label
@@ -463,11 +464,18 @@ func _configure_overlay_focus() -> void:
 	autosave_button.focus_neighbor_top = autosave_button.get_path_to(interface_audio_button)
 	autosave_button.focus_neighbor_bottom = autosave_button.get_path_to(data_info_button)
 	data_info_button.focus_neighbor_top = data_info_button.get_path_to(autosave_button)
+	resume_button.focus_neighbor_left = resume_button.get_path_to(pause_order_button)
+	resume_button.focus_neighbor_right = resume_button.get_path_to(pause_order_button)
+	resume_button.focus_neighbor_top = resume_button.get_path_to(restart_button)
 	resume_button.focus_neighbor_bottom = resume_button.get_path_to(pause_save_button)
+	pause_order_button.focus_neighbor_left = pause_order_button.get_path_to(resume_button)
+	pause_order_button.focus_neighbor_right = pause_order_button.get_path_to(resume_button)
+	pause_order_button.focus_neighbor_top = pause_order_button.get_path_to(title_button)
+	pause_order_button.focus_neighbor_bottom = pause_order_button.get_path_to(save_return_button)
 	pause_save_button.focus_neighbor_top = pause_save_button.get_path_to(resume_button)
 	pause_save_button.focus_neighbor_right = pause_save_button.get_path_to(save_return_button)
 	pause_save_button.focus_neighbor_bottom = pause_save_button.get_path_to(pause_record_button)
-	save_return_button.focus_neighbor_top = save_return_button.get_path_to(resume_button)
+	save_return_button.focus_neighbor_top = save_return_button.get_path_to(pause_order_button)
 	save_return_button.focus_neighbor_left = save_return_button.get_path_to(pause_save_button)
 	save_return_button.focus_neighbor_bottom = save_return_button.get_path_to(pause_settings_button)
 	pause_record_button.focus_neighbor_top = pause_record_button.get_path_to(pause_save_button)
@@ -489,8 +497,8 @@ func _configure_overlay_focus() -> void:
 	restart_button.focus_neighbor_bottom = restart_button.get_path_to(resume_button)
 	title_button.focus_neighbor_top = title_button.get_path_to(pause_notes_button)
 	title_button.focus_neighbor_left = title_button.get_path_to(restart_button)
-	title_button.focus_neighbor_bottom = title_button.get_path_to(resume_button)
-	_configure_focus_cycle([resume_button, pause_save_button, save_return_button, pause_record_button, pause_briefing_button, pause_settings_button, pause_notes_button, restart_button, title_button])
+	title_button.focus_neighbor_bottom = title_button.get_path_to(pause_order_button)
+	_configure_focus_cycle([resume_button, pause_order_button, pause_save_button, save_return_button, pause_record_button, pause_briefing_button, pause_settings_button, pause_notes_button, restart_button, title_button])
 	_configure_focus_pair(confirmation_cancel_button, confirmation_confirm_button)
 
 func _configure_focus_pair(first: Control, second: Control) -> void:
@@ -916,12 +924,24 @@ func _build_pause_menu() -> void:
 	pause_save_status_label.add_theme_font_size_override("font_size", 12)
 	pause_save_status_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	summary.add_child(pause_save_status_label)
+	var resume_actions := HBoxContainer.new()
+	resume_actions.add_theme_constant_override("separation", 8)
+	content.add_child(resume_actions)
 	resume_button = Button.new()
-	resume_button.text = "RESUME MARCH"
+	resume_button.text = "RESUME HERE"
 	resume_button.custom_minimum_size = Vector2(0, 54)
+	resume_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	resume_button.tooltip_text = "Return to the exact stage control that was focused before Pause."
 	resume_button.pressed.connect(_resume_game)
 	_accent_button(resume_button)
-	content.add_child(resume_button)
+	resume_actions.add_child(resume_button)
+	pause_order_button = Button.new()
+	pause_order_button.text = "GO TO ORDER"
+	pause_order_button.custom_minimum_size = Vector2(0, 54)
+	pause_order_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pause_order_button.tooltip_text = "Return to the required control without activating it."
+	pause_order_button.pressed.connect(_resume_at_current_order)
+	resume_actions.add_child(pause_order_button)
 	var save_actions := HBoxContainer.new()
 	save_actions.add_theme_constant_override("separation", 8)
 	content.add_child(save_actions)
@@ -1377,7 +1397,7 @@ func _refresh_controller_copy() -> void:
 func _pause_cancel_hint() -> String:
 	var cancel_label := ControllerLayout.cancel_label(controller_layout_id)
 	var viewing_debrief := game_view != null and String(game_view.get("state").get("phase")) == "results"
-	return "%s / Esc returns to debrief" % cancel_label if viewing_debrief else "%s / Esc resumes" % cancel_label
+	return "%s / Esc returns to debrief" % cancel_label if viewing_debrief else "%s / Esc resumes here" % cancel_label
 
 func _toggle_reduced_motion() -> void:
 	reduced_motion = not reduced_motion
@@ -1879,10 +1899,13 @@ func _refresh_pause_summary(message: String = "") -> void:
 	var current_run_saved := _current_run_matches_save()
 	var region_id := String(run_state.get("campaign_region_id"))
 	var region_name := _region_display_name(region_id)
+	var current_order_destination := String(game_view.call("current_order_destination"))
 	pause_eyebrow_label.text = "FINAL REPORT" if viewing_debrief else "THE ROAD WAITS"
 	pause_title_label.text = "DEBRIEF OPTIONS" if viewing_debrief else "MARCH PAUSED"
-	pause_detail_label.text = "The march has ended. Review the result, save it locally, or adjust settings." if viewing_debrief else "The road is turn-based. Nothing changes while this menu is open."
-	resume_button.text = "RETURN TO DEBRIEF" if viewing_debrief else "RESUME MARCH"
+	pause_detail_label.text = "The march has ended. Review the result, save it locally, or adjust settings." if viewing_debrief else "Nothing changes here. Resume where you left off, or return to the current order."
+	resume_button.text = "RETURN TO DEBRIEF" if viewing_debrief else "RESUME HERE"
+	pause_order_button.text = "GO TO %s" % current_order_destination
+	pause_order_button.tooltip_text = "Return to %s without activating it." % current_order_destination.to_lower()
 	pause_save_button.text = "SAVE RESULT" if viewing_debrief else "SAVE MARCH"
 	restart_button.text = "PLAY AGAIN" if viewing_debrief else "RESTART"
 	restart_button.tooltip_text = "Begin another %s march after confirmation." % region_name if viewing_debrief else "Discard the current %s stage state and begin again." % region_name
@@ -2031,6 +2054,14 @@ func _resume_game() -> void:
 	else:
 		game_view.call_deferred("focus_current_action")
 	paused_stage_focus = null
+
+func _resume_at_current_order() -> void:
+	if game_view == null:
+		return
+	pause_view.visible = false
+	game_view.process_mode = Node.PROCESS_MODE_INHERIT
+	paused_stage_focus = null
+	game_view.call_deferred("focus_current_action")
 
 func _show_in_run_briefing() -> void:
 	if game_view == null:

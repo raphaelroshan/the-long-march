@@ -1629,14 +1629,17 @@ func focus_current_action() -> void:
 	if feedback_overlay != null and feedback_overlay.visible:
 		_focus_control(feedback_clear_text)
 		return
-	if _focus_control(contract_accept_button):
+	if state.phase == "results" and _focus_control(feedback_button):
 		return
-	for button in campaign_event_buttons:
-		if _focus_control(button):
-			return
 	if state.phase in ["battle", "final_battle"] and _focus_control(advance_encounter_button):
 		return
-	if _focus_control(campaign_commit_button):
+	if not state.campaign_event_pending.is_empty():
+		for button in campaign_event_buttons:
+			if _focus_control(button):
+				return
+	if _active_contract_status() == "offered" and _focus_control(contract_accept_button):
+		return
+	if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
 		return
 	if state.phase == "settlement":
 		for button in [settlement_repair_button, settlement_refuel_button, settlement_hull_button]:
@@ -1647,8 +1650,6 @@ func focus_current_action() -> void:
 	for button in campaign_node_buttons:
 		if _focus_control(button):
 			return
-	if state.phase == "results" and _focus_control(feedback_button):
-		return
 	_focus_control(travel_button)
 
 func _ensure_current_focus() -> void:
@@ -2973,6 +2974,9 @@ func _current_action_jump_label() -> String:
 
 func _current_action_jump_target() -> String:
 	return _current_action_jump_label().trim_prefix("GO TO ").trim_suffix(" ↓").replace("_", " ")
+
+func current_order_destination() -> String:
+	return _current_action_jump_target()
 
 func _critical_combat_warning() -> String:
 	var best_priority := 0

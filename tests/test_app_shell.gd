@@ -352,6 +352,16 @@ func _run() -> void:
 	await process_frame
 	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the visible stage pause action should open and suspend the march")
 	_expect(app.pause_save_status_label.text.contains("No decision checkpoint yet") and app.pause_save_status_label.text.contains("Save March"), "pause should explain how a fresh run receives its first checkpoint instead of only reporting that it is unsaved")
+	_expect(app.resume_button.text == "RESUME HERE" and app.resume_button.tooltip_text.contains("exact stage control") and app.pause_order_button.text == "GO TO CONTRACT" and app.pause_order_button.tooltip_text.contains("without activating it"), "Pause should separate exact focus restoration from returning to the required contract")
+	var pause_order_state: Dictionary = app.game_view.state.serialize()
+	app.pause_order_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(not app.pause_view.visible and app.game_view.contract_accept_button.has_focus(), "Go to Contract from Pause should resume at the first required action rather than the previously focused decline action")
+	_expect(app._saved_values_match(pause_order_state, app.game_view.state.serialize()), "returning to the current order from Pause should not activate or mutate it")
+	app.game_view.contract_decline_button.grab_focus()
+	app._show_pause()
+	await process_frame
 	app.restart_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_body_label.text.contains("no usable checkpoint to return to"), "restart should not promise recovery when the current run has never been saved")
@@ -369,6 +379,7 @@ func _run() -> void:
 	app._show_pause()
 	_expect(not app.checkpoint_toast.visible, "opening the pause menu should dismiss transient checkpoint notices")
 	_expect(app.title_button.text == "RETURN TO TITLE" and app.pause_save_status_label.text.begins_with("Current decision saved"), "the pause menu should recognize a current automatic checkpoint")
+	_expect(app.pause_order_button.text == "GO TO ROUTES", "Pause should update its order return when the contract opens the road map")
 	_expect(app.restart_button.has_theme_stylebox_override("normal") and not app.title_button.has_theme_stylebox_override("normal"), "pause should distinguish destructive restart from a safely checkpointed title return")
 	_expect(app.pause_summary_label.text.contains("FUEL 6") and app.pause_summary_label.text.contains("HULL 10/10") and app.pause_summary_label.text.contains("HEAT 5/6"), "the pause menu should preserve the critical fortress resource snapshot")
 	app.game_view.state.money += 1
@@ -431,10 +442,10 @@ func _run() -> void:
 	_expect(app.pause_view.visible, "the in-stage menu should pause the march")
 	_expect(app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "pausing should block stage input")
 	_expect(app.resume_button.has_focus(), "Resume should receive keyboard or controller focus")
-	_expect(app.resume_button.get_node_or_null(app.resume_button.focus_neighbor_bottom) == app.pause_save_button and app.pause_save_button.get_node_or_null(app.pause_save_button.focus_neighbor_right) == app.save_return_button, "the pause menu should have explicit directional navigation")
+	_expect(app.resume_button.get_node_or_null(app.resume_button.focus_neighbor_right) == app.pause_order_button and app.pause_order_button.get_node_or_null(app.pause_order_button.focus_neighbor_bottom) == app.save_return_button and app.resume_button.get_node_or_null(app.resume_button.focus_neighbor_bottom) == app.pause_save_button, "the pause menu should expose both resume paths with explicit directional navigation")
 	_expect(app.pause_record_button.get_node_or_null(app.pause_record_button.focus_neighbor_right) == app.pause_briefing_button and app.pause_briefing_button.get_node_or_null(app.pause_briefing_button.focus_neighbor_right) == app.pause_settings_button and app.pause_briefing_button.get_node_or_null(app.pause_briefing_button.focus_neighbor_bottom) == app.pause_notes_button, "pause navigation should expose March Record, Field Briefing, and Settings before local notes and destructive controls")
 	_expect(app.pause_notes_button.get_node_or_null(app.pause_notes_button.focus_neighbor_bottom) == app.restart_button, "pause navigation should retain local playtest notes before destructive session controls")
-	_expect(app.title_button.get_node_or_null(app.title_button.focus_next) == app.resume_button and app.resume_button.get_node_or_null(app.resume_button.focus_previous) == app.title_button, "the pause menu should trap Tab navigation inside its visible actions")
+	_expect(app.title_button.get_node_or_null(app.title_button.focus_next) == app.resume_button and app.resume_button.get_node_or_null(app.resume_button.focus_previous) == app.title_button and app.resume_button.get_node_or_null(app.resume_button.focus_next) == app.pause_order_button, "the pause menu should trap Tab navigation inside its visible actions and include the order return")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5") and app.pause_summary_label.text.contains("RUN ASH-1107"), "the pause menu should summarize the current run and expose its reproducible identity")
 	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
 	var state_before_record: Dictionary = app.game_view.state.serialize()
@@ -784,7 +795,7 @@ func _run() -> void:
 	app._show_pause()
 	await process_frame
 	_expect(app.pause_eyebrow_label.text == "FINAL REPORT" and app.pause_title_label.text == "DEBRIEF OPTIONS", "opening session options from results should use completed-run framing")
-	_expect(app.pause_detail_label.text.contains("march has ended") and app.resume_button.text == "RETURN TO DEBRIEF" and app.pause_save_button.text == "SAVE RESULT" and app.restart_button.text == "PLAY AGAIN" and app.pause_hint_label.text.contains("returns to debrief"), "the completed-run overlay should describe its actual return, save, and replay actions")
+	_expect(app.pause_detail_label.text.contains("march has ended") and app.resume_button.text == "RETURN TO DEBRIEF" and app.pause_order_button.text == "GO TO FEEDBACK" and app.pause_save_button.text == "SAVE RESULT" and app.restart_button.text == "PLAY AGAIN" and app.pause_hint_label.text.contains("returns to debrief"), "the completed-run overlay should describe its actual return, feedback, save, and replay actions")
 	_expect(app.pause_save_status_label.text.contains("result is not saved yet") and app.pause_save_status_label.text.contains("Save Result"), "an unsaved debrief should name the result-specific persistence action instead of asking for another campaign decision")
 	app.restart_button.pressed.emit()
 	await process_frame
@@ -792,9 +803,12 @@ func _run() -> void:
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
 	_expect(not app.confirmation_view.visible and app.pause_view.visible and app.restart_button.has_focus() and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "cancelling a debrief-options replay should return focus to the paused overlay")
-	app.resume_button.pressed.emit()
+	var paused_result_state: Dictionary = app.game_view.state.serialize()
+	app.pause_order_button.pressed.emit()
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.state.phase == "results", "returning from debrief options should preserve the completed result")
+	await process_frame
+	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from debrief options at the required result action")
+	_expect(app._saved_values_match(paused_result_state, app.game_view.state.serialize()), "Go to Feedback should preserve the completed result without opening the form")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Replay Ashgate Lowlands?" and app.confirmation_confirm_button.text == "PLAY AGAIN" and app.confirmation_cancel_button.text == "KEEP RESULT", "Play Again should require an explicit chapter-aware result-preserving confirmation")
