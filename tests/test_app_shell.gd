@@ -230,6 +230,11 @@ func _run() -> void:
 	_expect(app.pause_save_status_label.text.begins_with("Saved."), "the pause menu should confirm a successful save")
 	_expect(app.title_button.text == "RETURN TO TITLE", "saving should make the safe return action explicit")
 	_expect(not app.title_button.has_theme_stylebox_override("normal"), "saving should remove the destructive warning treatment from Return to Title")
+	app.autosave_enabled = false
+	app._refresh_pause_summary()
+	_expect(app.pause_save_status_label.text.begins_with("Current decision is saved") and app.pause_save_status_label.text.contains("autosave remains off"), "an autosave-disabled pause should still acknowledge a matching manual save")
+	app.autosave_enabled = true
+	app._refresh_pause_summary()
 	app.title_button.pressed.emit()
 	await process_frame
 	await process_frame

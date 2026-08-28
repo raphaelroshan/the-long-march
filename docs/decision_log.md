@@ -543,3 +543,7 @@ An after-action receipt remains above the fold while the player is deciding what
 ## 2026-08-28 — Authored events own the blocking instruction
 
 When a road event prevents departure, the above-fold receipt now names that event and asks for a response instead of continuing to headline the encounter that has already ended. The exact event consequence still replaces it after the choice, preserving the decision-to-result chain without letting historical combat copy mask the current blocker.
+
+## 2026-08-28 — Manual saves remain explicit when autosave is off
+
+The pause status now evaluates whether the live run matches the local save before warning about disabled autosave. A matching manual checkpoint is acknowledged as saved while still noting that future decisions will not checkpoint automatically; only changed or never-saved state asks the player to use Save March.
