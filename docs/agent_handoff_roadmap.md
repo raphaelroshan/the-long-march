@@ -1,12 +1,12 @@
 # The Long Road — GPT-Agent Handoff Roadmap
 
 **Project repository:** The Long March
-**Game identity:** The Long Road, a moving-fortress crawler
-**Current code baseline:** `0.3.0-alpha.223` at `285144c`
-**Current playable slice:** Ashgate Lowlands, Ashgate Depot to Meridian Pass
+**Game identity:** The Long March, a moving-fortress strategy roguelite
+**Current code baseline:** `0.3.0-alpha.267`
+**Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
-**Development posture:** Agent-first, deterministic, private/internal until human-approved alpha
+**Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
 
@@ -16,7 +16,7 @@ This document is the current handoff contract for GPT development agents. It sup
 
 ## 1. Current implementation baseline
 
-The current code proves a complete five-encounter Ashgate Lowlands journey. The player configures a 6×4 fortress chassis with two exterior mounts, accepts or declines a local contract, selects routes and travel doctrines, resolves automatic battles, uses explicit interventions, recovers at Morrowline Camp, refits the fortress, and reaches a final Meridian Pass battle.
+The current code proves two isolated five-encounter journeys: Ashgate Lowlands and Flooded Veyru. The player configures a 6×4 fortress chassis with two exterior mounts, accepts or declines a regional contract, selects routes and travel doctrines, resolves automatic battles, uses explicit interventions, recovers mid-run, refits the fortress, and reaches a distinct final contact and debrief in each chapter.
 
 The implemented slice includes the following capabilities:
 
@@ -25,18 +25,18 @@ The implemented slice includes the following capabilities:
 | Fortress construction | Shape-aware module placement, rotation where supported, overlap checks, grid bounds, exterior mount limits, removal, and dependency reporting. |
 | Operating systems | Power, heat, mass, fuel, hull, condition, route days, crew capacity, and trust are visible and mechanically connected. |
 | Dependencies | Fuel-to-engine, generator-to-power, ammunition-to-weapon, crew-to-workshop, signal-to-forecast, and parts-to-repair relationships are evaluated explicitly. |
-| Threats | Road Raiders, Climbers, Burrowers, Storm Front pressure, and Siege Beast finale behavior are implemented in the Ashgate journey. |
+| Threats | Ashgate implements Road Raiders, Climbers, Burrowers, Storm Fronts, and the Siege Beast; Veyru adds Flood Surge and the Civic Guardian through the same combat engine. |
 | Battle | Automatic step-based encounters expose target selection, arrival/contact, response, damage, retreat, interventions, repair, and causal reporting. |
 | Interventions | Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo are explicit commands with visible trade-offs. |
-| Route map | Ashgate Lowlands has an authored branching graph with known, forecast, and unscouted information, visible closure pressure, route costs, and guaranteed forward progress. |
-| Settlements | Ashgate Depot and Morrowline Camp provide contract, service, recruit, refit, salvage, repair, fuel, and recovery decisions. |
-| Character | Iven Pell is recruitable and changes forecasting, route safety, storm mitigation, and Signal Causeway availability. Other specialists remain designed extension points. |
-| Recovery | Non-final defeats retreat to the last secured node with explicit time, money, pressure, and limping-state costs. Meridian Pass is the declared final commitment. |
+| Route map | Ashgate Lowlands and Flooded Veyru have separate authored graphs with known, forecast, and unscouted information, visible regional pressure, route costs, and guaranteed recovery paths. |
+| Settlements | Ashgate Depot, Morrowline Camp, Lantern Quay, and Evacuation Camp expose chapter-specific contracts, services, refit, fuel, and recovery decisions. |
+| Character | Iven Pell changes forecasting and route safety; Mara Flint changes workshop recovery and a later route consequence. Other specialists remain designed extension points. |
+| Recovery | Non-final defeats retreat to a valid regional anchor with explicit time, money, pressure, and limping-state costs. Meridian Pass and the Dry Archive are declared final commitments. |
 | Persistence | Versioned saves, backup recovery, incompatible-save handling, isolated profiles, local playtest notes, and explicit Continue/New Run behavior exist. |
 | Presentation | The fortress remains the main decision surface. The UI shows modules, dependencies, route state, threat forecast, encounter progress, services, receipts, and debrief information. |
 | Packaging | Local and CI verification includes Godot tests, policy/content checks, Windows/macOS export scripts, packaged smoke coverage, offline boundaries, input, scaling, pause, save path, and teardown checks. |
 
-The implemented journey is deliberately narrow. Later regions, a complete cargo economy, a broad faction simulation, a full character-campaign system, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
+The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
 
 ---
 
@@ -496,6 +496,8 @@ Start with three operational events, one optional meeting, one rare occurrence, 
 
 ### Long Road 5 — Flooded Veyru chapter
 
+**Status:** Complete in `0.3.0-alpha.234`.
+
 **Objective:** Add the first new region with a distinct physical identity.
 
 Implement one authored map graph, one settlement, one new pressure, four or five encounters, one contract, one recovery route, and a final commitment. Reuse the fortress simulation; do not build a second combat engine.
@@ -503,6 +505,8 @@ Implement one authored map graph, one settlement, one new pressure, four or five
 **Exit gate:** Ashgate and Veyru require visibly different fortress designs and route decisions, and both remain playable as isolated chapters.
 
 ### Long Road 6 — Regional consequences
+
+**Status:** Complete for the first bounded development in `0.3.0-alpha.235`.
 
 **Objective:** Connect one completed journey to one regional development.
 
@@ -512,6 +516,8 @@ A settlement, route, or faction should change because of a previous contract, re
 
 ### Long Road 7 — Campaign structure and replay
 
+**Status:** First bounded two-chapter shell complete in `0.3.0-alpha.236`; broader campaign structure remains future work.
+
 **Objective:** Add a small campaign layer over at least two proven regions.
 
 Use route history, contracts, regional developments, specialist arcs, and bounded unlocks. Prefer new choices, facilities, relationships, and information patterns over permanent numerical power.
@@ -519,6 +525,8 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 **Exit gate:** The campaign makes individual journeys more meaningful rather than disposable, and a completed run offers a concrete reason to replay.
 
 ### Long Road 8 — Private alpha hardening
+
+**Status:** In progress; save-aware close, explicit Charter reset, validated Continue backup recovery, pause-accessible contextual playtest notes, bounded large-text support, clean first-launch reset, a controller-accessible feedback export handoff, persistent interface-audio feedback, a bounded high-contrast mode, a controller confirm/cancel convention preference, in-game build/local-data transparency, action-aware title journey previews, a pause-accessible March Record, current-order focus recovery, phase-aware Field Briefing navigation, separate pause return/reorientation paths, a grouped focus-aware Settings hierarchy, direct two-chapter Field Guide launches, explicit saved-versus-discarded title return receipts, distinct passive chassis inspection versus active edit presentation, collision-safe and phase-aware checkpoint receipts, phase-aware battle/debrief chassis review, an inspect-first debrief handoff, fitted phase-labelled chassis detail copy, a fixed pointer-accessible stage header, exact pointer-Pause resume restoration, consistent playtest-build identity, clean route-section focus anchoring, unclipped battle-order focus, and explicit event-to-next-action handoffs are complete through `0.3.0-alpha.267`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 
@@ -626,14 +634,26 @@ Implement Mara Flint through one three-event authored chain: meeting, repair-ver
 
 #### Feed D — Bounded occurrence scheduler
 
+**Status:** Complete in `0.3.0-alpha.233`.
+
 ```text
 Implement a seeded occurrence scheduler with one primary event per phase, hard eligibility filters, cooldowns, repeat policy, bounded history, named random stream, and save-safe active state. Start with three operational events and one optional meeting. Preserve at least one visible counter for every tested seed. Do not add procedural prose generation or an unbounded event graph.
 ```
 
 #### Feed E — Flooded Veyru
 
+**Status:** Complete in `0.3.0-alpha.234`.
+
 ```text
 Implement Flooded Veyru as an isolated authored chapter using the existing fortress state and map contracts. Add one new pressure, one settlement, two viable route branches, one contract, a guaranteed recovery path, an isolated teaching encounter, a combination encounter, and a final commitment. Add deterministic route, save, UI, and balance tests. Do not build the full five-region campaign.
+```
+
+#### Feed F — Regional consequence
+
+**Status:** Complete in `0.3.0-alpha.235` through Public Archive Signal.
+
+```text
+Connect one completed Ashgate or Flooded Veyru decision to one visible regional development. Persist one small migration-safe consequence, show its cause on the map and in the debrief, and make it change a later option rather than grant a flat permanent stat bonus. Do not build the full campaign layer in the same change.
 ```
 
 ### Response format required from every agent
@@ -662,7 +682,7 @@ One bounded follow-up, not a broad feature list.
 
 ## 9. Release and private-alpha discipline
 
-The repository is private and should remain internal until the human owner approves a broader test release.
+The source repository is public by owner decision. Playtest executables, storefront claims, credentials, and promoted releases remain human-controlled until the owner approves a broader test release.
 
 Before commit, the agent must run:
 
@@ -869,13 +889,19 @@ The Long Road should grow by making the moving fortress more legible, more conse
 
 ### Task 1: Dependency comprehension card
 
+**Status:** Complete.
+
 Improve one existing module inspector so it names the module’s direct dependency, current state, next likely failure, and one legal counter. Add one UI regression and one state-preservation test. This task is the best immediate UX investment because it strengthens every future module.
 
 ### Task 2: Water Condenser teaching slice
 
+**Status:** Complete in `0.3.0-alpha.231`.
+
 Add Water Condenser to the Ashgate or a small isolated test scenario. It should reduce supply drain, add heat, require maintenance, and open one route option. Pair it with one weather or arid-road threat. Test a cool/light layout and a heavy/safe layout rather than declaring one correct answer.
 
 ### Task 3: Mara Flint recovery chain
+
+**Status:** Complete in `0.3.0-alpha.232`.
 
 Add Mara through an event at Morrowline or a route-side workshop. Her choices should make the player decide between repair efficiency, refuge capacity, and salvage. End the chain with a later report that names the consequence of the first decision. This provides the first bridge from mechanical event to character arc without requiring a campaign overhaul.
 

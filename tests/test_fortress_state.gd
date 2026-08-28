@@ -10,6 +10,7 @@ func _init() -> void:
 	_test_rotation_reposition_and_removal()
 	_test_exterior_mount_rules()
 	_test_dependency_graph()
+	_test_water_condenser_foundation()
 	_test_mass_and_power()
 	_test_travel_and_deterministic_threat()
 	_test_intervention_and_recovery()
@@ -24,6 +25,14 @@ func _init() -> void:
 	_test_campaign_graph_and_visibility()
 	_test_campaign_contract_and_specialist()
 	_test_campaign_events_and_closure()
+	_test_water_condenser_route_unlock()
+	_test_water_condenser_threat_and_recovery()
+	_test_mara_flint_event_chain()
+	_test_bounded_occurrence_scheduler()
+	_test_flooded_veyru_region_state()
+	_test_flooded_veyru_threats_and_contract()
+	_test_veyru_public_archive_signal()
+	_test_complete_flooded_veyru_campaign()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
 	_test_campaign_recoverable_failure()
@@ -99,7 +108,7 @@ func _test_dependency_graph() -> void:
 	comparison_state.choose_guard_contract(false)
 	var comparison_before: Dictionary = comparison_state.serialize()
 	var route_comparison := comparison_state.campaign_route_comparison()
-	_expect(route_comparison.size() == 2 and route_comparison[0].has("days") and route_comparison[0].has("fuel") and route_comparison[0].has("pressure_gain") and route_comparison[0].has("next_stops"), "route comparison should expose the required planning facts for every available road")
+	_expect(route_comparison.size() == 2 and route_comparison[0].has("days") and route_comparison[0].has("fuel") and route_comparison[0].has("risk_band") and route_comparison[0].has("pressure_gain") and route_comparison[0].has("next_stops"), "route comparison should expose the required planning facts for every available road")
 	_expect(comparison_state.serialize() == comparison_before, "reading the route comparison must not mutate authoritative campaign state")
 
 	var weapon_state := LongMarchState.new(1107)
@@ -124,6 +133,42 @@ func _test_dependency_graph() -> void:
 	_expect(signal_state.dependency_status_at(Vector2i(2, 1)).state == "strained", "interior signal without exterior visibility should have a broad forecast")
 	signal_state.place_module("wall_lamp", Vector2i(2, 2), true)
 	_expect(signal_state.dependency_status_at(Vector2i(2, 1)).state == "ready", "adjacent exterior signal should provide visibility")
+
+func _test_water_condenser_foundation() -> void:
+	var state := LongMarchState.new(1107)
+	var placed := state.place_module("water_condenser", Vector2i(4, 1))
+	_expect(placed.ok, "Water Condenser should fit as a two-cell interior sustain module")
+	_expect(Vector2i(5, 1) in state.occupied_cells(state.modules[0]), "unrotated Water Condenser should occupy two horizontal cells")
+	var rotated := state.reposition_module_at(Vector2i(4, 1), Vector2i(5, 1), true)
+	_expect(rotated.ok and Vector2i(5, 2) in state.occupied_cells(state.modules[0]), "Water Condenser should rotate into a vertical footprint")
+	state.reposition_module_at(Vector2i(5, 1), Vector2i(4, 1), false)
+	_expect(state.dependency_status_at(Vector2i(4, 1)).state == "strained", "a powered Water Condenser without workshop access should be strained")
+	state.place_module("generator_core", Vector2i(0, 0))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("crew_quarters", Vector2i(2, 0))
+	_expect(state.dependency_status_at(Vector2i(4, 1)).state == "ready", "an adjacent operational Field Workshop should ready the Water Condenser")
+	var before_card: Dictionary = state.serialize()
+	var card := state.module_dependency_card(state.module_at(Vector2i(4, 1)))
+	_expect(String(card.get("direct_dependency", "")).contains("Field Workshop") and String(card.get("next_failure", "")).contains("Dry Cistern Cut") and String(card.get("legal_counter", "")).contains("Field Workshop"), "Water Condenser dependency card should explain maintenance, route loss, and recovery")
+	_expect(state.serialize() == before_card, "reading the Water Condenser dependency card must not mutate fortress state")
+	state.seed_starter_inventory()
+	_expect(state.stored_module_count("water_condenser") == 0, "starter inventory should not duplicate an installed Water Condenser")
+	var stored_state := LongMarchState.new(1107)
+	stored_state.seed_starter_inventory()
+	_expect(stored_state.stored_module_count("water_condenser") == 1, "starter inventory should include one Water Condenser")
+	for stored in stored_state.stored_modules:
+		if String(stored.get("id", "")) == "water_condenser":
+			stored["durability"] = 2
+			stored["rotated"] = true
+	var restored := LongMarchState.new(0)
+	var load_result := restored.load_serialized(stored_state.serialize())
+	_expect(bool(load_result.get("ok", false)), "a checkpoint containing the Water Condenser should load")
+	var restored_condenser: Dictionary = {}
+	for stored in restored.stored_modules:
+		if String(stored.get("id", "")) == "water_condenser":
+			restored_condenser = stored
+			break
+	_expect(int(restored_condenser.get("durability", 0)) == 2 and bool(restored_condenser.get("rotated", false)), "Water Condenser identity, damage, and rotation should survive save/load")
 
 func _test_mass_and_power() -> void:
 	var state := LongMarchState.new(1107)
@@ -436,6 +481,24 @@ func _test_save_round_trip() -> void:
 	unknown_phase_save["phase"] = "lost_between_roads"
 	var unknown_phase_load := LongMarchState.new(0).load_serialized(unknown_phase_save)
 	_expect(not bool(unknown_phase_load.get("ok", false)) and String(unknown_phase_load.get("reason", "")).contains("unknown campaign phase"), "unknown campaign phases should be rejected before state mutation")
+	var unknown_event_save := state.serialize()
+	unknown_event_save["campaign_event_pending"] = "invented_meeting"
+	var unknown_event_load := LongMarchState.new(0).load_serialized(unknown_event_save)
+	_expect(not bool(unknown_event_load.get("ok", false)) and String(unknown_event_load.get("reason", "")).contains("unknown active campaign event"), "unknown active campaign events should be rejected safely")
+	var unknown_specialist_save := state.serialize()
+	unknown_specialist_save["specialist_id"] = "miracle_mechanic"
+	var unknown_specialist_load := LongMarchState.new(0).load_serialized(unknown_specialist_save)
+	_expect(not bool(unknown_specialist_load.get("ok", false)) and String(unknown_specialist_load.get("reason", "")).contains("unknown specialist"), "unknown specialist IDs should be rejected safely")
+	var version_four_save := state.serialize()
+	version_four_save["save_version"] = 4
+	version_four_save.erase("mara_repaired_module_id")
+	var version_four_restore := LongMarchState.new(0)
+	_expect(bool(version_four_restore.load_serialized(version_four_save).get("ok", false)) and version_four_restore.mara_repaired_module_id.is_empty(), "version-four checkpoints should migrate with no Mara repair target")
+	var missing_mara_target_save := state.serialize()
+	missing_mara_target_save["specialist_id"] = "mara_flint"
+	missing_mara_target_save["campaign_decisions"] = {"mara_meeting": "recruit_mara", "mara_workbench_choice": "rebuild_weakest"}
+	var missing_mara_target_load := LongMarchState.new(0).load_serialized(missing_mara_target_save)
+	_expect(not bool(missing_mara_target_load.get("ok", false)) and String(missing_mara_target_load.get("reason", "")).contains("missing its system target"), "Mara repair checkpoints should reject a missing repaired-system reference")
 	var inactive_battle_save := state.serialize()
 	inactive_battle_save["phase"] = "battle"
 	var inactive_battle_load := LongMarchState.new(0).load_serialized(inactive_battle_save)
@@ -575,6 +638,7 @@ func _test_campaign_events_and_closure() -> void:
 	_expect(state.money == money_before + 8 and state.campaign_pressure == pressure_before + 1, "breaking the toll should recover coin and increase closure pressure")
 	var morrowline_result := _campaign_battle(state, "morrowline_camp")
 	_expect(bool(morrowline_result.get("resolved", false)) and state.phase == "settlement", "the Soot Orchard and Red Wheel path should reach Morrowline after three encounters")
+	_expect(state.campaign_event_pending == "mara_meeting" and bool(state.resolve_campaign_event("decline_mara").get("ok", false)), "a free specialist berth should surface Mara's offer at Morrowline and allow a clean decline")
 
 	var refuge_state := LongMarchState.new(1107)
 	refuge_state.place_module("refugee_bunk", Vector2i(0, 0))
@@ -603,6 +667,554 @@ func _test_campaign_events_and_closure() -> void:
 	state.specialist_id = "iven_pell"
 	_expect(not state.campaign_node_closed("signal_causeway"), "Iven should keep the Signal Causeway readable at Break pressure")
 	_expect(state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "reliable forecasting should restore both Morrowline departures")
+
+func _install_mara_loadout(state: LongMarchState, include_refuge: bool = true) -> void:
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("parts_crate", Vector2i(4, 1))
+	if include_refuge:
+		state.place_module("refugee_bunk", Vector2i(4, 2))
+	state.seed_starter_inventory()
+
+func _arrive_at_morrowline_for_mara(state: LongMarchState) -> void:
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	state.campaign_path = ["ashgate_depot", "rill_crossing", "broken_relay"]
+	state.campaign_last_safe_node = "broken_relay"
+	state.current_location = "broken_relay"
+	state.journey_node = "broken_relay"
+	state.campaign_encounters_completed = 2
+	state.campaign_target_node = "morrowline_camp"
+	state.current_location = "morrowline_camp"
+	state.journey_node = "morrowline_camp"
+	state._finish_campaign_encounter(true)
+
+func _test_mara_flint_event_chain() -> void:
+	var unqualified := LongMarchState.new(1107)
+	unqualified.campaign_active = true
+	unqualified.current_location = "morrowline_camp"
+	unqualified.journey_node = "morrowline_camp"
+	unqualified.phase = "settlement"
+	unqualified.campaign_event_pending = "mara_meeting"
+	var locked_offer := unqualified.campaign_event_details()
+	_expect(not bool(locked_offer.choices[0].enabled) and String(locked_offer.choices[0].reason).contains("Field Workshop"), "Mara's offer should name the missing operational workshop requirement")
+	_expect(bool(unqualified.resolve_campaign_event("decline_mara").get("ok", false)) and unqualified.specialist_id.is_empty() and unqualified.campaign_event_pending.is_empty(), "declining Mara should keep the specialist berth open and end her chain")
+
+	var repair_state := LongMarchState.new(1107)
+	_install_mara_loadout(repair_state)
+	repair_state.modules[repair_state._module_index_by_id("steam_lance_engine")]["durability"] = 2
+	_arrive_at_morrowline_for_mara(repair_state)
+	_expect(repair_state.campaign_event_pending == "mara_meeting", "Mara's meeting should trigger after the third encounter at Morrowline")
+	var meeting_restore := LongMarchState.new(0)
+	_expect(bool(meeting_restore.load_serialized(repair_state.serialize()).get("ok", false)) and meeting_restore.campaign_event_pending == "mara_meeting", "an active Mara meeting should survive save/load")
+	var recruited := repair_state.resolve_campaign_event("recruit_mara")
+	_expect(bool(recruited.get("ok", false)) and repair_state.specialist_id == "mara_flint" and repair_state.campaign_event_pending == "mara_workbench_choice", "accepting Mara should fill the specialist berth and advance to the forge-core choice")
+	var workbench_restore := LongMarchState.new(0)
+	_expect(bool(workbench_restore.load_serialized(repair_state.serialize()).get("ok", false)) and workbench_restore.campaign_event_pending == "mara_workbench_choice" and workbench_restore.specialist_id == "mara_flint", "the active Mara workbench choice should survive save/load")
+	var workbench := repair_state.campaign_event_details()
+	_expect(String(workbench.choices[0].label).contains("Steam Lance Engine") and String(workbench.choices[0].effect).contains("Day +1") and String(workbench.choices[1].effect).contains("damage -1"), "the forge-core event should preview its exact repair target, delay, and refuge alternative")
+	var day_before := repair_state.day
+	var pressure_before := repair_state.campaign_pressure
+	var rebuilt := repair_state.resolve_campaign_event("rebuild_weakest")
+	_expect(bool(rebuilt.get("ok", false)) and int(repair_state.module_at(Vector2i(0, 0)).durability) == 4 and repair_state.day == day_before + 1 and repair_state.campaign_pressure == pressure_before + 1, "Mara should rebuild the deterministic weakest system for a visible day and pressure cost")
+	_expect(repair_state.mara_repaired_module_id == "steam_lance_engine" and not bool(repair_state.resolve_campaign_event("brace_refuge").get("ok", false)), "resolving the one-core choice should record its target and make the alternative unavailable")
+	_expect(repair_state._workshop_repair_amount() == 3, "Mara plus connected parts should raise field repair from two durability to three")
+	repair_state.modules[repair_state._module_index_by_id("crew_quarters")]["durability"] = 1
+	var service_preview := repair_state.settlement_repair_preview("crew_quarters")
+	_expect(int(service_preview.restored) == 3 and int(service_preview.cost) == 8 and int(service_preview.mara_bonus) == 1, "Mara's settlement preview should add one free durability without increasing the two-point price")
+	var service_result := repair_state.settlement_repair("crew_quarters")
+	_expect(bool(service_result.get("ok", false)) and int(repair_state.module_at(Vector2i(2, 2)).durability) == 4 and String(service_result.get("message", "")).contains("Mara Flint"), "Morrowline service should apply and explain Mara's extra repair point")
+	repair_state.campaign_target_node = "lower_ash_road"
+	repair_state.current_location = "lower_ash_road"
+	repair_state.journey_node = "lower_ash_road"
+	repair_state._finish_campaign_encounter(true)
+	_expect(repair_state.campaign_event_pending == "mara_followup", "Mara's later callback should block departure after the fourth road")
+	var followup_restore := LongMarchState.new(0)
+	_expect(bool(followup_restore.load_serialized(repair_state.serialize()).get("ok", false)) and followup_restore.campaign_event_pending == "mara_followup" and followup_restore.mara_repaired_module_id == "steam_lance_engine", "the active Mara callback and repaired system should survive save/load")
+	var callback_pressure := repair_state.campaign_pressure
+	var callback := repair_state.resolve_campaign_event(String(repair_state.mara_followup_preview().get("choice_id", "")))
+	_expect(bool(callback.get("ok", false)) and repair_state.campaign_pressure == maxi(0, callback_pressure - 1) and String(callback.get("message", "")).contains("repair held"), "an operational repaired system should pay off in the later callback by recovering one pressure")
+	_expect(repair_state.mara_debrief_line().contains("Steam Lance Engine") and repair_state.mara_debrief_line().contains("recovered 1 pressure"), "Mara's repair debrief should preserve the chosen system and later consequence")
+
+	var refuge_state := LongMarchState.new(1107)
+	_install_mara_loadout(refuge_state)
+	_arrive_at_morrowline_for_mara(refuge_state)
+	refuge_state.resolve_campaign_event("recruit_mara")
+	var braced := refuge_state.resolve_campaign_event("brace_refuge")
+	_expect(bool(braced.get("ok", false)) and refuge_state.mara_refuge_bracing_active(), "the forge core should be spendable on persistent Refugee Bunk bracing")
+	refuge_state.encounter_target_doctrine = "run_hot"
+	var bunk_preview := refuge_state.encounter_enemy_impact_preview({"id": "road_raiders", "arrived": true, "defeated": false, "target": "refugee_bunk", "damage_bonus": 0})
+	_expect(int(bunk_preview.get("damage", -1)) == 0 and String(bunk_preview.get("mara_effect", "")) == "refuge_bracing", "Mara's bracing should reduce each Refugee Bunk hit by one and expose that mitigation in the preview")
+	refuge_state.campaign_target_node = "signal_causeway"
+	refuge_state.current_location = "signal_causeway"
+	refuge_state.journey_node = "signal_causeway"
+	refuge_state._finish_campaign_encounter(true)
+	var trust_before := refuge_state.settlement_trust
+	var shelter_before := refuge_state.shelter_tendency
+	var refuge_callback := refuge_state.resolve_campaign_event(String(refuge_state.mara_followup_preview().get("choice_id", "")))
+	_expect(bool(refuge_callback.get("ok", false)) and refuge_state.settlement_trust == trust_before + 1 and refuge_state.shelter_tendency == shelter_before + 1, "an operational braced bunk should earn the promised trust and Shelter callback")
+	_expect(refuge_state.mara_debrief_line().contains("Refugee Bunk") and refuge_state.mara_debrief_line().contains("1 trust"), "Mara's refuge debrief should preserve the physical commitment and earned trust")
+	var failed_refuge := LongMarchState.new(1107)
+	_install_mara_loadout(failed_refuge)
+	_arrive_at_morrowline_for_mara(failed_refuge)
+	failed_refuge.resolve_campaign_event("recruit_mara")
+	failed_refuge.resolve_campaign_event("brace_refuge")
+	failed_refuge.modules[failed_refuge._module_index_by_id("refugee_bunk")]["durability"] = 0
+	failed_refuge.campaign_target_node = "dry_cistern_cut"
+	failed_refuge.current_location = "dry_cistern_cut"
+	failed_refuge.journey_node = "dry_cistern_cut"
+	failed_refuge._finish_campaign_encounter(true)
+	var failed_followup := failed_refuge.mara_followup_preview()
+	var failed_trust := failed_refuge.settlement_trust
+	_expect(String(failed_followup.get("choice_id", "")) == "record_refuge_failed" and String(failed_followup.get("effect", "")).contains("not operational"), "the later callback should preview failure when the braced bunk did not remain operational")
+	_expect(bool(failed_refuge.resolve_campaign_event("record_refuge_failed").get("ok", false)) and failed_refuge.settlement_trust == failed_trust and failed_refuge.mara_debrief_line().contains("not operational"), "a failed refuge commitment should grant no hidden trust and remain explicit in the debrief")
+
+	var first := LongMarchState.new(1107)
+	var second := LongMarchState.new(1107)
+	for replay_state in [first, second]:
+		_install_mara_loadout(replay_state)
+		replay_state.modules[replay_state._module_index_by_id("steam_lance_engine")]["durability"] = 2
+		_arrive_at_morrowline_for_mara(replay_state)
+		replay_state.resolve_campaign_event("recruit_mara")
+		replay_state.resolve_campaign_event("rebuild_weakest")
+		replay_state.campaign_target_node = "lower_ash_road"
+		replay_state.current_location = "lower_ash_road"
+		replay_state.journey_node = "lower_ash_road"
+		replay_state._finish_campaign_encounter(true)
+		replay_state.resolve_campaign_event(String(replay_state.mara_followup_preview().get("choice_id", "")))
+	_expect(first.serialize() == second.serialize(), "Mara's complete event chain should replay deterministically from the same state and choices")
+
+func _install_occurrence_loadout(state: LongMarchState) -> void:
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("parts_crate", Vector2i(4, 1))
+	state.place_module("refugee_bunk", Vector2i(4, 2))
+	state.modules[state._module_index_by_id("steam_lance_engine")]["durability"] = 2
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	state.campaign_encounters_completed = 1
+	state.current_location = "rill_crossing"
+	state.journey_node = "rill_crossing"
+	state.phase = "map"
+
+func _activate_occurrence(state: LongMarchState, event_id: String, phase_id: String) -> void:
+	state.campaign_event_pending = event_id
+	state.occurrence_active_phase = phase_id
+	state.occurrence_phase_history.append(phase_id)
+
+func _test_bounded_occurrence_scheduler() -> void:
+	var first := LongMarchState.new(1107)
+	var second := LongMarchState.new(1107)
+	for state in [first, second]:
+		_install_occurrence_loadout(state)
+		var candidates: Array[String] = state.occurrence_candidates("road_arrival", "rill_crossing")
+		_expect(candidates == ["boiler_heartbeat", "the_last_dry_room", "the_miller_with_a_broken_wheel"], "occurrence eligibility should filter the library by live systems before selection")
+		var scheduled: Dictionary = state.try_schedule_occurrence("road_arrival", "rill_crossing", "road_arrival_1_rill_crossing")
+		_expect(String(scheduled.get("event_id", "")) == "boiler_heartbeat", "the named occurrence stream should select the same authored incident for the fixed fixture")
+		var details: Dictionary = state.campaign_event_details()
+		var enabled_counter := false
+		for choice in details.get("choices", []):
+			enabled_counter = enabled_counter or bool(choice.get("enabled", false))
+		_expect(enabled_counter and String(details.get("title", "")).contains("Heartbeat"), "every scheduled occurrence should expose at least one enabled counter in the existing event card")
+	_expect(first.campaign_event_pending == second.campaign_event_pending and first.occurrence_stream_cursor == second.occurrence_stream_cursor and first.occurrence_phase_history == second.occurrence_phase_history, "identical seeds and eligible state should produce identical occurrence selection state")
+	var active_restore := LongMarchState.new(0)
+	_expect(bool(active_restore.load_serialized(first.serialize()).get("ok", false)) and active_restore.campaign_event_pending == "boiler_heartbeat" and active_restore.occurrence_active_phase == "road_arrival_1_rill_crossing" and active_restore.occurrence_stream_cursor == 1, "an active occurrence and its named-stream cursor should survive save/load")
+	var cursor_before := first.occurrence_stream_cursor
+	var pressure_before := first.campaign_pressure
+	var resolved := first.resolve_campaign_event("inspect_boiler")
+	_expect(bool(resolved.get("ok", false)) and first.day == 2 and first.campaign_pressure == pressure_before + 1 and int(first.modules[first._module_index_by_id("steam_lance_engine")].durability) == 3, "the boiler inspection should repair the named engine for its visible time and pressure cost")
+	_expect(first.occurrence_history.size() == 1 and first.occurrence_active_phase.is_empty() and String(first.occurrence_history[0].choice_id) == "inspect_boiler", "resolving an occurrence should append one typed audit record and clear active state")
+	var repeated_phase := first.try_schedule_occurrence("road_arrival", "rill_crossing", "road_arrival_1_rill_crossing")
+	_expect(String(repeated_phase.get("event_id", "")).is_empty() and first.occurrence_stream_cursor == cursor_before, "an evaluated phase should not reroll after resolution or reload")
+	_expect(not bool(first.occurrence_eligibility("boiler_heartbeat", "road_arrival", "lower_ash_road").eligible), "a repeatable occurrence should respect its encounter cooldown")
+	first.campaign_encounters_completed = 4
+	_expect(bool(first.occurrence_eligibility("boiler_heartbeat", "road_arrival", "lower_ash_road").eligible), "a repeatable occurrence should become eligible again after its cooldown")
+
+	var dry_room := LongMarchState.new(1107)
+	_install_occurrence_loadout(dry_room)
+	_activate_occurrence(dry_room, "the_last_dry_room", "manual_dry_room")
+	var parts_before := int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability)
+	_expect(bool(dry_room.resolve_campaign_event("shelter_in_dry_room").get("ok", false)) and dry_room.settlement_trust == 2 and dry_room.shelter_tendency == 1 and int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability) == parts_before - 1, "the dry-room shelter choice should exchange physical repair stock for trust and refuge capacity")
+	_expect(not bool(dry_room.occurrence_eligibility("the_last_dry_room", "road_arrival", "lower_ash_road").eligible), "a one-shot occurrence should not repeat after resolution")
+
+	var lift := LongMarchState.new(1107)
+	lift.place_module("steam_lance_engine", Vector2i(0, 0))
+	lift.place_module("coal_cell", Vector2i(0, 1))
+	lift.place_module("generator_core", Vector2i(2, 0))
+	lift.place_module("ammunition_lift", Vector2i(2, 1))
+	lift.place_module("repeater_gun", Vector2i(3, 2), true)
+	lift.start_campaign()
+	lift.choose_guard_contract(false)
+	lift.campaign_encounters_completed = 1
+	_activate_occurrence(lift, "lift_chain_sings", "manual_lift")
+	var lift_before := int(lift.modules[lift._module_index_by_id("ammunition_lift")].durability)
+	_expect(bool(lift.resolve_campaign_event("carry_lift_load").get("ok", false)) and int(lift.modules[lift._module_index_by_id("ammunition_lift")].durability) == lift_before - 1, "the lift incident should make dependency strain explicit and recoverable")
+
+	var miller := LongMarchState.new(1107)
+	_install_occurrence_loadout(miller)
+	_activate_occurrence(miller, "the_miller_with_a_broken_wheel", "manual_miller")
+	var workshop_before := int(miller.modules[miller._module_index_by_id("field_workshop")].durability)
+	_expect(bool(miller.resolve_campaign_event("lend_workshop_bench").get("ok", false)) and miller.fuel == 7 and miller.settlement_trust == 1 and int(miller.modules[miller._module_index_by_id("field_workshop")].durability) == workshop_before - 1, "the optional meeting should trade workshop condition and time for fuel and trust without creating a recruit state")
+
+	var seen_results: Dictionary = {}
+	for world_seed in range(1, 33):
+		var seeded := LongMarchState.new(world_seed)
+		_install_occurrence_loadout(seeded)
+		var seeded_result := seeded.try_schedule_occurrence("road_arrival", "rill_crossing", "seed_audit")
+		var event_id := String(seeded_result.get("event_id", ""))
+		seen_results[event_id] = true
+		if not event_id.is_empty():
+			var has_counter := false
+			for choice in seeded.campaign_event_details().get("choices", []):
+				has_counter = has_counter or bool(choice.get("enabled", false))
+			_expect(has_counter, "every tested seed that selects an occurrence should preserve one visible legal counter")
+	_expect(seen_results.size() >= 3 and seen_results.has(""), "the named stream should produce multiple authored results and intentional quiet phases across tested seeds")
+
+	var bounded := LongMarchState.new(1107)
+	for index in range(LongMarchState.OCCURRENCE_HISTORY_LIMIT + 3):
+		bounded.occurrence_active_phase = "history_%d" % index
+		bounded._record_occurrence_resolution("lift_chain_sings", "carry_lift_load")
+	_expect(bounded.occurrence_history.size() == LongMarchState.OCCURRENCE_HISTORY_LIMIT and String(bounded.occurrence_history[0].phase_id) == "history_3", "occurrence history should discard its oldest records instead of growing without bound")
+	var malformed_history := first.serialize()
+	malformed_history["occurrence_history"] = []
+	for index in range(LongMarchState.OCCURRENCE_HISTORY_LIMIT + 1):
+		malformed_history["occurrence_history"].append({"event_id": "lift_chain_sings", "choice_id": "carry_lift_load", "phase_id": "bad_%d" % index})
+	_expect(not bool(LongMarchState.new(0).load_serialized(malformed_history).get("ok", false)), "unbounded occurrence history should be rejected before mutating restored state")
+	var version_five := first.serialize()
+	version_five["save_version"] = 5
+	for key in ["occurrence_stream", "occurrence_stream_cursor", "occurrence_active_phase", "occurrence_phase_history", "occurrence_history", "occurrence_cooldowns"]:
+		version_five.erase(key)
+	var migrated := LongMarchState.new(0)
+	_expect(bool(migrated.load_serialized(version_five).get("ok", false)) and migrated.occurrence_history.is_empty() and migrated.occurrence_stream_cursor == 0, "version-five checkpoints should migrate with an empty occurrence scheduler")
+	_expect(first.occurrence_debrief_lines()[0].contains("Boiler's Second Heartbeat") and first.occurrence_debrief_lines()[0].contains("Inspect Boiler"), "resolved occurrences should produce a concise causal debrief record")
+
+func _test_flooded_veyru_region_state() -> void:
+	var state := LongMarchState.new(2204)
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("refugee_bunk", Vector2i(4, 1))
+	state.start_flooded_veyru()
+	_expect(state.campaign_region_id == "flooded_veyru" and state.current_location == "lantern_quay" and state.campaign_path == ["lantern_quay"], "a Veyru chapter should initialize independently at Lantern Quay")
+	_expect(state.campaign_region_name() == "Flooded Veyru" and state.campaign_pressure_name() == "Rising water" and state.campaign_pressure_band() == "low_water", "Veyru should expose its regional identity and low-water pressure band")
+	_expect(state.campaign_available_nodes() == ["pump_gallery", "sunken_tramworks"] and not state.campaign_edges()["veyru_evacuation_camp"].has("pilgrim_gantry"), "low water should expose both opening routes while keeping the emergency gantry out of the normal graph")
+	var contract_status := state.veyru_medicine_contract_status()
+	_expect(bool(contract_status.get("available", false)) and String(contract_status.get("carrier_id", "")) == "refugee_bunk", "the medicine contract should reserve the operational Refugee Bunk before falling back to parts storage")
+	var accepted := state.choose_veyru_medicine_contract(true)
+	_expect(bool(accepted.get("ok", false)) and state.veyru_contract_status == "accepted" and state.veyru_medicine_carrier_id == "refugee_bunk" and state.veyru_contract_carrier_operational(), "accepting the Veyru contract should preserve its exact physical carrier")
+	state.current_location = "veyru_evacuation_camp"
+	state.journey_node = "veyru_evacuation_camp"
+	state.campaign_path.append("pump_gallery")
+	state.campaign_path.append("veyru_evacuation_camp")
+	state.campaign_last_safe_node = "veyru_evacuation_camp"
+	state.phase = "settlement"
+	state.campaign_pressure = 5
+	_expect(state.campaign_pressure_band() == "breach" and state.campaign_node_closed("drowned_registry"), "Breach water should close the low Drowned Registry branch")
+	_expect(state.campaign_available_nodes() == ["archive_causeway", "pilgrim_gantry"] and state.campaign_edges()["veyru_evacuation_camp"].has("pilgrim_gantry"), "Breach water must add Pilgrim Gantry while preserving another forward route")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.campaign_region_id == "flooded_veyru" and restored.campaign_pressure == 5 and restored.veyru_medicine_carrier_id == "refugee_bunk" and restored.campaign_available_nodes() == ["archive_causeway", "pilgrim_gantry"], "Veyru region, water pressure, graph state, and contract carrier should survive save/load")
+	var bad_region := state.serialize()
+	bad_region["campaign_region_id"] = "endless_ocean"
+	_expect(not bool(LongMarchState.new(0).load_serialized(bad_region).get("ok", false)), "unknown campaign regions should be rejected before restore")
+	var bad_carrier := state.serialize()
+	bad_carrier["veyru_medicine_carrier_id"] = "shell_cannon"
+	_expect(not bool(LongMarchState.new(0).load_serialized(bad_carrier).get("ok", false)), "the medicine contract should reject a carrier outside its authored cargo options")
+	var missing_carrier := state.serialize()
+	for index in range(missing_carrier["modules"].size() - 1, -1, -1):
+		if String(missing_carrier["modules"][index].get("id", "")) == "refugee_bunk":
+			missing_carrier["modules"].remove_at(index)
+	_expect(not bool(LongMarchState.new(0).load_serialized(missing_carrier).get("ok", false)), "an accepted medicine contract should reject a checkpoint whose reserved carrier has been removed")
+	var legacy := state.serialize()
+	legacy["save_version"] = 6
+	legacy.erase("campaign_region_id")
+	legacy.erase("veyru_contract_status")
+	legacy.erase("veyru_medicine_carrier_id")
+	legacy["campaign_path"] = ["ashgate_depot"]
+	legacy["campaign_last_safe_node"] = "ashgate_depot"
+	legacy["current_location"] = "ashgate_depot"
+	legacy["journey_node"] = "ashgate_depot"
+	var legacy_restore := LongMarchState.new(0)
+	_expect(bool(legacy_restore.load_serialized(legacy).get("ok", false)) and legacy_restore.campaign_region_id == "ashgate_lowlands" and legacy_restore.veyru_contract_status == "unoffered", "version-six checkpoints should migrate into the Ashgate region with no Veyru contract")
+	var declined := LongMarchState.new(2204)
+	declined.start_flooded_veyru()
+	_expect(bool(declined.choose_veyru_medicine_contract(false).get("ok", false)) and declined.veyru_contract_status == "declined" and declined.mobility_tendency == 1 and declined.veyru_medicine_carrier_id.is_empty(), "declining the Veyru contract should preserve capacity and record the mobility tradeoff")
+
+func _install_veyru_loadout(state: LongMarchState) -> void:
+	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "Veyru engine should install")
+	_expect(bool(state.place_module("coal_cell", Vector2i(0, 1)).get("ok", false)), "Veyru fuel should install beside the engine")
+	_expect(bool(state.place_module("generator_core", Vector2i(2, 0)).get("ok", false)), "Veyru generator should install")
+	_expect(bool(state.place_module("crew_quarters", Vector2i(2, 1)).get("ok", false)), "Veyru crew quarters should install")
+	_expect(bool(state.place_module("field_workshop", Vector2i(2, 2)).get("ok", false)), "Veyru workshop should install beside crew")
+	_expect(bool(state.place_module("water_condenser", Vector2i(2, 3)).get("ok", false)), "Veyru condenser should install beside the workshop")
+	_expect(bool(state.place_module("parts_crate", Vector2i(4, 2)).get("ok", false)), "Veyru medicine carrier should install beside the workshop")
+	state.seed_starter_inventory()
+
+func _veyru_battle(state: LongMarchState, node_id: String, doctrine: String = "protect_cargo") -> Dictionary:
+	var begun := state.begin_campaign_route(node_id, doctrine)
+	if not bool(begun.get("ok", false)):
+		return begun
+	state.use_encounter_intervention("vent_heat")
+	return state.advance_encounter(6.0)
+
+func _test_flooded_veyru_threats_and_contract() -> void:
+	var exposed := LongMarchState.new(2204)
+	exposed.place_module("refugee_bunk", Vector2i(3, 2))
+	exposed.campaign_region_id = "flooded_veyru"
+	exposed.campaign_pressure = 3
+	exposed.encounter_target_doctrine = "protect_crew"
+	var exposed_profile := exposed._encounter_damage_profile("flood_surge", "refugee_bunk")
+	_expect(int(exposed_profile.get("damage", 0)) == 2 and String(exposed_profile.get("threat_effect", "")) == "flood_pressure", "Flood Surge should add visible damage at Flooding water against an exposed carrier")
+
+	var condensed := LongMarchState.new(2204)
+	_install_water_condenser_loadout(condensed)
+	condensed.place_module("parts_crate", Vector2i(4, 2))
+	condensed.campaign_region_id = "flooded_veyru"
+	condensed.campaign_pressure = 3
+	condensed.encounter_target_doctrine = "protect_crew"
+	var condensed_profile := condensed._encounter_damage_profile("flood_surge", "parts_crate")
+	_expect(int(condensed_profile.get("damage", 0)) == 1 and String(condensed_profile.get("water_effect", "")) == "condenser_buffer", "a Ready Water Condenser should remove one Flood Surge damage without erasing the pressure rule")
+
+	var armored := LongMarchState.new(2204)
+	armored.place_module("parts_crate", Vector2i(4, 2))
+	armored.place_module("side_armor_skirt", Vector2i(5, 2))
+	armored.campaign_region_id = "flooded_veyru"
+	armored.campaign_pressure = 3
+	armored.encounter_target_doctrine = "protect_crew"
+	var armored_profile := armored._encounter_damage_profile("flood_surge", "parts_crate")
+	_expect(int(armored_profile.get("armor_absorbed", 0)) == 1 and int(armored_profile.get("damage", 0)) == 1, "a Side Armor Skirt should intercept Flood Surge before the rising-water pressure is applied")
+
+	var teaching := LongMarchState.new(2204)
+	_install_veyru_loadout(teaching)
+	teaching.start_flooded_veyru()
+	_expect(bool(teaching.choose_veyru_medicine_contract(true).get("ok", false)) and teaching.veyru_medicine_carrier_id == "parts_crate", "the Veyru fixture should reserve its exact cargo-capable Parts Crate")
+	var carrier := teaching.module_at(Vector2i(4, 2))
+	var rationale := teaching.encounter_target_rationale("flood_surge", carrier)
+	_expect(String(rationale.get("reason", "")).contains("lower-deck exposure") and String(rationale.get("reason", "")).contains("sealed medicine carrier"), "Flood Surge should explain both the carrier obligation and lower-deck exposure")
+	var opening := teaching.begin_campaign_route("pump_gallery", "protect_crew")
+	_expect(bool(opening.get("ok", false)) and teaching.encounter_enemies.size() == 1 and String(teaching.encounter_enemies[0].get("id", "")) == "flood_surge", "Pump Gallery should teach Flood Surge without hiding another contact in the composition")
+	var active_restore := LongMarchState.new(0)
+	_expect(bool(active_restore.load_serialized(teaching.serialize()).get("ok", false)) and active_restore.encounter_active and String(active_restore.encounter_enemies[0].get("id", "")) == "flood_surge", "an active Veyru teaching encounter should survive save/load")
+	var cut_loose := teaching.use_encounter_intervention("cut_loose_cargo")
+	_expect(bool(cut_loose.get("ok", false)) and String(cut_loose.get("removed_module", "")) == "parts_crate" and teaching.veyru_contract_status == "failed" and teaching.encounter_active, "losing the reserved medicine carrier should fail the contract without ending the run")
+	var failed_restore := LongMarchState.new(0)
+	_expect(bool(failed_restore.load_serialized(teaching.serialize()).get("ok", false)) and failed_restore.veyru_contract_status == "failed" and failed_restore.veyru_medicine_carrier_id == "parts_crate", "a failed medicine contract should preserve its named carrier even when that carrier was cut loose")
+
+	var sunken := LongMarchState.new(2204)
+	_install_veyru_loadout(sunken)
+	sunken.start_flooded_veyru()
+	sunken.choose_veyru_medicine_contract(true)
+	var route_choice_restore := LongMarchState.new(0)
+	_expect(bool(route_choice_restore.load_serialized(sunken.serialize()).get("ok", false)) and route_choice_restore.campaign_available_nodes() == ["pump_gallery", "sunken_tramworks"], "the answered Veyru contract and opening route choice should survive save/load")
+	var sunken_result := _veyru_battle(sunken, "sunken_tramworks", "protect_crew")
+	_expect(bool(sunken_result.get("resolved", false)) and sunken.phase == "map" and sunken.hull_condition == 9 and sunken.campaign_path.has("sunken_tramworks"), "the prepared layout should survive Sunken Tramworks while paying its visible heavy-build hull cost")
+
+	var combination := LongMarchState.new(2204)
+	_install_veyru_loadout(combination)
+	combination.start_flooded_veyru()
+	combination.choose_veyru_medicine_contract(false)
+	combination.current_location = "veyru_evacuation_camp"
+	combination.journey_node = "veyru_evacuation_camp"
+	combination.phase = "settlement"
+	combination.campaign_path = ["lantern_quay", "pump_gallery", "veyru_evacuation_camp"]
+	combination.campaign_last_safe_node = "veyru_evacuation_camp"
+	combination.campaign_pressure = 2
+	var registry := combination.begin_campaign_route("drowned_registry", "protect_crew")
+	_expect(bool(registry.get("ok", false)) and combination.encounter_enemies.size() == 2 and String(combination.encounter_enemies[0].get("id", "")) == "flood_surge" and String(combination.encounter_enemies[1].get("id", "")) == "climbers", "Drowned Registry should expose the authored Flood Surge and Climbers combination")
+
+	var replay_a := LongMarchState.new(2204)
+	var replay_b := LongMarchState.new(2204)
+	for replay_state in [replay_a, replay_b]:
+		_install_veyru_loadout(replay_state)
+		replay_state.start_flooded_veyru()
+		replay_state.choose_veyru_medicine_contract(true)
+		_veyru_battle(replay_state, "pump_gallery", "protect_cargo")
+	_expect(replay_a.encounter_report == replay_b.encounter_report and replay_a.modules == replay_b.modules and replay_a.hull_condition == replay_b.hull_condition and replay_a.campaign_pressure == replay_b.campaign_pressure, "the Veyru teaching route should replay deterministically from the same seed, layout, contract, doctrine, and order")
+
+func _test_veyru_public_archive_signal() -> void:
+	var state := LongMarchState.new(2204)
+	state.start_flooded_veyru()
+	var before := state.campaign_node_preview("drowned_registry")
+	_expect(String(before.get("visibility", "")) == "unscouted" and String(before.get("regional_development", "")).is_empty(), "Drowned Registry should begin unscouted without a prior regional development")
+	var applied := state.set_regional_developments(["veyru_public_archive_signal"])
+	var after := state.campaign_node_preview("drowned_registry")
+	_expect(bool(applied.get("ok", false)) and String(after.get("visibility", "")) == "known" and String(after.get("regional_development", "")) == "Public Archive Signal", "Public Archive Signal should reveal the Registry's exact contacts without requiring a live signal module")
+	_expect(after.get("threats", []) == ["Flood Surge", "Climber"] and not Array(after.get("risk_factors", [])).has("forecasting -8pt"), "the development should reveal information without granting the live forecasting risk discount")
+	_expect(float(after.get("risk", 0.0)) == float(before.get("risk", 0.0)) and int(after.get("pressure_gain", 0)) == int(before.get("pressure_gain", 0)) and int(after.get("fuel", 0)) == int(before.get("fuel", 0)) and int(after.get("days", 0)) == int(before.get("days", 0)), "the information development should not alter Registry risk, pressure, fuel, or time")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.has_regional_development("veyru_public_archive_signal"), "active regional developments should survive the run save envelope")
+	var legacy_payload := state.serialize()
+	legacy_payload["save_version"] = 7
+	legacy_payload.erase("regional_developments")
+	var legacy_restore := LongMarchState.new(0)
+	_expect(bool(legacy_restore.load_serialized(legacy_payload).get("ok", false)) and legacy_restore.regional_developments.is_empty(), "schema-7 saves should migrate with no invented regional development")
+	var invalid_payload := state.serialize()
+	invalid_payload["regional_developments"] = ["perfect_forecast"]
+	_expect(not bool(LongMarchState.new(0).load_serialized(invalid_payload).get("ok", false)), "unknown regional developments should be rejected before mutating restored state")
+	state.phase = "results"
+	state.final_result = "archive_scarred"
+	state.run_complete = true
+	state.journey_complete = true
+	state.campaign_decisions["archive_broadcast"] = "broadcast_archive"
+	_expect(state.earned_regional_development() == "veyru_public_archive_signal", "surviving after the public archive broadcast should earn its named regional development")
+	state.campaign_decisions["archive_broadcast"] = "seal_archive"
+	_expect(state.earned_regional_development().is_empty(), "sealing the archive should not silently earn the public signal development")
+
+func _test_complete_flooded_veyru_campaign() -> void:
+	var state := LongMarchState.new(2204)
+	_install_veyru_loadout(state)
+	state.start_flooded_veyru()
+	_expect(bool(state.choose_veyru_medicine_contract(true).get("ok", false)), "the complete Veyru route should accept the medicine contract")
+	var first := _veyru_battle(state, "pump_gallery", "protect_cargo")
+	_expect(bool(first.get("resolved", false)) and state.campaign_event_pending == "drain_pumps", "the first Veyru encounter should secure Pump Gallery and expose its water decision")
+	_expect(bool(state.resolve_campaign_event("drain_gallery").get("ok", false)) and state.campaign_pressure == 0, "draining Pump Gallery should trade one day for two water pressure")
+	var second := _veyru_battle(state, "veyru_evacuation_camp", "protect_cargo")
+	_expect(bool(second.get("resolved", false)) and state.phase == "settlement" and state.settlement_actions_remaining == 2 and state.campaign_last_safe_node == "veyru_evacuation_camp", "an operational medicine carrier should earn two camp actions and establish Veyru's recovery anchor")
+	var camp_restore := LongMarchState.new(0)
+	_expect(bool(camp_restore.load_serialized(state.serialize()).get("ok", false)) and camp_restore.phase == "settlement" and camp_restore.campaign_last_safe_node == "veyru_evacuation_camp", "Evacuation Camp recovery state should survive save/load")
+	state.hull_condition = 8
+	_expect(bool(state.settlement_repair_hull().get("ok", false)) and state.hull_condition == 10 and state.settlement_actions_remaining == 1, "Evacuation Camp should provide the authored two-hull service for one action")
+	state.fuel = 1
+	_expect(bool(state.settlement_refuel().get("ok", false)) and state.fuel == 2 and state.settlement_actions_remaining == 0, "Evacuation Camp should provide one free emergency fuel below two fuel")
+	state.fuel = 5
+	var third := _veyru_battle(state, "archive_causeway", "protect_cargo")
+	_expect(bool(third.get("resolved", false)) and state.phase == "map", "Archive Causeway should resolve as the third Veyru encounter")
+	var fourth := _veyru_battle(state, "dry_archive_gate", "protect_cargo")
+	_expect(bool(fourth.get("resolved", false)) and state.campaign_event_pending == "archive_broadcast", "Dry Archive Gate should block departure on the archive commitment")
+	var choice_restore := LongMarchState.new(0)
+	_expect(bool(choice_restore.load_serialized(state.serialize()).get("ok", false)) and choice_restore.campaign_event_pending == "archive_broadcast", "the final archive commitment should survive save/load")
+	var broadcast_state := LongMarchState.new(0)
+	broadcast_state.load_serialized(state.serialize())
+	_expect(bool(broadcast_state.resolve_campaign_event("broadcast_archive").get("ok", false)), "broadcasting the archive should resolve the final commitment")
+	var broadcast_departure := broadcast_state.begin_campaign_route("dry_archive", "protect_cargo")
+	_expect(bool(broadcast_departure.get("ok", false)) and broadcast_state.encounter_enemies.size() == 2 and String(broadcast_state.encounter_enemies[1].get("id", "")) == "climbers", "broadcasting should add Climbers to the Civic Guardian final contact")
+
+	var pressure_before_seal := state.campaign_pressure
+	_expect(bool(state.resolve_campaign_event("seal_archive").get("ok", false)) and state.campaign_pressure == maxi(0, pressure_before_seal - 1), "sealing the archive should lower rising water before the final approach")
+	var final_preview := state.campaign_node_preview("dry_archive")
+	_expect(String(final_preview.get("visibility", "")) == "forecast" and Array(final_preview.get("threats", [])).is_empty(), "the sealed archive approach should keep exact final targeting at forecast confidence")
+	var fifth := _veyru_battle(state, "dry_archive", "protect_cargo")
+	_expect(bool(fifth.get("resolved", false)) and state.phase == "results" and state.run_complete and state.campaign_encounters_completed == 5, "the fifth Veyru encounter should end the isolated chapter")
+	_expect(state.final_result == "archive_kept" and state.veyru_contract_status == "completed" and state.settlement_trust == 2, "an operational medicine carrier and sound hull should produce Archive Kept and complete the delivery")
+	var result_restore := LongMarchState.new(0)
+	_expect(bool(result_restore.load_serialized(state.serialize()).get("ok", false)) and result_restore.final_result == "archive_kept" and result_restore.veyru_contract_status == "completed", "the Veyru result and completed medicine contract should survive save/load")
+
+	var retreat := LongMarchState.new(2204)
+	_install_veyru_loadout(retreat)
+	retreat.start_flooded_veyru()
+	retreat.choose_veyru_medicine_contract(false)
+	retreat.campaign_path = ["lantern_quay", "pump_gallery", "veyru_evacuation_camp", "archive_causeway"]
+	retreat.campaign_last_safe_node = "veyru_evacuation_camp"
+	retreat.current_location = "dry_archive_gate"
+	retreat.journey_node = "dry_archive_gate"
+	retreat.campaign_target_node = "dry_archive_gate"
+	retreat.phase = "battle"
+	retreat.encounter_active = true
+	var recovered := retreat._finish_campaign_encounter(false)
+	_expect(bool(recovered.get("resolved", false)) and retreat.current_location == "veyru_evacuation_camp" and retreat.phase == "settlement" and retreat.campaign_retreats == 1 and retreat.campaign_edges()["veyru_evacuation_camp"].has("pilgrim_gantry"), "a non-final Veyru failure should retreat to Evacuation Camp and permanently expose Pilgrim Gantry")
+func _test_water_condenser_route_unlock() -> void:
+	var locked_state := LongMarchState.new(1107)
+	locked_state.start_campaign()
+	locked_state.choose_guard_contract(false)
+	locked_state.current_location = "morrowline_camp"
+	locked_state.phase = "settlement"
+	_expect(locked_state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "Dry Cistern Cut should stay unavailable without a Ready Water Condenser")
+	_expect(String(locked_state.campaign_node_lock_reason("dry_cistern_cut")).contains("Ready Water Condenser"), "the locked dry road should name its system requirement")
+	var blocked_departure := locked_state.begin_campaign_route("dry_cistern_cut")
+	_expect(not bool(blocked_departure.get("ok", false)) and String(blocked_departure.get("reason", "")).contains("Field Workshop"), "attempting the locked dry road should return its actionable maintenance requirement")
+
+	var ready_state := LongMarchState.new(1107)
+	ready_state.place_module("steam_lance_engine", Vector2i(0, 0))
+	ready_state.place_module("coal_cell", Vector2i(0, 1))
+	ready_state.place_module("generator_core", Vector2i(2, 0))
+	ready_state.place_module("crew_quarters", Vector2i(2, 2))
+	ready_state.place_module("field_workshop", Vector2i(2, 1))
+	ready_state.place_module("water_condenser", Vector2i(4, 1))
+	ready_state.start_campaign()
+	ready_state.choose_guard_contract(false)
+	ready_state.current_location = "morrowline_camp"
+	ready_state.phase = "settlement"
+	_expect(ready_state.total_mass() == 13 and ready_state.total_heat() == LongMarchState.BASE_HEAT_LIMIT, "the cool condenser fixture should remain within both chassis mass and heat limits by giving up weapon coverage")
+	_expect(ready_state.campaign_available_nodes() == ["lower_ash_road", "dry_cistern_cut", "signal_causeway"], "a Ready Water Condenser should add Dry Cistern Cut as a third Morrowline road")
+	var preview := ready_state.campaign_node_preview("dry_cistern_cut")
+	_expect(int(preview.get("fuel", 0)) == 1 and int(preview.get("fuel_discount", 0)) == 1, "the Ready Water Condenser should reduce Dry Cistern Cut from two fuel to one")
+	var comparison := ready_state.campaign_route_comparison()
+	_expect(comparison.size() == 3 and String(comparison[1].get("id", "")) == "dry_cistern_cut" and int(comparison[1].get("fuel", 0)) == 1 and int(comparison[1].get("fuel_discount", 0)) == 1, "route comparison should include the unlocked dry road and its explicit condenser fuel discount")
+	var fuel_before := ready_state.fuel
+	var departure := ready_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
+	_expect(bool(departure.get("ok", false)) and ready_state.fuel == fuel_before - 1, "committing to Dry Cistern Cut should charge the discounted fuel cost")
+	_expect(ready_state.encounter_enemies.size() == 1 and String(ready_state.encounter_enemies[0].get("id", "")) == "storm_front", "Dry Cistern Cut should begin its authored Storm Front encounter")
+
+func _install_water_condenser_loadout(state: LongMarchState) -> void:
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("crew_quarters", Vector2i(2, 2))
+	state.place_module("field_workshop", Vector2i(2, 1))
+	state.place_module("water_condenser", Vector2i(4, 1))
+
+func _test_water_condenser_threat_and_recovery() -> void:
+	var vulnerable := LongMarchState.new(1107)
+	_install_water_condenser_loadout(vulnerable)
+	vulnerable.journey_route = "dry_cistern_cut"
+	var condenser := vulnerable.module_at(Vector2i(4, 1))
+	var rationale := vulnerable.encounter_target_rationale("storm_front", condenser)
+	_expect(vulnerable._encounter_choose_target("storm_front") == "water_condenser" and String(rationale.get("reason", "")).contains("dry-road sustain role"), "Storm Front should select and explain the condenser's dry-road sustain vulnerability")
+	var impact := vulnerable.encounter_enemy_impact_preview({"id": "storm_front", "arrived": true, "defeated": false, "target": "water_condenser", "damage_bonus": 0})
+	_expect(int(impact.get("damage", 0)) == 2 and String(impact.get("threat_effect", "")) == "sustain_exposure", "an exposed sustain system should preview one additional Storm Front damage")
+	vulnerable._encounter_apply_enemy_damage("storm_front", "water_condenser")
+	_expect(int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 1 and vulnerable.encounter_report[-2].contains("Dry-system exposure"), "the Storm Front report should explain the condenser's extra damage before recording the hit")
+	_expect(bool(vulnerable.repair_module("water_condenser", 1).get("ok", false)) and int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 2, "an operational Field Workshop should repair a damaged Water Condenser")
+	vulnerable.phase = "settlement"
+	vulnerable.current_location = "morrowline_camp"
+	vulnerable.settlement_actions_remaining = 1
+	vulnerable.money = 8
+	var settlement_repair := vulnerable.settlement_repair("water_condenser")
+	_expect(bool(settlement_repair.get("ok", false)) and int(vulnerable.module_at(Vector2i(4, 1)).get("durability", 0)) == 3, "Morrowline service should fully restore the damaged Water Condenser")
+
+	var armored := LongMarchState.new(1107)
+	armored.place_module("ash_runner_engine", Vector2i(0, 0))
+	armored.place_module("coal_cell", Vector2i(1, 0))
+	armored.place_module("generator_core", Vector2i(2, 0))
+	armored.place_module("crew_quarters", Vector2i(2, 2))
+	armored.place_module("field_workshop", Vector2i(2, 1))
+	armored.place_module("water_condenser", Vector2i(4, 1))
+	armored.place_module("side_armor_skirt", Vector2i(5, 2))
+	_expect(armored.total_mass() == LongMarchState.BASE_MASS_LIMIT and armored.total_heat() > LongMarchState.BASE_HEAT_LIMIT and armored.dependency_status_at(Vector2i(4, 1)).state == "ready", "the heavy condenser fixture should be legal and protected while visibly paying the maximum-mass and overheat costs")
+	var armored_preview := armored.encounter_enemy_impact_preview({"id": "storm_front", "arrived": true, "defeated": false, "target": "water_condenser", "damage_bonus": 0})
+	_expect(int(armored_preview.get("damage", 0)) == 1 and int(armored_preview.get("armor_absorbed", 0)) == 1, "adjacent armor should absorb one point of the condenser's Storm Front hit")
+
+	var sealed := LongMarchState.new(1107)
+	_install_water_condenser_loadout(sealed)
+	sealed.journey_node = "dry_cistern_cut"
+	sealed.journey_route = "dry_cistern_cut"
+	sealed._configure_encounter(["storm_front"], "Dry Cistern Cut", "A dry weather line closes over the cisterns.")
+	sealed.encounter_enemies[0]["arrived"] = true
+	sealed.encounter_enemies[0]["target"] = "water_condenser"
+	var seal_result := sealed.use_encounter_intervention("seal_compartment", "water_condenser")
+	_expect(bool(seal_result.get("ok", false)) and String(sealed.encounter_enemies[0].get("target", "")) != "water_condenser", "Seal Compartment should immediately redirect a Storm Front away from the Water Condenser")
+	_expect(sealed.dependency_status_at(Vector2i(4, 1)).state == "offline" and String(seal_result.get("effect", "")).contains("protected from targeting"), "sealing the condenser should expose its temporary offline trade-off")
+	sealed._clear_temporary_seals()
+	_expect(sealed.dependency_status_at(Vector2i(4, 1)).state == "ready", "the condenser should return to Ready after the encounter seal clears")
+
+	var first := LongMarchState.new(1107)
+	var second := LongMarchState.new(1107)
+	for replay_state in [first, second]:
+		_install_water_condenser_loadout(replay_state)
+		replay_state.start_campaign()
+		replay_state.choose_guard_contract(false)
+		replay_state.current_location = "morrowline_camp"
+		replay_state.phase = "settlement"
+		replay_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
+		replay_state.advance_encounter(6.0)
+	_expect(first.encounter_report == second.encounter_report and first.modules == second.modules and first.hull_condition == second.hull_condition, "the Water Condenser teaching encounter should replay deterministically from the same seed, layout, and doctrine")
 
 func _test_complete_five_encounter_campaign() -> void:
 	var state := LongMarchState.new(1107)
@@ -641,6 +1253,7 @@ func _test_alternate_five_encounter_campaign() -> void:
 	_expect(String(state.campaign_decisions.get("salvage_choice", "")) == "take_fuel" and String(state.campaign_decisions.get("toll_decision", "")) == "pay_toll", "the alternate route should retain both authored decisions for its eventual debrief")
 	var third := _campaign_battle(state, "morrowline_camp", "protect_cargo")
 	_expect(bool(third.get("resolved", false)) and state.phase == "settlement", "the alternate first half should reach Morrowline recovery")
+	_expect(bool(state.resolve_campaign_event("decline_mara").get("ok", false)), "the alternate route should be able to decline Mara and preserve its existing recovery plan")
 	_expect(bool(state.settlement_repair("wall_lamp").get("ok", false)), "the alternate route should restore its storm counter at Morrowline")
 	state.settlement_refuel()
 	var fourth := _campaign_battle(state, "signal_causeway", "protect_crew")

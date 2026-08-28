@@ -1,6 +1,7 @@
 class_name CombatPanel
 extends VBoxContainer
 
+const VisualContrast = preload("res://src/support/visual_contrast.gd")
 const MAX_STEPS := 6
 const MAX_ENEMIES := 3
 
@@ -13,6 +14,7 @@ var enemy_names: Array[Label] = []
 var enemy_states: Array[Label] = []
 var enemy_counters: Array[Label] = []
 var causal_label: Label
+var high_contrast_enabled: bool = false
 
 func _init() -> void:
 	add_theme_constant_override("separation", 7)
@@ -80,6 +82,10 @@ func _init() -> void:
 	add_child(causal_label)
 
 func _panel_style(background: Color, border: Color, width: int = 1) -> StyleBoxFlat:
+	if high_contrast_enabled:
+		background = background.darkened(0.38)
+		border = VisualContrast.display_color(border)
+		width += 1
 	var style := StyleBoxFlat.new()
 	style.bg_color = background
 	style.border_color = border
@@ -90,6 +96,9 @@ func _panel_style(background: Color, border: Color, width: int = 1) -> StyleBoxF
 	style.content_margin_top = 5
 	style.content_margin_bottom = 5
 	return style
+
+func set_high_contrast(enabled: bool) -> void:
+	high_contrast_enabled = enabled
 
 func _latest_causal_lines(report: Array) -> String:
 	var latest_step_index := -1
@@ -217,6 +226,8 @@ func configure(view: Dictionary, enemy_definitions: Dictionary) -> void:
 				var armor_after := int(impact.get("armor_remaining_durability", maxi(0, armor_before - armor_absorbed)))
 				var armor_warning := " · BREAKS" if armor_after <= 0 else ""
 				target_text += "\nARMOR · %s · %d→%d%s" % [armor_name.to_upper(), armor_before, armor_after, armor_warning]
+			if String(impact.get("mara_effect", "")) == "refuge_bracing":
+				target_text += "\nMARA · FORGE-CORE BRACING ABSORBS 1"
 			var dependency_changes: Array = impact.get("dependency_changes", [])
 			if not dependency_changes.is_empty():
 				var cascade_labels: Array[String] = []

@@ -751,3 +751,203 @@ When two forward roads are available, the command desk now presents their days, 
 ## 2026-08-28 — Target explanations share the targeting score
 
 Combat cards now state why an arrived threat chose its current target before showing the predicted hit. The explanation is produced by the same authoritative scoring profile used to select the target, including route tags, exposed or lower-hull placement, doctrine protection, and damaged condition. This avoids a separate UI heuristic that could disagree with simulation behavior.
+
+## 2026-08-28 — The title names the build's real boundary
+
+The title now identifies Ashgate Lowlands as the current complete test journey, names Ashgate Depot as its starting point, and states that later regions are not included. Existing encounter, recovery, finale, and duration expectations remain prominent. This replaces the ambiguous “Chapter One” framing without adding a defensive disclaimer screen or diminishing the playable chapter.
+
+## 2026-08-28 — Guided onboarding teaches one dependency at a time
+
+The Marchmaster briefing now separates engine fuel, weapon ammunition, workshop staffing and parts, signal visibility, route pressure, and contact response into focused steps. The contract remains first and each page names one concrete inspection or decision. This accepts a slightly longer optional briefing in exchange for avoiding the previous compressed chassis page, where several unrelated dependencies competed for attention.
+
+## 2026-08-28 — Route comparison states confidence and risk bands
+
+Each available-road summary now pairs its numeric risk with the same low, guarded, or high planning band and explicitly labels information as known, forecast, or unscouted. The comparison updates when doctrine changes and still hides exact risk for unscouted roads. This keeps uncertainty meaningful while removing the need to cross-reference map-node shorthand.
+
+## 2026-08-28 — Water Condenser is a maintained sustain system
+
+The first post-alpha module is a rotatable two-cell interior system with two heat, one power draw, and three durability. Shared power keeps the hardware operational, while an adjacent operational Field Workshop is the soft maintenance dependency that moves it from Strained to Ready. Only Ready state may unlock and discount the Dry Cistern Cut, so layout, workshop staffing, power, damage, and sealing can all remove the benefit through the existing dependency model. The module uses a stable `water_condenser` ID and the existing finite inventory and save schema rather than adding a separate resource or persistence path.
+
+## 2026-08-28 — Gated roads remain visible on the campaign map
+
+Dry Cistern Cut is a one-day Storm Front road from Morrowline to Meridian Pass. Its authored cost is two fuel; a Ready Water Condenser both unlocks it and reduces that cost to one. The comparison and route intel name the condenser discount separately from risk modifiers. Without the required system, the node remains visible with a distinct `SYSTEM REQUIRED` state and names shared power plus adjacent operational workshop maintenance. This keeps build-gated content legible and aspirational instead of silently removing it from comparison or presenting an unusable Commit action.
+
+## 2026-08-28 — Storms pressure the system that enabled the shortcut
+
+Storm Front targeting now includes sustain systems and strongly prefers the Water Condenser that enabled Dry Cistern Cut. A sustain hit deals one additional damage, making an unprotected condenser deteriorate faster than a basic workshop patch can restore it. Adjacent armor absorbs one point, while Seal Compartment removes the condenser from targeting at the explicit cost of taking it offline until the encounter ends. The target rationale, impact preview, and causal report all use the same rule, and both field repair and Morrowline service can restore the resulting damage.
+
+## 2026-08-28 — Mara Flint enters through a recovery decision
+
+Mara appears at Morrowline only while the current specialist berth is free. Recruiting her requires an operational Field Workshop and Crew Quarters, then immediately presents one scarce forge core: rebuild the weakest installed system for one day and one blockade pressure, or brace the Refugee Bunk against one damage per hit. Mara adds one durability to operational workshop repairs and to paid Morrowline module service without increasing the service price. After the fourth encounter, a blocking callback evaluates the actual committed system and grants only the visible consequence that survived. The chain reuses validated event decisions, adds one stable repaired-module reference, and does not introduce affinity, dialogue, or faction-reputation state.
+
+## 2026-08-28 — Road occurrences are bounded authored state
+
+The Ashgate campaign now evaluates otherwise-empty arrival phases through the named `ashgate_operational_occurrences_v1` stream. Hard eligibility checks use the live chassis before a sorted candidate set can select one authored event or an intentional quiet result. Milestone events retain priority, no phase rolls twice, repeatable incidents use encounter cooldowns, one-shot meetings consult durable decisions, and both phase and result histories are capped at eight records. Active phase, cursor, cooldowns, and history are validated in save schema 6. This rejects procedural prose, unbounded graphs, reroll-on-load behavior, and UI-owned event rules while allowing repeat runs to respond to the fortress the player actually built.
+
+## 2026-08-28 — Regional maps share one configurable view
+
+The campaign map now owns named layout data for Ashgate Lowlands and Flooded Veyru rather than assuming every chapter uses Ashgate's ten node IDs. Region configuration rebuilds the same buttons, status colors, route lines, focus behavior, and commit surface from a bounded authored layout. The simulation will still own reachability and route rules; this presentation change only makes a second isolated chapter possible without duplicating the map widget or creating a second game flow.
+
+## 2026-08-28 — Veyru is an isolated region in the existing save envelope
+
+Flooded Veyru begins at Lantern Quay through the same authoritative fortress state rather than a second campaign controller. A stable region ID selects its authored graph and gives the shared pressure value Veyru's Low Water, Flooding, and Breach bands. At Breach, Drowned Registry closes while Pilgrim Gantry joins the graph as a guaranteed recovery route. The medicine contract records the exact installed Refugee Bunk or Parts Crate carrying its sealed cases, and save schema 7 validates the region, path, contract, and carrier before restore. Older schema-6 saves migrate to Ashgate with no Veyru obligation.
+
+## 2026-08-28 — Veyru reuses combat while changing what survival means
+
+Flooded Veyru now completes through the shared six-step encounter engine rather than a regional combat fork. Flood Surge applies explicit lower-deck and medicine-carrier targeting, gains damage at Flooding water or maximum chassis mass, and exposes Water Condenser, Side Armor Skirt, workshop recovery, and Seal Compartment as distinct counters. Pilgrim Gantry reduces flood impact without erasing it. The Civic Guardian tests the reserved carrier at the archive, while the gate commitment either adds Climbers through a public broadcast or reduces carrier damage through a sealed approach.
+
+Veyru recovery is anchored only at Lantern Quay and Evacuation Camp. Securing an ordinary road no longer turns every node into a retreat point; save validation instead accepts the latest reached regional anchor within the authored path. Evacuation Camp grants one service action, or two while an accepted medicine carrier remains operational, and provides one free emergency fuel below two. Carrier destruction or Cut Loose Cargo fails the contract but never ends the chapter. A surviving fifth encounter produces Archive Kept only with an operational delivered carrier and at least six hull; all other mobile arrivals produce Archive Scarred, while final mobility or hull failure produces Veyru Lost.
+
+## 2026-08-28 — Chapter selection is explicit at the title
+
+The title now presents Ashgate and Flooded Veyru as separate new-run actions while Continue remains tied to one validated local checkpoint. Ashgate retains the guided briefing; Veyru opens directly at Lantern Quay because the current briefing is authored around Ashgate-specific systems and route names. The playable stage receives a stable starting region before it enters the scene tree, builds the matching legal chassis, and then uses the same save, pause, map, event, combat, recovery, and debrief surfaces. Restart and replay preserve the active region, including after loading a Veyru checkpoint.
+
+The Veyru prepared layout sits exactly at the fourteen-mass limit and six-heat limit with a Ready Water Condenser, crew-connected workshop, and Parts Crate medicine carrier. It deliberately has no installed weapon: Pump Gallery teaches that draining, armor, repair, sealing, and condenser preparation are real answers to a hazard rather than making every encounter another damage race. Flood Surge base endurance is four so a maintained condenser resolves the teaching contact before its pressure can exhaust the prepared carrier, while unprepared builds still face six approach steps and escalating water damage.
+
+## 2026-08-28 — Veyru content has a machine-checked chapter contract
+
+Flooded Veyru now has a dedicated authored content file referenced by the main manifest. Its validator fixes the region endpoints, five-encounter route length, pressure closures and guaranteed recovery, medicine-carrier rules, prepared loadout, regional threats, decisions, and result IDs. The runtime remains authoritative for simulation, while CI now rejects drift between the implemented chapter and its reviewable content contract before Godot tests run.
+
+## 2026-08-28 — Region-rebuilt map controls retain accessible handoffs
+
+Campaign map controls rebuilt for a different regional layout now receive the same focus-triggered command-desk scrolling as the initial Ashgate buttons. Settlement focus also includes Review Next Roads after enabled services, so a fully supplied Evacuation Camp does not jump directly into the map or leave controller focus below the viewport. The Veyru UI regression drives the complete five-encounter route through real buttons and requires the opening route, recovery handoff, final archive choice, and debrief to remain visible and actionable at 1280×720.
+
+## 2026-08-28 — Session actions preserve chapter identity
+
+Continue now names Ashgate or Veyru on the action, summary, and tooltip. Pause summaries, restart confirmations, and replay confirmations derive their chapter and starting settlement from the active run, preventing a Veyru player from being told that a destructive action will restart Ashgate. When a checkpoint exists, the title hides the redundant Ashgate Skip Briefing button and keeps that path in the Field Guide; Continue, one guided Ashgate start, Veyru, utilities, and the complete checkpoint summary therefore remain visible together at 1280×720.
+
+## 2026-08-28 — Help follows the active region
+
+The title Field Guide now explains the shared loop through both implemented chapters instead of presenting Ashgate as the only road. Reopening the in-run briefing derives seven labels and lessons from the active region: Ashgate retains its engine, ammunition, signal, blockade, and Morrowline teaching, while Veyru teaches the condenser, named medicine carrier, water thresholds, Pilgrim Gantry guarantee, and archive commitment. Veyru still starts directly at its contract; the tailored briefing is available on demand and never marks the Ashgate first-run lesson complete.
+
+## 2026-08-28 — Public information creates information, not power
+
+Surviving Flooded Veyru after broadcasting the Dry Archive establishes `veyru_public_archive_signal` in a small local progression record. Later Veyru runs copy that stable ID into their save-safe simulation state and reveal Drowned Registry's Flood Surge and Climber composition as Known. The development does not reduce route risk, pressure, damage, fuel, or time, preserving the value of live signal equipment and avoiding a permanent-stat treadmill. The earning debrief, title overview, active run status, route comparison, and map detail all name the prior decision that changed the later option.
+
+## 2026-08-28 — The first campaign shell connects results, not resources
+
+The March Charter stores each playable region's best terminal result separately from the single Continue checkpoint. A debrief can now March On directly to the other chapter through a confirmation that explains what persists and when Continue changes. This creates a readable two-chapter itinerary and a replay reason without carrying fuel, damage, modules, or money between isolated deterministic chapters, and without presenting the planned five-region campaign as finished.
+
+## 2026-08-28 — Window close respects the save boundary
+
+The shell disables automatic acceptance of operating-system close requests. A safe title or an exactly checkpointed stage exits immediately; unsaved live state opens a chapter- and location-specific Save & Quit confirmation. Cancelling restores the previous live or paused focus context, repeated close requests cannot bypass the modal, and a failed write leaves the application open. The existing Continue format remains the only run save.
+
+## 2026-08-28 — Persistent data resets stay separate
+
+Title Settings exposes March Charter reset independently from Continue clearing and briefing reset. Its confirmation explicitly names regional results and Public Archive Signal as the deleted data, and names Continue, settings, and briefing progress as preserved. The action is disabled during a live run because that stage holds a deterministic regional-development snapshot; reset therefore cannot make active state disagree with its profile mid-journey.
+
+## 2026-08-28 — Continue keeps one validated predecessor
+
+Before a valid primary checkpoint is overwritten, the stage preserves and validates its complete previous serialized state as a local recovery backup. The title never loads that file silently: when the primary is missing or invalid it disables Continue, names the recoverable chapter/day/location, and requires an explicit Restore Backup confirmation. Invalid primary bytes cannot replace a valid predecessor, and Clear Local Save removes both files while preserving the March Charter and other local data categories.
+
+## 2026-08-28 — Playtest notes are available at the decision
+
+The existing local-only feedback form is reachable from Pause as well as the final debrief. A paused handoff names the active region, day, location, and phase, preserves unfinished text for the current stage, and returns to the suspended pause menu without mutating campaign state or losing the pre-pause focus target. This was chosen over background telemetry or automatic uploads because early tests need authentic explanation in the tester's own words and an explicit sharing boundary.
+
+## 2026-08-28 — Large text preserves the decision canvas
+
+Settings offers a bounded 100%/110% text-size preference rather than scaling the whole viewport. Whole-canvas scaling made the fixed chassis and command desk exceed the 1280×720 logical width; enlarging inherited and explicit font sizes keeps that decision surface intact. At 110%, the title removes one redundant small control-summary line and its decorative right spacer, while the visible input guide remains. Settings scrolls its preference rows independently so context, status, and return controls stay fixed and controller focus never lands below the viewport.
+
+## 2026-08-28 — Clean playtests preserve deliberate exports
+
+Title Settings can return all managed runtime state to a genuine first-launch baseline in one confirmed action. Continue and backup, March Charter state, briefing completion, preferences, and the current journal are removed together and their in-memory counterparts are rebuilt immediately. Exported feedback files are excluded because they are deliberate tester-owned artifacts, not hidden runtime state. The reset is unavailable during a live run, while narrower category resets remain for targeted testing.
+
+## 2026-08-28 — Exported feedback has an input-neutral handoff
+
+A successful local feedback export exposes Copy Report Path as a visible action in the modal rather than hiding the complete location in a pointer tooltip. The action copies only the path and never uploads or opens the file. It joins the controller focus row only while the report exists; a moved or deleted report removes the stale action and returns focus to Save Again. This keeps consent explicit while making the intended handoff practical for every supported input method.
+
+## 2026-08-28 — Interface audio reinforces rather than carries state
+
+The shell generates four short local cues for focus, activation, warning dialogs, and checkpoint receipts, then applies them to both existing menus and buttons created inside a stage. Settings uses a bounded Muted/40%/70%/100% control instead of presenting an unsupported final mixer. Muting never removes text, focus styling, confirmation copy, or save receipts. Runtime-generated PCM keeps the checkpoint offline and license-free while the final music, ambience, combat sound, and platform mix remain separate human-reviewed work.
+
+## 2026-08-28 — High contrast preserves authored meaning
+
+Settings can darken image-backed surfaces, brighten reviewed text colors, and strengthen button, route-map, and combat outlines across the running shell. The transformer records the latest authored base color rather than repeatedly lightening its own output, so dynamic warning changes remain reversible and switching back restores the standard palette. Route visibility, risk, pressure, dependency state, combat contact, and run progress continue to name themselves through text and symbols; color remains reinforcement rather than authority. This is a bounded playtest aid, not a substitute for a measured accessibility audit.
+
+## 2026-08-28 — Controller convention changes bindings and copy together
+
+Settings can swap the south/east face buttons assigned to `ui_accept` and `ui_cancel` while preserving Enter, Escape, navigation, and pointer input. The shell applies the mapping before initial focus and passes the preference into each stage before it enters the tree. Title, Pause, briefing, route, and chassis hints derive from the same layout identifier, preventing instructions from drifting away from runtime behavior. The preference deliberately stops short of a complete binding editor, which would require conflict handling, device-specific glyphs, and an inaccessible-binding recovery path.
+
+## 2026-08-28 — Build and storage support stays inside the consent boundary
+
+Settings exposes one read-only panel that identifies the exact build/platform, states the no-account/no-telemetry/no-automatic-upload boundary, reports managed local-file presence, counts exported feedback, and shows the absolute Godot data folder. Its only side effect is copying that folder path; it never opens a browser, reads report contents into the UI, or sends data. The panel preserves title versus paused context and returns focus to Settings without resuming the stage, making support handoff practical without weakening the local-only playtest contract.
+
+## 2026-08-28 — Title focus explains the action it will take
+
+The existing right-hand title card now follows Guided Ashgate, Quick Ashgate, Flooded Veyru, Continue, and damaged-save recovery focus instead of describing both chapters generically. Each new journey names its obligation, pressure, recovery point, and finale; Continue uses validated save metadata to name the waiting decision and fortress condition. Pointer hover may inspect another action, but mouse exit restores the keyboard/controller-focused card. Launch remains a single activation and existing replacement confirmations remain authoritative, so preview does not become a hidden selection step.
+
+## 2026-08-28 — Reorientation uses an inspectable March Record
+
+Pause now exposes a read-only March Record assembled from the authoritative live state. Its first viewport prioritizes the stable chapter-and-seed run code and current order, followed by path, pressure, commitments, authored decisions, occurrences, resources, and named system damage. Copy is an explicit clipboard-only action; Back or cancel restores the suspended Pause menu and exact entry focus. The same run code enters debrief and feedback summaries so screenshots, notes, and exported reports refer to one deterministic run without claiming that the seed replaces the command history.
+
+## 2026-08-28 — Current Order can return focus but cannot act
+
+The Run Flow heading carries a compact phase-aware jump that delegates to the same `focus_current_action()` resolver used after transitions. Its label names the destination class, while activation only focuses and scrolls to the existing authoritative control. Contract, route, event, battle, recovery, and debrief choices therefore retain their original confirmation and state-change paths. The adjacent route cancel copy is shortened at 110% text so the reversible pointer action remains visible beside Commit.
+
+## 2026-08-28 — Reference help opens where the player is working
+
+Reopening Field Briefing now selects the topic implied by the live contract, road, battle, recovery, Mara, or archive state instead of returning to Command unconditionally. The seven-item rail is made of real input controls, so a player can inspect any other topic directly; only visited topics receive a completion mark. First-run guidance still starts at the authored opening and focuses Next. This keeps reference help fast without introducing a second tutorial state machine, changing briefing persistence, or mutating the deterministic run.
+
+## 2026-08-28 — Pause separates continuity from reorientation
+
+The primary Pause row now distinguishes Resume Here, which restores the exact valid pre-pause control, from a phase-labelled Go to action, which delegates to the authoritative current-order resolver. Cancel remains Resume Here. Sharing one row preserves the 1280×720 layout and makes the choice explicit without adding another overlay. The resolver now prioritizes phase and pending-decision state before testing visible controls, so stale presentation cannot redirect a debrief or battle order. Neither path activates a control or changes serialized state.
+
+## 2026-08-28 — Settings exposes its hierarchy while scrolling
+
+Settings now groups its existing controls under Display & Readability, Controls & Feedback, and Runs & Local Data. Compact headings make pointer scanning easier, while the fixed context line follows keyboard/controller focus so the category remains visible after scrolling. Opening Settings resets to the first heading, and Build & Local Data returns to its original section. Headings remain non-interactive, avoiding extra focus stops or a second settings state model; preferences, defaults, storage, and confirmation behavior are unchanged.
+
+## 2026-08-28 — The shared guide launches either proven chapter
+
+The title Field Guide now offers direct Ashgate and Flooded Veyru starts beside Back to Title. Both delegate to the existing chapter launch and Continue-replacement confirmation paths; cancelling restores the exact guide action. Replay wording derives from each region's March Charter record rather than treating any completed Continue file as proof that both chapters were completed. This closes the mismatch between a two-chapter guide and an Ashgate-only footer without introducing another chapter selector or save slot.
+
+## 2026-08-28 — Returning to title leaves a persistence receipt
+
+Before releasing a live stage, the shell now compares its complete serialized state with the validated Continue checkpoint and creates one temporary title receipt. Saved decisions name their chapter, day, and location; saved results name the retained debrief; unsaved exits distinguish an older retained checkpoint from no checkpoint. The receipt temporarily replaces the longer generic save summary so the 1280×720 title remains intact at 110% text, while Continue focus still exposes full checkpoint details. It clears on the next launch and never enters saves, preferences, the journal, or the March Charter. This was chosen over a notification history or second save model because the ambiguity exists only at the immediate stage-to-title boundary.
+
+## 2026-08-28 — Chassis selection is inspection until the grid owns focus
+
+The preparation screen still selects one installed module so its dependency card is immediately useful, but the passive chassis now names that state as Overview, Inspected System, and Inspect. Edit Chassis or a direct pointer click changes the same panel into explicit edit mode with a stronger selection outline, active cursor, placement language, and mapped confirm/cancel instructions. Stored modules continue to expose global placement blockers before entry. This preserves fast mouse editing and controller parity while removing the false impression that the opening engine is already being moved. The stage refresh also type-checks non-button focus before route-button membership tests, preventing chassis focus from emitting an engine error.
+
+## 2026-08-28 — Checkpoint feedback owns a safe header slot
+
+The non-modal checkpoint toast now uses compact `Saved · reason` copy in a 250-pixel header slot capped at x=330 and positioned with a twelve-pixel gap before the live Pause control. The cap reserves space for the widest contextual Pause label before that label expands, preventing an existing toast from being covered during Route Review. This keeps save feedback, the title, and session control simultaneously legible at 1280×720 with 110% text. The toast still carries no focus, dismisses when Pause opens, and changes no autosave timing, state, or audio behavior.
+
+## 2026-08-28 — Chassis guidance follows the available phase action
+
+The passive chassis heading now points to Edit Chassis only where refit is actually available, to battle inspection during contact, and to final-chassis review during debrief. Results expose a dedicated Inspect Final Chassis action in the debrief action sequence; controller or keyboard selection remains in review, while cancel returns to that visible action. This closes the previous pointer-only debrief path and removes refit language from locked phases without changing placement, damage, targeting, results, or serialized state.
+
+## 2026-08-28 — Debrief navigation follows its teaching order
+
+A newly opened debrief now resets inherited battle scrolling and focuses Inspect Final Chassis before feedback. The action moved directly below March Debrief so both remain visible together even when the authored result record is long at 110% text. Entering review advances the current-order and Pause return targets to feedback through transient UI state; loading the result offers review first again. This aligns guidance, focus, and layout without making inspection mandatory or adding presentation state to saves.
+
+## 2026-08-28 — Chassis detail copy obeys its fixed column
+
+Locked-phase chassis help now uses compact labelled instructions sized for the existing 320-pixel detail column, with a two-line drawing bound as a fallback. Battle names the selected module as a Battle System and points to targeting; results use Final System and review language; road states name the refit lock and next road-stop opportunity. This preserves the dense inspector layout while removing visibly truncated instructions and generic headings, without changing any simulation or input behavior.
+
+## 2026-08-28 — Session controls stay above stage scrolling
+
+The stage title and contextual Pause action now sit in a fixed left-column header, while metrics, route evidence, combat, chassis, and reports scroll beneath them. Chassis focus can still reveal the complete inspector at 110% text without moving Pause out of pointer reach. Results also hide the decorative journey banner because the completed path, result, and machine are the relevant evidence. Shortcut priority and simulation state are unchanged.
+
+## 2026-08-28 — Pointer Pause does not become the resume target
+
+The persistent Pause button is pointer-active but focus-neutral. Keyboard and controller users already open Pause through Escape or the configured cancel button, so adding the visible button to their focus loop would duplicate the same command. More importantly, a pointer click no longer replaces the active stage control before the overlay records it; Resume Here restores that exact context, while Go to Order retains its separate authoritative destination.
+
+## 2026-08-28 — Build identity names the artifact once
+
+Title and Pause now share a `Playtest Build · v<version>` convention. The title retains the two-playable-region scope, while the Pause footer stays compact. This removes the previous `ALPHA · v...alpha...` repetition and gives screenshots one recognizable artifact label without changing the raw version used by saves, feedback exports, manifests, or compatibility checks.
+
+## 2026-08-28 — Focus scrolling begins at a meaningful section boundary
+
+Campaign-node focus now prefers the regional map heading as its scroll anchor, while route confirmation prefers the selected-road summary. The focused action still wins when all context cannot fit, but ordinary 1280×720 route handoffs no longer begin on a clipped fragment of the preceding doctrine explanation. This keeps automatic focus movement legible without making headings sticky or changing route state.
+
+## 2026-08-28 — Lower desk actions need trailing focus room
+
+The Marchmaster's Desk now ends with a small non-interactive margin. This gives automatic scrolling enough range to place lower controls cleanly without leaving a sliver of the prior section at the viewport edge. Emergency-order focus therefore preserves the complete Current Order and Encounter Order context, while ordinary battle entry still begins at the desk header and run tracker.
+
+## 2026-08-28 — Checkpoint receipts name the resumable state
+
+Encounter checkpoint reasons now distinguish an intermediate Battle Step from a Road Secured, Recovery Reached, or Run Ended transition. The save still occurs at the same successful advance boundary with the same serialized state and backup behavior; only the receipt and later pause summary use the more accurate player-facing reason. Run Ended remains neutral across decisive, scarred, and failed debriefs.
+
+## 2026-08-28 — Event consequences hand off to the next order
+
+A completed authored event now appends one Next line derived from the live Current Order guidance. The left evidence column therefore keeps the consequence and immediate route or recovery instruction together even when automatic focus scrolls the desk to lower controls. Chained events retain their existing Decision Continues treatment until the final choice resolves.
