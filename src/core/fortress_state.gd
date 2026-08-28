@@ -10,6 +10,11 @@ const MAX_EXTERIOR_MOUNTS := 2
 const SAVE_VERSION := 4
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
+const CAMPAIGN_DECISION_OPTIONS := {
+	"salvage_choice": ["take_fuel", "rescue_workers"],
+	"lost_signal": ["restore_relay", "move_silent"],
+	"toll_decision": ["pay_toll", "break_blockade"]
+}
 const BASE_POWER := 2
 const BASE_MASS_LIMIT := 14
 const BASE_HEAT_LIMIT := 6
@@ -1049,6 +1054,12 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_run_complete := bool(data.get("run_complete", run_complete))
 	var restored_journey_complete := bool(data.get("journey_complete", journey_complete))
 	var restored_encounter_active := bool(data.get("encounter_active", encounter_active))
+	var restored_decisions = data.get("campaign_decisions", {})
+	if not restored_decisions is Dictionary:
+		return {"ok": false, "reason": "campaign decision record is malformed"}
+	for event_id in restored_decisions:
+		if event_id not in CAMPAIGN_DECISION_OPTIONS or String(restored_decisions[event_id]) not in CAMPAIGN_DECISION_OPTIONS[event_id]:
+			return {"ok": false, "reason": "campaign decision record contains an unknown choice"}
 	if restored_phase not in VALID_PHASES:
 		return {"ok": false, "reason": "checkpoint has an unknown campaign phase"}
 	var restored_battle_phase := restored_phase in ["battle", "final_battle"]
@@ -1103,8 +1114,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	campaign_pressure = int(data.get("campaign_pressure", campaign_pressure))
 	campaign_retreats = int(data.get("campaign_retreats", campaign_retreats))
 	campaign_event_pending = String(data.get("campaign_event_pending", campaign_event_pending))
-	var restored_decisions = data.get("campaign_decisions", {})
-	campaign_decisions = restored_decisions.duplicate(true) if restored_decisions is Dictionary else {}
+	campaign_decisions = restored_decisions.duplicate(true)
 	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))

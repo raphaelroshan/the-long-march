@@ -429,6 +429,14 @@ func _test_save_round_trip() -> void:
 	active_refit_save["encounter_active"] = true
 	var active_refit_load := LongMarchState.new(0).load_serialized(active_refit_save)
 	_expect(not bool(active_refit_load.get("ok", false)) and String(active_refit_load.get("reason", "")).contains("encounter state"), "planning checkpoints should reject a stray active encounter")
+	var invalid_decision_save := state.serialize()
+	invalid_decision_save["campaign_decisions"] = {"lost_signal": "sell_the_relay"}
+	var invalid_decision_load := LongMarchState.new(0).load_serialized(invalid_decision_save)
+	_expect(not bool(invalid_decision_load.get("ok", false)) and String(invalid_decision_load.get("reason", "")).contains("unknown choice"), "saved campaign history should reject an unknown authored choice")
+	var malformed_decision_save := state.serialize()
+	malformed_decision_save["campaign_decisions"] = ["move_silent"]
+	var malformed_decision_load := LongMarchState.new(0).load_serialized(malformed_decision_save)
+	_expect(not bool(malformed_decision_load.get("ok", false)) and String(malformed_decision_load.get("reason", "")).contains("malformed"), "saved campaign history should reject a non-dictionary decision record")
 
 func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	_expect(bool(state.place_module("steam_lance_engine", Vector2i(0, 0)).get("ok", false)), "campaign engine should install")

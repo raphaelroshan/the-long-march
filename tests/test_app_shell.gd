@@ -325,6 +325,13 @@ func _run() -> void:
 	unknown_phase_file.close()
 	var unknown_phase_info: Dictionary = app._saved_run_info()
 	_expect(not bool(unknown_phase_info.get("valid", true)) and String(unknown_phase_info.get("summary", "")).contains("unknown campaign phase"), "the title should route unknown campaign phases through unusable-save recovery")
+	var invalid_decision_payload: Dictionary = completed_payload.duplicate(true)
+	invalid_decision_payload["campaign_decisions"] = {"lost_signal": "sell_the_relay"}
+	var invalid_decision_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	invalid_decision_file.store_string(JSON.stringify(invalid_decision_payload))
+	invalid_decision_file.close()
+	var invalid_decision_info: Dictionary = app._saved_run_info()
+	_expect(not bool(invalid_decision_info.get("valid", true)) and String(invalid_decision_info.get("summary", "")).contains("unknown choice"), "the title should reject a checkpoint whose authored decision history cannot be trusted")
 	completed_save = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()

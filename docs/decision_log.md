@@ -675,3 +675,7 @@ The first-run briefing and persistent Field Guide now explain that known routes 
 ## 2026-08-28 — Known-route intel checks the current chassis
 
 Threat definitions now carry explicit counter-module IDs in addition to player-facing advice. Known route previews use those IDs to name which counters are operational in the current build, or state that no listed module counter is ready. Forecast and unscouted routes do not expose this derived information, preserving the value of signal readiness and Iven Pell.
+
+## 2026-08-28 — Saved decision history is validated
+
+Campaign deserialization now checks every persisted event and choice against the authored Soot Orchard, Broken Relay, and Red Wheel option sets. Malformed containers and unknown choices are rejected before state mutation, so a damaged checkpoint cannot manufacture a plausible but false debrief history.
