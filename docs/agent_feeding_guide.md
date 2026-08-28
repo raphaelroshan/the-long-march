@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.247`; Feeds A through R are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.248`; Feeds A through S are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -113,6 +113,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.247` through the read-only Build & Local Data panel.
 
 > Give testers one title/paused Settings panel that names the exact build and platform, states the current offline boundary, reports each managed local-data category, counts exported reports, and exposes a copyable `user://` folder path. Preserve pause and focus context. Do not open external applications, inspect report contents, or add upload behavior.
+
+### Current Feed S — action-aware journey preview
+
+**Status:** Complete in `0.3.0-alpha.248` through the responsive title journey card.
+
+> Make each title start, Continue, and recovery action explain the exact journey or checkpoint it will open. Update one existing card on focus or hover, restore keyboard/controller context after mouse exit, and name obligation, pressure, recovery, finale, or saved next decision. Do not add another confirmation step or change gameplay state.
 
 ## Historical prototype feed sequence
 

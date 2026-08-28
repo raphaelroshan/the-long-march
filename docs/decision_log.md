@@ -871,3 +871,7 @@ Settings can swap the south/east face buttons assigned to `ui_accept` and `ui_ca
 ## 2026-08-28 — Build and storage support stays inside the consent boundary
 
 Settings exposes one read-only panel that identifies the exact build/platform, states the no-account/no-telemetry/no-automatic-upload boundary, reports managed local-file presence, counts exported feedback, and shows the absolute Godot data folder. Its only side effect is copying that folder path; it never opens a browser, reads report contents into the UI, or sends data. The panel preserves title versus paused context and returns focus to Settings without resuming the stage, making support handoff practical without weakening the local-only playtest contract.
+
+## 2026-08-28 — Title focus explains the action it will take
+
+The existing right-hand title card now follows Guided Ashgate, Quick Ashgate, Flooded Veyru, Continue, and damaged-save recovery focus instead of describing both chapters generically. Each new journey names its obligation, pressure, recovery point, and finale; Continue uses validated save metadata to name the waiting decision and fortress condition. Pointer hover may inspect another action, but mouse exit restores the keyboard/controller-focused card. Launch remains a single activation and existing replacement confirmations remain authoritative, so preview does not become a hidden selection step.

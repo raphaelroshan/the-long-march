@@ -9,6 +9,7 @@ The battles resolve automatically, but the player chooses the fortress layout, r
 The repository contains an agent-first Godot project with:
 
 - A playtest-focused title flow with guided Ashgate, Flooded Veyru, chapter-aware Continue, and a concise run guide.
+- An action-aware title preview that compares each chapter's obligation, pressure, recovery point, and finale, then turns Continue into an exact saved-decision summary.
 - A session-safe pause menu with live run status, Save, Save & Return, field briefing, context-aware local playtest notes with a copyable export path, settings, and confirmation before discarding progress.
 - A persistent 100%/110% text-size preference with scroll-safe Settings and responsive title spacing at 1280×720.
 - A persistent high-contrast mode that strengthens backdrops, muted copy, map/combat outlines, and focus without replacing written status labels.

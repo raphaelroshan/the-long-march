@@ -94,6 +94,11 @@ var pause_build_label: Label
 var title_control_contract_label: Label
 var title_input_legend_label: Label
 var title_right_spacer: Control
+var title_preview_eyebrow_label: Label
+var title_preview_title_label: Label
+var title_preview_scope_label: Label
+var title_preview_rule_title_labels: Array[Label] = []
+var title_preview_rule_detail_labels: Array[Label] = []
 var confirmation_title_label: Label
 var confirmation_body_label: Label
 var confirmation_confirm_button: Button
@@ -119,6 +124,8 @@ var checkpoint_toast_tween: Tween
 var campaign_progress: CampaignProgress
 var campaign_progress_error: String = ""
 var interface_audio: LongMarchInterfaceAudio
+var title_preview_id: String = "ashgate_guided"
+var focused_title_preview_id: String = "ashgate_guided"
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -259,6 +266,7 @@ func _build_title_menu() -> void:
 	start_button.custom_minimum_size = Vector2(0, 62)
 	start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
 	start_button.pressed.connect(_start_new_game)
+	_bind_title_preview(start_button, "ashgate_guided")
 	_accent_button(start_button)
 	actions.add_child(start_button)
 
@@ -268,6 +276,7 @@ func _build_title_menu() -> void:
 	quick_start_button.custom_minimum_size = Vector2(0, 50)
 	quick_start_button.tooltip_text = "Open a fresh Ashgate stage immediately without changing the saved briefing preference."
 	quick_start_button.pressed.connect(_quick_start_game)
+	_bind_title_preview(quick_start_button, "ashgate_quick")
 	actions.add_child(quick_start_button)
 
 	veyru_start_button = Button.new()
@@ -276,6 +285,7 @@ func _build_title_menu() -> void:
 	veyru_start_button.custom_minimum_size = Vector2(0, 50)
 	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay."
 	veyru_start_button.pressed.connect(_start_veyru_game)
+	_bind_title_preview(veyru_start_button, "veyru")
 	actions.add_child(veyru_start_button)
 
 	continue_button = Button.new()
@@ -283,6 +293,7 @@ func _build_title_menu() -> void:
 	continue_button.custom_minimum_size = Vector2(0, 52)
 	continue_button.tooltip_text = "Load the last locally saved fortress state."
 	continue_button.pressed.connect(_continue_game)
+	_bind_title_preview(continue_button, "continue")
 	actions.add_child(continue_button)
 	save_recovery_button = Button.new()
 	save_recovery_button.name = "SaveRecoveryButton"
@@ -291,6 +302,7 @@ func _build_title_menu() -> void:
 	save_recovery_button.tooltip_text = "Remove the local save that cannot be loaded."
 	save_recovery_button.visible = false
 	save_recovery_button.pressed.connect(_on_save_recovery_pressed)
+	_bind_title_preview(save_recovery_button, "recovery")
 	actions.add_child(save_recovery_button)
 
 	var utility_actions := HBoxContainer.new()
@@ -340,16 +352,16 @@ func _build_title_menu() -> void:
 	stage.add_theme_constant_override("separation", 13)
 	stage_panel.add_child(stage)
 
-	var stage_eyebrow := Label.new()
-	stage_eyebrow.text = "CURRENT BUILD · TWO TEST JOURNEYS · 15–25 MINUTES EACH"
-	stage_eyebrow.add_theme_font_size_override("font_size", 12)
-	stage_eyebrow.add_theme_color_override("font_color", Color("#9fd2c2"))
-	stage.add_child(stage_eyebrow)
-	var stage_title := Label.new()
-	stage_title.text = "Choose a region"
-	stage_title.add_theme_font_size_override("font_size", 30)
-	stage_title.add_theme_color_override("font_color", Color("#f0d29d"))
-	stage.add_child(stage_title)
+	title_preview_eyebrow_label = Label.new()
+	title_preview_eyebrow_label.text = "ASHGATE LOWLANDS · FIRST JOURNEY · 15–25 MINUTES"
+	title_preview_eyebrow_label.add_theme_font_size_override("font_size", 12)
+	title_preview_eyebrow_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	stage.add_child(title_preview_eyebrow_label)
+	title_preview_title_label = Label.new()
+	title_preview_title_label.text = "Learn the machine"
+	title_preview_title_label.add_theme_font_size_override("font_size", 30)
+	title_preview_title_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	stage.add_child(title_preview_title_label)
 	title_region_briefing_label = Label.new()
 	title_region_briefing_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_region_briefing_label.custom_minimum_size = Vector2(330, 72)
@@ -363,14 +375,14 @@ func _build_title_menu() -> void:
 	title_charter_label.add_theme_font_size_override("font_size", 12)
 	title_charter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	charter_panel.add_child(title_charter_label)
-	var scope := Label.new()
-	scope.text = "TWO PLAYABLE CHAPTERS   ·   5 ENCOUNTERS EACH   ·   RECOVERY MID-RUN   ·   FINALE AT 5"
-	scope.add_theme_font_size_override("font_size", 11)
-	scope.add_theme_color_override("font_color", Color("#d8a650"))
-	stage.add_child(scope)
-	stage.add_child(_stage_rule("01", "Choose the obligation", "Guard Ashgate's convoy or carry Veyru's sealed medicines."))
-	stage.add_child(_stage_rule("02", "Read the regional pressure", "Compare risk, fuel, time, rising danger, and what the fortress can see."))
-	stage.add_child(_stage_rule("03", "Survive five encounters", "Read enemy targets, intervene once per contact, and recover mid-run."))
+	title_preview_scope_label = Label.new()
+	title_preview_scope_label.text = "PRESSURE · BLOCKADE WATCH   ·   RECOVERY · MORROWLINE   ·   FINALE · SIEGE BEAST"
+	title_preview_scope_label.add_theme_font_size_override("font_size", 11)
+	title_preview_scope_label.add_theme_color_override("font_color", Color("#d8a650"))
+	stage.add_child(title_preview_scope_label)
+	stage.add_child(_stage_rule("01", "Choose the obligation", "Guard Morrowline's parts convoy or travel unbound.", true))
+	stage.add_child(_stage_rule("02", "Read signal and road pressure", "Compare known, forecast, and unscouted routes before committing.", true))
+	stage.add_child(_stage_rule("03", "Recover before the finale", "Refit at Morrowline, then face the Siege Beast at encounter five.", true))
 
 	title_input_legend_label = Label.new()
 	title_input_legend_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -516,7 +528,27 @@ func _warning_button(button: Button) -> void:
 	button.add_theme_stylebox_override("pressed", _flat_style(Color("#1b090cfa") if high_contrast_enabled else Color("#211714f2"), Color("#ffe0e1") if high_contrast_enabled else Color("#efb39d"), 3 if high_contrast_enabled else 2, 6, 10 if high_contrast_enabled else 11))
 	button.add_theme_stylebox_override("focus", _flat_style(normal_fill, Color.WHITE, 4 if high_contrast_enabled else 3, 6, 9 if high_contrast_enabled else 10))
 
-func _stage_rule(number: String, title: String, detail: String) -> Control:
+func _bind_title_preview(button: Button, preview_id: String) -> void:
+	button.set_meta("long_march_title_preview", preview_id)
+	button.focus_entered.connect(_focus_title_preview.bind(preview_id))
+	button.mouse_entered.connect(_show_title_preview.bind(preview_id))
+	button.mouse_exited.connect(_restore_focused_title_preview)
+
+func _focus_title_preview(preview_id: String) -> void:
+	focused_title_preview_id = preview_id
+	_show_title_preview(preview_id)
+
+func _show_title_preview(preview_id: String) -> void:
+	title_preview_id = preview_id
+	_refresh_title_preview()
+
+func _restore_focused_title_preview() -> void:
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner != null and focus_owner.has_meta("long_march_title_preview"):
+		focused_title_preview_id = String(focus_owner.get_meta("long_march_title_preview"))
+	_show_title_preview(focused_title_preview_id)
+
+func _stage_rule(number: String, title: String, detail: String, track_title_preview: bool = false) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	var number_label := Label.new()
@@ -539,6 +571,9 @@ func _stage_rule(number: String, title: String, detail: String) -> Control:
 	detail_label.add_theme_font_size_override("font_size", 12)
 	detail_label.add_theme_color_override("font_color", Color("#98a5a5"))
 	copy.add_child(detail_label)
+	if track_title_preview:
+		title_preview_rule_title_labels.append(title_label)
+		title_preview_rule_detail_labels.append(detail_label)
 	return row
 
 func _build_guide_overlay() -> void:
@@ -1284,12 +1319,6 @@ func _refresh_title_state() -> void:
 	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
 	var has_completed_save := has_valid_save and bool(save_info.get("completed", false))
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
-	if not campaign_progress_error.is_empty():
-		title_region_briefing_label.text = "Ashgate and Flooded Veyru remain playable. Regional record unavailable: %s. Completing a qualifying run can rebuild it." % campaign_progress_error
-	elif campaign_progress.has_development("veyru_public_archive_signal"):
-		title_region_briefing_label.text = "Ashgate teaches route pressure and convoy recovery. Flooded Veyru now carries the PUBLIC ARCHIVE SIGNAL: Drowned Registry contacts are Known on later runs."
-	else:
-		title_region_briefing_label.text = "Ashgate teaches route pressure, signal, and convoy recovery. Flooded Veyru tests lower-hull condition, rising water, and a medicine carrier bound for the Dry Archive."
 	title_charter_label.text = _march_charter_text()
 	if briefing_complete:
 		start_button.text = "PLAY AGAIN · ASHGATE DEPOT" if has_completed_save else ("NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT")
@@ -1339,11 +1368,79 @@ func _refresh_title_state() -> void:
 		save_status_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
 		save_status_label.add_theme_color_override("font_color", Color("#9aa8aa"))
+	if title_preview_id == "continue" and not has_valid_save:
+		title_preview_id = "recovery" if has_invalid_save else "ashgate_guided"
+	elif title_preview_id == "recovery" and not has_invalid_save:
+		title_preview_id = "continue" if has_valid_save else "ashgate_guided"
+	elif title_preview_id == "ashgate_quick" and not quick_start_button.visible:
+		title_preview_id = "ashgate_guided"
+	if focused_title_preview_id == "continue" and not has_valid_save:
+		focused_title_preview_id = "recovery" if has_invalid_save else "ashgate_guided"
+	elif focused_title_preview_id == "recovery" and not has_invalid_save:
+		focused_title_preview_id = "continue" if has_valid_save else "ashgate_guided"
+	elif focused_title_preview_id == "ashgate_quick" and not quick_start_button.visible:
+		focused_title_preview_id = "ashgate_guided"
+	_refresh_title_preview(save_info)
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
 	_accent_button(continue_button if has_valid_save else start_button)
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
+
+func _refresh_title_preview(save_info: Dictionary = {}) -> void:
+	if title_preview_title_label == null or title_preview_rule_title_labels.size() != 3:
+		return
+	var current_save := save_info if not save_info.is_empty() else _saved_run_info()
+	var rule_titles: Array[String] = []
+	var rule_details: Array[String] = []
+	match title_preview_id:
+		"continue":
+			if not bool(current_save.get("valid", false)):
+				title_preview_id = "recovery" if bool(current_save.get("exists", false)) else "ashgate_guided"
+				_refresh_title_preview(current_save)
+				return
+			var completed := bool(current_save.get("completed", false))
+			title_preview_eyebrow_label.text = "LOCAL CHECKPOINT · %s · %s" % [String(current_save.get("region", "SAVED MARCH")).to_upper(), String(current_save.get("save_age", "SAVED EARLIER")).to_upper()]
+			title_preview_title_label.text = "Review the saved result" if completed else "Resume the march"
+			title_region_briefing_label.text = "%s at %s. Continue restores this exact validated decision; it does not begin a replacement run." % [String(current_save.get("region", "Campaign")), String(current_save.get("location", "the saved location"))]
+			title_preview_scope_label.text = "%s · %d/5 SECURED   ·   DAY %d   ·   SAVED BY %s" % [String(current_save.get("phase", "Checkpoint")).to_upper(), int(current_save.get("encounters", 0)), int(current_save.get("day", 1)), String(current_save.get("saved_build", "EARLIER BUILD")).to_upper()]
+			rule_titles = ["Return to the waiting decision", "Check the fortress condition", "Keep replacement runs deliberate"]
+			rule_details = [String(current_save.get("next_action", "Review the current decision")), "Fuel %d · Hull %d/10 · Heat %d/%d · %s" % [int(current_save.get("fuel", 0)), int(current_save.get("hull", 0)), int(current_save.get("heat", 0)), LongMarchState.BASE_HEAT_LIMIT, String(current_save.get("condition", "unknown")).capitalize()], "New Ashgate or Veyru runs ask before they can replace this Continue slot."]
+		"recovery":
+			var backup_valid := bool(current_save.get("backup_valid", false))
+			title_preview_eyebrow_label.text = "LOCAL CHECKPOINT · RECOVERY REQUIRED"
+			title_preview_title_label.text = "Restore the previous checkpoint" if backup_valid else "Remove the unusable checkpoint"
+			title_region_briefing_label.text = "The primary Continue file cannot be loaded by this build. New Ashgate and Veyru runs remain available."
+			title_preview_scope_label.text = "BACKUP · %s   ·   PRIMARY · UNUSABLE   ·   ACTION · CONFIRM FIRST" % ("VALID" if backup_valid else "NOT AVAILABLE")
+			rule_titles = ["Protect valid state", "Make replacement explicit", "Keep both chapters playable"]
+			rule_details = ["Restore the validated predecessor before attempting Continue." if backup_valid else "No validated predecessor exists; the broken file cannot be resumed.", "Recovery never silently chooses or deletes a local file.", "Starting a new run remains separate from clearing the unusable checkpoint."]
+		"veyru":
+			title_preview_eyebrow_label.text = "FLOODED VEYRU · SECOND JOURNEY · 15–25 MINUTES"
+			title_preview_title_label.text = "Outrun rising water"
+			var development_note := " Public Archive Signal is active: Drowned Registry contacts begin Known." if campaign_progress.has_development("veyru_public_archive_signal") else ""
+			title_region_briefing_label.text = "A prepared fortress carries sealed medicine toward the Dry Archive while water closes routes and punishes exposed lower-hull systems.%s" % development_note
+			title_preview_scope_label.text = "PRESSURE · RISING WATER   ·   RECOVERY · EVACUATION CAMP   ·   FINALE · CIVIC GUARDIAN"
+			rule_titles = ["Bind medicine to a real module", "Read a changing map", "Choose what the archive says"]
+			rule_details = ["Accept the obligation with a named carrier, or decline before the first road.", "Flooding can close one approach, but never every recovery path.", "Broadcast or seal the archive after five encounters; each choice changes the finale."]
+		"ashgate_quick":
+			title_preview_eyebrow_label.text = "ASHGATE LOWLANDS · QUICK START · 15–25 MINUTES"
+			title_preview_title_label.text = "Use the prepared fortress"
+			title_region_briefing_label.text = "Begin at Ashgate Depot with the authored chassis ready and the Marchmaster briefing skipped for fast replay or comparison."
+			title_preview_scope_label.text = "PRESSURE · BLOCKADE WATCH   ·   RECOVERY · MORROWLINE   ·   FINALE · SIEGE BEAST"
+			rule_titles = ["Answer the convoy contract", "Compare three visibility bands", "Recover before the finale"]
+			rule_details = ["Guard Morrowline's parts for a harder approach and payout, or travel unbound.", "Known, Forecast, and Unscouted roads reveal different amounts without hiding all counterplay.", "Refit at Morrowline, then face the Siege Beast at encounter five."]
+		_:
+			title_preview_id = "ashgate_guided"
+			var briefing_available := not FileAccess.file_exists(ONBOARDING_PATH)
+			title_preview_eyebrow_label.text = "ASHGATE LOWLANDS · GUIDED FIRST JOURNEY · 15–25 MINUTES" if briefing_available else "ASHGATE LOWLANDS · RETURNING JOURNEY · 15–25 MINUTES"
+			title_preview_title_label.text = "Learn the machine" if briefing_available else "Return to Ashgate"
+			title_region_briefing_label.text = "Begin at Ashgate Depot with seven short Marchmaster cards covering chassis, dependencies, routes, battle, recovery, and debrief." if briefing_available else "Begin directly at Ashgate Depot with the prepared fortress. The completed Marchmaster briefing remains available from the Field Briefing, or can be reset in Settings."
+			title_preview_scope_label.text = "PRESSURE · BLOCKADE WATCH   ·   RECOVERY · MORROWLINE   ·   FINALE · SIEGE BEAST"
+			rule_titles = ["Build around a promise", "Read signal and road pressure", "Recover before the finale"]
+			rule_details = ["Guard Morrowline's parts for a harder approach and payout, or travel unbound.", "Compare known, forecast, and unscouted routes before committing.", "Refit at Morrowline, then face the Siege Beast at encounter five."]
+	for index in range(3):
+		title_preview_rule_title_labels[index].text = rule_titles[index]
+		title_preview_rule_detail_labels[index].text = rule_details[index]
 
 func _march_charter_text() -> String:
 	if not campaign_progress_error.is_empty():
@@ -1444,6 +1541,11 @@ func _saved_run_info_at(save_path: String) -> Dictionary:
 		"region_id": region_id,
 		"region": region_name,
 		"saved_build": saved_build,
+		"save_age": save_age,
+		"next_action": next_action,
+		"fuel": fuel,
+		"hull": hull,
+		"heat": heat,
 		"action": "VIEW RESULT · %s · %s" % [result_name.to_upper(), region_menu_name] if completed else "CONTINUE · %s · DAY %d · %s" % [region_menu_name, day, location.to_upper()],
 		"tooltip": "Review the saved %s debrief from %s in %s. Saved by %s." % [result_name, location, region_name, saved_build] if completed else "Resume %s at %s during %s with %d of 5 encounters secured. Saved by %s." % [region_name, location, phase, encounters, saved_build],
 		"summary": "Completed run · %s · %d/5 · %s · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [result_name, encounters, region_name, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note] if completed else "Checkpoint · %s · %s · %s · %d/5 · %s\nNext · %s · Fuel %d · Hull %d/10 · Heat %d/%d%s" % [region_name, condition.capitalize(), phase, encounters, save_age, next_action, fuel, hull, heat, LongMarchState.BASE_HEAT_LIMIT, build_note]
