@@ -931,3 +931,7 @@ The stage title and contextual Pause action now sit in a fixed left-column heade
 ## 2026-08-28 — Pointer Pause does not become the resume target
 
 The persistent Pause button is pointer-active but focus-neutral. Keyboard and controller users already open Pause through Escape or the configured cancel button, so adding the visible button to their focus loop would duplicate the same command. More importantly, a pointer click no longer replaces the active stage control before the overlay records it; Resume Here restores that exact context, while Go to Order retains its separate authoritative destination.
+
+## 2026-08-28 — Build identity names the artifact once
+
+Title and Pause now share a `Playtest Build · v<version>` convention. The title retains the two-playable-region scope, while the Pause footer stays compact. This removes the previous `ALPHA · v...alpha...` repetition and gives screenshots one recognizable artifact label without changing the raw version used by saves, feedback exports, manifests, or compatibility checks.

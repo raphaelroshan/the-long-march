@@ -243,7 +243,7 @@ func _build_title_menu() -> void:
 	columns.add_child(left)
 
 	title_build_label = Label.new()
-	title_build_label.text = "TWO PLAYABLE REGIONS · ALPHA · %s" % _build_version()
+	title_build_label.text = "TWO PLAYABLE REGIONS · %s" % _playtest_build_label()
 	title_build_label.add_theme_font_size_override("font_size", 13)
 	title_build_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	left.add_child(title_build_label)
@@ -1068,7 +1068,7 @@ func _build_pause_menu() -> void:
 	pause_hint_label.add_theme_color_override("font_color", Color("#829092"))
 	content.add_child(pause_hint_label)
 	pause_build_label = Label.new()
-	pause_build_label.text = _build_version()
+	pause_build_label.text = _playtest_build_label()
 	pause_build_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_build_label.add_theme_font_size_override("font_size", 10)
 	pause_build_label.add_theme_color_override("font_color", Color("#667477"))
@@ -1244,6 +1244,9 @@ func _load_preferences() -> void:
 
 func _build_version() -> String:
 	return "v%s" % String(ProjectSettings.get_setting("application/config/version", "development"))
+
+func _playtest_build_label() -> String:
+	return "PLAYTEST BUILD · %s" % _build_version()
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()

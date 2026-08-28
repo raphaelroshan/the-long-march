@@ -58,7 +58,7 @@ func _run() -> void:
 	_expect(not auto_accept_quit, "the application should intercept operating-system close requests instead of accepting them before save review")
 	_expect(app.menu_view.visible, "the application should open on the title menu")
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
-	_expect(app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should expose the exact build version for playtest reports")
+	_expect(app.title_build_label.text.begins_with("TWO PLAYABLE REGIONS · PLAYTEST BUILD") and app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and not app.title_build_label.text.contains("ALPHA · v"), "the title should expose one clear playtest-build identity without duplicating the alpha channel")
 	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
 	_expect(not app.title_return_notice_panel.visible and app.title_return_notice.is_empty() and app.save_status_label.visible, "a clean launch should show normal save guidance without inventing a prior-session return receipt")
 	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.quick_start_button, "title navigation should move down from Guided Start to Quick Start")
@@ -487,7 +487,7 @@ func _run() -> void:
 	_expect(app.pause_notes_button.get_node_or_null(app.pause_notes_button.focus_neighbor_bottom) == app.restart_button, "pause navigation should retain local playtest notes before destructive session controls")
 	_expect(app.title_button.get_node_or_null(app.title_button.focus_next) == app.resume_button and app.resume_button.get_node_or_null(app.resume_button.focus_previous) == app.title_button and app.resume_button.get_node_or_null(app.resume_button.focus_next) == app.pause_order_button, "the pause menu should trap Tab navigation inside its visible actions and include the order return")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5") and app.pause_summary_label.text.contains("RUN ASH-1107"), "the pause menu should summarize the current run and expose its reproducible identity")
-	_expect(app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the tested build identifier")
+	_expect(app.pause_build_label.text.begins_with("PLAYTEST BUILD") and app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the same labelled build identity as the title")
 	var state_before_record: Dictionary = app.game_view.state.serialize()
 	app.pause_record_button.pressed.emit()
 	await process_frame

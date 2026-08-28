@@ -62,6 +62,8 @@ Inside the inspector, **Battle System**, **Final System**, and **Refit Locked** 
 
 **Build & Local Data** identifies the running artifact and every managed local-data category without opening the filesystem. Use **Copy Data Folder Path** when collecting a save or exported report from a tester. The panel is informational: its copy action moves only the folder path to the clipboard, and its Back/cancel action returns to Settings without resuming a paused run.
 
+The title and Pause footer both label the exact version as **Playtest Build**. Include that full identifier in screenshots or issue reports; it is the same authoritative application version written into saves and exported feedback.
+
 Settings uses three visible sections: **Display & Readability**, **Controls & Feedback**, and **Runs & Local Data**. The fixed breadcrumb follows focused controls even when their section heading scrolls away. Watch whether testers can predict where a preference or reset belongs before reading every row.
 
 ## Building locally
