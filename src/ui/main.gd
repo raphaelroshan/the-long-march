@@ -91,6 +91,8 @@ var settlement_hull_button: Button
 var settlement_routes_button: Button
 var final_journey_button: Button
 var refit_label: Label
+var dependency_card_panel: PanelContainer
+var dependency_card_label: Label
 var route_preview_label: Label
 var refit_title: Label
 var module_group: Control
@@ -575,6 +577,15 @@ func _build_ui() -> void:
 	refit_label.custom_minimum_size = Vector2(320, 54)
 	refit_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	controls.add_child(refit_label)
+	dependency_card_panel = PanelContainer.new()
+	dependency_card_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 10))
+	controls.add_child(dependency_card_panel)
+	dependency_card_label = Label.new()
+	dependency_card_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	dependency_card_label.custom_minimum_size = Vector2(300, 116)
+	dependency_card_label.add_theme_font_size_override("font_size", 11)
+	dependency_card_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	dependency_card_panel.add_child(dependency_card_label)
 
 	settlement_group = VBoxContainer.new()
 	settlement_group.add_theme_constant_override("separation", 8)
@@ -1290,7 +1301,7 @@ func _scroll_action_context_into_view(control: Control) -> void:
 	var viewport_rect := right_scroll.get_global_rect()
 	var previous_scroll := right_scroll.scroll_vertical
 	var guidance_rect := guidance_label.get_global_rect()
-	var control_rect := control.get_global_rect()
+	var control_rect := dependency_card_panel.get_global_rect() if dependency_card_panel.visible and control in [module_option, focus_chassis_button, rotate_button, remove_button] else control.get_global_rect()
 	var guidance_top := guidance_rect.position.y - viewport_rect.position.y + previous_scroll
 	var control_bottom := control_rect.end.y - viewport_rect.position.y + previous_scroll
 	var context_height := control_bottom - guidance_top
@@ -1462,6 +1473,8 @@ func _on_module_selected(index: int) -> void:
 	else:
 		_set_event("%s is no longer available in this run." % module_name)
 	_refresh_ui()
+	if module_option.has_focus():
+		_on_desk_control_focused(module_option)
 
 func _focus_chassis_for_refit() -> void:
 	if not state.can_refit():
@@ -2147,6 +2160,15 @@ func _refresh_ui() -> void:
 	focus_chassis_button.visible = is_refit_phase
 	refit_actions.visible = is_refit_phase
 	refit_label.visible = is_refit_phase
+	dependency_card_panel.visible = is_refit_phase
+	if is_refit_phase and not selected_installed.is_empty():
+		var dependency_card := state.module_dependency_card(selected_installed)
+		dependency_card_label.text = "DEPENDENCY · %s\nDEPENDS ON · %s\nNOW · %s — %s\nIF LOST · %s\nCOUNTER · %s" % [String(dependency_card.get("name", "MODULE")).to_upper(), String(dependency_card.get("direct_dependency", "unknown")), String(dependency_card.get("state", "offline")).to_upper(), String(dependency_card.get("current_detail", "status unavailable")), String(dependency_card.get("next_failure", "No downstream effect recorded.")), String(dependency_card.get("legal_counter", "No legal counter recorded."))]
+		var dependency_card_state := String(dependency_card.get("state", "offline"))
+		dependency_card_label.add_theme_color_override("font_color", Color("#c8d1d1") if dependency_card_state == "ready" else (Color("#e8c58e") if dependency_card_state == "strained" else Color("#ef8375")))
+	elif is_refit_phase:
+		dependency_card_label.text = "DEPENDENCY · NOT INSTALLED\nPlace the selected module on the chassis to evaluate its live connections, failure chain, and legal counter."
+		dependency_card_label.add_theme_color_override("font_color", Color("#89999e"))
 	if state.phase == "settlement" and settlement_group.get_index() > doctrine_group.get_index():
 		settlement_group.get_parent().move_child(settlement_group, doctrine_group.get_index())
 	route_group.visible = state.phase == "refit" and not state.campaign_active

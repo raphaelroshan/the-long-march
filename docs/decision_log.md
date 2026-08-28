@@ -739,3 +739,7 @@ Campaign recovery now ends with a Review Next Roads action that moves focus to t
 ## 2026-08-28 — Focus handoffs must also move the viewport
 
 Command-desk focus scrolling now coalesces rapid focus changes and reapplies the latest target across the next two UI frames, after layout has settled. The previous nested coroutine reached the target control logically but never applied its scroll, allowing controller focus to sit far below the visible panel. A geometry regression now requires the recovery-to-route handoff to place the entire focused node inside the right-hand viewport.
+
+## 2026-08-28 — Dependency explanations are authoritative read models
+
+The selected installed module now exposes one compact dependency card: direct inputs, current operating state, the next practical failure if its most relevant link is lost, and one legal counter. The card is derived by `LongMarchState` without mutating the fortress; presentation only formats the returned fields. This rejects UI-owned dependency rules and a larger encyclopedia panel, keeping the explanation attached to the physical chassis decision.

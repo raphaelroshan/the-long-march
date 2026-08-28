@@ -718,6 +718,103 @@ func dependency_status_at(cell: Vector2i) -> Dictionary:
 		return {}
 	return dependency_status(instance)
 
+func module_dependency_card(instance: Dictionary) -> Dictionary:
+	var module_id := String(instance.get("id", ""))
+	var definition := module_definition(module_id)
+	if definition.is_empty():
+		return {}
+	var status := dependency_status(instance)
+	var connections: Array = status.get("connections", [])
+	var dependency_labels := {
+		"power_to_module": "shared power bus",
+		"fuel_to_engine": "adjacent Coal Cell",
+		"ammunition_to_weapon": "adjacent Ammunition Lift",
+		"crew_to_workshop": "adjacent Crew Quarters",
+		"parts_to_workshop": "adjacent Parts Crate",
+		"visibility_to_signal": "exterior signal visibility"
+	}
+	var failure_texts := {
+		"power_to_module": "Power demand can force this module offline.",
+		"fuel_to_engine": "Losing the adjacent Coal Cell stops movement and blocks departure.",
+		"ammunition_to_weapon": "Losing the Ammunition Lift strains this weapon and reduces its damage.",
+		"crew_to_workshop": "Losing Crew Quarters takes the workshop offline and stops field repairs.",
+		"parts_to_workshop": "Losing the Parts Crate limits each workshop repair.",
+		"visibility_to_signal": "Losing exterior visibility broadens route and target forecasts."
+	}
+	var counter_texts := {
+		"power_to_module": "Keep total draw at or below output, or restore a Generator Core.",
+		"fuel_to_engine": "Keep a working Coal Cell adjacent; reposition or repair it before departure.",
+		"ammunition_to_weapon": "Place a working Ammunition Lift adjacent, or accept emergency ammunition.",
+		"crew_to_workshop": "Place working Crew Quarters adjacent before relying on field repair.",
+		"parts_to_workshop": "Place a working Parts Crate adjacent to restore full repair output.",
+		"visibility_to_signal": "Use an exterior signal module or place this beside one."
+	}
+	var dependency_names: Array[String] = []
+	var focus_connection: Dictionary = {}
+	for connection in connections:
+		var connection_id := String(connection.get("id", ""))
+		dependency_names.append(String(dependency_labels.get(connection_id, connection_id.replace("_", " "))))
+		if focus_connection.is_empty() and not bool(connection.get("satisfied", false)):
+			focus_connection = connection
+	if focus_connection.is_empty():
+		for connection in connections:
+			if String(connection.get("id", "")) != "power_to_module":
+				focus_connection = connection
+				break
+	if focus_connection.is_empty() and not connections.is_empty():
+		focus_connection = connections[0]
+
+	var reasons: Array = status.get("reasons", [])
+	var benefits: Array = status.get("benefits", [])
+	var current_detail := String(reasons[0]) if not reasons.is_empty() else ("; ".join(benefits) if not benefits.is_empty() else "no operating input required")
+	var direct_dependency := ", ".join(dependency_names) if not dependency_names.is_empty() else "no required operating input"
+	var next_failure := "Damage reduces this module's own capability before affecting another system."
+	var legal_counter := "Repair before durability reaches zero or place it behind an adjacent armor module."
+	if not focus_connection.is_empty():
+		var focus_id := String(focus_connection.get("id", ""))
+		next_failure = String(failure_texts.get(focus_id, next_failure))
+		legal_counter = String(counter_texts.get(focus_id, legal_counter))
+	else:
+		match module_id:
+			"generator_core":
+				direct_dependency = "no input · supplies the shared power bus"
+				next_failure = "If disabled, four power is lost and powered systems may go offline."
+				legal_counter = "Keep power draw within reserve or protect the core with adjacent armor."
+			"coal_cell":
+				direct_dependency = "no input · supplies adjacent engines"
+				next_failure = "If disabled or moved, an adjacent engine loses its fuel feed and movement stops."
+				legal_counter = "Keep it beside an engine and repair it before durability reaches zero."
+			"ammunition_lift":
+				direct_dependency = "shared power bus · supplies adjacent weapons"
+				next_failure = "If disabled or moved, adjacent weapons fall back to emergency ammunition."
+				legal_counter = "Keep it powered beside a weapon or retain a lower-output fallback weapon."
+			"parts_crate":
+				direct_dependency = "no input · supplies adjacent workshops"
+				next_failure = "If disabled or moved, adjacent workshops perform only limited repairs."
+				legal_counter = "Keep it beside a workshop or reserve settlement repair for critical damage."
+			_:
+				if "armor" in definition.get("tags", []):
+					direct_dependency = "adjacent system placement"
+					next_failure = "If disabled or moved, its adjacent system loses damage absorption."
+					legal_counter = "Place it beside the system you cannot afford to lose and repair it before zero."
+	if module_id == "ammunition_lift":
+		direct_dependency = "shared power bus · supplies adjacent weapons"
+		next_failure = "If disabled or moved, adjacent weapons fall back to emergency ammunition."
+		legal_counter = "Keep it powered beside a weapon or retain a lower-output fallback weapon."
+	elif module_id == "crew_quarters":
+		direct_dependency = "shared power bus · staffs adjacent workshops"
+		next_failure = "If disabled or moved, adjacent workshops lose their crew and go offline."
+		legal_counter = "Keep it powered beside the workshop or protect it with adjacent armor."
+	return {
+		"module_id": module_id,
+		"name": String(definition.get("name", module_id)),
+		"state": String(status.get("state", "offline")),
+		"current_detail": current_detail,
+		"direct_dependency": direct_dependency,
+		"next_failure": next_failure,
+		"legal_counter": legal_counter
+	}
+
 func dependency_summary() -> Dictionary:
 	var result := {"ready": 0, "strained": 0, "offline": 0}
 	for instance in modules:

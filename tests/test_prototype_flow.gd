@@ -160,9 +160,13 @@ func _run() -> void:
 	_expect(game.module_option.is_item_disabled(cannon_index) and game.module_option.get_item_text(cannon_index).contains("LOST"), "a permanently unavailable module should be disabled and marked lost")
 	game.state.stored_modules.append(stored_cannon)
 	var engine_index := _module_picker_index("steam_lance_engine")
+	game.module_option.grab_focus()
 	game.module_option.select(engine_index)
 	game.module_option.item_selected.emit(engine_index)
 	await process_frame
+	await process_frame
+	_expect(game.dependency_card_label.text.contains("DEPENDENCY · STEAM LANCE ENGINE") and game.dependency_card_label.text.contains("DEPENDS ON · adjacent Coal Cell") and game.dependency_card_label.text.contains("IF LOST · Losing the adjacent Coal Cell stops movement") and game.dependency_card_label.text.contains("COUNTER · Keep a working Coal Cell adjacent"), "the module inspector should present the engine dependency, current risk, downstream failure, and legal counter together")
+	_expect(game.right_scroll.get_global_rect().encloses(game.dependency_card_panel.get_global_rect()), "focusing an installed module should keep its complete dependency card visible")
 	var before_remove_copy: Dictionary = game.state.serialize()
 	game.remove_button.pressed.emit()
 	await process_frame

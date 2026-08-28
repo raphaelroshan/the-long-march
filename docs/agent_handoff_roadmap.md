@@ -671,8 +671,8 @@ cd /path/to/the-long-march
 bash scripts/verify.sh
 python3 -m json.tool content/content_manifest.json
 python3 -m json.tool content/gameplay_framework.json
-python3 tools/validate_content.py
-python3 tools/validate_gameplay_framework.py
+python3 tools/validate_content.py --manifest content/content_manifest.json
+python3 tools/validate_gameplay_framework.py --data content/gameplay_framework.json
 python3 tools/policy_check.py --repo .
 git diff --check
 ```

@@ -88,6 +88,10 @@ func _test_dependency_graph() -> void:
 	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "offline", "engine without adjacent fuel should be offline")
 	engine_state.place_module("coal_cell", Vector2i(0, 1))
 	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "ready", "adjacent Coal Cell should enable the engine")
+	var engine_before_card: Dictionary = engine_state.serialize()
+	var engine_card := engine_state.module_dependency_card(engine_state.module_at(Vector2i(0, 0)))
+	_expect(String(engine_card.get("direct_dependency", "")).contains("adjacent Coal Cell") and String(engine_card.get("next_failure", "")).contains("stops movement") and String(engine_card.get("legal_counter", "")).contains("reposition or repair"), "the engine dependency card should name its direct fuel link, downstream movement failure, and one legal counter")
+	_expect(engine_state.serialize() == engine_before_card, "reading a dependency card must not mutate authoritative fortress state")
 	engine_state.reposition_module_at(Vector2i(0, 1), Vector2i(4, 3), false)
 	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "offline", "moving fuel away should immediately break the engine connection")
 
