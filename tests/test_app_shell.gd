@@ -7,6 +7,7 @@ const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 const PROGRESS_PATH := "user://the_long_march_progress.json"
+const FEEDBACK_PRESERVE_PATH := "user://the_long_march_feedback_reset_test.json"
 
 var app: Control
 var failures: Array[String] = []
@@ -16,7 +17,7 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _remove_local_test_files() -> void:
-	for path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH, FEEDBACK_PRESERVE_PATH]:
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)
@@ -106,7 +107,7 @@ func _run() -> void:
 	_expect(_tree_contains_text(app.settings_view, "Switch between a window") and _tree_contains_text(app.settings_view, "Increase interface text") and _tree_contains_text(app.settings_view, "Save after committed decisions"), "Settings should expose display, text-size, and save consequences without requiring mouse-only tooltips")
 	_expect(app.text_scale_button.text == "TEXT SIZE · 100%" and app.theme.default_font_size == 16, "Settings should safely normalize an unsupported stored text size to the standard interface size")
 	_expect(app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_bottom) == app.text_scale_button and app.text_scale_button.get_node_or_null(app.text_scale_button.focus_neighbor_bottom) == app.motion_button, "controller navigation should place text size between display mode and motion")
-	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.settings_close_button and app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_top) == app.autosave_button, "Settings navigation should skip unavailable one-shot actions")
+	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "Settings navigation should retain the available clean-start action while skipping unavailable category resets")
 	_expect(app.settings_close_button.get_node_or_null(app.settings_close_button.focus_neighbor_bottom) == app.display_mode_button and app.display_mode_button.get_node_or_null(app.display_mode_button.focus_neighbor_top) == app.settings_close_button, "Settings navigation should form an explicit controller loop")
 	app.text_scale_button.pressed.emit()
 	await process_frame
@@ -381,6 +382,7 @@ func _run() -> void:
 	_expect(app.settings_view.visible and not app.pause_view.visible, "Settings should open directly from a paused run")
 	_expect(app.settings_context_label.text.begins_with("PAUSED MARCH") and app.settings_close_button.text == "BACK TO PAUSE", "in-run Settings should identify and return to the paused march")
 	_expect(app.reset_charter_button.disabled and app.reset_charter_button.text.contains("RETURN TO TITLE"), "paused Settings should not erase persistent history beneath an active run snapshot")
+	_expect(app.reset_playtest_button.disabled and app.reset_playtest_button.text.contains("RETURN TO TITLE"), "paused Settings should not reset local playtest data beneath an active run")
 	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include available one-shot actions in order")
 	app.text_scale_button.pressed.emit()
@@ -639,7 +641,7 @@ func _run() -> void:
 		await process_frame
 		_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_BACKUP_PATH)) and not app.continue_button.visible and app.continue_button.disabled, "confirmed save clearing should remove Continue and its recovery backup from the title action stack")
 		_expect(app.clear_save_button.disabled and app.settings_close_button.has_focus(), "clearing the save should move focus away from the newly disabled action")
-		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_charter_button and app.reset_charter_button.get_node_or_null(app.reset_charter_button.focus_neighbor_bottom) == app.settings_close_button, "clearing Continue should leave the independent March Charter reset in the Settings focus path")
+		_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_charter_button and app.reset_charter_button.get_node_or_null(app.reset_charter_button.focus_neighbor_bottom) == app.reset_playtest_button and app.reset_playtest_button.get_node_or_null(app.reset_playtest_button.focus_neighbor_bottom) == app.settings_close_button, "clearing Continue should leave the independent Charter and clean-start resets in the Settings focus path")
 
 	app._open_stage(false, false)
 	await process_frame
@@ -741,6 +743,43 @@ func _run() -> void:
 	app.settings_close_button.pressed.emit()
 	await process_frame
 	_expect(app.title_charter_label.text.contains("MARCH CHARTER · 0/2 REGIONS SURVIVED") and not app.veyru_start_button.tooltip_text.contains("Public Archive Signal is active"), "the title should immediately return to a clean Charter and remove development-specific guidance")
+
+	app.settings_button.pressed.emit()
+	await process_frame
+	app.text_scale_button.pressed.emit()
+	if app.autosave_enabled:
+		app.autosave_button.pressed.emit()
+	var onboarding_marker := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
+	onboarding_marker.store_string("completed")
+	onboarding_marker.close()
+	var journal_file := FileAccess.open(JOURNAL_PATH, FileAccess.WRITE)
+	journal_file.store_string("{\"events\":[]}")
+	journal_file.close()
+	var feedback_file := FileAccess.open(FEEDBACK_PRESERVE_PATH, FileAccess.WRITE)
+	feedback_file.store_string("tester-owned export")
+	feedback_file.close()
+	_expect(bool(app.campaign_progress.unlock("veyru_public_archive_signal").get("ok", false)), "the clean-reset test should recreate a persistent regional development")
+	app._refresh_title_state()
+	app._refresh_settings()
+	_expect(not app.reset_playtest_button.disabled and app.reset_playtest_button.text.contains("AVAILABLE") and app.reset_playtest_button.has_theme_stylebox_override("normal"), "title Settings should expose the clean-start reset as a distinct destructive action when local state exists")
+	app.reset_playtest_button.pressed.emit()
+	await process_frame
+	_expect(app.confirmation_title_label.text == "Start with clean playtest data?" and app.confirmation_confirm_button.text == "RESET PLAYTEST DATA" and app.confirmation_cancel_button.text == "KEEP LOCAL DATA", "clean-start reset should require an unmistakable confirmation")
+	_expect(app.confirmation_body_label.text.contains("Continue and its backup") and app.confirmation_body_label.text.contains("current local journal") and app.confirmation_body_label.text.contains("Exported playtest reports remain"), "the clean-start confirmation should enumerate removed and preserved data")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.settings_view.visible and app.reset_playtest_button.has_focus() and FileAccess.file_exists(SAVE_PATH) and FileAccess.file_exists(PROGRESS_PATH) and FileAccess.file_exists(FEEDBACK_PRESERVE_PATH), "cancelling clean-start reset should preserve every local data category and restore focus")
+	app.reset_playtest_button.pressed.emit()
+	await process_frame
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	for cleared_path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH]:
+		_expect(not FileAccess.file_exists(cleared_path), "clean-start reset should remove %s" % cleared_path.get_file())
+	_expect(FileAccess.file_exists(FEEDBACK_PRESERVE_PATH) and FileAccess.get_file_as_string(FEEDBACK_PRESERVE_PATH) == "tester-owned export", "clean-start reset should preserve previously exported playtest reports exactly")
+	_expect(not app.fullscreen_enabled and app.text_scale_percent == 100 and not app.reduced_motion and app.autosave_enabled and app.theme.default_font_size == 16, "clean-start reset should immediately restore every device preference default")
+	_expect(app.campaign_progress.developments.is_empty() and app.campaign_progress.region_results.is_empty() and app.title_charter_label.text.contains("0/2 REGIONS SURVIVED"), "clean-start reset should rebuild an empty in-memory March Charter")
+	_expect(not app.continue_button.visible and app.quick_start_button.visible and app.start_button.text.contains("GUIDED FIRST RUN"), "clean-start reset should immediately restore the first-launch title flow")
+	_expect(app.reset_playtest_button.disabled and app.settings_status_label.text.contains("Exported feedback reports were kept") and app.settings_close_button.has_focus(), "successful clean-start reset should disable itself, report preservation, and focus an enabled return action")
 
 	_remove_local_test_files()
 	if failures.is_empty():

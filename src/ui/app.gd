@@ -12,6 +12,7 @@ const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const PROGRESS_PATH := "user://the_long_march_progress.json"
+const PLAYTEST_JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const CHECKPOINT_LABELS := {
 	"contract_answered": "Contract decision",
 	"route_started": "Route committed",
@@ -57,6 +58,7 @@ var autosave_button: Button
 var reset_briefing_button: Button
 var reset_charter_button: Button
 var clear_save_button: Button
+var reset_playtest_button: Button
 var settings_status_label: Label
 var resume_button: Button
 var pause_summary_label: Label
@@ -649,6 +651,8 @@ func _build_settings_overlay() -> void:
 	reset_briefing_button = _settings_action(settings_actions, "FIRST-RUN BRIEFING", "Show the seven-step Marchmaster briefing on the next guided run.", _reset_briefing)
 	reset_charter_button = _settings_action(settings_actions, "MARCH CHARTER", "Remove regional results and developments without changing Continue, settings, or briefing progress.", _request_confirmation.bind("clear_progress"))
 	clear_save_button = _settings_action(settings_actions, "LOCAL SAVE", "Permanently remove the local Continue save after confirmation.", _request_confirmation.bind("clear_save"))
+	reset_playtest_button = _settings_action(settings_actions, "CLEAN PLAYTEST START", "Remove local run, Charter, briefing, preferences, and journal data while preserving exported feedback reports.", _request_confirmation.bind("reset_playtest_data"))
+	_warning_button(reset_playtest_button)
 	settings_status_label = Label.new()
 	settings_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	settings_status_label.custom_minimum_size = Vector2(550, 28)
@@ -886,6 +890,10 @@ func _build_checkpoint_toast() -> void:
 	checkpoint_toast.add_child(checkpoint_toast_label)
 
 func _load_preferences() -> void:
+	fullscreen_enabled = false
+	text_scale_percent = 100
+	reduced_motion = false
+	autosave_enabled = true
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
 		fullscreen_enabled = bool(config.get_value("display", "fullscreen", false))
@@ -938,12 +946,14 @@ func _refresh_settings(message: String = "") -> void:
 	reset_charter_button.disabled = settings_opened_from_pause or not progress_exists
 	clear_save_button.text = "CLEAR LOCAL SAVE · " + ("AVAILABLE" if _has_local_save_files() else "NO SAVE")
 	clear_save_button.disabled = not _has_local_save_files()
+	reset_playtest_button.text = "RESET PLAYTEST DATA · " + ("RETURN TO TITLE" if settings_opened_from_pause else ("AVAILABLE" if _has_resettable_playtest_data() else "ALREADY CLEAN"))
+	reset_playtest_button.disabled = settings_opened_from_pause or not _has_resettable_playtest_data()
 	_refresh_settings_focus()
 	settings_status_label.text = message if not message.is_empty() else "Preferences are local to this device."
 
 func _refresh_settings_focus() -> void:
 	var active_controls: Array = [display_mode_button, text_scale_button, motion_button, autosave_button]
-	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button]:
+	for optional_button in [reset_briefing_button, reset_charter_button, clear_save_button, reset_playtest_button]:
 		if not optional_button.disabled:
 			active_controls.append(optional_button)
 	active_controls.append(settings_close_button)
@@ -1257,6 +1267,12 @@ func _on_save_recovery_pressed() -> void:
 func _has_local_save_files() -> bool:
 	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH)
 
+func _has_resettable_playtest_data() -> bool:
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH]:
+		if FileAccess.file_exists(path):
+			return true
+	return false
+
 func _restore_save_backup() -> Dictionary:
 	var backup_info := _saved_run_info_at(SAVE_BACKUP_PATH)
 	if not bool(backup_info.get("valid", false)):
@@ -1272,8 +1288,23 @@ func _restore_save_backup() -> Dictionary:
 	return {"ok": true}
 
 func _clear_local_save_files() -> Dictionary:
+	return _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH])
+
+func _reset_playtest_data() -> Dictionary:
+	var removal := _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH])
+	_load_preferences()
+	_apply_display_mode()
+	_apply_text_scale()
+	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
+	var progress_result := campaign_progress.load_progress()
+	campaign_progress_error = "" if bool(progress_result.get("ok", false)) else String(progress_result.get("reason", "regional record could not be read"))
+	last_checkpoint_reason = ""
+	return removal
+
+func _remove_local_files(paths: Array) -> Dictionary:
 	var errors: Array[String] = []
-	for path in [SAVE_PATH, SAVE_BACKUP_PATH]:
+	for path_value in paths:
+		var path := String(path_value)
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			var removal_error := DirAccess.remove_absolute(absolute_path)
@@ -1544,9 +1575,9 @@ func _request_march_on_confirmation(region_id: String) -> void:
 	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else "march_on_veyru")
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "reset_playtest_data", "new_guided", "new_quick", "new_veyru"]:
 		return
-	if action == "clear_progress" and game_view != null:
+	if action in ["clear_progress", "reset_playtest_data"] and game_view != null:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1609,6 +1640,10 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Clear the local save?"
 		confirmation_body_label.text = "This local checkpoint cannot be loaded by this build. It and any local recovery backup will be permanently removed; your March Charter, settings, and briefing preference remain unchanged." if action == "clear_invalid_save" else "Continue progress and its local recovery backup will be permanently removed. Your March Charter, settings, and briefing preference remain unchanged."
 		confirmation_confirm_button.text = "REMOVE SAVE" if action == "clear_invalid_save" else "CLEAR SAVE"
+	elif action == "reset_playtest_data":
+		confirmation_title_label.text = "Start with clean playtest data?"
+		confirmation_body_label.text = "Continue and its backup, March Charter developments, briefing completion, preferences, and the current local journal will be permanently removed. Exported playtest reports remain available."
+		confirmation_confirm_button.text = "RESET PLAYTEST DATA"
 	else:
 		var save_info := _saved_run_info()
 		if bool(save_info.get("completed", false)):
@@ -1631,6 +1666,8 @@ func _request_confirmation(action: String) -> void:
 		confirmation_cancel_button.text = "KEEP SAVE"
 	elif action == "clear_progress":
 		confirmation_cancel_button.text = "KEEP CHARTER"
+	elif action == "reset_playtest_data":
+		confirmation_cancel_button.text = "KEEP LOCAL DATA"
 	elif action in ["march_on_ashgate", "march_on_veyru"]:
 		confirmation_cancel_button.text = "STAY AT DEBRIEF"
 	elif action == "quit_save":
@@ -1676,6 +1713,8 @@ func _cancel_confirmation() -> void:
 		clear_save_button.grab_focus()
 	elif previous_action == "clear_progress":
 		reset_charter_button.grab_focus()
+	elif previous_action == "reset_playtest_data":
+		reset_playtest_button.grab_focus()
 	elif previous_action == "clear_invalid_save":
 		save_recovery_button.grab_focus()
 	elif previous_action == "restore_backup":
@@ -1742,6 +1781,15 @@ func _confirm_pending_action() -> void:
 		else:
 			_refresh_settings("Continue and its recovery backup were cleared. Start Game begins a fresh march.")
 			settings_close_button.grab_focus()
+	elif action == "reset_playtest_data":
+		var reset_result := _reset_playtest_data()
+		_refresh_title_state()
+		if bool(reset_result.get("ok", false)):
+			_refresh_settings("Clean playtest state restored. Exported feedback reports were kept.")
+			settings_close_button.grab_focus()
+		else:
+			_refresh_settings("Playtest reset was incomplete: %s" % String(reset_result.get("reason", "unknown error")))
+			(reset_playtest_button if not reset_playtest_button.disabled else settings_close_button).grab_focus()
 	elif action == "new_guided":
 		_open_stage(false, true)
 	elif action == "new_quick":

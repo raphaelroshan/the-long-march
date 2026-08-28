@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.241`; Feeds A through L are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.242`; Feeds A through M are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -77,6 +77,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.241` through the bounded 100%/110% text-size preference.
 
 > Add one persistent large-text option without shrinking the logical canvas or losing the two-column decision surface. Make Settings scroll focused rows into view, adapt secondary title spacing, apply the preference to newly opened stages, and inspect title, guide, stage, and pause at 1280×720. Do not claim arbitrary zoom or full accessibility certification.
+
+### Current Feed M — clean playtest reset
+
+**Status:** Complete in `0.3.0-alpha.242` through the title-only local-state reset.
+
+> Add one confirmed title action that returns the build to a genuine first-launch test state: remove Continue and backup, Charter/developments, briefing completion, device preferences, and the current journal; restore defaults immediately; preserve exported feedback; and reject the action during a live run. Keep the narrower reset actions.
 
 ## Historical prototype feed sequence
 

@@ -28,6 +28,8 @@ The prototype keeps a small playtest journal on the local machine. It records ga
 
 Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the exact build version, the tester's two written answers, replay score, final state, and local event journal. The receipt shows the filename; hovering it reveals the full local path. The tester chooses whether to share that file.
 
+Before handing the build to a new tester, use **Settings → Reset Playtest Data** from the title. Confirm that the guided first-run title returns. Previously exported feedback reports remain in the user-data folder and must be managed separately by the test owner.
+
 ## Building locally
 
 Install Godot 4.4.1 with export templates, then run:

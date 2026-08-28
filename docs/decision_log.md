@@ -847,3 +847,7 @@ The existing local-only feedback form is reachable from Pause as well as the fin
 ## 2026-08-28 — Large text preserves the decision canvas
 
 Settings offers a bounded 100%/110% text-size preference rather than scaling the whole viewport. Whole-canvas scaling made the fixed chassis and command desk exceed the 1280×720 logical width; enlarging inherited and explicit font sizes keeps that decision surface intact. At 110%, the title removes one redundant small control-summary line and its decorative right spacer, while the visible input guide remains. Settings scrolls its preference rows independently so context, status, and return controls stay fixed and controller focus never lands below the viewport.
+
+## 2026-08-28 — Clean playtests preserve deliberate exports
+
+Title Settings can return all managed runtime state to a genuine first-launch baseline in one confirmed action. Continue and backup, March Charter state, briefing completion, preferences, and the current journal are removed together and their in-memory counterparts are rebuilt immediately. Exported feedback files are excluded because they are deliberate tester-owned artifacts, not hidden runtime state. The reset is unavailable during a live run, while narrower category resets remain for targeted testing.
