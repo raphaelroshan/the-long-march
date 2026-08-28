@@ -117,6 +117,7 @@ The current build contains two isolated five-encounter test journeys. Ashgate be
 
 The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
 The next presentation vertical slice—separate journey planning, committed travel, moving-fortress scenes, and readable threat approach—is specified in [`design/journey_presentation_vertical_slice.md`](design/journey_presentation_vertical_slice.md).
+Its shared fortress layout and at-rest, map, moving, and encounter modes are specified in [`design/fortress_visual_modes.md`](design/fortress_visual_modes.md).
 The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
 
 ## Related follow-up concept

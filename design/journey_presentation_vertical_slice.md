@@ -262,6 +262,8 @@ After selection, show the consequence over the same tableau, then the authoritat
 
 ## Godot scene architecture
 
+The shared frame, centered fortress, value rail, detail dock, and rest/march/contact mode rules are specified in [`fortress_visual_modes.md`](fortress_visual_modes.md).
+
 The current `scenes/Main.tscn` can remain the playable-stage root, but the major modes should become separate child scenes with narrow APIs.
 
 ```text

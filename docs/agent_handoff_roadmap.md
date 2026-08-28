@@ -8,6 +8,7 @@
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
 **Next build target:** Replace the settlement control stack with a bazaar hub, then extract Plan Journey and add deterministic in-between travel according to [`design/journey_presentation_vertical_slice.md`](../design/journey_presentation_vertical_slice.md)
+**Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
 
