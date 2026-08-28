@@ -453,6 +453,33 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"closed": campaign_node_closed(node_id)
 	}
 
+func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dictionary]:
+	var comparison: Array[Dictionary] = []
+	for node_id in campaign_available_nodes():
+		var preview := campaign_node_preview(node_id, doctrine)
+		var next_names: Array[String] = []
+		var settlement_follows := false
+		for raw_next_id in CAMPAIGN_EDGES.get(node_id, []):
+			var next_id := String(raw_next_id)
+			var next_node: Dictionary = CAMPAIGN_NODES.get(next_id, {})
+			next_names.append(String(next_node.get("name", next_id)))
+			if String(next_node.get("type", "")) == "settlement":
+				settlement_follows = true
+		comparison.append({
+			"id": node_id,
+			"name": String(preview.get("name", node_id)),
+			"visibility": String(preview.get("visibility", "unscouted")),
+			"days": int(preview.get("days", 0)),
+			"fuel": int(preview.get("fuel", 0)),
+			"risk": float(preview.get("risk", 0.0)),
+			"pressure_gain": int(preview.get("pressure_gain", 0)),
+			"threat_hint": String(preview.get("threat_hint", "uncertain pressure")),
+			"threats": preview.get("threats", []).duplicate(),
+			"next_stops": next_names,
+			"settlement_follows": settlement_follows
+		})
+	return comparison
+
 func choose_guard_contract(accept: bool) -> Dictionary:
 	if not campaign_active or current_location != "ashgate_depot" or phase != "refit":
 		return {"ok": false, "reason": "the guard contract is only offered at Ashgate Depot"}

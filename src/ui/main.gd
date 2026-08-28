@@ -109,6 +109,8 @@ var settlement_group: Control
 var campaign_title: Label
 var campaign_pressure_label: Label
 var campaign_path_label: Label
+var campaign_comparison_panel: PanelContainer
+var campaign_comparison_label: Label
 var campaign_map: CampaignMapView
 var campaign_node_buttons: Array[Button] = []
 var campaign_commit_button: Button
@@ -666,6 +668,14 @@ func _build_ui() -> void:
 	campaign_path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_path_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	controls.add_child(campaign_path_label)
+	campaign_comparison_panel = PanelContainer.new()
+	campaign_comparison_panel.add_theme_stylebox_override("panel", _flat_style(Color("#172329"), Color("#536a70"), 1, 5, 9))
+	controls.add_child(campaign_comparison_panel)
+	campaign_comparison_label = Label.new()
+	campaign_comparison_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_comparison_label.add_theme_font_size_override("font_size", 11)
+	campaign_comparison_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	campaign_comparison_panel.add_child(campaign_comparison_label)
 	campaign_map = CampaignMapView.new()
 	campaign_map.node_selected.connect(_on_campaign_node_selected)
 	campaign_map.route_committed.connect(_on_campaign_route_committed)
@@ -2011,6 +2021,16 @@ func _refresh_campaign_controls() -> void:
 	var previews := {}
 	for node_id in options:
 		previews[node_id] = state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+	var comparison_lines: Array[String] = ["COMPARE AVAILABLE ROADS · CONTRACT %s" % state.guard_contract_status.replace("_", " ").to_upper()]
+	for route in state.campaign_route_comparison(_selected_id(doctrine_option)):
+		var visibility := String(route.get("visibility", "unscouted"))
+		var risk_text := "UNKNOWN RISK" if visibility == "unscouted" else "%.0f%% RISK" % (float(route.get("risk", 0.0)) * 100.0)
+		var threats: Array = route.get("threats", [])
+		var threat_text := ", ".join(threats) if not threats.is_empty() else String(route.get("threat_hint", "uncertain pressure"))
+		var next_stops: Array = route.get("next_stops", [])
+		comparison_lines.append("%s · %dD · %d FUEL · %s · PRESSURE +%d\n%s · NEXT %s · %s" % [String(route.get("name", "Road")).to_upper(), int(route.get("days", 0)), int(route.get("fuel", 0)), risk_text, int(route.get("pressure_gain", 0)), threat_text.to_upper(), " / ".join(next_stops) if not next_stops.is_empty() else "FINAL", "RECOVERY FOLLOWS" if bool(route.get("settlement_follows", false)) else "NO SETTLEMENT NEXT"])
+	campaign_comparison_panel.visible = state.campaign_active and planning_phase and not contract_offered and state.campaign_event_pending.is_empty() and options.size() > 1 and selected_campaign_node_id.is_empty()
+	campaign_comparison_label.text = "\n".join(comparison_lines)
 	var departure_block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
 	var outgoing_nodes: Array[String] = []
 	var closed_nodes: Array[String] = []

@@ -94,6 +94,13 @@ func _test_dependency_graph() -> void:
 	_expect(engine_state.serialize() == engine_before_card, "reading a dependency card must not mutate authoritative fortress state")
 	engine_state.reposition_module_at(Vector2i(0, 1), Vector2i(4, 3), false)
 	_expect(engine_state.dependency_status_at(Vector2i(0, 0)).state == "offline", "moving fuel away should immediately break the engine connection")
+	var comparison_state := LongMarchState.new(1107)
+	comparison_state.start_campaign()
+	comparison_state.choose_guard_contract(false)
+	var comparison_before: Dictionary = comparison_state.serialize()
+	var route_comparison := comparison_state.campaign_route_comparison()
+	_expect(route_comparison.size() == 2 and route_comparison[0].has("days") and route_comparison[0].has("fuel") and route_comparison[0].has("pressure_gain") and route_comparison[0].has("next_stops"), "route comparison should expose the required planning facts for every available road")
+	_expect(comparison_state.serialize() == comparison_before, "reading the route comparison must not mutate authoritative campaign state")
 
 	var weapon_state := LongMarchState.new(1107)
 	weapon_state.place_module("generator_core", Vector2i(3, 0))

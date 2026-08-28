@@ -743,3 +743,7 @@ Command-desk focus scrolling now coalesces rapid focus changes and reapplies the
 ## 2026-08-28 — Dependency explanations are authoritative read models
 
 The selected installed module now exposes one compact dependency card: direct inputs, current operating state, the next practical failure if its most relevant link is lost, and one legal counter. The card is derived by `LongMarchState` without mutating the fortress; presentation only formats the returned fields. This rejects UI-owned dependency rules and a larger encyclopedia panel, keeping the explanation attached to the physical chassis decision.
+
+## 2026-08-28 — Available roads are compared before selection
+
+When two forward roads are available, the command desk now presents their days, current fuel cost, known or unknown risk, pressure gain, threat clue, next stops, and whether a settlement follows. The comparison is an authoritative non-mutating read model and disappears during final route confirmation, preserving the existing preview-and-commit boundary instead of turning comparison into automatic choice.
