@@ -827,3 +827,7 @@ Surviving Flooded Veyru after broadcasting the Dry Archive establishes `veyru_pu
 ## 2026-08-28 — The first campaign shell connects results, not resources
 
 The March Charter stores each playable region's best terminal result separately from the single Continue checkpoint. A debrief can now March On directly to the other chapter through a confirmation that explains what persists and when Continue changes. This creates a readable two-chapter itinerary and a replay reason without carrying fuel, damage, modules, or money between isolated deterministic chapters, and without presenting the planned five-region campaign as finished.
+
+## 2026-08-28 — Window close respects the save boundary
+
+The shell disables automatic acceptance of operating-system close requests. A safe title or an exactly checkpointed stage exits immediately; unsaved live state opens a chapter- and location-specific Save & Quit confirmation. Cancelling restores the previous live or paused focus context, repeated close requests cannot bypass the modal, and a failed write leaves the application open. The existing Continue format remains the only run save.

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.236`; Feeds A through G are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.237`; Feeds A through H are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -47,6 +47,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.236` through the March Charter and March On flow.
 
 > Record each proven region's best terminal result outside the Continue slot, show the bounded two-chapter Charter on the title, and let a debrief continue into the other region through an explicit save-aware confirmation. Preserve normal chapter seeds and starting state. Do not carry numerical run resources between regions or imply that the five-region campaign exists.
+
+### Current Feed H — safe application close
+
+**Status:** Complete in `0.3.0-alpha.237` through save-aware window-close handling.
+
+> Intercept operating-system close requests. Quit immediately only from the title or an exactly checkpointed run; otherwise pause, name the current chapter and location, and offer Save & Quit or Keep Playing. Flush the existing save before exit, restore exact focus on cancel, and keep the app open after save failure. Do not add background timers or another save slot.
 
 ## Historical prototype feed sequence
 

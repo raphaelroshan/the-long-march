@@ -35,6 +35,8 @@ Content files are authored source data. They are not executable scripts. New mod
 
 The UI writes a versioned prototype save to `user://the_long_march_prototype.save`. The playtest journal and explicitly exported feedback bundles also remain under Godot's local `user://` directory. They are never uploaded by the game. Do not commit local saves or tester feedback.
 
+The application intercepts operating-system close requests. A title screen or fully checkpointed march closes immediately; an unsaved live march offers **Save & Quit** and writes the existing Continue save before exit. If that write fails, the application remains open.
+
 ## Release staging
 
 The repository contains reviewed Windows and unsigned macOS playtest export presets. Run `bash scripts/export_playtest.sh windows` or `bash scripts/export_playtest.sh macos` after installing matching Godot export templates. Tags matching `v*` produce both artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.

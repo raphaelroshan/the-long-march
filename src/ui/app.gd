@@ -1,6 +1,8 @@
 class_name LongMarchApp
 extends Control
 
+signal application_quit_requested
+
 const GAME_SCENE = preload("res://scenes/Main.tscn")
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const CampaignProgress = preload("res://src/support/campaign_progress.gd")
@@ -76,6 +78,9 @@ var title_region_briefing_label: Label
 var title_charter_label: Label
 var pending_confirmation: String = ""
 var paused_stage_focus: Control
+var close_request_focus: Control
+var close_request_was_paused: bool = false
+var close_request_process_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
 var fullscreen_enabled: bool = false
 var reduced_motion: bool = false
 var autosave_enabled: bool = true
@@ -115,6 +120,7 @@ func _create_menu_theme() -> Theme:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().auto_accept_quit = false
 	_load_preferences()
 	campaign_progress = CampaignProgress.new(PROGRESS_PATH)
 	var progress_result := campaign_progress.load_progress()
@@ -1392,7 +1398,7 @@ func _request_march_on_confirmation(region_id: String) -> void:
 	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else "march_on_veyru")
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "clear_save", "clear_invalid_save", "new_guided", "new_quick", "new_veyru"]:
 		return
 	if action == "title" and _current_run_matches_save():
 		_return_to_title()
@@ -1431,6 +1437,13 @@ func _request_confirmation(action: String) -> void:
 		confirmation_title_label.text = "Continue to %s?" % next_region_name
 		confirmation_body_label.text = "The %s result is recorded in the March Charter. Begin a fresh %s chapter now; Continue keeps its current checkpoint until the next automatic save." % [current_region_name, next_region_name] if autosave_enabled else "The %s result is recorded in the March Charter. Begin a fresh %s chapter now; Continue changes only when you save manually." % [current_region_name, next_region_name]
 		confirmation_confirm_button.text = "MARCH ON"
+	elif action == "quit_save":
+		var run_state = game_view.get("state")
+		var region_name := _region_display_name(String(run_state.get("campaign_region_id")))
+		var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
+		confirmation_title_label.text = "Save before quitting?"
+		confirmation_body_label.text = "%s at %s has unsaved changes. Save this exact decision to the local Continue slot, then close the game." % [region_name, location]
+		confirmation_confirm_button.text = "SAVE & QUIT"
 	elif action == "title":
 		confirmation_title_label.text = "Return without saving?"
 		confirmation_body_label.text = "Progress since the last save will be discarded. Choose Save & Return instead if you want to continue later."
@@ -1459,6 +1472,8 @@ func _request_confirmation(action: String) -> void:
 		confirmation_cancel_button.text = "KEEP SAVE"
 	elif action in ["march_on_ashgate", "march_on_veyru"]:
 		confirmation_cancel_button.text = "STAY AT DEBRIEF"
+	elif action == "quit_save":
+		confirmation_cancel_button.text = "KEEP PLAYING"
 	elif action == "replay":
 		confirmation_cancel_button.text = "KEEP RESULT"
 	else:
@@ -1482,6 +1497,20 @@ func _cancel_confirmation() -> void:
 		if game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.march_on_button.grab_focus()
+	elif previous_action == "quit_save":
+		if game_view != null:
+			game_view.process_mode = close_request_process_mode
+			if close_request_focus != null and is_instance_valid(close_request_focus) and close_request_focus.is_visible_in_tree() and close_request_focus.focus_mode != Control.FOCUS_NONE:
+				close_request_focus.grab_focus()
+			elif settings_view.visible:
+				settings_close_button.grab_focus()
+			elif close_request_was_paused:
+				resume_button.grab_focus()
+			else:
+				game_view.call_deferred("focus_current_action")
+		close_request_focus = null
+		close_request_was_paused = false
+		close_request_process_mode = Node.PROCESS_MODE_INHERIT
 	elif previous_action == "clear_save":
 		clear_save_button.grab_focus()
 	elif previous_action == "clear_invalid_save":
@@ -1511,6 +1540,8 @@ func _confirm_pending_action() -> void:
 		pause_view.visible = false
 		paused_stage_focus = null
 		_open_stage(false, false, "ashgate_lowlands" if action == "march_on_ashgate" else "flooded_veyru")
+	elif action == "quit_save":
+		_save_and_quit()
 	elif action == "title":
 		_return_to_title()
 	elif action in ["clear_save", "clear_invalid_save"]:
@@ -1557,6 +1588,50 @@ func _return_to_title() -> void:
 	_focus_title_primary()
 
 func _quit_game() -> void:
+	_perform_application_quit()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and is_inside_tree():
+		_request_application_close()
+
+func _request_application_close() -> void:
+	if confirmation_view != null and confirmation_view.visible:
+		return
+	if game_view == null or _current_run_matches_save():
+		_perform_application_quit()
+		return
+	close_request_focus = get_viewport().gui_get_focus_owner()
+	close_request_was_paused = pause_view.visible or settings_opened_from_pause
+	close_request_process_mode = game_view.process_mode
+	game_view.process_mode = Node.PROCESS_MODE_DISABLED
+	_request_confirmation("quit_save")
+
+func _save_and_quit() -> void:
+	if game_view == null:
+		_perform_application_quit()
+		return
+	game_view.process_mode = Node.PROCESS_MODE_INHERIT
+	_record_campaign_progress()
+	if bool(game_view.call("save_run")):
+		last_checkpoint_reason = "manual save"
+		close_request_focus = null
+		close_request_was_paused = false
+		close_request_process_mode = Node.PROCESS_MODE_INHERIT
+		_perform_application_quit()
+		return
+	game_view.process_mode = Node.PROCESS_MODE_DISABLED
+	pending_confirmation = "quit_save"
+	confirmation_view.visible = true
+	confirmation_title_label.text = "Could not save"
+	confirmation_body_label.text = "The game is still open and your latest state was not saved. Check local storage access, then try again or keep playing."
+	confirmation_confirm_button.text = "TRY SAVE AGAIN"
+	confirmation_cancel_button.text = "KEEP PLAYING"
+	confirmation_cancel_button.grab_focus()
+
+func _perform_application_quit() -> void:
+	if not application_quit_requested.get_connections().is_empty():
+		application_quit_requested.emit()
+		return
 	get_tree().quit()
 
 func _unhandled_input(event: InputEvent) -> void:

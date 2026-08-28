@@ -25,9 +25,12 @@ func _init() -> void:
 func _run() -> void:
 	_remove_local_test_files()
 	app = load("res://scenes/App.tscn").instantiate()
+	var quit_probe := {"count": 0}
+	app.application_quit_requested.connect(func() -> void: quit_probe["count"] = int(quit_probe["count"]) + 1)
 	root.add_child(app)
 	await process_frame
 	await process_frame
+	_expect(not auto_accept_quit, "the application should intercept operating-system close requests instead of accepting them before save review")
 	_expect(app.menu_view.visible, "the application should open on the title menu")
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
 	_expect(app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should expose the exact build version for playtest reports")
@@ -45,6 +48,8 @@ func _run() -> void:
 	_expect(_tree_contains_text(app.menu_view, "TWO PLAYABLE CHAPTERS") and _tree_contains_text(app.menu_view, "5 ENCOUNTERS EACH") and _tree_contains_text(app.menu_view, "FINALE AT 5"), "the title should make clear that both playable chapters reach a fifth-encounter finale")
 	_expect(app.title_charter_label.text.contains("MARCH CHARTER · 0/2 REGIONS SURVIVED") and app.title_charter_label.text.contains("Choose either chapter"), "a fresh title should present the bounded two-chapter charter without inventing progress")
 	_expect(_tree_contains_text(app.menu_view, "D-pad / arrows move") and _tree_contains_text(app.menu_view, "B / Esc closes panels"), "the title should describe its own navigation behavior instead of claiming that cancel pauses the game")
+	app._notification(Node.NOTIFICATION_WM_CLOSE_REQUEST)
+	_expect(int(quit_probe["count"]) == 1 and not app.confirmation_view.visible, "closing from the title should quit immediately because no live stage state can be lost")
 	var completed_briefing := FileAccess.open(ONBOARDING_PATH, FileAccess.WRITE)
 	completed_briefing.store_string("completed for title test")
 	completed_briefing.close()
@@ -122,6 +127,15 @@ func _run() -> void:
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the title should open Flooded Veyru as a separate chapter at Lantern Quay")
 	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.contract_accept_button.has_focus(), "Veyru should skip the Ashgate briefing and focus its medicine decision")
+	app._request_application_close()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.pending_confirmation == "quit_save" and app.confirmation_title_label.text == "Save before quitting?" and app.confirmation_confirm_button.text == "SAVE & QUIT", "closing a fresh unsaved stage should stop at an explicit local save boundary")
+	_expect(app.confirmation_body_label.text.contains("Flooded Veyru at Lantern Quay") and app.confirmation_body_label.text.contains("local Continue slot"), "the close confirmation should name the exact chapter, location, and persistence target")
+	app._request_application_close()
+	_expect(int(quit_probe["count"]) == 1 and app.confirmation_view.visible and app.pending_confirmation == "quit_save", "a second close request should not bypass or dismiss an open save-before-quit confirmation")
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(not app.confirmation_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.contract_accept_button.has_focus(), "cancelling a window close should restore the exact live-stage focus and processing state")
 	_expect(app.game_view.contract_title.text == "LANTERN QUAY CONTRACT" and app.game_view.contract_accept_button.text.contains("PARTS CRATE") and app.game_view.campaign_map.button_for("pump_gallery") != null, "the Veyru stage should expose its named carrier and regional map immediately")
 	app._show_pause()
 	await process_frame
@@ -231,6 +245,12 @@ func _run() -> void:
 	app._refresh_pause_summary()
 	_expect(app.title_button.text == "EXIT UNSAVED" and app.pause_save_status_label.text.begins_with("Unsaved changes"), "the pause menu should reveal progress made after the last checkpoint")
 	_expect(app.title_button.has_theme_stylebox_override("normal"), "an unsaved title exit should receive the destructive warning treatment")
+	app.title_button.grab_focus()
+	app._request_application_close()
+	await process_frame
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED and app.title_button.has_focus(), "cancelling window close from Pause should restore the paused context and its exact focused action")
 	app.title_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible, "returning without saving should require confirmation")
@@ -296,6 +316,12 @@ func _run() -> void:
 	_expect(app.settings_context_label.text.begins_with("PAUSED MARCH") and app.settings_close_button.text == "BACK TO PAUSE", "in-run Settings should identify and return to the paused march")
 	_expect(not app.reset_briefing_button.disabled, "a completed briefing should expose its one-shot reset action")
 	_expect(app.autosave_button.get_node_or_null(app.autosave_button.focus_neighbor_bottom) == app.reset_briefing_button and app.reset_briefing_button.get_node_or_null(app.reset_briefing_button.focus_neighbor_bottom) == app.clear_save_button, "Settings navigation should include available one-shot actions in order")
+	app.autosave_button.grab_focus()
+	app._request_application_close()
+	await process_frame
+	app.confirmation_cancel_button.pressed.emit()
+	await process_frame
+	_expect(app.settings_view.visible and not app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED and app.autosave_button.has_focus(), "cancelling window close from paused Settings should preserve both the overlay and disabled stage state")
 	app.reset_briefing_button.pressed.emit()
 	await process_frame
 	_expect(app.reset_briefing_button.disabled and app.settings_close_button.has_focus(), "resetting the briefing should move focus to an enabled return action")
@@ -573,6 +599,17 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay" and app.game_view.state.has_regional_development("veyru_public_archive_signal"), "confirming March On should open the other chapter and carry durable regional developments into it")
+	app.game_view.state.money += 3
+	app.autosave_enabled = false
+	app._request_application_close()
+	await process_frame
+	_expect(app.confirmation_view.visible and app.confirmation_body_label.text.contains("unsaved changes"), "window close should protect unsaved stage changes even when automatic checkpoints are disabled")
+	app.confirmation_confirm_button.pressed.emit()
+	await process_frame
+	var close_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	_expect(int(quit_probe["count"]) == 2 and close_payload is Dictionary and String(close_payload.get("campaign_region_id", "")) == "flooded_veyru" and int(close_payload.get("money", 0)) == app.game_view.state.money, "Save & Quit should flush the exact live state before requesting application exit")
+	app._request_application_close()
+	_expect(int(quit_probe["count"]) == 3 and not app.confirmation_view.visible, "a close request should quit immediately once the live stage matches the durable checkpoint")
 
 	_remove_local_test_files()
 	if failures.is_empty():

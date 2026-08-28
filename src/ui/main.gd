@@ -2038,6 +2038,7 @@ func save_run(silent: bool = false) -> bool:
 	payload["build_version"] = String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	payload["saved_at_unix"] = int(Time.get_unix_time_from_system())
 	file.store_string(JSON.stringify(payload))
+	file.close()
 	if not silent:
 		_set_event("March saved locally. Continue will resume from this decision.")
 		_journal_event("run_saved", {"phase": state.phase, "day": state.day})

@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.236`
+**Current code baseline:** `0.3.0-alpha.237`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -525,6 +525,8 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 **Exit gate:** The campaign makes individual journeys more meaningful rather than disposable, and a completed run offers a concrete reason to replay.
 
 ### Long Road 8 — Private alpha hardening
+
+**Status:** In progress; save-aware application close is complete in `0.3.0-alpha.237`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 
