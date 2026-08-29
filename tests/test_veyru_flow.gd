@@ -29,6 +29,7 @@ func _press_route(node_id: String) -> void:
 	game.campaign_commit_button.pressed.emit()
 	await process_frame
 	_expect(game.journey_transition.visible and game.journey_transition.detail_label.text.contains("resolve the contact before"), "committing a Veyru route should preserve its in-between road presentation")
+	_expect(game.journey_transition.promise_label.text.contains("sealed medicines") and game.journey_transition.phase_label.text.contains("COSTS COMMITTED") and game.journey_transition.next_label.text.contains("enter contact"), "the Veyru departure order should carry its medicine promise, committed phase, and next decision")
 	game.journey_transition.continue_button.pressed.emit()
 	await process_frame
 

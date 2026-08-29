@@ -1016,3 +1016,7 @@ The repository now includes a five-session observation sheet, a fixed visual cap
 ## 2026-08-30 — One module bay shows one primary condition
 
 The shared fortress silhouette now reduces offline, damage, strain, sealing, and repair into one ordered interior condition mark per family bay. Authoritative target intent remains a separate exterior bracket so a target can be located without covering the family pictogram. The same hull gains restrained material and regional wear cues: exposed dust and heat for Ashgate, rain and a lower waterline for Veyru. Region and heat enter only the presentation snapshot, while dependency, damage, intervention, target, and recovery rules remain in `FortressState`. This was chosen over stacking every truthful flag because simultaneous crosses, cracks, labels, borders, and circles made the most important failure harder to read at normal play distance.
+
+## 2026-08-30 — Departure carries the promise, receipt, and next decision
+
+The mandatory road handoff now states the accepted or declined regional promise, marks the fortress as departing with costs committed and arrival pending, and names the immediate contact-reading decision. The saved presentation snapshot retains the exact pre-commit day, fuel, and pressure values used by the receipt, while load still reconstructs the view from authoritative encounter state. This was chosen over adding another cinematic phase because the existing checkpoint boundary already represents the correct game state; the missing work was orientation and continuity, not simulation timing.

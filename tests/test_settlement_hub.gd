@@ -78,9 +78,22 @@ func _run() -> void:
 	_expect(game.state.phase == "battle" and game.state.current_location == "ashgate_depot" and game.state.campaign_target_node == "rill_crossing" and journey.visible and not game.main_columns.visible, "committing a route should keep the fortress at its last secured location and stop at a mandatory road presentation")
 	_expect(journey.route_label.text.contains("ASHGATE DEPOT") and journey.route_label.text.contains("RILL CROSSING") and journey.detail_label.text.contains("resolve the contact before"), "the road view should preserve origin, destination, and the unresolved-arrival rule")
 	_expect(journey.day_label.text.contains("+1") and journey.fuel_label.text.contains("−1") and journey.pressure_label.text.contains("+1"), "the road view should show the committed time, fuel, and pressure receipt")
+	_expect(journey.promise_label.text.contains("Guard Morrowline's parts convoy") and journey.phase_label.text.contains("DEPARTING") and journey.phase_label.text.contains("ARRIVAL PENDING"), "the departure order should carry the accepted promise and name the current journey phase")
+	_expect(journey.next_label.text.contains("Road Raider") and journey.next_label.text.contains("enter contact"), "the departure order should name the next decision before combat controls appear")
 	var march_rect: Rect2 = journey.march_canvas.get_global_rect()
 	_expect(journey.day_label.global_position.x < march_rect.position.x and journey.destination_label.global_position.x > march_rect.end.x, "the road view should retain the left-values, centered-fortress, right-details hierarchy")
 	_expect(journey.continue_button.has_focus() and journey.continue_button.text == "CONTINUE TO CONTACT", "the road view should require an explicit continuation into the contact")
+	var committed_day_receipt: String = journey.day_label.text
+	var committed_fuel_receipt: String = journey.fuel_label.text
+	_expect(game.save_run(true), "the departure handoff should save after costs are committed")
+	game.journey_transition_active = false
+	game.journey_transition_view = {}
+	game._refresh_ui()
+	_expect(game.load_saved_run(), "the departure handoff should load from its exact checkpoint")
+	await _settle_ui(2)
+	_expect(journey.visible and game.state.current_location == "ashgate_depot" and game.state.campaign_target_node == "rill_crossing", "Continue should restore the fortress on the road without securing the destination")
+	_expect(journey.day_label.text == committed_day_receipt and journey.fuel_label.text == committed_fuel_receipt and journey.promise_label.text.contains("Guard Morrowline's parts convoy"), "restored departure should preserve the exact cost receipt and promise")
+	_expect(journey.continue_button.has_focus(), "restored departure should return focus to the explicit contact handoff")
 	journey.continue_button.pressed.emit()
 	await _settle_ui()
 	_expect(not journey.visible and game.main_columns.visible and game.combat_panel.visible and game.road_contact.visible and game.road_contact.advance_button.has_focus(), "continuing from the road should reveal the fortress contact without resolving a combat step")

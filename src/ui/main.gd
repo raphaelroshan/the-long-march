@@ -2254,7 +2254,7 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		journey_arrival_view = {}
 		journey_planner_active = false
 		journey_transition_view = _build_journey_transition_view(origin_id, node_id, route_preview, day_before, fuel_before, pressure_before)
-		journey_departure_snapshot = {"origin_id": origin_id, "destination_id": node_id, "hull": state.hull_condition, "money": state.money, "pressure": pressure_before}
+		journey_departure_snapshot = {"origin_id": origin_id, "destination_id": node_id, "day": day_before, "fuel": fuel_before, "hull": state.hull_condition, "money": state.money, "pressure": pressure_before, "doctrine": doctrine}
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
 		_checkpoint("route_started")
@@ -2276,7 +2276,10 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 		"destination_id": destination_id,
 		"destination_name": destination_name,
 		"status": "%s CONTACT AHEAD" % visibility.to_upper(),
+		"promise": _journey_promise_summary(),
+		"phase": "PHASE · DEPARTING · COSTS COMMITTED · ARRIVAL PENDING",
 		"detail": detail,
+		"next_decision": "NEXT · Read %s intent and counter, then enter contact." % contact_text,
 		"day_receipt": "DAY %d → %d  ·  +%d" % [day_before, state.day, state.day - day_before],
 		"fuel_receipt": "%d → %d  ·  −%d" % [fuel_before, state.fuel, fuel_before - state.fuel],
 		"pressure_receipt": "%d → %d  ·  +%d" % [pressure_before, state.campaign_pressure, state.campaign_pressure - pressure_before],
@@ -2292,7 +2295,33 @@ func _restore_journey_transition_view() -> Dictionary:
 	var days := int(preview.get("days", 0))
 	var fuel_cost := int(preview.get("fuel", 0))
 	var pressure_gain := int(preview.get("pressure_gain", 0))
-	return _build_journey_transition_view(origin_id, destination_id, preview, state.day - days, state.fuel + fuel_cost, state.campaign_pressure - pressure_gain)
+	var matching_snapshot := String(journey_departure_snapshot.get("destination_id", "")) == destination_id
+	var day_before := int(journey_departure_snapshot.get("day", state.day - days)) if matching_snapshot else state.day - days
+	var fuel_before := int(journey_departure_snapshot.get("fuel", state.fuel + fuel_cost)) if matching_snapshot else state.fuel + fuel_cost
+	var pressure_before := int(journey_departure_snapshot.get("pressure", state.campaign_pressure - pressure_gain)) if matching_snapshot else state.campaign_pressure - pressure_gain
+	return _build_journey_transition_view(origin_id, destination_id, preview, day_before, fuel_before, pressure_before)
+
+func _journey_promise_summary() -> String:
+	if state.campaign_region_id == "flooded_veyru":
+		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "the assigned carrier")) if not state.veyru_medicine_carrier_id.is_empty() else "no assigned carrier"
+		match state.veyru_contract_status:
+			"accepted":
+				return "PROMISE · Deliver Lantern Quay's sealed medicines in %s." % carrier_name
+			"completed":
+				return "PROMISE KEPT · Lantern Quay's medicines reached the Dry Archive."
+			"failed":
+				return "PROMISE BROKEN · The medicine carrier failed; the march continues."
+			_:
+				return "PROMISE DECLINED · Preserve cargo freedom instead of carrying the medicine cases."
+	match state.guard_contract_status:
+		"accepted":
+			return "PROMISE · Guard Morrowline's parts convoy through the Lowlands."
+		"completed":
+			return "PROMISE KEPT · Morrowline's parts convoy arrived under guard."
+		"failed":
+			return "PROMISE BROKEN · The parts convoy did not reach Morrowline."
+		_:
+			return "PROMISE DECLINED · Travel without Morrowline's convoy obligation."
 
 func _on_journey_transition_continued() -> void:
 	if not journey_transition_active:

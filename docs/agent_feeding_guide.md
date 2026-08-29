@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.280`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, and the first shared-fortress continuity pass are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.281`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, the first shared-fortress continuity pass, and the first journey-handoff pass are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
 ### Active Feed 1 — five-session human validation
 
@@ -21,6 +21,8 @@ Replace one high-noise surface in the shared fortress silhouette with a restrain
 ```
 
 ### Active Feed 3 — journey transition rhythm
+
+**Status:** The settlement-to-route-to-departure handoff now carries its promise, exact committed costs, current phase, next decision, and save-safe receipt in `0.3.0-alpha.281`; later contact-to-arrival rhythm remains open.
 
 ```text
 Improve one transition from settlement to route, route to travel, travel to contact, or contact to arrival. It must state the current location, commitment, cost, phase, and next decision; remain skippable; preserve exact save/resume semantics; and add UI/focus tests plus normal and scaled visual captures. Do not create a cinematic sequence or alter authoritative timing.

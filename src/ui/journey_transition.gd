@@ -15,7 +15,10 @@ var heat_label: Label
 var march_canvas: MarchCanvas
 var destination_label: Label
 var status_label: Label
+var promise_label: Label
+var phase_label: Label
 var detail_label: Label
+var next_label: Label
 var sequence_labels: Array[Label] = []
 var continue_button: Button
 var high_contrast_enabled: bool = false
@@ -100,7 +103,7 @@ func _build_ui() -> void:
 	pressure_label = _add_receipt(value_stack, "PRESSURE")
 	heat_label = _add_receipt(value_stack, "HEAT")
 	var receipt_note := Label.new()
-	receipt_note.text = "Costs are already committed.\nThe destination is not secured until this road contact resolves."
+	receipt_note.text = "Costs are committed.\nArrival remains pending until contact resolves."
 	receipt_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	receipt_note.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	receipt_note.add_theme_font_size_override("font_size", 11)
@@ -119,7 +122,7 @@ func _build_ui() -> void:
 	detail_stack.add_theme_constant_override("separation", 9)
 	detail_panel.add_child(detail_stack)
 	var kicker := Label.new()
-	kicker.text = "ROAD CONTACT"
+	kicker.text = "DEPARTURE ORDER"
 	kicker.add_theme_font_size_override("font_size", 10)
 	kicker.add_theme_color_override("font_color", Color("#89999e"))
 	detail_stack.add_child(kicker)
@@ -133,6 +136,16 @@ func _build_ui() -> void:
 	status_label.add_theme_font_size_override("font_size", 12)
 	status_label.add_theme_color_override("font_color", Color("#efb879"))
 	detail_stack.add_child(status_label)
+	promise_label = Label.new()
+	promise_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	promise_label.add_theme_font_size_override("font_size", 12)
+	promise_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	detail_stack.add_child(promise_label)
+	phase_label = Label.new()
+	phase_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	phase_label.add_theme_font_size_override("font_size", 11)
+	phase_label.add_theme_color_override("font_color", Color("#f0cf96"))
+	detail_stack.add_child(phase_label)
 	detail_label = Label.new()
 	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -150,6 +163,11 @@ func _build_ui() -> void:
 		step_label.add_theme_font_size_override("font_size", 11)
 		sequence_labels.append(step_label)
 		detail_stack.add_child(step_label)
+	next_label = Label.new()
+	next_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	next_label.add_theme_font_size_override("font_size", 11)
+	next_label.add_theme_color_override("font_color", Color("#e7d6b4"))
+	detail_stack.add_child(next_label)
 	continue_button = Button.new()
 	continue_button.text = "CONTINUE TO CONTACT"
 	continue_button.custom_minimum_size = Vector2(0, 62)
@@ -183,7 +201,10 @@ func configure(view: Dictionary) -> void:
 	route_label.text = "%s → %s · ON THE ROAD" % [origin.to_upper(), destination.to_upper()]
 	destination_label.text = destination.to_upper()
 	status_label.text = String(view.get("status", "CONTACT AHEAD")).to_upper()
+	promise_label.text = String(view.get("promise", "PROMISE · Keep the fortress moving."))
+	phase_label.text = String(view.get("phase", "PHASE · DEPARTING · COSTS COMMITTED"))
 	detail_label.text = String(view.get("detail", "The fortress has committed to the road. Resolve the contact before arrival."))
+	next_label.text = String(view.get("next_decision", "NEXT · Read the contact, then continue."))
 	day_label.text = String(view.get("day_receipt", "—"))
 	fuel_label.text = String(view.get("fuel_receipt", "—"))
 	pressure_label.text = String(view.get("pressure_receipt", "—"))
@@ -196,7 +217,13 @@ func configure(view: Dictionary) -> void:
 	march_canvas.reduced_motion = reduced_motion
 	march_canvas.queue_redraw()
 	for index in range(sequence_labels.size()):
-		sequence_labels[index].add_theme_color_override("font_color", Color("#9fd2c2") if index <= 2 else Color("#69777c"))
+		var color := Color("#69777c")
+		if index == 0:
+			color = Color("#9fddbd")
+		elif index == 1:
+			color = Color("#f0cf96")
+		sequence_labels[index].add_theme_color_override("font_color", color)
+	continue_button.tooltip_text = "%s Arrival remains pending until the authoritative contact resolves." % next_label.text
 
 func focus_default() -> void:
 	continue_button.grab_focus()

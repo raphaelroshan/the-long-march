@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.280`
+**Current baseline:** `0.3.0-alpha.281`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -659,6 +659,8 @@ Tasks:
 **Exit:** A screenshot of the fortress communicates its operating identity without reading every label.
 
 ### Phase 3 — Map and travel game feel
+
+**Status:** The first save-safe settlement-to-route-to-departure handoff is complete in `0.3.0-alpha.281`; contact-to-arrival pacing and broader route-specific transitions remain open.
 
 **Objective:** Make routes feel like roads with stakes.
 

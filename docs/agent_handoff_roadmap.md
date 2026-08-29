@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.280`
+**Current code baseline:** `0.3.0-alpha.281`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current PR baseline:** PR #41 `0.3.0-alpha.280` — First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, private-alpha evidence workflow, and the first shared-fortress continuity pass.
+**Current PR baseline:** PR #41 `0.3.0-alpha.281` — First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, private-alpha evidence workflow, shared-fortress continuity, and the first journey-handoff pass.
 **Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -975,6 +975,8 @@ Create a visual state inventory for idle, selected, strained, disabled, damaged,
 
 **Objective:** Make travel feel like a sequence of commitments instead of a chain of menus.
 
+**Status:** Long Road 11.1 is complete in `0.3.0-alpha.281`: departure now preserves the origin/destination, accepted or declined promise, exact committed day/fuel/pressure/heat receipt, explicit departing phase, next contact decision, and focus across save/load. Contact-to-arrival rhythm remains open.
+
 The target rhythm is:
 
 ```text
@@ -1070,4 +1072,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **Long Road 9.1: run the five-session human validation protocol against PR #41’s exact artifact**, not a new region or new combat system. Long Road 10.1 is complete. If implementation must continue before sessions are available, use **Long Road 11.1: improve the settlement-receipt → route-commitment → departure handoff** so location, promise, exact cost, phase, and next decision remain visible and save-safe, with no simulation changes.
+The next agent task should be **Long Road 9.1: run the five-session human validation protocol against PR #41’s exact artifact**, not a new region or new combat system. Long Road 10.1 and 11.1 are complete. If implementation must continue before sessions are available, use **Long Road 12.1: tighten one existing contact's forecast → target → wind-up → impact → dependency → settle sequence**, preserving deterministic step resolution and manual-step/pause behavior.
