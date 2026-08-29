@@ -4,9 +4,59 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.279`; Feeds A through AT, the automated First Watch tutorial, and the first eight game-quality transformation slices are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.280`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, and the first shared-fortress continuity pass are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
-### Current Feed A — fortress comprehension
+### Active Feed 1 — five-session human validation
+
+```text
+Run docs/private_alpha_session_sheet.md against one exact PR #41 artifact cohort using First Watch and the quick path. Record only observed player behavior across the documented input/display combinations. Do not infer comprehension from completion or fabricate human evidence. Triage repeated failures under what to do, why it matters, and what happened; implement only repeated high-severity fixes and update the evidence package.
+```
+
+### Active Feed 2 — shared fortress visual continuity
+
+**Status:** First high-noise module-bay reduction and Ashgate/Veyru place-treatment pass complete in `0.3.0-alpha.280`; broader authored art and human recognition testing remain open.
+
+```text
+Replace one high-noise surface in the shared fortress silhouette with a restrained authored 2D treatment that remains readable in rest, travel, contact, recovery, and Debrief. Preserve FortressState, geometry, placement, state colors, high contrast, large text, reduced motion, and screenshots at 1280x720 and 2560x1440. Do not add mechanics, regions, or decorative effects that obscure dependencies.
+```
+
+### Active Feed 3 — journey transition rhythm
+
+```text
+Improve one transition from settlement to route, route to travel, travel to contact, or contact to arrival. It must state the current location, commitment, cost, phase, and next decision; remain skippable; preserve exact save/resume semantics; and add UI/focus tests plus normal and scaled visual captures. Do not create a cinematic sequence or alter authoritative timing.
+```
+
+### Active Feed 4 — battle cause-and-effect staging
+
+```text
+Stage one existing deterministic encounter as forecast, approach, target commitment, wind-up, response, impact, dependency consequence, and settling beat. Presentation may interpolate but must not change FortressState, random streams, target order, or replay keys. Add pause, speed, manual-step, same-seed, focus, and visual verification.
+```
+
+### Active Feed 5 — settlement identity and service choice
+
+```text
+Deepen one existing settlement with a place-specific visual motif and two meaningful service priorities. Each service must expose cost, restored system, remaining options, and trade-off. Use existing commands and currencies; do not add a generalized reputation meter or service currency. Add deterministic, save, controller, large-text, and receipt tests.
+```
+
+### Active Feed 6 — controlled new content
+
+```text
+Only after the human and presentation gates pass, add one facility, specialist, threat, or route branch as a complete teaching slice. Define the player question, stable data, physical rule, counter, weakness, isolated encounter, combination encounter, recovery consequence, tests, save/replay coverage, and visual evidence. Do not add a third region in the same task.
+```
+
+### Active Feed 7 — causal campaign consequence
+
+```text
+Connect one completed, declined, or failed promise to one visible later regional condition. The response must create a new route, settlement state, faction offer, shortage, or refuge consequence rather than a generic penalty. Keep the state small, deterministic, inspectable, migration-safe, and ending-capable.
+```
+
+### Active Feed 8 — private alpha hardening
+
+```text
+Complete the existing packaging, offline, save migration, backup recovery, controller, scaling, contrast, reduced-motion, safe-close, route-transition, active-event, recovery, and terminal-Debrief checks. Produce one honest private-alpha artifact with manifest, observer brief, known limitations, rollback path, and exact source revision. Do not make a public-release or storefront-ready claim.
+```
+
+### Historical Feed A — fortress comprehension
 
 **Status:** Complete through dependency cards, route comparison, and deterministic target explanations.
 

@@ -1972,7 +1972,10 @@ func _fortress_presentation_snapshot(active_target_id: String = "") -> Dictionar
 		"hull": state.hull_condition,
 		"damaged_count": damaged_count,
 		"offline_count": offline_count,
-		"active_target_id": active_target_id
+		"active_target_id": active_target_id,
+		"region_id": state.campaign_region_id,
+		"heat": state.heat,
+		"heat_limit": LongMarchState.BASE_HEAT_LIMIT
 	}
 
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:

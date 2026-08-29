@@ -297,6 +297,12 @@ The playable slice now uses the same three-part composition in settlement, plann
 
 This is a legibility checkpoint rather than final animation. Threat movement, attack anticipation, impact frames, fortress response, and authored biome effects remain presentation-only follow-up work. The deterministic encounter engine, route resolution, module targets, damage, and save format are unchanged.
 
+## Shared silhouette continuity checkpoint (`0.3.0-alpha.280`)
+
+The shared fortress now uses one primary condition mark per family bay instead of stacking damage cracks, sealed labels, dependency warnings, offline crosses, and target circles in the same small surface. Target intent remains outside the bay as corner brackets, preserving the authoritative target without hiding the family pictogram. The stable hull gains restrained timber, canvas, engine-housing, patch-plate, cargo-restraint, heat, dust, rain, and waterline cues; Ashgate and Veyru therefore read as different operating environments while retaining the same machine identity and module anchors.
+
+The complete state and precedence contract is recorded in [`fortress_visual_state_inventory.md`](fortress_visual_state_inventory.md). Region and heat are presentation snapshot fields derived from the existing simulation. No target, damage, dependency, travel, recovery, or save rule moved into the renderer.
+
 ## Acceptance criteria
 
 - The fortress is the largest meaningful object in rest, travel, and encounter modes.
