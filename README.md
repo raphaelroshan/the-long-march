@@ -126,7 +126,7 @@ The implemented presentation vertical slice—settlement hubs, dedicated journey
 Its shared fortress layout and at-rest, map, moving, and encounter modes are specified in [`design/fortress_visual_modes.md`](design/fortress_visual_modes.md).
 The current code-native fortress silhouette now carries module-family identity and ready, strained, offline, sealed, damaged, and targeted state across settlement, travel, contact, events, arrival, and Debrief.
 Road contacts replay each resolved step through target lock, threat-specific wind-up, impact, and concise dependency consequence cues; Reduced Motion moves directly to the final consequence.
-The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
+The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md). The repeatable five-session sheet and capture matrix are in [`docs/private_alpha_session_sheet.md`](docs/private_alpha_session_sheet.md).
 
 ## Related follow-up concept
 

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.278`; Feeds A through AS, the automated First Watch tutorial, and the first seven game-quality transformation slices are complete. Continue with a captured private-alpha playtest baseline and the first uncoached human sessions from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.279`; Feeds A through AT, the automated First Watch tutorial, and the first eight game-quality transformation slices are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
 ### Current Feed A — fortress comprehension
 
@@ -275,6 +275,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.278` through exact choice previews, the divided-room tableau, and the terminal occurrence record.
 
 > Show the event's one sealed compartment as a physical contest between families and repair stock. Replace generic deltas with exact before/after trust, Parts Crate, and weakest-system durability values, while keeping the authoritative one-shot occurrence effects unchanged. Carry the human-readable outcome into the terminal Debrief and retain controller, high-contrast, and 110% text coverage.
+
+### Current Feed AT — private-alpha evidence workflow
+
+**Status:** Complete in `0.3.0-alpha.279` through the local session-sheet generator and capture matrix; the five human sessions themselves remain owner/tester work.
+
+> Convert the existing opt-in local feedback export into a concise Markdown session sheet. Prefill only facts present in the journal and final-state payload, leave prediction, hesitation, recall, and spoken reasoning for a human observer, and include the exact capture matrix used to compare standard/high-contrast and 100%/110% text states. Never upload data or infer emotion from behavior.
 
 ## Historical prototype feed sequence
 

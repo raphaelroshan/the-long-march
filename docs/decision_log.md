@@ -1008,3 +1008,7 @@ The Gallery Still Turns now draws the old pumps between a hold-position marker a
 ## 2026-08-30 — The dry room shows what cannot be protected together
 
 The Last Dry Room now depicts one divided sealed compartment with families on one side and repair stock on the other. Its authoritative choice preview names exact trust and module-durability transitions before commitment, and the occurrence record translates the stored choice ID into the human consequence carried into Debrief. This was chosen over adding a separate shelter resource screen because the event's value comes from making one physical exclusion memorable while retaining the bounded occurrence system.
+
+## 2026-08-30 — Private-alpha interpretation remains human work
+
+The repository now includes a five-session observation sheet, a fixed visual capture matrix, and a local command that converts the existing opt-in feedback JSON into a readable Markdown record. The tool prefills only build identity, recorded actions, final state, written answers, and elapsed timestamps already present in the export. Predictions, hesitation, recall, reasoning, and emotion remain blank observer fields. This was chosen over telemetry or automated sentiment inference because the private-alpha gate depends on consented human evidence and direct quotes, not silent collection or synthetic conclusions.

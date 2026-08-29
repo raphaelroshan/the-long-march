@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.278`
+**Current baseline:** `0.3.0-alpha.279`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -722,6 +722,8 @@ Tasks:
 
 ### Phase 7 — Human private alpha
 
+**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, and capture matrix are complete in `0.3.0-alpha.279`; five consented uncoached sessions and evidence-led fixes require human testers.
+
 **Objective:** Replace assumptions with observed behavior.
 
 Tasks:
@@ -940,19 +942,18 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.278`, prepare the first human private-alpha evidence
-pass without changing simulation balance.
+Starting from `0.3.0-alpha.279`, run five consented, uncoached private-alpha
+sessions using `docs/private_alpha_session_sheet.md`.
 
-Create a concise in-repository session sheet for First Watch, Ashgate, and Veyru
-that records first action, placement errors, route prediction, contact prediction,
-recovery reasoning, event recall, debrief comprehension, and replay intent. Add a
-repeatable capture checklist for the supported 1280×720 standard/high-contrast and
-100%/110% text combinations. Keep all collection local and opt-in; do not add
-telemetry, accounts, automatic uploads, or inferred emotion scoring.
+Include First Watch, at least two Ashgate runs, and at least two Flooded Veyru
+runs across keyboard/mouse and controller. Generate a Markdown sheet from each
+local feedback export, add only direct observations and tester quotes, and group
+repeated failures by severity. Implement and verify the three highest repeated
+comprehension fixes before adding another region or expanding the item catalog.
 
-Validate the sheet against the existing local journal/export flow and document
-the exact owner work needed to run five uncoached sessions. Report automated
-coverage separately from human evidence.
+This gate requires human participants. Automated agents may prepare builds,
+capture states, summarize local exports, and implement the resulting fixes, but
+must not fabricate sessions, quotes, emotions, or qualitative conclusions.
 ```
 
 ---
@@ -964,6 +965,6 @@ coverage separately from human evidence.
 [3] [`docs/agent_feeding_guide.md`](agent_feeding_guide.md) — current staged agent prompts.
 [4] [`design/design_prompt.md`](../design/design_prompt.md) — product identity, central promise, and design constraints.
 [5] [`design/events_occurrences_bible.md`](../design/events_occurrences_bible.md) — future event and occurrence library.
-[6] [`docs/p16_human_playtest_protocol.md`](p16_human_playtest_protocol.md) — current human-playtest protocol.
+[6] [`docs/private_alpha_session_sheet.md`](private_alpha_session_sheet.md) — five-session evidence sheet and capture matrix.
 
 This document is an internal implementation plan. It does not claim that the listed visual, audio, UX, or campaign work is already implemented.

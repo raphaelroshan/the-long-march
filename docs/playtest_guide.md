@@ -1,5 +1,7 @@
 # The Long March — Functional Playtest Guide
 
+For the five-session private-alpha protocol, capture matrix, and local export summarizer, use [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md).
+
 ## What this build is testing
 
 This playtest is about two connected questions: can a player understand how a fortress layout causes a battle outcome, and can they use incomplete map information to plan five encounters? It is not a content-volume test. A useful session is one complete attempt from Ashgate Depot to Meridian Pass, including contract, route decisions, Morrowline recovery, retreat, or failure.
