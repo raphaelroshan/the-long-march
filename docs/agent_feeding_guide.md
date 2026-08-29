@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.284`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, and both recovery-settlement identity passes are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.285`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, and the current settlement-identity passes are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
 ### Active Feed 1 — five-session human validation
 
@@ -38,7 +38,7 @@ Stage one existing deterministic encounter as forecast, approach, target commitm
 
 ### Active Feed 5 — settlement identity and service choice
 
-**Status:** Morrowline and Evacuation Camp now have distinct canvas/parts and raised-waterworks motifs plus place-specific service priorities through `0.3.0-alpha.284`; starting-settlement services remain separate future slices.
+**Status:** Morrowline, Evacuation Camp, Ashgate Depot, and Lantern Quay now have distinct place motifs and locally framed service priorities through `0.3.0-alpha.285`; human recognition testing remains open.
 
 ```text
 Deepen one existing settlement with a place-specific visual motif and two meaningful service priorities. Each service must expose cost, restored system, remaining options, and trade-off. Use existing commands and currencies; do not add a generalized reputation meter or service currency. Add deterministic, save, controller, large-text, and receipt tests.

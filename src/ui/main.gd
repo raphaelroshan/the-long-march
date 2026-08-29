@@ -2725,7 +2725,7 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,
-		"context": "FORTRESS AT REST · %s" % ("Choose an assignment or inspect a bazaar station." if contract_status == "offered" else "Prepare the fortress, then plan the first road."),
+		"context": "%s · %s" % ["LANTERN QUAY FLOOD MARKET" if is_veyru else "ASHGATE RAIL DEPOT", "Choose an assignment or inspect a bazaar station." if contract_status == "offered" else "Prepare the fortress, then plan the first road."],
 		"preferred_station": "assignment_board" if contract_status == "offered" else "departure_gate",
 		"values": {
 			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
@@ -2742,7 +2742,7 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 				"title": "Chassis Workshop",
 				"status": "REFIT AVAILABLE",
 				"button_status": "REFIT",
-				"body": "Inspect the walking fortress, trace system dependencies, rotate stored modules, and repair the layout before departure.",
+				"body": ("Use the quay's dry gantry to inspect the walking fortress and protect its lower hull before the archive road." if is_veyru else "Use the depot's rail-side repair bay to inspect the walking fortress, trace dependencies, and prepare its movement chain."),
 				"tone": "safe",
 				"primary": {"id": "open_workshop", "label": "ENTER WORKSHOP", "enabled": true, "tooltip": "Open the detailed chassis workbench."}
 			},
@@ -2750,7 +2750,7 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 				"title": "Quartermaster Stores",
 				"status": "%d ASHMARKS · %d FUEL" % [state.money, state.fuel],
 				"button_status": "STORES",
-				"body": "Review carried modules and current capacity. Trading inventory is not yet available in this settlement slice.",
+				"body": ("Review medicine space, fuel, and carried modules before the flood roads. Trading inventory is not yet available here." if is_veyru else "Review fuel, parts, and carried modules before leaving the rail depot. Trading inventory is not yet available here."),
 				"tone": "neutral",
 				"primary": {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}
 			},
@@ -2758,7 +2758,7 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 				"title": "Signal Broker",
 				"status": "NO LOCAL REPORTS",
 				"button_status": "QUIET",
-				"body": "Route intelligence comes from working signal equipment and people met on the road. No report is for sale here yet.",
+				"body": ("Lantern keepers compare water levels and archive signals. Exact forecasts still depend on working signal equipment." if is_veyru else "Depot signalers compare blockade sightings and ash fronts. Exact forecasts still depend on working signal equipment."),
 				"tone": "muted"
 			},
 			"hiring_post": {

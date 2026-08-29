@@ -374,21 +374,47 @@ class BazaarCanvas extends Control:
 		mouse_filter = Control.MOUSE_FILTER_PASS
 
 	func _draw() -> void:
-		var sky := Color("#080d10") if high_contrast_enabled else Color("#1b292f")
-		var haze := Color("#27363a") if high_contrast_enabled else Color("#485052")
-		var ground := Color("#17120e") if high_contrast_enabled else Color("#342a21")
+		var flooded := location_id == "lantern_quay"
+		var sky := Color("#080d10") if high_contrast_enabled else (Color("#17363d") if flooded else Color("#1b292f"))
+		var haze := Color("#27363a") if high_contrast_enabled else (Color("#35575c") if flooded else Color("#485052"))
+		var ground := Color("#17120e") if high_contrast_enabled else (Color("#10282c") if flooded else Color("#342a21"))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.72, size.y * 0.18), 72.0, Color(0.82, 0.66, 0.42, 0.12))
 		for index in range(7):
 			var ridge_y := size.y * (0.26 + index * 0.015)
 			draw_line(Vector2(0, ridge_y), Vector2(size.x, ridge_y - 14 + index * 3), haze.darkened(float(index) * 0.035), 18.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.58), Vector2(size.x, size.y * 0.42)), ground, true)
+		_draw_place_features(flooded)
 		_draw_stall(Rect2(Vector2(6, 20), Vector2(190, 128)), "workshop")
 		_draw_stall(Rect2(Vector2(size.x - 196, 20), Vector2(190, 128)), "signal_broker")
 		_draw_stall(Rect2(Vector2(0, size.y - 205), Vector2(190, 145)), "quartermaster")
 		_draw_stall(Rect2(Vector2(size.x - 196, size.y - 260), Vector2(190, 198)), "assignment_board")
 		_draw_fortress()
 		draw_string(ThemeDB.fallback_font, Vector2(size.x * 0.5 - 90, size.y * 0.77), "FORTRESS AT REST", HORIZONTAL_ALIGNMENT_CENTER, 180, 12, Color("#cdbb95"))
+
+	func _draw_place_features(flooded: bool) -> void:
+		if flooded:
+			var dock := Color("#5c827d") if not high_contrast_enabled else Color("#bfe5df")
+			draw_line(Vector2(0, size.y * 0.68), Vector2(size.x, size.y * 0.68), dock, 7.0)
+			var support_ratios: Array[float] = [0.08, 0.22, 0.78, 0.92]
+			for x_ratio: float in support_ratios:
+				var x: float = size.x * x_ratio
+				draw_line(Vector2(x, size.y * 0.68), Vector2(x - 12.0, size.y * 0.92), dock.darkened(0.25), 5.0)
+			for lantern_x in [size.x * 0.18, size.x * 0.82]:
+				draw_line(Vector2(lantern_x, size.y * 0.23), Vector2(lantern_x, size.y * 0.34), dock, 3.0)
+				draw_circle(Vector2(lantern_x, size.y * 0.36), 7.0, Color("#ffd47f"))
+		else:
+			var rail := Color("#8d744d") if not high_contrast_enabled else Color("#f2dda2")
+			for rail_y in [size.y * 0.69, size.y * 0.82]:
+				draw_line(Vector2(0, rail_y), Vector2(size.x, rail_y), rail.darkened(0.15), 5.0)
+			for sleeper_index in range(10):
+				var x := float(sleeper_index) * size.x / 9.0
+				draw_line(Vector2(x, size.y * 0.66), Vector2(x + 22.0, size.y * 0.86), rail.darkened(0.30), 4.0)
+			draw_line(Vector2(size.x * 0.50, size.y * 0.16), Vector2(size.x * 0.50, size.y * 0.30), rail, 5.0)
+			draw_line(Vector2(size.x * 0.50, size.y * 0.16), Vector2(size.x * 0.61, size.y * 0.12), rail, 4.0)
+
+	func presentation_signature() -> String:
+		return "LANTERN QUAY · FLOOD DOCK · HANGING LAMPS" if location_id == "lantern_quay" else "ASHGATE DEPOT · BLACK RAILS · SIGNAL GANTRY"
 
 	func _draw_stall(rect: Rect2, station_id: String) -> void:
 		var selected := station_id == selected_station_id
