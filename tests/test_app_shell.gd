@@ -3,6 +3,9 @@ extends SceneTree
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
+const TUTORIAL_SAVE_PATH := "user://the_long_march_tutorial.save"
+const TUTORIAL_BACKUP_PATH := "user://the_long_march_tutorial.backup.save"
+const TUTORIAL_COMPLETE_PATH := "user://the_long_march_tutorial.complete"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
@@ -17,7 +20,7 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _remove_local_test_files() -> void:
-	for path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH, FEEDBACK_PRESERVE_PATH]:
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, TUTORIAL_SAVE_PATH, TUTORIAL_BACKUP_PATH, TUTORIAL_COMPLETE_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH, FEEDBACK_PRESERVE_PATH]:
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)

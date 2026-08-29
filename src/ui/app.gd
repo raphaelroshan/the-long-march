@@ -1559,6 +1559,7 @@ func _refresh_title_state() -> void:
 	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
 	var has_completed_save := has_valid_save and bool(save_info.get("completed", false))
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
+	var tutorial_complete := FileAccess.file_exists(TUTORIAL_COMPLETE_PATH)
 	title_charter_label.text = _march_charter_text()
 	var tutorial_lesson := String(tutorial_info.get("tutorial_lesson", ""))
 	tutorial_button.text = ("REVIEW TRAINING CERTIFICATE" if tutorial_lesson == "complete" else "RESUME TUTORIAL · %s" % String(tutorial_info.get("next_action", "CURRENT LESSON")).to_upper()) if bool(tutorial_info.get("valid", false)) else "LEARN TO COMMAND"
@@ -1571,8 +1572,8 @@ func _refresh_title_state() -> void:
 		start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
 	quick_start_button.visible = false
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
-	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
-	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay.%s" % (" Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else "")
+	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else ("START FLOODED VEYRU · RISING WATER" if tutorial_complete else "FLOODED VEYRU · ADVANCED JOURNEY"))
+	veyru_start_button.tooltip_text = "%s%s" % ["Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay." if tutorial_complete else "Flooded Veyru remains available, but The First Watch is recommended before this advanced journey.", " Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else ""]
 	var ashgate_completed := not campaign_progress.result_for_region("ashgate_lowlands").is_empty()
 	var veyru_completed := not campaign_progress.result_for_region("flooded_veyru").is_empty()
 	guide_quick_start_button.text = "REPLAY · ASHGATE" if ashgate_completed else ("START NEW · ASHGATE" if has_valid_save else "QUICK START · ASHGATE")
@@ -1678,7 +1679,8 @@ func _refresh_title_preview(save_info: Dictionary = {}) -> void:
 			title_preview_eyebrow_label.text = "FLOODED VEYRU · SECOND JOURNEY · 15–25 MINUTES"
 			title_preview_title_label.text = "Outrun rising water"
 			var development_note := " Public Archive Signal is active: Drowned Registry contacts begin Known." if campaign_progress.has_development("veyru_public_archive_signal") else ""
-			title_region_briefing_label.text = "A prepared fortress carries sealed medicine toward the Dry Archive while water closes routes and punishes exposed lower-hull systems.%s" % development_note
+			var tutorial_note := " Complete The First Watch first if you have not yet placed modules or read a live contact." if not FileAccess.file_exists(TUTORIAL_COMPLETE_PATH) else ""
+			title_region_briefing_label.text = "A prepared fortress carries sealed medicine toward the Dry Archive while water closes routes and punishes exposed lower-hull systems.%s%s" % [development_note, tutorial_note]
 			title_preview_scope_label.text = "PRESSURE · RISING WATER   ·   RECOVERY · EVACUATION CAMP   ·   FINALE · CIVIC GUARDIAN"
 			rule_titles = ["Bind medicine to a real module", "Read a changing map", "Choose what the archive says"]
 			rule_details = ["Accept the obligation with a named carrier, or decline before the first road.", "Flooding can close one approach, but never every recovery path.", "Broadcast or seal the archive after five encounters; each choice changes the finale."]

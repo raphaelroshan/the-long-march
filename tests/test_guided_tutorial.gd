@@ -129,6 +129,7 @@ func _run() -> void:
 		game.settlement_repair_button.pressed.emit()
 		await process_frame
 	_expect(game.tutorial_director.lesson_id == "complete", "repairing the authored damage should complete The First Watch")
+	_expect(FileAccess.file_exists(ProjectSettings.globalize_path("user://the_long_march_tutorial.complete")), "completing the final lesson should write the local tutorial-completion marker immediately")
 	_expect(game.tutorial_completion_view.visible and game.tutorial_completion_view.begin_button.has_focus(), "completion should open an in-world certification screen with a focused campaign handoff")
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(TUTORIAL_SAVE)) and not FileAccess.file_exists(ProjectSettings.globalize_path(CAMPAIGN_SAVE)), "tutorial checkpoints should remain isolated from campaign Continue")
 	game.tutorial_completion_view.repeat_option.select(9)
@@ -162,6 +163,7 @@ func _run() -> void:
 	_expect(skip_app.game_view != null and not skip_app.game_view.tutorial_mode and skip_app.game_view.state.campaign_active, "Skip Tutorial should enter the documented Ashgate campaign without creating tutorial state")
 	skip_app.queue_free()
 	await process_frame
+	_remove("user://the_long_march_tutorial.complete")
 	if failures.is_empty():
 		print("PASS: The Long March guided tutorial")
 		quit(0)

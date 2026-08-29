@@ -31,6 +31,7 @@ const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
 const TUTORIAL_SAVE_PATH := "user://the_long_march_tutorial.save"
 const TUTORIAL_BACKUP_PATH := "user://the_long_march_tutorial.backup.save"
+const TUTORIAL_COMPLETE_PATH := "user://the_long_march_tutorial.complete"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
 const DOCTRINE_DESCRIPTIONS := {
@@ -1254,7 +1255,15 @@ func _tutorial_advance(next_lesson: String, receipt: String) -> void:
 		tutorial_lesson_snapshots[next_lesson] = tutorial_lesson_snapshot.duplicate(true)
 		tutorial_director_snapshots[next_lesson] = tutorial_director.serialize()
 		_checkpoint("tutorial_lesson_completed")
+		if next_lesson == "complete":
+			_mark_tutorial_complete()
 		_refresh_tutorial_ui()
+
+func _mark_tutorial_complete() -> void:
+	var marker := FileAccess.open(TUTORIAL_COMPLETE_PATH, FileAccess.WRITE)
+	if marker != null:
+		marker.store_string("completed")
+		marker.close()
 
 func _tutorial_observe_state() -> void:
 	if not tutorial_mode or tutorial_director == null:
