@@ -37,6 +37,16 @@ func _run() -> void:
 	_expect(app.tutorial_intro.visible and not app.menu_view.visible, "Learn to Command should open the prologue without starting gameplay behind it")
 	_expect(app.game_view == null, "reading the prologue must not create or mutate a fortress run")
 	_expect(app.tutorial_intro.page_index == 0 and app.tutorial_intro.next_button.has_focus(), "the prologue should begin on its first page with a focused forward action")
+	app.text_scale_percent = 110
+	app.high_contrast_enabled = true
+	app._apply_visual_contrast()
+	await process_frame
+	var intro_rect: Rect2 = app.tutorial_intro.get_global_rect()
+	_expect(app.tutorial_intro.canvas.high_contrast_enabled and intro_rect.encloses(app.tutorial_intro.next_button.get_global_rect()) and intro_rect.encloses(app.tutorial_intro.skip_button.get_global_rect()), "high contrast and 110% text should keep every required prologue action visible")
+	app.text_scale_percent = 100
+	app.high_contrast_enabled = false
+	app.reduced_motion = true
+	app._apply_visual_contrast()
 	app.tutorial_intro.next_button.pressed.emit()
 	app.tutorial_intro.next_button.pressed.emit()
 	await process_frame
@@ -46,6 +56,7 @@ func _run() -> void:
 	await process_frame
 	game = app.game_view
 	_expect(game != null and game.tutorial_mode, "entering the muster yard should create an isolated tutorial stage")
+	_expect(game.reduced_motion_enabled and game.journey_transition.reduced_motion, "the tutorial should inherit reduced-motion behavior before travel begins")
 	_expect(game.tutorial_director.lesson_id == "place_engine", "the first playable lesson should ask for the engine")
 	_expect(game.tutorial_objective_view.visible and game.tutorial_objective_view.action_label.text.contains("Steam Lance Engine"), "the muster yard should show one concrete current order")
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(CAMPAIGN_SAVE)), "opening the tutorial must not create or replace the campaign Continue slot")
