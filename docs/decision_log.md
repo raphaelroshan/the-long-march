@@ -1032,3 +1032,7 @@ Morrowline's existing recovery screen now identifies the place through canvas re
 ## 2026-08-30 — Evacuation Camp is raised above the flood
 
 Evacuation Camp's existing recovery screen now uses a raised timber platform, water pump, sealed medicine cases, and high lamp to distinguish it from Morrowline. Its service guidance frames the current lower-hull or medicine-carrier risk against the fuel margin needed for the archive road. The simulation, service prices, finite action budget, and medicine contract remain unchanged. This was chosen over another generic blue backdrop because the settlement should communicate why its existing recovery choices matter.
+
+## 2026-08-30 — Starting bazaars inherit their region's work
+
+Ashgate Depot now reads as a rail yard through black rails, sleepers, a signal gantry, and depot-specific workshop, stores, and signal copy. Lantern Quay uses a raised flood dock, pilings, hanging lamps, and water/archive-specific service copy. Station IDs, actions, focus order, contracts, forecasts, and route access remain unchanged. This was chosen over adding more bazaar buttons because the existing decisions needed stronger place context, not more options.

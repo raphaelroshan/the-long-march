@@ -24,6 +24,7 @@ func _run() -> void:
 	_expect(hub.visible and not game.main_columns.visible, "the opening settlement should use the bazaar hub instead of the dense operations desk")
 	_expect(hub.station_buttons.size() == 6 and hub.station_buttons.has("workshop") and hub.station_buttons.has("departure_gate"), "the bazaar should expose six stable station landmarks")
 	_expect(hub.value_labels["hull"].text == "10/10" and hub.value_labels["fuel"].text == "6" and hub.value_labels["money"].text == "80", "the left rail should expose the critical fortress values")
+	_expect(hub.context_label.text.contains("ASHGATE RAIL DEPOT") and hub.bazaar_canvas.presentation_signature().contains("BLACK RAILS"), "Ashgate's starting bazaar should identify its rail-depot setting without relying only on the location title")
 	_expect(hub.station_buttons["assignment_board"].has_focus(), "the unresolved opening assignment should receive default focus")
 	var canvas_rect: Rect2 = hub.bazaar_canvas.get_global_rect()
 	_expect(hub.value_labels["hull"].global_position.x < canvas_rect.position.x and hub.detail_title.global_position.x > canvas_rect.end.x, "the 1280x720 hub should keep values left, the fortress stage centered, and details right")
@@ -33,6 +34,7 @@ func _run() -> void:
 	hub.station_buttons["workshop"].pressed.emit()
 	await process_frame
 	_expect(hub.selected_station_id == "workshop" and hub.primary_action_button.text == "ENTER WORKSHOP", "selecting a bazaar station should open its named detail action")
+	_expect(hub.detail_body.text.contains("rail-side repair bay") and hub.detail_body.text.contains("movement chain"), "Ashgate's workshop should frame refit around the depot's immediate operational priority")
 	_expect(game.state.serialize() == state_before_browse, "browsing bazaar stations should not mutate deterministic run state")
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui()

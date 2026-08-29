@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.284`
+**Current code baseline:** `0.3.0-alpha.285`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.283` from PR #41. The active follow-up is `0.3.0-alpha.284`, extending settlement identity without changing service rules.
+**Current merged baseline:** `0.3.0-alpha.284`. The active follow-up is `0.3.0-alpha.285`, extending starting-settlement identity without changing service rules.
 **Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -1011,7 +1011,7 @@ The existing step-based simulation remains authoritative. Presentation may inter
 
 **Objective:** Make settlements feel like breathing spaces with distinct practical pressures rather than interchangeable service menus.
 
-**Status:** Long Road 13.1 is complete for Morrowline and Evacuation Camp through `0.3.0-alpha.284`: their field-recovery tableaux now distinguish a moving canvas-and-parts convoy shelter from a raised flood platform with waterworks and sealed cases. Both frame their existing service choices without adding currencies or commands.
+**Status:** Long Road 13.1 is complete across the four current settlements through `0.3.0-alpha.285`: Ashgate Depot uses black rails and depot signaling, Lantern Quay uses a raised flood dock and hanging lamps, Morrowline uses canvas repair bays and parts wagons, and Evacuation Camp uses waterworks and sealed cases. Their service copy frames existing local priorities without adding currencies or commands.
 
 Ashgate Depot, Morrowline Camp, Lantern Quay, and Evacuation Camp should each have a visual motif, a dominant local problem, a recognizable service priority, and one human-facing consequence. Service receipts must state cost, restored system, remaining options, and trade-off. Players should be able to choose between at least two reasonable recovery paths instead of buying every service.
 
@@ -1076,4 +1076,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and both recovery-settlement Long Road 13.1 slices are complete. If implementation must continue before sessions are available, deepen **one starting settlement's bazaar identity and service priorities** without adding a new region, currency, or command.
+The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and the four-settlement Long Road 13.1 pass are complete. Do not begin controlled content breadth until human evidence exists.

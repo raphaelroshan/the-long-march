@@ -79,9 +79,13 @@ func _run() -> void:
 	await process_frame
 
 	_expect(game.state.campaign_region_id == "flooded_veyru" and game.state.current_location == "lantern_quay", "the Veyru UI flow should begin at Lantern Quay")
-	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus() and game.settlement_hub.detail_body.text.contains("Parts Crate"), "the opening bazaar should focus and name the medicine carrier")
+	_expect(game.settlement_hub.context_label.text.contains("LANTERN QUAY FLOOD MARKET") and game.settlement_hub.bazaar_canvas.presentation_signature().contains("FLOOD DOCK"), "Lantern Quay's starting bazaar should identify its raised flood-market setting")
+	game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
+	await process_frame
+	_expect(game.settlement_hub.detail_body.text.contains("water levels") and game.settlement_hub.detail_body.text.contains("archive signals"), "Lantern Quay's signal service should reflect its local route problem")
 	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
 	await process_frame
+	_expect(game.settlement_hub.visible and game.settlement_hub.primary_action_button.has_focus() and game.settlement_hub.detail_body.text.contains("Parts Crate"), "the opening bazaar should expose and name the medicine carrier after inspecting another local service")
 	game.settlement_hub.primary_action_button.pressed.emit()
 	await _settle_ui()
 	_expect(game.state.veyru_contract_status == "accepted" and game.campaign_path_label.text.contains("Carrier: Parts Crate"), "accepting through the UI should persist the exact medicine carrier")
