@@ -7,7 +7,7 @@
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Next build target:** Replace the code-native placeholders in the implemented bazaar-to-road chain with reviewed fortress, biome, event, and threat art; then validate the flow in human playtests before adding more simulation breadth.
+**Next build target:** Implement the action-led first-run prologue in [`design/guided_tutorial_vertical_slice.md`](../design/guided_tutorial_vertical_slice.md), then use its full-flow playtests to prioritize final fortress, biome, event, and threat art.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -40,7 +40,7 @@ The implemented slice includes the following capabilities:
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
 
-The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, full-frame route planner, focused workshop mode, atomic route-commit boundary, and mandatory side-on road bridge are implemented. Next, show threat approach against fortress anchors, keep roadside choices in the road scene, and add arrival tableaux. The fortress now remains at its last secured location while a campaign encounter is unresolved. The simulation must continue to decide offers, costs, schedules, targets, damage, and consequences; animation consumes structured events and cannot advance or randomize the run.
+The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, full-frame route planner, focused workshop mode, atomic route-commit boundary, mandatory side-on road bridge, animated fortress contact, arrival receipt, and roadside event tableau are implemented. The next player-facing problem is the first-run experience: replace the passive briefing and test-oriented launcher language with a canonical interactive prologue that teaches placement, dependencies, route reading, contact analysis, emergency response, damage, repair, and victory through normal commands. The simulation must continue to decide costs, targets, damage, repair, and outcomes; the tutorial director may sequence lessons but cannot manufacture alternate rules.
 
 ---
 
