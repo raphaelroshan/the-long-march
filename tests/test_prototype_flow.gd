@@ -6,6 +6,7 @@ var game: Control
 var failures: Array[String] = []
 var return_to_title_requested: bool = false
 var last_checkpoint_reason: String = ""
+var arrival_resume_tested: bool = false
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -40,34 +41,56 @@ func _press_campaign_node(node_id: String) -> void:
 			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
 			_expect(game.campaign_map.commit_button.has_focus(), "route selection should move keyboard or controller focus to confirmation")
-			_expect(game.right_scroll.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action visible together")
+			_expect(game.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action fully on screen")
 			game.campaign_map.commit_button.pressed.emit()
+			await process_frame
+			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "committing a route should present the road before exposing combat controls")
+			_expect(game.journey_transition.current_view.get("fortress", {}).get("modules", []).size() > 0, "committed travel should carry the live fortress identity into its road silhouette")
+			game.journey_transition.continue_button.pressed.emit()
 			await process_frame
 			return
 	_expect(false, "campaign node button should be available: " + node_id)
 
 func _press_campaign_event(choice_id: String) -> void:
-	for button in game.campaign_event_buttons:
-		if button.visible and String(button.get_meta("choice_id", "")) == choice_id:
-			button.pressed.emit()
-			await process_frame
-			return
+	var button: Button = game.roadside_event.button_for(choice_id)
+	if button != null and button.visible:
+		button.pressed.emit()
+		await process_frame
+		return
 	_expect(false, "campaign event choice should be available: " + choice_id)
 
 func _advance_until_phase(expected_phase: String) -> void:
+	if game.journey_transition.visible:
+		game.journey_transition.continue_button.pressed.emit()
+		await process_frame
 	if game.state.encounter_active:
 		game.advance_encounter_button.pressed.emit()
 		await process_frame
 		if game.state.encounter_active and not game.state.encounter_intervention_used:
-			game.intervention_buttons[0].pressed.emit()
+			game.road_contact.intervention_buttons[0].pressed.emit()
 			await process_frame
 			_expect(game.event_label.text.contains("Weapon priority") and game.event_label.text.contains("heat +1"), "an emergency order should immediately report its exact benefit and cost")
 			_expect(game.combat_panel.causal_label.text.contains("Weapon priority") and game.combat_panel.causal_label.text.contains("heat +1"), "the persistent cause-and-effect report should retain the emergency order result")
 			_expect(game.intervention_title.text.contains("SPENT") and game.intervention_help_label.text.begins_with("Emergency order spent") and game.intervention_help_label.text.contains("one order returns next encounter"), "spent intervention guidance should direct the player back to damage review and advancement")
 			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.combat_inspect_button, "spending the emergency order should remove disabled interventions while retaining chassis inspection in controller navigation")
-			_expect(game.advance_encounter_button.has_focus(), "spending an emergency order should return focus to encounter advancement")
+			_expect(game.road_contact.advance_button.has_focus(), "spending an emergency order should return focus to the visible contact advance action")
 	for _step in range(8):
 		if game.state.phase == expected_phase:
+			if game.journey_arrival.visible:
+				_expect(game.journey_arrival.continue_button.has_focus() and game.journey_arrival.destination_label.text.length() > 0, "a resolved road should pause at a focused arrival receipt before exposing the next phase")
+				_expect(game.journey_arrival.route_label.text.contains("ROAD RESOLVED") and game.journey_arrival.receipt_labels["outcome"].text != "—" and game.journey_arrival.report_label.text.begins_with("• "), "the arrival tableau should name the resolved road and retain its applied consequence receipt")
+				if not arrival_resume_tested:
+					arrival_resume_tested = true
+					var arrival_destination: String = game.journey_arrival.destination_label.text
+					_expect(game.save_run(true), "the resolved arrival handoff should save successfully")
+					game.journey_arrival_active = false
+					game.journey_arrival_view = {}
+					game._refresh_ui()
+					_expect(game.load_saved_run(), "the resolved arrival handoff should load successfully")
+					await process_frame
+					_expect(game.journey_arrival.visible and game.journey_arrival.destination_label.text == arrival_destination, "Continue should restore a pending arrival receipt instead of skipping directly to the next phase")
+				game.journey_arrival.continue_button.pressed.emit()
+				await process_frame
 			return
 		game.advance_encounter_button.pressed.emit()
 		await process_frame
@@ -171,26 +194,31 @@ func _run() -> void:
 	_expect(game.state.phase == "refit", "prototype should begin in Ashgate refit")
 	_expect(game.current_run_flow_step == 0 and game.run_flow_labels[0].text.contains("PREP"), "the stage tracker should begin at fortress preparation")
 	_expect(game.metric_labels.size() == 7 and game.metric_labels["fuel"].text == "6", "the HUD should expose the seven core operating resources")
+	_expect(game.settlement_hub.visible and not game.main_columns.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "the playable opening should enter Ashgate's bazaar with the required assignment focused")
+	_expect(game.settlement_hub.value_labels["fuel"].text == "6" and game.settlement_hub.value_labels["hull"].text == "10/10", "the bazaar should keep critical fortress values visible beside the centered fortress")
 	_expect(game.current_run_code() == "ASH-1107", "the playable stage should expose a stable chapter-and-seed run identity")
 	var opening_record: String = game.current_run_record_text()
 	_expect(opening_record.contains("RUN ID · ASH-1107") and opening_record.contains("ASHGATE LOWLANDS · DAY 1 · Ashgate Depot · Refit") and opening_record.contains("Contract · Offered"), "the live March Record should identify the opening run and its unresolved obligation")
 	_expect(opening_record.contains("Systems · 6 ready · 1 strained · 0 offline") and opening_record.contains("NEXT ORDER") and opening_record.contains("guard Morrowline"), "the live March Record should preserve current system condition and the authoritative next order")
-	_expect(game.contract_accept_button.text.contains("EACH ENEMY +1 HP") and game.contract_accept_button.text.contains("+30 ASHMARKS · +2 TRUST") and game.contract_decline_button.text.contains("NO EXTRA ENEMY HP") and game.contract_decline_button.text.contains("NO CONTRACT PAYOUT OR TRUST"), "the opening contract actions should disclose both sides of the combat and reward tradeoff before commitment")
-	_expect(game.contract_accept_button.get_node_or_null(game.contract_accept_button.focus_neighbor_bottom) == game.contract_decline_button and game.contract_decline_button.get_node_or_null(game.contract_decline_button.focus_neighbor_bottom) == game.doctrine_option, "opening planning controls should follow the visible contract-to-doctrine order")
-	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.contract_accept_button, "planning controls should wrap to the current mandatory decision")
-	_expect(game.current_order_button.text == "GO TO CONTRACT ↓" and game.current_order_button.tooltip_text.contains("without activating it"), "the persistent jump action should name the opening contract without implying activation")
+	_expect(game.settlement_hub.detail_body.text.contains("Each enemy") and game.settlement_hub.detail_body.text.contains("30 Ashmarks") and game.settlement_hub.primary_action_button.text == "ACCEPT ASSIGNMENT" and game.settlement_hub.secondary_action_button.text.contains("TRAVEL UNBOUND"), "the assignment station should disclose both sides of the combat and reward tradeoff before commitment")
 	_expect(not game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS OVERVIEW") and game.fortress_panel.placement_status_text().begins_with("INSPECT") and game.fortress_panel.placement_status_text().contains("EDIT CHASSIS TO MOVE"), "the untouched opening should present the selected engine as passive inspection rather than an active move command")
 	_expect(game.refit_label.text.contains("On chassis for inspection") and game.refit_label.text.contains("Use Edit Chassis or click the grid to move it"), "the opening module summary should explain how inspection becomes an intentional refit action")
+	game.settlement_hub.station_buttons["workshop"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(not game.settlement_hub.visible and game.main_columns.visible and game.settlement_detail_mode == "workshop" and not game.campaign_map.visible, "entering the workshop should replace the bazaar with a focused chassis workspace")
 	game.how_to_play_button.grab_focus()
 	await process_frame
 	await process_frame
-	_expect(game.right_scroll.get_global_rect().encloses(game.how_to_play_button.get_global_rect()), "manual focus navigation should scroll the field briefing action fully into view")
+	_expect(game.right_scroll.get_global_rect().encloses(game.how_to_play_button.get_global_rect()), "manual focus navigation should scroll the workshop briefing action fully into view")
 	var state_before_order_jump: Dictionary = game.state.serialize()
 	game.current_order_button.grab_focus()
 	game.current_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(game.contract_accept_button.has_focus() and game.right_scroll.get_global_rect().encloses(game.contract_accept_button.get_global_rect()), "Go to Contract should focus and reveal the mandatory choice")
+	_expect(game.focus_chassis_button.has_focus() and game.right_scroll.get_global_rect().encloses(game.focus_chassis_button.get_global_rect()), "Go to Chassis should focus and reveal the workshop's primary action")
 	_expect(game.state.serialize() == state_before_order_jump, "jumping to the current order should never activate or mutate the decision")
 	_expect(game.doctrine_detail_label.text.contains("Raiders") and game.doctrine_detail_label.text.contains("−1 damage"), "the default doctrine should explain its real targeting and mitigation effects")
 	game.doctrine_option.select(2)
@@ -270,21 +298,34 @@ func _run() -> void:
 	await process_frame
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
-	_expect(game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the campaign should render the full authored node graph")
+	_expect(not game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the workshop should keep the authored route graph prepared but out of the focused refit workspace")
 	var condenser_picker_index := _module_picker_index("water_condenser")
 	_expect(condenser_picker_index >= 0 and game.module_option.get_item_text(condenser_picker_index).contains("STORED"), "the Water Condenser should appear as a finite stored module in the refit picker")
 	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
-	_expect(game.campaign_commit_intel_label.get_parent() == game.campaign_map.get_parent() and game.campaign_commit_intel_label.get_index() == game.campaign_map.get_index() + 1 and campaign_action_row.get_parent() == game.campaign_map.get_parent() and campaign_action_row.get_index() == game.campaign_commit_intel_label.get_index() + 1 and game.campaign_cancel_button.get_parent() == campaign_action_row, "route commitment and its reversible exit should remain grouped in one row directly below the map and compact intel")
+	_expect(game.campaign_map.get_parent() == game.journey_planner.map_host and game.campaign_commit_intel_label.get_parent() == game.journey_planner.detail_stack and campaign_action_row.get_parent() == game.journey_planner.action_host and game.campaign_cancel_button.get_parent() == campaign_action_row, "the route map, dossier, and reversible commit actions should occupy their dedicated planner regions")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
-	game.contract_accept_button.pressed.emit()
+	game.settlement_hub_return_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "leaving the workshop should return to the unresolved assignment in the bazaar")
+	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
 	await process_frame
 	await process_frame
 	await process_frame
 	_expect(game.state.guard_contract_status == "accepted", "the guard contract should be selectable through the UI")
 	_expect(game.event_label.text.begins_with("CONTRACT DECISION") and game.encounter_label.text.begins_with("CONTRACT DECISION") and game.encounter_label.text.contains("each enemy") and game.encounter_label.text.contains("30 Ashmarks") and game.encounter_label.text.contains("2 trust"), "the accepted contract should leave an exact above-fold consequence receipt after its choice cards disappear")
-	_expect(game.guidance_label.text.contains("Select one cyan route"), "the objective should advance immediately after the contract is answered")
-	_expect(game.current_order_button.text == "GO TO ROUTES ↓", "the jump action should advance from contract to the available route choices")
+	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["departure_gate"].has_focus(), "the bazaar should advance from the answered assignment to departure planning")
+	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
+	await process_frame
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await process_frame
+	await process_frame
+	_expect(game.campaign_map.visible and game.settlement_detail_mode == "journey" and not game.refit_title.visible, "Plan Journey should open a focused route table without retaining workshop controls")
+	_expect(game.guidance_label.text.contains("Select one highlighted destination"), "the objective should advance immediately to route inspection")
+	_expect(game.current_order_button.text == "GO TO ROUTES ↓", "the jump action should advance from assignment to the available route choices")
 	var route_briefing_state: Dictionary = game.state.serialize()
 	game._show_onboarding(true)
 	await process_frame
@@ -298,13 +339,9 @@ func _run() -> void:
 	_expect(game.campaign_comparison_panel.visible and game.campaign_comparison_label.text.contains("RILL CROSSING · 1D · 1 FUEL · KNOWN · LOW 14% RISK") and game.campaign_comparison_label.text.contains("SOOT ORCHARD · 2D · 2 FUEL · FORECAST · GUARDED 27% RISK") and game.campaign_comparison_label.text.contains("PRESSURE +1") and game.campaign_comparison_label.text.contains("NO SETTLEMENT NEXT"), "route planning should compare confidence, days, fuel, risk band, pressure, threat clue, and onward recovery before selection")
 	_expect(game.campaign_pressure_label.text.contains("Closing begins at 3") and game.campaign_pressure_label.text.contains("Break at 5"), "Watch pressure should explain both upcoming closure thresholds before route choice")
 	_expect(game.campaign_map.button_for("rill_crossing").text.contains("KNOWN · LOW") and game.campaign_map.button_for("soot_orchard").text.contains("FORECAST · GUARDED"), "available map nodes should expose compact scouting and risk comparisons before focus")
-	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "resolving the contract should hand controller focus to the first route")
-	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should scroll the selected action fully into view")
-	var route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
-	var route_asset_rect: Rect2 = game.asset_row.get_global_rect()
-	_expect(not route_asset_rect.intersects(route_viewport_rect) or route_viewport_rect.encloses(route_asset_rect), "route focus should not leave the command-desk icon row partially clipped")
-	var route_doctrine_rect: Rect2 = game.doctrine_detail_label.get_global_rect()
-	_expect(not route_doctrine_rect.intersects(route_viewport_rect) or route_viewport_rect.encloses(route_doctrine_rect), "route focus should not begin midway through the preceding doctrine explanation")
+	_expect(game.campaign_map.button_for("rill_crossing").has_focus(), "opening the departure table should hand controller focus to the first route")
+	_expect(game.journey_planner.map_host.get_global_rect().encloses(game.campaign_map.button_for("rill_crossing").get_global_rect()), "route focus should remain fully visible inside the centered regional map")
+	_expect(game.doctrine_detail_label.get_parent() == game.journey_planner.detail_stack, "the route planner should keep doctrine context inside its right detail dock")
 	_expect(game._desk_context_anchor_for(game.campaign_map.button_for("rill_crossing")) == game.campaign_title, "route focus should anchor scrolling at the map heading instead of the generic desk guidance")
 	game.doctrine_option.select(2)
 	game.doctrine_option.item_selected.emit(2)
@@ -372,9 +409,11 @@ func _run() -> void:
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
 	_expect(game.journey_label.text.contains("Ashgate Depot → Rill Crossing") and game.journey_label.text.contains("Encounter 1/5 underway") and not game.journey_label.text.contains("Encounter 0/5"), "the journey header should include the active road destination and count the first encounter rather than showing zero progress")
 	_expect(game.campaign_pressure_label.text.contains("secured 0/5") and not game.campaign_pressure_label.text.contains("encounters 0/5"), "the blockade summary should identify its zero as secured encounters while the first battle is underway")
-	_expect(game.advance_encounter_button.has_focus(), "committing a route should hand controller focus to the encounter timeline")
+	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "committing a route should hand controller focus to the fortress contact scene")
+	_expect(game.road_contact.contact_canvas.visible and game.road_contact.timeline_labels.size() == 6 and game.road_contact.threat_heading.text == "ROAD RAIDER", "the road contact should center the fortress, name the nearest threat, and retain the six-step timeline")
+	_expect(game.road_contact.threat_status.text.contains("2 STEPS OUT") and game.road_contact.threat_detail.text.contains("PREFERRED TARGETS · cargo / exterior") and game.road_contact.threat_detail.text.contains("COUNTER · shell cannon or repeater gun"), "the contact dossier should explain approach timing, target priorities, and the authored counter")
 	_expect(game.current_order_button.text == "GO TO BATTLE STEP ↓", "battle entry should retarget the persistent jump action to the next timeline step")
-	_expect(game.right_scroll.get_global_rect().encloses(game.advance_encounter_button.get_global_rect()), "battle focus should scroll encounter advancement into view")
+	_expect(game.get_global_rect().encloses(game.road_contact.advance_button.get_global_rect()), "battle entry should keep the visible contact advance action fully on screen")
 	var battle_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
 	var battle_asset_rect: Rect2 = game.asset_row.get_global_rect()
 	_expect(not battle_asset_rect.intersects(battle_viewport_rect) or battle_viewport_rect.encloses(battle_asset_rect), "battle focus should settle after layout changes without clipping the icon row")
@@ -393,7 +432,7 @@ func _run() -> void:
 	game._finish_onboarding(true)
 	await process_frame
 	await process_frame
-	_expect(game.state.serialize() == battle_briefing_state and game.advance_encounter_button.has_focus(), "closing contextual battle guidance should return to the next authoritative step without advancing it")
+	_expect(game.state.serialize() == battle_briefing_state and game.road_contact.advance_button.has_focus(), "closing contextual battle guidance should return to the visible contact advance action without advancing it")
 	var initial_shift_preview: Dictionary = game.state.encounter_shift_power_preview()
 	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("remains available after Advance") and game.intervention_help_label.text.contains("Review CONTACT NEXT") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the pre-contact order panel should explain that waiting preserves the order while pointing back to the arrival forecast")
 	game.intervention_buttons[0].grab_focus()
@@ -414,7 +453,7 @@ func _run() -> void:
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
 	_expect(game.fortress_panel.interaction_heading().contains("Inspect Chassis chooses a seal target") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive battle chassis should describe the action that is actually available in this phase")
 	_expect(game.fortress_panel.inspection_detail_heading() == "BATTLE SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("TARGETING") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0, "battle inspection detail copy should name its phase and fit the fixed status column")
-	game.combat_inspect_button.pressed.emit()
+	game.road_contact.inspect_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS INSPECTION") and not game.fortress_panel.interaction_heading().contains("EDIT MODE"), "the combat inspection action should enter a clearly named non-refit chassis mode")
 	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()), "battle chassis inspection should keep the fixed pointer-accessible Pause action visible")
@@ -424,7 +463,7 @@ func _run() -> void:
 	battle_chassis_select.pressed = true
 	game.fortress_panel._gui_input(battle_chassis_select)
 	await process_frame
-	_expect(game.selected_module_id == "coal_cell" and game.intervention_buttons[1].has_focus() and game.intervention_buttons[1].text.contains("Coal Cell"), "selecting a combat system should return focus to the matching Seal order")
+	_expect(game.selected_module_id == "coal_cell" and game.road_contact.visible and game.road_contact.intervention_buttons[1].has_focus() and game.intervention_buttons[1].text.contains("Coal Cell"), "selecting a combat system should return to the fortress contact and focus the matching Seal order")
 	var original_raider: Dictionary = game.state.encounter_enemies[0].duplicate(true)
 	game.selected_module_id = "steam_lance_engine"
 	game._sync_selected_module_context()
@@ -438,6 +477,7 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["damage_bonus"] = 1
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
+	_expect(game.road_contact.threat_status.text.contains("TARGETING COAL CELL") and game.road_contact.threat_detail.text.contains("WHY ·") and game.road_contact.threat_detail.text.contains("NEXT ·") and game.road_contact.current_view.get("active_target_id", "") == "coal_cell", "the fortress contact should connect the active threat dossier and visual target marker to the authoritative module")
 	_expect(not game.fortress_panel.hull_under_threat and "coal_cell" in game.fortress_panel.combat_target_ids, "a module-directed contact should highlight only its chassis target")
 	game.intervention_buttons[1].grab_focus()
 	await process_frame
@@ -516,14 +556,19 @@ func _run() -> void:
 	battle_chassis_cancel.pressed = true
 	game.fortress_panel._gui_input(battle_chassis_cancel)
 	await process_frame
-	_expect(game.combat_inspect_button.has_focus(), "B or Escape should return battle inspection focus to its visible desk action")
+	_expect(game.road_contact.visible and game.road_contact.inspect_button.has_focus(), "B or Escape should return battle inspection focus to its visible contact action")
 	game.advance_encounter_button.grab_focus()
 	await process_frame
 	_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.intervention_buttons[0] and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.current_order_button, "combat actions should form a visible vertical controller loop through chassis inspection and the persistent order jump")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_next) == game.current_order_button and game.current_order_button.get_node_or_null(game.current_order_button.focus_next) == game.advance_encounter_button, "combat Tab navigation should remain inside the active command set while including the order jump")
-	game.advance_encounter_button.pressed.emit()
+	game.road_contact.advance_button.pressed.emit()
 	await process_frame
 	_expect(game.combat_panel.enemy_states[0].text.contains("1 STEP OUT") and game.advance_encounter_button.text.contains("STEP 2 OF 6") and game.advance_encounter_button.text.contains("CONTACT NEXT · ROAD RAIDER") and game.combat_panel.order_label.text.contains("Next step 2/6") and game.combat_panel.step_labels[1].text == "CONTACT · 2", "the arrival countdown, timeline, combat status, and advance action should agree and warn before contact")
+	_expect(game.road_contact.contact_canvas.transition_progress < 1.0, "advancing contact should begin a short presentation-only approach beat")
+	var motion_state: Dictionary = game.state.serialize()
+	game.set_reduced_motion(true)
+	_expect(game.road_contact.contact_canvas.transition_progress == 1.0 and game.state.serialize() == motion_state, "Reduced Motion should finish the contact beat immediately without changing simulation state")
+	game.set_reduced_motion(false)
 	_expect(game.combat_panel.causal_label.text.contains("Repeater Gun") and not game.combat_panel.causal_label.text.contains("repeater_gun"), "the visible causal report should use authored system names rather than internal content IDs")
 	var target_card_preview: Dictionary = game.state.encounter_summary()
 	var target_enemy: Dictionary = target_card_preview.enemies[0]
@@ -561,6 +606,7 @@ func _run() -> void:
 	_expect(last_checkpoint_reason == "route_secured", "securing a non-recovery road should request a road-secured checkpoint instead of leaving the final battle step as the visible save reason")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	_expect(game.state.campaign_event_pending == "lift_chain_sings" and game.encounter_label.text.begins_with("DECISION REQUIRED · THE LIFT CHAIN SINGS"), "the first eligible seeded occurrence should replace the generic after-action prompt with one primary road decision")
+	_expect(game.roadside_event.visible and game.roadside_event.context_label.text == "ROADSIDE OCCURRENCE" and game.roadside_event.title_label.text == "THE LIFT CHAIN SINGS" and game.roadside_event.location_label.text.contains("RILL CROSSING"), "the Frontier-style roadside tableau should keep the fortress, place, and occurrence together")
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
@@ -568,11 +614,11 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.campaign_event_title.text == "THE LIFT CHAIN SINGS" and game.campaign_event_buttons[0].text.contains("Ashmarks -6") and game.campaign_event_buttons[0].text.contains("Future route risk -2%") and game.campaign_event_buttons[1].text.contains("Ammunition Lift -1 durability"), "the seeded occurrence card should disclose both dependency tradeoffs before commitment")
-	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_event_title.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "the complete occurrence card should stay visible at the reference viewport")
+	_expect(game.get_global_rect().encloses(game.roadside_event.title_label.get_global_rect()) and game.get_global_rect().encloses(game.roadside_event.choice_buttons[1].get_global_rect()), "the complete roadside occurrence should stay visible at the reference viewport")
 	_expect(game.current_order_button.text == "GO TO DECISION ↓", "a blocking road occurrence should retarget the jump action to its choice card")
 	game.current_order_button.pressed.emit()
 	await process_frame
-	_expect(game.campaign_event_buttons[0].has_focus(), "Go to Decision should focus the first legal event response without choosing it")
+	_expect(game.roadside_event.choice_buttons[0].has_focus(), "Go to Decision should focus the first legal roadside response without choosing it")
 	await _press_campaign_event("brace_lift_chain")
 	_expect(game.state.occurrence_history.size() == 1 and game.event_label.text.contains("future route risk falls by 2%"), "resolving an occurrence should immediately expose its consequence and retain one audit record")
 	_expect(game.encounter_label.text.contains("NEXT · Select one cyan route") and game.encounter_label.text.contains("Commit begins travel"), "a completed road occurrence should keep its consequence and the authoritative next route action together")
@@ -664,7 +710,8 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.specialist_id == "mara_flint" and game.state.campaign_event_pending == "mara_workbench_choice", "recruiting Mara should visibly advance to her one-core decision")
 	_expect(game.encounter_label.text.begins_with("DECISION CONTINUES · ONE SOUND CORE") and game.campaign_event_buttons[0].text.contains("Rebuild Field Workshop") and game.campaign_event_buttons[0].text.contains("Day +1") and game.campaign_event_buttons[1].text.contains("damage -1 per hit"), "the workbench card should identify the deterministic repair target and complete tradeoffs")
-	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_event_title.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "a chained event should scroll its title and both choices into the visible command desk")
+	_expect(game.roadside_event.story_panel.visible and game.roadside_event.story_label.text.contains("MARA'S FORGE CORE · ONE USE ONLY") and game.roadside_event.tableau.presentation_signature() == "ONE CORE · MACHINE OR SHELTER", "Mara's workbench should visually frame the machine-versus-shelter commitment")
+	_expect(game.get_global_rect().encloses(game.roadside_event.title_label.get_global_rect()) and game.get_global_rect().encloses(game.roadside_event.choice_buttons[1].get_global_rect()), "a chained event should keep its title and both choices inside the roadside tableau")
 	await _press_campaign_event("rebuild_weakest")
 	_expect(game.state.campaign_event_pending.is_empty() and int(game.state.modules[mara_workshop_index].durability) == 3 and game.campaign_path_label.text.contains("Specialist: Mara Flint"), "choosing machine recovery should repair the workshop, clear the blocking event, and retain Mara in the campaign status")
 	_expect(game.encounter_label.text.contains("NEXT · 2 service actions remain") and game.encounter_label.text.contains("choose the next road"), "finishing Mara's chained decision should keep its consequence and the authoritative recovery action together")
@@ -672,14 +719,14 @@ func _run() -> void:
 	_expect(game.current_order_button.text == "GO TO RECOVERY ↓", "clearing the settlement event should retarget the jump action to available recovery services")
 	game.current_order_button.pressed.emit()
 	await process_frame
-	_expect(game.get_viewport().gui_get_focus_owner() in [game.settlement_repair_button, game.settlement_refuel_button, game.settlement_hull_button], "Go to Recovery should focus the first legal service without spending an action")
+	_expect(game.get_viewport().gui_get_focus_owner() in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button], "Go to Recovery should focus the first legal visible service without spending an action")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
-	_expect(game.settlement_group.get_index() < game.doctrine_group.get_index(), "Morrowline should place its primary recovery actions before optional doctrine and chassis controls")
-	_expect(game.settlement_refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.settlement_refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
+	_expect(game.recovery_panel.visible and not game.main_columns.visible and not game.journey_planner.visible, "Morrowline should present a dedicated recovery tableau until the player explicitly opens the route planner")
+	_expect(game.recovery_panel.refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.recovery_panel.refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
 	if game.state.hull_condition < 10:
-		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
+		_expect(game.recovery_panel.hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.recovery_panel.hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
 	else:
-		_expect(game.settlement_hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
+		_expect(game.recovery_panel.hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
 	var mara_crew_index: int = game.state._module_index_by_id("crew_quarters")
 	var mara_crew_before: int = int(game.state.modules[mara_crew_index].get("durability", 0))
 	game.state.modules[mara_crew_index]["durability"] = 1
@@ -687,7 +734,7 @@ func _run() -> void:
 	game._select_module_option("crew_quarters")
 	game._sync_selected_module_context()
 	game._refresh_ui()
-	_expect(game.settlement_repair_button.text.contains("REPAIR CREW QUARTERS +3") and game.settlement_repair_button.text.contains("8 ASHMARKS · MARA +1") and game.settlement_repair_button.text.contains("DURABILITY 1→4"), "Mara's settlement service preview should show the extra free durability and unchanged price before commitment")
+	_expect(game.recovery_panel.repair_button.text.contains("REPAIR CREW QUARTERS +3") and game.recovery_panel.repair_button.text.contains("8 ASHMARKS · MARA +1") and game.recovery_panel.repair_button.text.contains("DURABILITY 1→4"), "Mara's settlement service preview should show the extra free durability and unchanged price before commitment")
 	game.state.modules[mara_crew_index]["durability"] = mara_crew_before
 	game.selected_module_id = "steam_lance_engine"
 	game._select_module_option("steam_lance_engine")
@@ -695,25 +742,27 @@ func _run() -> void:
 	game._refresh_ui()
 	var handoff_money: int = game.state.money
 	var handoff_actions: int = game.state.settlement_actions_remaining
-	game.settlement_routes_button.pressed.emit()
+	game.recovery_panel.routes_button.pressed.emit()
 	await process_frame
 	await process_frame
 	_expect(game.get_viewport().gui_get_focus_owner() in game.campaign_node_buttons and game.selected_campaign_node_id.is_empty(), "Review Next Roads should move focus to route selection without choosing a road for the player")
 	var focused_route_rect: Rect2 = game.get_viewport().gui_get_focus_owner().get_global_rect()
-	var recovery_route_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
-	_expect(focused_route_rect.position.y >= recovery_route_viewport_rect.position.y and focused_route_rect.end.y <= recovery_route_viewport_rect.end.y, "the recovery handoff should scroll its focused route fully into the visible command desk")
+	var recovery_route_viewport_rect: Rect2 = game.journey_planner.map_host.get_global_rect()
+	_expect(focused_route_rect.position.y >= recovery_route_viewport_rect.position.y and focused_route_rect.end.y <= recovery_route_viewport_rect.end.y, "the recovery handoff should keep its focused route fully inside the dedicated map")
 	_expect(game.state.money == handoff_money and game.state.settlement_actions_remaining == handoff_actions and game.event_label.text.contains("no service action has been spent"), "the recovery handoff should preserve resources and explicitly state its no-cost semantics")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
 	_expect(game.campaign_commit_intel_label.text.contains("UNUSED RECOVERY · 2 service actions remain") and game.campaign_commit_intel_label.text.contains("Departing ends access"), "route commitment should warn before both unused Morrowline services become inaccessible")
 	game.selected_campaign_node_id = ""
 	game._refresh_ui()
-	game.settlement_refuel_button.grab_focus()
-	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
-	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
-	var recovery_previous := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) as BaseButton
-	_expect(recovery_previous != null and recovery_previous != game.settlement_repair_button and not recovery_previous.disabled, "settlement Tab navigation should skip the unavailable repair action while retaining refit controls")
-	var recovery_next := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_next) as BaseButton
+	game.journey_planner.return_button.pressed.emit()
+	await process_frame
+	game.recovery_panel.refuel_button.grab_focus()
+	_expect(game.recovery_panel.repair_button.disabled and game.recovery_panel.repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
+	_expect(game.recovery_panel.refuel_button.has_focus(), "recovery focus should skip unavailable services and land on the first viable action")
+	var recovery_previous := game.recovery_panel.refuel_button.get_node_or_null(game.recovery_panel.refuel_button.focus_previous) as BaseButton
+	_expect(recovery_previous != null and recovery_previous != game.recovery_panel.repair_button and not recovery_previous.disabled, "recovery Tab navigation should skip the unavailable repair action")
+	var recovery_next := game.recovery_panel.refuel_button.get_node_or_null(game.recovery_panel.refuel_button.focus_next) as BaseButton
 	_expect(recovery_next != null and not recovery_next.disabled, "settlement navigation should lead only to an enabled recovery or route action")
 	game.selected_module_id = "steam_lance_engine"
 	game._select_module_option("steam_lance_engine")
@@ -723,11 +772,12 @@ func _run() -> void:
 	game.state.modules[damaged_workshop_index]["durability"] = 1
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(not game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("REVIEW FIELD WORKSHOP") and game.settlement_repair_button.text.contains("1/3") and game.settlement_repair_button.text.contains("NO COST · PRESS AGAIN TO REPAIR"), "repair should offer a clearly reversible inspection handoff to the most damaged system when the current selection is already full")
+	_expect(not game.recovery_panel.repair_button.disabled and game.recovery_panel.repair_button.text.contains("REVIEW FIELD WORKSHOP") and game.recovery_panel.repair_button.text.contains("1/3") and game.recovery_panel.repair_button.text.contains("NO COST · PRESS AGAIN TO REPAIR"), "repair should offer a clearly reversible inspection handoff to the most damaged system when the current selection is already full")
 	var actions_before_repair_selection: int = game.state.settlement_actions_remaining
-	game.settlement_repair_button.pressed.emit()
+	game.recovery_panel.repair_button.pressed.emit()
 	await process_frame
-	_expect(game.selected_module_id == "field_workshop" and game.settlement_repair_button.has_focus() and game.settlement_repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.settlement_repair_button.text.contains("DURABILITY 1→3") and game.settlement_repair_button.text.contains("ACTIONS 2→1") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact durability and action-budget consequences without spending an action")
+	await process_frame
+	_expect(game.selected_module_id == "field_workshop" and game.recovery_panel.repair_button.has_focus() and game.recovery_panel.repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.recovery_panel.repair_button.text.contains("DURABILITY 1→3") and game.recovery_panel.repair_button.text.contains("ACTIONS 2→1") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact durability and action-budget consequences without spending an action")
 	_expect(game.refit_label.text.contains("Damaged · 1/3 durability · strained") and game.fortress_panel.selected_system_state_text().contains("Strained · damaged 1/3"), "a damaged operational module should disclose its condition alongside its dependency state instead of appearing fully healthy")
 	game.state.modules[damaged_workshop_index]["durability"] = workshop_before
 	game.state._recalculate()
@@ -738,12 +788,12 @@ func _run() -> void:
 	game.state.money = 3
 	game.state.hull_condition = 9
 	game._refresh_ui()
-	_expect(game.settlement_refuel_button.disabled and game.settlement_refuel_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable fuel service should name the player's current funds")
-	_expect(game.settlement_hull_button.disabled and game.settlement_hull_button.text.contains("REPAIR +1 HULL") and game.settlement_hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable near-full hull service should name both its exact benefit and the player's current funds")
+	_expect(game.recovery_panel.refuel_button.disabled and game.recovery_panel.refuel_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable fuel service should name the player's current funds")
+	_expect(game.recovery_panel.hull_button.disabled and game.recovery_panel.hull_button.text.contains("REPAIR +1 HULL") and game.recovery_panel.hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable near-full hull service should name both its exact benefit and the player's current funds")
 	game.state.money = recovery_money
 	game.state.settlement_actions_remaining = 0
 	game._refresh_ui()
-	_expect(game.settlement_repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
+	_expect(game.recovery_panel.repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.recovery_panel.refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.recovery_panel.hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
 	_expect(game.guidance_label.text.contains("0 service actions remain") and not game.guidance_label.text.contains("actions remains"), "exhausted recovery guidance should retain correct plural grammar")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
@@ -771,11 +821,19 @@ func _run() -> void:
 	game.load_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "settlement" and game.state.money == saved_money, "JSON save/load should restore settlement state")
-	game.settlement_refuel_button.pressed.emit()
+	game.recovery_panel.refuel_button.pressed.emit()
 	await process_frame
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	_expect(game.settlement_title.text.contains("1 ACTION LEFT"), "the service budget should update immediately after use")
 	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action remains"), "settlement services should report cost, effect, and remaining budget above the fold")
+	_expect(game.recovery_panel.receipt_label.text.contains("+2 fuel loaded") and game.recovery_panel.receipt_label.text.contains("1 service action remains"), "the visible recovery receipt should preserve the exact transaction and remaining opportunity")
+	var saved_recovery_receipt: String = game.last_recovery_receipt
+	game.save_button.pressed.emit()
+	await process_frame
+	game.last_recovery_receipt = ""
+	game.load_button.pressed.emit()
+	await process_frame
+	_expect(game.last_recovery_receipt == saved_recovery_receipt and game.recovery_panel.receipt_label.text.contains("+2 fuel loaded"), "save/load should restore the latest recovery receipt with the authoritative settlement state")
 	game._refresh_ui()
 	_expect(game.encounter_label.text.begins_with("MORROWLINE RECOVERY") and game.encounter_label.text.contains("1 service action remains") and not game.encounter_label.text.contains("up to two"), "ordinary recovery refreshes should retain the live remaining service budget")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
@@ -791,6 +849,7 @@ func _run() -> void:
 	_expect(game.state.campaign_event_pending == "mara_followup" and game.campaign_event_title.text == "WHAT HELD", "the fourth road should surface Mara's later callback before Meridian Pass")
 	var mara_followup_choice := String(game.campaign_event_buttons[0].get_meta("choice_id", ""))
 	_expect(mara_followup_choice in ["record_repair_held", "record_repair_failed"] and game.campaign_event_buttons[0].text.to_upper().contains("PRESSURE"), "Mara's callback should preview whether the repaired system earned pressure recovery")
+	_expect(game.roadside_event.story_label.text.contains("FOURTH-ROAD PROMISE CHECK") and game.roadside_event.story_label.text.contains("Field Workshop was the workbench commitment") and game.roadside_event.tableau.presentation_signature().contains("FIELD WORKSHOP"), "Mara's callback should name and visually resolve the earlier physical commitment")
 	await _press_campaign_event(mara_followup_choice)
 	_expect(game.state.campaign_event_pending.is_empty(), "acknowledging Mara's callback should reopen final route selection")
 	game.campaign_map.button_for("meridian_pass").pressed.emit()
@@ -807,19 +866,17 @@ func _run() -> void:
 	_expect(last_checkpoint_reason == "run_ended", "resolving the final encounter should request a neutral run-ended checkpoint for the debrief")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
-	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible and not game.journey_banner.visible, "results should expose final chassis review and follow-up actions while retiring the completed journey's decorative banner")
-	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
-	_expect(game.results_inspect_button.has_focus() and game.current_order_button.text == "GO TO CHASSIS REVIEW ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.results_inspect_button, "a newly opened debrief should focus and name final chassis review before asking for feedback")
-	_expect(game.right_scroll.get_global_rect().encloses(game.results_heading.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.results_inspect_button.get_global_rect()), "debrief arrival should reset inherited battle scrolling and keep both the outcome heading and first action visible")
+	_expect(game.debrief_panel.visible and not game.main_columns.visible and not game.journey_banner.visible, "results should open the dedicated terminal debrief and retire the operational desk")
+	_expect(game.debrief_panel.fortress_canvas.current_view.get("fortress", {}).get("modules", []).size() > 0, "the terminal debrief should render the same live module families and condition as the completed march")
+	_expect(game.debrief_panel.headline_label.text == "SCARRED" and game.debrief_panel.outcome_label.text == "JOURNEY COMPLETE · SCARRED MARCH", "the debrief should state the run outcome without success-coding every terminal state")
+	_expect(game.debrief_panel.inspect_button.has_focus(), "a newly opened debrief should focus final fortress review before asking for another commitment")
+	_expect(game.debrief_panel.headline_label.get_global_rect().position.y >= game.debrief_panel.get_global_rect().position.y and game.debrief_panel.inspect_button.get_global_rect().end.y <= game.debrief_panel.get_global_rect().end.y + 1.0, "the terminal debrief should keep both its outcome and first interpretation action visible at 720p")
 	_expect(game.fortress_panel.interaction_heading().contains("Inspect Final Chassis reviews survivors") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive result chassis should describe debrief review instead of an unavailable refit action")
-	game.current_order_button.pressed.emit()
-	await process_frame
-	_expect(game.results_inspect_button.has_focus(), "Go to Chassis Review should focus the debrief's first interpretation action without opening it")
-	game.results_inspect_button.pressed.emit()
+	game.debrief_panel.inspect_button.pressed.emit()
 	await process_frame
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.inspection_detail_heading() == "FINAL SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("REVIEW") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0 and game.fortress_panel.tooltip_text.contains("returns to the debrief") and game.current_order_button.text == "GO TO FEEDBACK ↓" and game.guidance_label.text.contains("Final chassis reviewed"), "Inspect Final Chassis should enter a fitted result-specific review mode and advance the debrief handoff toward feedback")
-	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()) and game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "active final chassis review should keep both the fixed Pause action and complete inspector visible at 720p")
+	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()) and game.left_scroll.is_ancestor_of(game.fortress_panel) and game.fortress_panel.get_global_rect().intersects(game.left_scroll.get_global_rect()), "active final chassis review should keep Pause fixed and the detailed inspector available in its 720p scroll surface")
 	var result_chassis_select := InputEventAction.new()
 	result_chassis_select.action = "ui_accept"
 	result_chassis_select.pressed = true
@@ -831,14 +888,13 @@ func _run() -> void:
 	result_chassis_cancel.pressed = true
 	game.fortress_panel._gui_input(result_chassis_cancel)
 	await process_frame
-	_expect(game.results_inspect_button.has_focus(), "B or Escape should return final chassis review to its visible debrief action")
-	game.current_order_button.pressed.emit()
-	await process_frame
-	_expect(game.feedback_button.has_focus(), "Go to Feedback should focus the debrief's primary follow-up without opening it")
-	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
-	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
+	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "B or Escape should return final chassis review to its visible debrief action")
+	_expect(game.debrief_panel.title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
+	_expect(game.debrief_panel.consequence_label.text.begins_with("SCARRED MARCH") and game.debrief_panel.consequence_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
+	_expect(game.debrief_panel.commitments_label.text.contains("Forge-core promise") and game.debrief_panel.commitments_label.text.contains("Field Workshop") and (game.debrief_panel.commitments_label.text.contains("held through the fourth road") or game.debrief_panel.commitments_label.text.contains("failed before the fourth-road check")), "the terminal debrief should preserve Mara's original physical promise and its later callback")
+	_expect(game.debrief_panel.commitments_label.text.contains("Occurrence · The Lift Chain Sings"), "the terminal debrief should carry resolved roadside occurrences beyond the transient event screen")
 	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Blockade:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Key decisions: Broken Relay — moved silently") and game.results_record_label.text.contains("Mara Flint — rebuilt Field Workshop") and game.results_record_label.text.contains("Road occurrence — The Lift Chain Sings: Brace Lift Chain") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, Mara's causal outcome, occurrence record, authored decisions, unused recovery, doctrine, and named operating condition needed to interpret the run")
-	_expect(game.results_replay_label.text.begins_with("NEXT RUN") and game.results_replay_label.text.contains("1 Morrowline service action went unused") and game.results_replay_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
+	_expect(game.debrief_panel.experiment_label.text.contains("1 Morrowline service action went unused") and game.debrief_panel.experiment_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
 	var completed_path: Array[String] = game.state.campaign_path.duplicate()
 	var completed_encounters: int = game.state.campaign_encounters_completed
 	var completed_hull: int = game.state.hull_condition
@@ -856,8 +912,8 @@ func _run() -> void:
 		game.state.encounter_enemies[enemy_index]["defeated"] = true
 		game.state.encounter_enemies[enemy_index]["hp"] = 0
 	game._refresh_ui()
-	_expect(game.results_summary_label.text.contains("1 final contact remained") and not game.results_summary_label.text.contains("convoy contract failed"), "scarred results should name only thresholds that actually determine the outcome")
-	_expect(game.results_replay_label.text.contains("CONTACTS FIRST") and game.results_replay_label.text.contains("Siege Beast") and game.results_replay_label.text.contains("shell cannon and front armor"), "a contact-only scarred result should recommend the authored counter for the surviving threat")
+	_expect(game.debrief_panel.consequence_label.text.contains("1 final contact remained") and not game.debrief_panel.consequence_label.text.contains("convoy contract failed"), "scarred results should name only thresholds that actually determine the outcome")
+	_expect(game.debrief_panel.experiment_label.text.contains("CONTACTS FIRST") and game.debrief_panel.experiment_label.text.contains("Siege Beast") and game.debrief_panel.experiment_label.text.contains("shell cannon and front armor"), "a contact-only scarred result should recommend the authored counter for the surviving threat")
 	game.state.final_result = "decisive_march"
 	game.state.settlement_actions_remaining = 0
 	game.state.guard_contract_status = "declined"
@@ -865,7 +921,7 @@ func _run() -> void:
 		enemy["defeated"] = true
 		enemy["hp"] = 0
 	game._refresh_ui()
-	_expect(game.results_summary_label.text.contains("travelled without the guard contract") and not game.results_summary_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
+	_expect(game.debrief_panel.consequence_label.text.contains("travelled without the guard contract") and not game.debrief_panel.consequence_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
 	_expect(game.results_record_label.text.contains("RUN RECORD · ASH-1107") and game.results_record_label.text.contains("Morrowline recovery: all service actions spent"), "the debrief should retain the reproducible run identity and distinguish fully used recovery from services left behind")
 	game.state.guard_contract_status = "completed"
 	game.state.settlement_actions_remaining = completed_services
@@ -878,8 +934,8 @@ func _run() -> void:
 	game.state._recalculate()
 	game._refresh_ui()
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "a failed final road should still open a debrief rather than present a success-coded completion heading")
-	_expect(game.results_summary_label.text.contains("hull reached zero"), "a hull failure should name the exact terminal cause")
-	_expect(game.results_replay_label.text.contains("HULL FIRST") and game.results_replay_label.text.contains("Morrowline service"), "a hull failure should recommend a matching next-run adjustment")
+	_expect(game.debrief_panel.consequence_label.text.contains("hull reached zero"), "a hull failure should name the exact terminal cause")
+	_expect(game.debrief_panel.experiment_label.text.contains("HULL FIRST") and game.debrief_panel.experiment_label.text.contains("Morrowline service"), "a hull failure should recommend a matching next-run adjustment")
 	_expect(game.results_record_label.text.contains("Stopped at: Meridian Pass") and game.results_record_label.text.contains("4/5 encounters secured"), "a failed final road should remain visible beside the secured path")
 	_expect(game.run_flow_labels[3].text.begins_with("×") and game.run_flow_labels[4].text.contains("RESULT"), "a terminal Meridian failure should mark the final stage as failed instead of completed")
 	var failed_engine_index: int = game.state._module_index_by_id("steam_lance_engine")
@@ -888,8 +944,8 @@ func _run() -> void:
 	game.state.modules[failed_engine_index]["durability"] = 0
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(game.results_summary_label.text.contains("Steam Lance Engine reached 0/4 durability"), "a movement failure should identify the disabled engine and its condition")
-	_expect(game.results_replay_label.text.contains("MOVEMENT FIRST") and game.results_replay_label.text.contains("Repair Steam Lance Engine"), "an engine failure should recommend repairing the system that ended the run")
+	_expect(game.debrief_panel.consequence_label.text.contains("Steam Lance Engine reached 0/4 durability"), "a movement failure should identify the disabled engine and its condition")
+	_expect(game.debrief_panel.experiment_label.text.contains("MOVEMENT FIRST") and game.debrief_panel.experiment_label.text.contains("Repair Steam Lance Engine"), "an engine failure should recommend repairing the system that ended the run")
 	_expect(game.results_record_label.text.contains("Damage: Steam Lance Engine 0/4") and game.results_record_label.text.contains("Unavailable: Steam Lance Engine"), "the run record should name the damaged and unavailable system instead of reporting only aggregate counts")
 	game.state.campaign_path = completed_path
 	game.state.campaign_encounters_completed = completed_encounters
@@ -900,16 +956,16 @@ func _run() -> void:
 	game.state.encounter_enemies = completed_enemies
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")
-	_expect(game.feedback_button.get_node_or_null(game.feedback_button.focus_neighbor_bottom) == game.march_on_button and game.march_on_button.get_node_or_null(game.march_on_button.focus_neighbor_bottom) == game.play_again_button and game.play_again_button.get_node_or_null(game.play_again_button.focus_neighbor_right) == game.results_title_button, "the result actions should follow their visible controller layout")
-	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.current_order_button and game.current_order_button.get_node_or_null(game.current_order_button.focus_next) == game.results_inspect_button and game.results_inspect_button.get_node_or_null(game.results_inspect_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.results_inspect_button, "the result actions should form a closed Tab cycle through the order jump and final chassis review")
-	game.march_on_button.grab_focus()
+	_expect(game.debrief_panel.visible, "restoring the completed state should return to the terminal debrief")
+	_expect(game.debrief_panel.inspect_button.get_node_or_null(game.debrief_panel.inspect_button.focus_neighbor_bottom) == game.debrief_panel.notes_button and game.debrief_panel.notes_button.get_node_or_null(game.debrief_panel.notes_button.focus_neighbor_bottom) == game.debrief_panel.march_on_button and game.debrief_panel.march_on_button.get_node_or_null(game.debrief_panel.march_on_button.focus_neighbor_bottom) == game.debrief_panel.replay_button, "the debrief actions should follow their visible controller order")
+	_expect(game.debrief_panel.title_button.get_node_or_null(game.debrief_panel.title_button.focus_next) == game.debrief_panel.inspect_button and game.debrief_panel.inspect_button.get_node_or_null(game.debrief_panel.inspect_button.focus_previous) == game.debrief_panel.title_button, "the debrief should form a closed keyboard focus cycle")
+	game.debrief_panel.march_on_button.grab_focus()
 	await process_frame
 	await process_frame
 	await process_frame
-	_expect(game.right_scroll.get_global_rect().encloses(game.march_on_button.get_global_rect()), "focusing March On should scroll its full destination label into the 720p desk viewport")
-	game.feedback_button.grab_focus()
-	game.feedback_button.pressed.emit()
+	_expect(game.debrief_panel.march_on_button.get_global_rect().end.y <= game.debrief_panel.get_global_rect().end.y + 1.0, "the March On action should remain visible in the 720p debrief")
+	game.debrief_panel.notes_button.grab_focus()
+	game.debrief_panel.notes_button.pressed.emit()
 	await process_frame
 	var feedback_panel := game.feedback_overlay.find_child("FeedbackPanel", true, false) as PanelContainer
 	var feedback_surface := feedback_panel.get_theme_stylebox("panel") as StyleBoxFlat if feedback_panel != null else null
@@ -938,7 +994,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.feedback_status_label.text.begins_with("REPORT PATH COPIED") and game.feedback_status_label.text.contains(game.last_feedback_path.get_file()) and game.feedback_path_button.has_focus(), "copying the report path should produce a visible receipt and preserve action focus")
 	game._hide_feedback()
-	game.feedback_button.pressed.emit()
+	game.debrief_panel.notes_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_status_label.text.begins_with("LAST SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_path_button.visible, "reopening feedback should preserve the previous local-save receipt and path action")
 	DirAccess.remove_absolute(game.last_feedback_path)
@@ -950,9 +1006,9 @@ func _run() -> void:
 	controller_cancel.pressed = true
 	game._unhandled_input(controller_cancel)
 	await process_frame
-	_expect(not game.feedback_overlay.visible and game.feedback_button.has_focus(), "controller cancel should close the feedback modal and restore result focus")
+	_expect(not game.feedback_overlay.visible and game.debrief_panel.notes_button.has_focus(), "controller cancel should close the feedback modal and restore debrief focus")
 	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
-	game.results_title_button.pressed.emit()
+	game.debrief_panel.title_button.pressed.emit()
 	await process_frame
 	_expect(return_to_title_requested, "the completed stage should be able to request the application title")
 	var result_save = JSON.parse_string(FileAccess.get_file_as_string(save_path))
@@ -963,9 +1019,9 @@ func _run() -> void:
 	corrupt_primary.store_string("{invalid primary")
 	corrupt_primary.close()
 	_expect(game.save_run(true) and FileAccess.get_file_as_string(backup_path) == protected_backup_text, "saving over an invalid primary should preserve the last validated backup instead of promoting corrupt bytes")
-	game.play_again_button.pressed.emit()
+	game.debrief_panel.replay_button.pressed.emit()
 	await process_frame
-	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.contract_accept_button.has_focus(), "Play Again should create a fresh focused Ashgate stage")
+	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "Play Again should create a fresh Ashgate bazaar focused on its assignment")
 	_expect(last_checkpoint_reason == "new_run_started", "Play Again should request a fresh checkpoint instead of leaving Continue on the completed result")
 	for path in [save_path, backup_path, onboarding_path, journal_path]:
 		if FileAccess.file_exists(path):

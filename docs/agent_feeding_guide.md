@@ -4,9 +4,65 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.267`; Feeds A through AL are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.283`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, and the first settlement-identity pass are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
-### Current Feed A — fortress comprehension
+### Active Feed 1 — five-session human validation
+
+```text
+Run docs/private_alpha_session_sheet.md against one exact PR #41 artifact cohort using First Watch and the quick path. Record only observed player behavior across the documented input/display combinations. Do not infer comprehension from completion or fabricate human evidence. Triage repeated failures under what to do, why it matters, and what happened; implement only repeated high-severity fixes and update the evidence package.
+```
+
+### Active Feed 2 — shared fortress visual continuity
+
+**Status:** First high-noise module-bay reduction and Ashgate/Veyru place-treatment pass complete in `0.3.0-alpha.280`; broader authored art and human recognition testing remain open.
+
+```text
+Replace one high-noise surface in the shared fortress silhouette with a restrained authored 2D treatment that remains readable in rest, travel, contact, recovery, and Debrief. Preserve FortressState, geometry, placement, state colors, high contrast, large text, reduced motion, and screenshots at 1280x720 and 2560x1440. Do not add mechanics, regions, or decorative effects that obscure dependencies.
+```
+
+### Active Feed 3 — journey transition rhythm
+
+**Status:** The settlement-to-route-to-departure handoff now carries its promise, exact committed costs, current phase, next decision, and save-safe receipt in `0.3.0-alpha.281`; later contact-to-arrival rhythm remains open.
+
+```text
+Improve one transition from settlement to route, route to travel, travel to contact, or contact to arrival. It must state the current location, commitment, cost, phase, and next decision; remain skippable; preserve exact save/resume semantics; and add UI/focus tests plus normal and scaled visual captures. Do not create a cinematic sequence or alter authoritative timing.
+```
+
+### Active Feed 4 — battle cause-and-effect staging
+
+**Status:** The first shared contact now exposes Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle as a stable phase grammar in `0.3.0-alpha.282`; broader threat-specific timing and human comprehension remain open.
+
+```text
+Stage one existing deterministic encounter as forecast, approach, target commitment, wind-up, response, impact, dependency consequence, and settling beat. Presentation may interpolate but must not change FortressState, random streams, target order, or replay keys. Add pause, speed, manual-step, same-seed, focus, and visual verification.
+```
+
+### Active Feed 5 — settlement identity and service choice
+
+**Status:** Morrowline now has its own canvas-and-parts visual motif and explicitly frames its movement/repair versus fuel/hull service priorities in `0.3.0-alpha.283`; the other settlements remain separate future slices.
+
+```text
+Deepen one existing settlement with a place-specific visual motif and two meaningful service priorities. Each service must expose cost, restored system, remaining options, and trade-off. Use existing commands and currencies; do not add a generalized reputation meter or service currency. Add deterministic, save, controller, large-text, and receipt tests.
+```
+
+### Active Feed 6 — controlled new content
+
+```text
+Only after the human and presentation gates pass, add one facility, specialist, threat, or route branch as a complete teaching slice. Define the player question, stable data, physical rule, counter, weakness, isolated encounter, combination encounter, recovery consequence, tests, save/replay coverage, and visual evidence. Do not add a third region in the same task.
+```
+
+### Active Feed 7 — causal campaign consequence
+
+```text
+Connect one completed, declined, or failed promise to one visible later regional condition. The response must create a new route, settlement state, faction offer, shortage, or refuge consequence rather than a generic penalty. Keep the state small, deterministic, inspectable, migration-safe, and ending-capable.
+```
+
+### Active Feed 8 — private alpha hardening
+
+```text
+Complete the existing packaging, offline, save migration, backup recovery, controller, scaling, contrast, reduced-motion, safe-close, route-transition, active-event, recovery, and terminal-Debrief checks. Produce one honest private-alpha artifact with manifest, observer brief, known limitations, rollback path, and exact source revision. Do not make a public-release or storefront-ready claim.
+```
+
+### Historical Feed A — fortress comprehension
 
 **Status:** Complete through dependency cards, route comparison, and deterministic target explanations.
 
@@ -230,9 +286,57 @@ The original prompts below describe the build-up of the prototype and are retain
 
 ### Current Feed AL — event consequence handoff
 
-**Status:** Complete in `0.3.0-alpha.267` through authoritative next-action copy.
+**Status:** Complete in `0.3.0-alpha.268` through authoritative next-action copy.
 
 > Keep each completed event's exact mechanical consequence above the fold, then append the next route or recovery instruction from the same guidance source as the Marchmaster's Desk. Chained events should continue to name the next decision instead of skipping ahead.
+
+### Current Feed AM — terminal journey debrief
+
+**Status:** Complete in `0.3.0-alpha.272` through the dedicated terminal Debrief.
+
+> Replace the reused operational result desk with a terminal journey tableau. Show the five-road timeline, outcome, route span, doctrine and contract, carried people or cargo, pressure and trust, persistent system condition, one explicit causal chain, and one state-specific replay experiment. Keep final chassis inspection, local notes, replay, March On, save, controller focus, 110% text, and high contrast available without adding new simulation rules.
+
+### Current Feed AN — shared fortress identity
+
+**Status:** Complete in `0.3.0-alpha.273` through the shared stateful silhouette and detailed chassis marks.
+
+> Use one code-native layered fortress renderer across rest, travel, contact, roadside event, arrival, and Debrief. Aggregate installed modules into recognizable engine, weapon, power/crew, workshop, cargo, signal, armor, and sustain bays. Show ready, strained, offline, sealed, damaged, and targeted states with symbols, cracks, outlines, and text as well as color. Preserve authoritative placement and dependency rules.
+
+### Current Feed AO — staged contact consequence
+
+**Status:** Complete in `0.3.0-alpha.274` through the first shared attack-replay grammar.
+
+> Replay a resolved contact as target lock, threat-specific wind-up, impact, and consequence cues using only the authoritative target, damage preview, encounter report, and pre-step fortress snapshot. Keep reduced motion equivalent by resolving directly to the final consequence. Do not change enemy timing, targeting, damage, doctrine, interventions, or outcomes.
+
+### Current Feed AP — field-recovery tableau
+
+**Status:** Complete in `0.3.0-alpha.275` through the dedicated Morrowline and Evacuation Camp recovery view.
+
+> Replace the hidden-desk recovery stack with a full-frame breathing space: stable values on the left, the same damaged fortress at rest in the center, and exact before/after service commitments on the right. Keep the authoritative service commands unchanged, persist the latest transaction receipt with the save, preserve route handoff and controller focus, and keep every required action visible at 1280×720 with 110% text.
+
+### Current Feed AQ — Mara's forge-core promise
+
+**Status:** Complete in `0.3.0-alpha.276` through the workbench choice, fourth-road callback, and terminal record.
+
+> Give Mara's one-core decision a distinct machine-versus-shelter tableau. Name the exact system that could be repaired, the immediate day and pressure cost, the persistent Refugee Bunk protection, and the fact that the unchosen need remains exposed. On the fourth road, reuse the motif to show whether the original physical promise held or failed, and preserve that result in the terminal Debrief. Do not change event eligibility, effects, timing, or deterministic replay.
+
+### Current Feed AR — Pump Gallery flood clock
+
+**Status:** Complete in `0.3.0-alpha.277` through the Old Drain commitment tableau and terminal route record.
+
+> Give The Gallery Still Turns a distinct pump-and-water motif. Frame its existing choice as one day held against two points of rising water, keep both paths and their exact costs visible before commitment, and preserve the selected Pump Gallery outcome in the terminal Debrief. Do not change route timing, water pressure, eligibility, event effects, or deterministic replay.
+
+### Current Feed AS — The Last Dry Room
+
+**Status:** Complete in `0.3.0-alpha.278` through exact choice previews, the divided-room tableau, and the terminal occurrence record.
+
+> Show the event's one sealed compartment as a physical contest between families and repair stock. Replace generic deltas with exact before/after trust, Parts Crate, and weakest-system durability values, while keeping the authoritative one-shot occurrence effects unchanged. Carry the human-readable outcome into the terminal Debrief and retain controller, high-contrast, and 110% text coverage.
+
+### Current Feed AT — private-alpha evidence workflow
+
+**Status:** Complete in `0.3.0-alpha.279` through the local session-sheet generator and capture matrix; the five human sessions themselves remain owner/tester work.
+
+> Convert the existing opt-in local feedback export into a concise Markdown session sheet. Prefill only facts present in the journal and final-state payload, leave prediction, hesitation, recall, and spoken reasoning for a human observer, and include the exact capture matrix used to compare standard/high-contrast and 100%/110% text states. Never upload data or infer emotion from behavior.
 
 ## Historical prototype feed sequence
 

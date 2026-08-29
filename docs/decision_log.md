@@ -951,3 +951,80 @@ Encounter checkpoint reasons now distinguish an intermediate Battle Step from a 
 ## 2026-08-28 — Event consequences hand off to the next order
 
 A completed authored event now appends one Next line derived from the live Current Order guidance. The left evidence column therefore keeps the consequence and immediate route or recovery instruction together even when automatic focus scrolls the desk to lower controls. Chained events retain their existing Decision Continues treatment until the final choice resolves.
+
+## 2026-08-29 — Journey spectacle follows an explicit simulation boundary
+
+The next presentation slice will first replace the settlement's long control stack with a labelled bazaar whose Quartermaster, Signal Broker, Hiring Post, Assignment Board, Workshop, and Departure Gate each open one task panel. Departure leads to reversible Plan Journey choices and one atomic Commit, then to a saveable `travel` phase before contact or arrival. Potential assignment destinations use hollow grey markers; accepted assignments use filled, labelled color markers, while route focus exposes sourced news and travel cost without selecting the node. The fortress remains at the origin until at least one in-between road beat and all mandatory events or contacts resolve. A side-on moving-fortress scene, scenery, threat actors, and scenario tableaux consume structured events produced by the deterministic core; animation frames, tween progress, particles, and camera motion never decide offers, route costs, schedules, targets, damage, or outcomes. This supports safe Continue behavior, skip/reduced-motion parity, and exact causal playback without building a second combat engine. The first proof is limited to Ashgate's bazaar, Rill Crossing, and The Soot Orchard before the visual grammar expands to every settlement, threat, and region.
+
+## 2026-08-29 — The fortress anchors every playable mode
+
+The next layout keeps operational values in a stable left rail, reserves the center stage for the fortress or regional map, and uses a right dock for one selected station, module, route, threat, event, or consequence. The same fortress actor and module-anchor mapping persist across idle, travel, and contact states so visual spectacle remains tied to the real chassis. Map inspection, route selection, and Commit stay separate, and moving encounters preserve the side-on road rather than switching to an unrelated battle board. This was chosen over adding more panels to the existing two-column scroll because the fortress must remain the game's spatial subject while details change around it.
+## 2026-08-29 — Separate settlement, road, and arrival state visually before expanding content
+
+The first presentation pass uses a reusable `SettlementHubView` at Ashgate Depot and Lantern Quay. It keeps hull, fuel, power, heat, mass, Ashmarks, and trust in a stable left rail; the fortress and bazaar landmarks occupy the center; one selected station owns the right detail dock. The workshop and route table are mutually focused workspaces with an explicit return to the bazaar. Stations without implemented inventory or personnel say so directly rather than presenting placeholder transactions.
+
+Route commitment now opens a mandatory `JourneyTransitionView` before combat controls. The view repeats the exact day, fuel, pressure, and heat result of the commitment, animates the same code-native walking-fortress silhouette against moving scenery, supports reduced motion and high contrast, and states that arrival is still pending. Campaign simulation also keeps `current_location` at the last secured node until the encounter resolves successfully; `campaign_target_node` remains the committed destination while on the road. This makes the no-teleport rule authoritative rather than purely cosmetic.
+
+Plan Journey now owns a full-frame three-part composition: readiness values on the left, the existing deterministic node graph enlarged and centered, and a scrollable road dossier with fixed Commit/Cancel actions on the right. Route detail remains verbose when inspected, while the selected-route heading and Commit label become compact to keep the final action on-screen at 1280×720.
+
+This checkpoint deliberately reuses the established deterministic combat engine and route graph. Threat-to-module approach staging, roadside scenario tableau, and arrival presentation remain separate slices so their UI can be tested without weakening save, focus, and campaign correctness.
+
+## 2026-08-29 — Contact and arrival are presentation gates, not new simulations
+
+Road encounters now use a full-frame `RoadContactView` while the existing encounter state remains the only authority for arrival timing, targets, damage, counters, interventions, and dependency cascades. The left rail keeps Hull, Power, Heat, Fuel, Pressure, Step, and Doctrine stable; the side-on fortress and current approach lanes occupy the center; one dossier owns the nearest threat and all player actions. The target marker is derived from the same module ID shown in the chassis inspector, and Inspect Chassis temporarily reveals that grid without enabling refit. A resolved encounter opens `JourneyArrivalView`, which reports already-applied Hull, Ashmark, Pressure, and system-state consequences before exposing the next map, bazaar, event, retreat stop, or debrief. These views add no simulation state; the save payload carries only their departure receipt and pending-arrival presentation snapshot so Continue cannot skip the visible handoff. This was chosen over a separate cinematic combat state machine because playback must never diverge from deterministic encounter results or create a second source of truth.
+
+## 2026-08-29 — Roadside choices stay inside the journey tableau
+
+Pending campaign events now replace the administrative command desk with a full-frame `RoadsideEventView`. The fortress remains visible at the left of a wide side-on scene, while the event subject—burning ruin, signal tower, toll barrier, forge, road machinery, floodworks, or archive signal—occupies the road ahead. Stable March values remain left and the exact core-authored body, consequences, requirements, and choices remain right. The view mirrors existing event commands and delegates every commitment to `resolve_campaign_event()`; it introduces no alternate choice data or consequence logic. This applies the Frontier-inspired sense of a stopped traveling party without copying another game's assets or moving authored decisions out of the deterministic campaign model.
+
+## 2026-08-29 — The first tutorial is a real prologue, not a briefing deck
+
+The planned first-run tutorial will teach one canonical Ashgate muster-yard journey through the normal placement, dependency, route, contact, intervention, damage, arrival, and repair commands. A tutorial director may gate presentation, set objectives, validate completion predicates, and restore a lesson snapshot, but it cannot change gameplay outcomes directly. Tutorial progress uses a separate checkpoint so learning, skipping, resetting, or resuming cannot overwrite the player's campaign Continue slot. The default title and tutorial path will use player-facing game language; build identity, playtest export, and reset diagnostics remain available outside the primary fantasy. This was chosen over expanding the existing seven-card briefing because comprehension must be demonstrated by action while the relevant fortress system is visible.
+
+## 2026-08-29 — A completed road ends in a dedicated Debrief
+
+Terminal results now leave the operational Marchmaster's Desk and open a dedicated full-frame Debrief. The route timeline, carried commitments, persistent machine condition, causal result chain, and next-run experiment are derived from the existing authoritative state; the panel owns no combat or campaign rules. Final chassis inspection remains available as a deliberate detail view, and the completed arrival receipt still appears before the Debrief so the last road is not skipped. This was chosen over further expanding the reused service screen because a chapter ending needs a clear emotional boundary, while save, replay, March On, local notes, controller focus, text scaling, and high contrast must retain their established behavior.
+
+## 2026-08-29 — One fortress silhouette carries authoritative module state
+
+Rest, travel, contact, roadside event, arrival, and Debrief now consume the same presentation-only fortress snapshot derived from installed modules and dependency status. A shared code-native renderer gives module families stable pictograms and layers offline crosses, strained warnings, sealed borders, damage cracks, and target brackets without deciding any rule. The detailed chassis uses the same family marks while retaining its exact grid and placement controls. This was chosen over separate scene-specific fortress drawings because damage and identity must visibly persist across the road without introducing a second simulation model.
+
+## 2026-08-30 — Contact animation replays authoritative consequences
+
+The road-contact tableau now stages each changed encounter step as target lock, threat-specific wind-up, impact, and consequence. It uses the pre-step fortress presentation snapshot only to show the machine before the already-resolved hit, then reveals the current authoritative damage and dependency state at impact. Reduced Motion skips directly to the consequence, and the simulation continues to own timing, target choice, damage, intervention effects, repair, and outcomes. This was chosen over delaying or duplicating combat resolution because presentation should clarify deterministic results without becoming another state machine.
+
+## 2026-08-30 — Recovery is a place and a finite receipt
+
+Morrowline and Evacuation Camp now leave the operational desk for a dedicated field-recovery tableau. The existing service controls continue to derive exact costs, before/after values, blockers, and authoritative commands; the new view mirrors those previews beside the same visibly damaged fortress and delegates every commitment back to the existing handlers. The latest transaction receipt is presentation state persisted with the checkpoint, while hull, fuel, Ashmarks, trust, pressure, and remaining opportunities stay simulation-owned. This was chosen over duplicating service rules inside the new panel because recovery should feel like a breathing space without becoming a second economy or silently changing deterministic outcomes.
+
+## 2026-08-30 — Authored event motifs carry promises forward
+
+Mara's one recovered forge core now appears as a visible fork between machine and shelter, then returns after the fourth road as a held-or-failed promise check. The event panel receives presentation-only story metadata derived from the authoritative event choices, repaired module ID, and follow-up preview; all eligibility, costs, effects, timing, and persistence remain in `LongMarchState`. The terminal Debrief repeats the resolved forge-core promise. This was chosen over a generic event illustration because the player should remember what physical obligation they created and recognize its later consequence without learning a parallel narrative state model.
+
+## 2026-08-30 — Pump Gallery makes delay a physical flood decision
+
+The Gallery Still Turns now draws the old pumps between a hold-position marker and the advancing waterline, while a compact event card states the existing exchange: one day for two points of flood relief, or no delay with the water unchanged. The choice remains owned by `LongMarchState`, and the existing Veyru decision record carries it into the terminal Debrief. This was chosen over adding a bespoke pump minigame because the meaningful action is the campaign-level time tradeoff, not manual machinery operation.
+
+## 2026-08-30 — The dry room shows what cannot be protected together
+
+The Last Dry Room now depicts one divided sealed compartment with families on one side and repair stock on the other. Its authoritative choice preview names exact trust and module-durability transitions before commitment, and the occurrence record translates the stored choice ID into the human consequence carried into Debrief. This was chosen over adding a separate shelter resource screen because the event's value comes from making one physical exclusion memorable while retaining the bounded occurrence system.
+
+## 2026-08-30 — Private-alpha interpretation remains human work
+
+The repository now includes a five-session observation sheet, a fixed visual capture matrix, and a local command that converts the existing opt-in feedback JSON into a readable Markdown record. The tool prefills only build identity, recorded actions, final state, written answers, and elapsed timestamps already present in the export. Predictions, hesitation, recall, reasoning, and emotion remain blank observer fields. This was chosen over telemetry or automated sentiment inference because the private-alpha gate depends on consented human evidence and direct quotes, not silent collection or synthetic conclusions.
+
+## 2026-08-30 — One module bay shows one primary condition
+
+The shared fortress silhouette now reduces offline, damage, strain, sealing, and repair into one ordered interior condition mark per family bay. Authoritative target intent remains a separate exterior bracket so a target can be located without covering the family pictogram. The same hull gains restrained material and regional wear cues: exposed dust and heat for Ashgate, rain and a lower waterline for Veyru. Region and heat enter only the presentation snapshot, while dependency, damage, intervention, target, and recovery rules remain in `FortressState`. This was chosen over stacking every truthful flag because simultaneous crosses, cracks, labels, borders, and circles made the most important failure harder to read at normal play distance.
+
+## 2026-08-30 — Departure carries the promise, receipt, and next decision
+
+The mandatory road handoff now states the accepted or declined regional promise, marks the fortress as departing with costs committed and arrival pending, and names the immediate contact-reading decision. The saved presentation snapshot retains the exact pre-commit day, fuel, and pressure values used by the receipt, while load still reconstructs the view from authoritative encounter state. This was chosen over adding another cinematic phase because the existing checkpoint boundary already represents the correct game state; the missing work was orientation and continuity, not simulation timing.
+
+## 2026-08-30 — Contact presentation names its causal phase
+
+The road-contact header now exposes a stable presentation grammar—Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle—derived from the existing enemy arrival, resolved report, and interpolation state. Step zero is explicitly Forecast, and a cleared road holds at Settle before arrival. No additional combat phase is serialized or simulated. This was chosen over adding a second battle state machine because the phase label should explain the authoritative step, not control it.
+
+## 2026-08-30 — Morrowline recovery is a convoy shelter
+
+Morrowline's existing recovery screen now identifies the place through canvas repair bays, parts wagons, and a departure lamp, then frames its two practical priorities: restore the movement/repair chain or reserve the stop for fuel and hull before Meridian Pass. The same service buttons, prices, action budget, and command handlers remain authoritative. This was chosen over adding settlement currency or decorative characters because the place should clarify an existing operational trade-off before it introduces another system.

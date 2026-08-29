@@ -226,7 +226,7 @@ func _test_city_journey_and_battle() -> void:
 	var started := state.begin_journey("safe_road", "protect_cargo")
 	_expect(bool(started.get("ok", false)), "safe road should begin the Ashgate-to-Morrowline journey")
 	_expect(not state.can_refit(), "refit should lock after departure")
-	_expect(state.current_location == "rill_crossing", "safe road should place the fortress at Rill Crossing during the encounter")
+	_expect(state.current_location == "rill_crossing", "safe road should place the fortress at Rill Crossing during the legacy encounter")
 	_expect(state.encounter_enemies.size() == 2, "safe road should create two Road Raider contacts")
 	_expect(String(started.get("forecast", {}).get("target_class", "")).contains("cargo"), "safe road forecast should identify cargo pressure")
 	var first_step := state.advance_encounter(1.0)
@@ -571,9 +571,11 @@ func _install_campaign_signal_loadout(state: LongMarchState) -> void:
 	state.seed_starter_inventory()
 
 func _campaign_battle(state: LongMarchState, node_id: String, doctrine: String = "protect_crew") -> Dictionary:
+	var origin_id := state.current_location
 	var begun := state.begin_campaign_route(node_id, doctrine)
 	if not bool(begun.get("ok", false)):
 		return begun
+	_expect(state.current_location == origin_id and state.campaign_target_node == node_id, "campaign departure should retain the last secured location until its road contact resolves")
 	state.advance_encounter(1.0)
 	state.use_encounter_intervention("shift_power")
 	return state.advance_encounter(6.0)
@@ -840,7 +842,10 @@ func _test_bounded_occurrence_scheduler() -> void:
 	_install_occurrence_loadout(dry_room)
 	_activate_occurrence(dry_room, "the_last_dry_room", "manual_dry_room")
 	var parts_before := int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability)
+	var dry_room_details := dry_room.campaign_event_details()
+	_expect(String(dry_room_details.choices[0].effect).contains("Parts Crate %d→%d" % [parts_before, parts_before - 1]) and String(dry_room_details.choices[1].effect).contains("Steam Lance Engine 2→3"), "the dry-room choice should preview exact physical damage and repair before commitment")
 	_expect(bool(dry_room.resolve_campaign_event("shelter_in_dry_room").get("ok", false)) and dry_room.settlement_trust == 2 and dry_room.shelter_tendency == 1 and int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability) == parts_before - 1, "the dry-room shelter choice should exchange physical repair stock for trust and refuge capacity")
+	_expect(dry_room.occurrence_debrief_lines()[0].contains("families sheltered; repair stock exposed"), "the dry-room terminal record should translate the internal choice ID into its remembered consequence")
 	_expect(not bool(dry_room.occurrence_eligibility("the_last_dry_room", "road_arrival", "lower_ash_road").eligible), "a one-shot occurrence should not repeat after resolution")
 
 	var lift := LongMarchState.new(1107)

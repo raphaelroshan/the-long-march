@@ -11,8 +11,20 @@ const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
 const VisualContrast = preload("res://src/support/visual_contrast.gd")
 const ControllerLayout = preload("res://src/support/controller_layout.gd")
+const TutorialDirectorScript = preload("res://src/tutorial/tutorial_director.gd")
+const TutorialObjectiveViewScript = preload("res://src/ui/tutorial_objective.gd")
+const TutorialCompletionViewScript = preload("res://src/ui/tutorial_completion.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const CombatPanel = preload("res://src/ui/combat_panel.gd")
+const SettlementHubScene = preload("res://scenes/settlement/SettlementHub.tscn")
+const JourneyTransitionScene = preload("res://scenes/journey/JourneyTransition.tscn")
+const JourneyPlannerScene = preload("res://scenes/journey/JourneyPlanner.tscn")
+const RoadContactScene = preload("res://scenes/journey/RoadContact.tscn")
+const JourneyArrivalScene = preload("res://scenes/journey/JourneyArrival.tscn")
+const RoadsideEventScene = preload("res://scenes/journey/RoadsideEvent.tscn")
+const DebriefPanelScene = preload("res://scenes/debrief/DebriefPanel.tscn")
+const RecoveryPanelScene = preload("res://scenes/recovery/RecoveryPanel.tscn")
+const FortressSilhouetteRenderer = preload("res://src/ui/fortress_silhouette.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -20,6 +32,9 @@ const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
 const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
+const TUTORIAL_SAVE_PATH := "user://the_long_march_tutorial.save"
+const TUTORIAL_BACKUP_PATH := "user://the_long_march_tutorial.backup.save"
+const TUTORIAL_COMPLETE_PATH := "user://the_long_march_tutorial.complete"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
 const DOCTRINE_DESCRIPTIONS := {
@@ -117,7 +132,30 @@ const VEYRU_ONBOARDING_STEPS := [
 ]
 
 var state: LongMarchState
+var main_columns: HBoxContainer
+var settlement_hub: SettlementHubView
+var settlement_hub_active: bool = true
+var settlement_detail_mode: String = "hub"
+var settlement_hub_return_button: Button
+var journey_transition: JourneyTransitionView
+var journey_transition_active: bool = false
+var journey_transition_view: Dictionary = {}
+var journey_planner: JourneyPlannerView
+var journey_planner_active: bool = false
+var road_contact: RoadContactView
+var contact_inspection_active: bool = false
+var journey_arrival: JourneyArrivalView
+var journey_arrival_active: bool = false
+var journey_arrival_view: Dictionary = {}
+var journey_departure_snapshot: Dictionary = {}
+var roadside_event: RoadsideEventView
+var debrief_panel: DebriefPanelView
+var debrief_inspection_active: bool = false
+var contact_fortress_before: Dictionary = {}
+var recovery_panel: RecoveryPanelView
+var last_recovery_receipt: String = ""
 var metric_labels: Dictionary = {}
+var metric_panels: Dictionary = {}
 var subtitle_label: Label
 var pause_button: Button
 var journey_banner: TextureRect
@@ -175,9 +213,11 @@ var campaign_node_buttons: Array[Button] = []
 var campaign_commit_button: Button
 var campaign_cancel_button: Button
 var campaign_commit_intel_label: Label
+var campaign_action_row: HBoxContainer
 var selected_campaign_node_id: String = ""
 var contract_title: Label
 var contract_label: Label
+var contract_group: Control
 var contract_accept_button: Button
 var contract_decline_button: Button
 var campaign_event_title: Label
@@ -190,6 +230,8 @@ var guidance_label: Label
 var current_order_button: Button
 var run_flow_panels: Array[PanelContainer] = []
 var run_flow_labels: Array[Label] = []
+var run_flow_heading_row: HBoxContainer
+var run_flow_tracker: HBoxContainer
 var current_run_flow_step: int = 0
 var asset_row: HBoxContainer
 var phase_badge: Label
@@ -238,10 +280,18 @@ var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
 var last_synced_combat_target_id: String = ""
 var show_onboarding_on_ready: bool = true
+var tutorial_mode: bool = false
+var tutorial_director: TutorialDirector
+var tutorial_objective_view: TutorialObjectiveView
+var tutorial_completion_view: TutorialCompletionView
+var tutorial_lesson_snapshot: Dictionary = {}
+var tutorial_lesson_snapshots: Dictionary = {}
+var tutorial_director_snapshots: Dictionary = {}
 var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
 var starting_region_results: Dictionary = {}
 var high_contrast_enabled: bool = false
+var reduced_motion_enabled: bool = false
 var controller_layout_id: String = ControllerLayout.DEFAULT_LAYOUT
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 5, padding: int = 8) -> StyleBoxFlat:
@@ -297,6 +347,7 @@ func _add_metric_chip(parent: HBoxContainer, metric_id: String, title: String, t
 	value_label.add_theme_color_override("font_color", Color("#f1e6cf"))
 	stack.add_child(value_label)
 	metric_labels[metric_id] = value_label
+	metric_panels[metric_id] = panel
 	parent.add_child(panel)
 
 func _set_metric(metric_id: String, value: String, color: Color = Color("#f1e6cf")) -> void:
@@ -354,6 +405,7 @@ func _refresh_planning_focus() -> void:
 
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	var heading_row := HBoxContainer.new()
+	run_flow_heading_row = heading_row
 	heading_row.add_theme_constant_override("separation", 8)
 	parent.add_child(heading_row)
 	var heading := Label.new()
@@ -371,6 +423,7 @@ func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	current_order_button.pressed.connect(focus_current_action)
 	heading_row.add_child(current_order_button)
 	var tracker := HBoxContainer.new()
+	run_flow_tracker = tracker
 	tracker.add_theme_constant_override("separation", 4)
 	parent.add_child(tracker)
 	for step_name in RUN_FLOW_STEPS:
@@ -391,6 +444,8 @@ func _run_flow_step() -> int:
 	if state.phase == "results":
 		return 4
 	if state.phase == "final_battle" or state.current_location == state.campaign_final_node_id() or state.campaign_encounters_completed >= 4:
+		return 3
+	if state.phase == "battle" and state.campaign_encounters_completed >= 3:
 		return 3
 	if state.campaign_region_id == "flooded_veyru":
 		if state.current_location == "veyru_evacuation_camp" or state.campaign_encounters_completed >= 2:
@@ -436,10 +491,24 @@ func _ready() -> void:
 	journal = PlaytestJournal.new()
 	_reset_state()
 	_build_ui()
+	if tutorial_mode:
+		_initialize_tutorial_ui()
 	campaign_map.set_high_contrast(high_contrast_enabled)
 	combat_panel.set_high_contrast(high_contrast_enabled)
+	settlement_hub.set_high_contrast(high_contrast_enabled)
+	journey_transition.set_high_contrast(high_contrast_enabled)
+	journey_transition.set_reduced_motion(reduced_motion_enabled)
+	journey_planner.set_high_contrast(high_contrast_enabled)
+	road_contact.set_high_contrast(high_contrast_enabled)
+	road_contact.set_reduced_motion(reduced_motion_enabled)
+	journey_arrival.set_high_contrast(high_contrast_enabled)
+	roadside_event.set_high_contrast(high_contrast_enabled)
+	debrief_panel.set_high_contrast(high_contrast_enabled)
+	recovery_panel.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
+	if tutorial_mode:
+		_refresh_tutorial_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
 	if show_onboarding_on_ready and not FileAccess.file_exists(ONBOARDING_PATH):
 		_show_onboarding()
@@ -453,6 +522,22 @@ func set_high_contrast(enabled: bool) -> void:
 		campaign_map.set_high_contrast(high_contrast_enabled)
 	if combat_panel != null:
 		combat_panel.set_high_contrast(high_contrast_enabled)
+	if settlement_hub != null:
+		settlement_hub.set_high_contrast(high_contrast_enabled)
+	if journey_transition != null:
+		journey_transition.set_high_contrast(high_contrast_enabled)
+	if journey_planner != null:
+		journey_planner.set_high_contrast(high_contrast_enabled)
+	if road_contact != null:
+		road_contact.set_high_contrast(high_contrast_enabled)
+	if journey_arrival != null:
+		journey_arrival.set_high_contrast(high_contrast_enabled)
+	if roadside_event != null:
+		roadside_event.set_high_contrast(high_contrast_enabled)
+	if debrief_panel != null:
+		debrief_panel.set_high_contrast(high_contrast_enabled)
+	if recovery_panel != null:
+		recovery_panel.set_high_contrast(high_contrast_enabled)
 	for button_data in [
 		[contract_accept_button, Color("#285348"), Color("#73c99b")],
 		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
@@ -490,10 +575,36 @@ func _refresh_controller_copy() -> void:
 		results_inspect_button.tooltip_text = "Move keyboard or controller focus to the final chassis. Use arrows to review systems, %s to inspect one, and %s to return to the debrief." % [_confirm_shortcut(), _cancel_shortcut()]
 	if fortress_panel != null:
 		fortress_panel.set_controller_labels(_controller_confirm_label(), _controller_cancel_label())
+	if settlement_hub != null:
+		settlement_hub.set_controller_cancel_label(_controller_cancel_label())
+	if journey_transition != null:
+		journey_transition.set_controller_cancel_label(_controller_cancel_label())
+	if journey_planner != null:
+		journey_planner.set_controller_cancel_label(_controller_cancel_label())
+	if road_contact != null:
+		road_contact.set_controller_cancel_label(_controller_cancel_label())
+	if journey_arrival != null:
+		journey_arrival.set_controller_cancel_label(_controller_cancel_label())
+	if roadside_event != null:
+		roadside_event.set_controller_cancel_label(_controller_cancel_label())
+	if debrief_panel != null:
+		debrief_panel.set_controller_cancel_label(_controller_cancel_label())
+	if recovery_panel != null:
+		recovery_panel.set_controller_cancel_label(_controller_cancel_label())
+
+func set_reduced_motion(enabled: bool) -> void:
+	reduced_motion_enabled = enabled
+	if journey_transition != null:
+		journey_transition.set_reduced_motion(enabled)
+	if road_contact != null:
+		road_contact.set_reduced_motion(enabled)
 
 func _reset_state() -> void:
-	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)
-	if starting_region_id == "flooded_veyru":
+	state = LongMarchState.new(3301 if tutorial_mode else (2204 if starting_region_id == "flooded_veyru" else 1107))
+	if tutorial_mode:
+		state.start_tutorial()
+		tutorial_director = TutorialDirectorScript.new()
+	elif starting_region_id == "flooded_veyru":
 		state.place_module("steam_lance_engine", Vector2i(0, 0))
 		state.place_module("coal_cell", Vector2i(0, 1))
 		state.place_module("generator_core", Vector2i(2, 0))
@@ -509,11 +620,12 @@ func _reset_state() -> void:
 		state.place_module("ammunition_lift", Vector2i(2, 1))
 		state.place_module("field_workshop", Vector2i(3, 1))
 		state.place_module("repeater_gun", Vector2i(3, 2), true)
-	state.seed_starter_inventory()
-	if starting_region_id == "flooded_veyru":
-		state.start_flooded_veyru()
-	else:
-		state.start_campaign()
+	if not tutorial_mode:
+		state.seed_starter_inventory()
+		if starting_region_id == "flooded_veyru":
+			state.start_flooded_veyru()
+		else:
+			state.start_campaign()
 	state.set_regional_developments(starting_regional_developments)
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
@@ -522,6 +634,22 @@ func _reset_state() -> void:
 	result_recorded = false
 	results_chassis_reviewed = false
 	last_rendered_phase = ""
+	settlement_hub_active = true
+	settlement_detail_mode = "hub"
+	journey_transition_active = false
+	journey_transition_view = {}
+	journey_planner_active = false
+	contact_inspection_active = false
+	journey_arrival_active = false
+	journey_arrival_view = {}
+	journey_departure_snapshot = {}
+	debrief_inspection_active = false
+	contact_fortress_before = {}
+	last_recovery_receipt = ""
+	if tutorial_mode:
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots = {"place_engine": tutorial_lesson_snapshot.duplicate(true)}
+		tutorial_director_snapshots = {"place_engine": tutorial_director.serialize()}
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -537,18 +665,18 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 22)
 	add_child(margin)
 
-	var columns := HBoxContainer.new()
-	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	columns.add_theme_constant_override("separation", 18)
-	margin.add_child(columns)
+	main_columns = HBoxContainer.new()
+	main_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_columns.add_theme_constant_override("separation", 18)
+	margin.add_child(main_columns)
 
 	var left_column := VBoxContainer.new()
 	left_column.custom_minimum_size = Vector2(760, 0)
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_column.add_theme_constant_override("separation", 10)
-	columns.add_child(left_column)
+	main_columns.add_child(left_column)
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
@@ -561,7 +689,7 @@ func _build_ui() -> void:
 	header.add_child(title)
 	pause_button = Button.new()
 	pause_button.text = "PAUSE · ESC / %s" % _controller_cancel_label()
-	pause_button.custom_minimum_size = Vector2(190, 42)
+	pause_button.custom_minimum_size = Vector2(240, 42)
 	pause_button.focus_mode = Control.FOCUS_NONE
 	pause_button.tooltip_text = "Pause the march to save, review the briefing, change settings, restart, or return to the title."
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
@@ -656,7 +784,7 @@ func _build_ui() -> void:
 	right_scroll.custom_minimum_size = Vector2(370, 0)
 	right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	columns.add_child(right_scroll)
+	main_columns.add_child(right_scroll)
 	var right := PanelContainer.new()
 	right.custom_minimum_size = Vector2(370, 760)
 	right.add_theme_stylebox_override("panel", _flat_style(Color("#151d21"), Color("#2c3a40"), 1, 6, 10))
@@ -670,6 +798,13 @@ func _build_ui() -> void:
 	control_title.add_theme_font_size_override("font_size", 20)
 	control_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	controls.add_child(control_title)
+	settlement_hub_return_button = Button.new()
+	settlement_hub_return_button.text = "RETURN TO SETTLEMENT BAZAAR"
+	settlement_hub_return_button.custom_minimum_size = Vector2(0, 46)
+	settlement_hub_return_button.tooltip_text = "Leave the detailed workbench or map and return to the settlement overview."
+	settlement_hub_return_button.visible = false
+	settlement_hub_return_button.pressed.connect(_on_return_to_settlement_hub)
+	controls.add_child(settlement_hub_return_button)
 	asset_row = HBoxContainer.new()
 	asset_row.add_theme_constant_override("separation", 5)
 	for asset in [ENGINE_ICON, CANNON_ICON, WORKSHOP_ICON, SIGNAL_ICON]:
@@ -790,7 +925,7 @@ func _build_ui() -> void:
 	settlement_group.add_child(final_journey_button)
 	controls.add_child(settlement_group)
 
-	var contract_group := VBoxContainer.new()
+	contract_group = VBoxContainer.new()
 	contract_group.add_theme_constant_override("separation", 8)
 	controls.add_child(contract_group)
 	contract_title = Label.new()
@@ -880,7 +1015,7 @@ func _build_ui() -> void:
 	campaign_commit_intel_label.add_theme_color_override("font_color", Color("#aab6ba"))
 	campaign_commit_intel_label.visible = false
 	controls.add_child(campaign_commit_intel_label)
-	var campaign_action_row := HBoxContainer.new()
+	campaign_action_row = HBoxContainer.new()
 	campaign_action_row.add_theme_constant_override("separation", 8)
 	controls.add_child(campaign_action_row)
 	campaign_action_row.add_child(campaign_commit_button)
@@ -1072,9 +1207,213 @@ func _build_ui() -> void:
 	desk_scroll_tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	controls.add_child(desk_scroll_tail)
 
+	settlement_hub = SettlementHubScene.instantiate()
+	settlement_hub.pause_requested.connect(func() -> void: pause_requested.emit())
+	settlement_hub.action_requested.connect(_on_settlement_hub_action)
+	margin.add_child(settlement_hub)
+	recovery_panel = RecoveryPanelScene.instantiate()
+	recovery_panel.pause_requested.connect(func() -> void: pause_requested.emit())
+	recovery_panel.repair_requested.connect(_on_recovery_repair_requested)
+	recovery_panel.refuel_requested.connect(_on_recovery_refuel_requested)
+	recovery_panel.hull_requested.connect(_on_recovery_hull_requested)
+	recovery_panel.routes_requested.connect(_on_settlement_routes_pressed)
+	margin.add_child(recovery_panel)
+	journey_transition = JourneyTransitionScene.instantiate()
+	journey_transition.pause_requested.connect(func() -> void: pause_requested.emit())
+	journey_transition.continue_requested.connect(_on_journey_transition_continued)
+	margin.add_child(journey_transition)
+	journey_planner = JourneyPlannerScene.instantiate()
+	journey_planner.pause_requested.connect(func() -> void: pause_requested.emit())
+	journey_planner.return_requested.connect(_on_journey_planner_returned)
+	margin.add_child(journey_planner)
+	journey_planner.attach_route_controls(campaign_map, campaign_comparison_panel, route_preview_label, doctrine_group, doctrine_detail_label, campaign_commit_intel_label, campaign_action_row)
+	road_contact = RoadContactScene.instantiate()
+	road_contact.pause_requested.connect(func() -> void: pause_requested.emit())
+	road_contact.advance_requested.connect(_on_advance_encounter_pressed)
+	road_contact.inspect_requested.connect(_focus_chassis_for_combat)
+	road_contact.intervention_requested.connect(_use_intervention)
+	margin.add_child(road_contact)
+	roadside_event = RoadsideEventScene.instantiate()
+	roadside_event.pause_requested.connect(func() -> void: pause_requested.emit())
+	roadside_event.choice_requested.connect(_on_roadside_event_choice)
+	margin.add_child(roadside_event)
+	journey_arrival = JourneyArrivalScene.instantiate()
+	journey_arrival.pause_requested.connect(func() -> void: pause_requested.emit())
+	journey_arrival.continue_requested.connect(_on_journey_arrival_continued)
+	margin.add_child(journey_arrival)
+	debrief_panel = DebriefPanelScene.instantiate()
+	debrief_panel.pause_requested.connect(func() -> void: pause_requested.emit())
+	debrief_panel.inspect_requested.connect(_open_debrief_inspection)
+	debrief_panel.notes_requested.connect(_open_debrief_notes)
+	debrief_panel.replay_requested.connect(_on_play_again_pressed)
+	debrief_panel.march_on_requested.connect(_on_march_on_pressed)
+	debrief_panel.title_requested.connect(_on_results_title_pressed)
+	margin.add_child(debrief_panel)
+
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
 	_connect_desk_focus_scrolling()
+
+func _initialize_tutorial_ui() -> void:
+	tutorial_objective_view = TutorialObjectiveViewScript.new()
+	tutorial_objective_view.name = "TutorialObjective"
+	tutorial_objective_view.show_me_requested.connect(_tutorial_show_me)
+	tutorial_objective_view.reset_requested.connect(_reset_tutorial_lesson)
+	tutorial_objective_view.skip_requested.connect(func() -> void: return_to_title_requested.emit())
+	var controls := guidance_label.get_parent()
+	controls.add_child(tutorial_objective_view)
+	controls.move_child(tutorial_objective_view, guidance_label.get_index())
+	tutorial_completion_view = TutorialCompletionViewScript.new()
+	tutorial_completion_view.name = "TutorialCompletion"
+	tutorial_completion_view.visible = false
+	tutorial_completion_view.begin_campaign_requested.connect(func() -> void: march_on_requested.emit("ashgate_lowlands"))
+	tutorial_completion_view.repeat_lesson_requested.connect(_repeat_tutorial_lesson)
+	tutorial_completion_view.title_requested.connect(func() -> void: return_to_title_requested.emit())
+	add_child(tutorial_completion_view)
+
+func _refresh_tutorial_ui() -> void:
+	if not tutorial_mode or tutorial_director == null or tutorial_objective_view == null:
+		return
+	var complete := tutorial_director.lesson_id == "complete"
+	tutorial_objective_view.configure(tutorial_director.current_copy(), tutorial_director.receipt)
+	tutorial_objective_view.visible = not complete and not onboarding_overlay.visible and not feedback_overlay.visible
+	if tutorial_completion_view != null:
+		tutorial_completion_view.visible = complete
+		if complete:
+			tutorial_completion_view.open(tutorial_director.completed_lessons)
+			tutorial_completion_view.move_to_front()
+
+func _tutorial_advance(next_lesson: String, receipt: String) -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	if tutorial_director.advance(next_lesson, receipt):
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots[next_lesson] = tutorial_lesson_snapshot.duplicate(true)
+		tutorial_director_snapshots[next_lesson] = tutorial_director.serialize()
+		_checkpoint("tutorial_lesson_completed")
+		if next_lesson == "complete":
+			_mark_tutorial_complete()
+		_refresh_tutorial_ui()
+
+func _mark_tutorial_complete() -> void:
+	var marker := FileAccess.open(TUTORIAL_COMPLETE_PATH, FileAccess.WRITE)
+	if marker != null:
+		marker.store_string("completed")
+		marker.close()
+
+func _tutorial_observe_state() -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	var previous := tutorial_director.lesson_id
+	if tutorial_director.observe_state(state):
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots[tutorial_director.lesson_id] = tutorial_lesson_snapshot.duplicate(true)
+		tutorial_director_snapshots[tutorial_director.lesson_id] = tutorial_director.serialize()
+		_checkpoint("tutorial_lesson_completed")
+		if previous == "place_engine":
+			selected_module_id = "repeater_gun"
+			selected_module_cell = Vector2i(-1, -1)
+			placement_rotated = true
+			_select_module_option(selected_module_id)
+		_refresh_tutorial_ui()
+
+func _tutorial_observe_inspection(module_id: String) -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	if tutorial_director.observe_inspection(module_id):
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots[tutorial_director.lesson_id] = tutorial_lesson_snapshot.duplicate(true)
+		tutorial_director_snapshots[tutorial_director.lesson_id] = tutorial_director.serialize()
+		_checkpoint("tutorial_lesson_completed")
+		_refresh_tutorial_ui()
+		return
+	if tutorial_director.lesson_id == "damage":
+		var module: Dictionary = {}
+		for installed in state.modules:
+			if String(installed.get("id", "")) == module_id:
+				module = installed
+				break
+		var maximum := int(state.module_definition(module_id).get("durability", 0))
+		if not module.is_empty() and int(module.get("durability", maximum)) < maximum:
+			_tutorial_advance("victory", "DAMAGE TRACED · Durability changed, and the system card shows whether the dependency chain still holds.")
+
+func _reset_tutorial_lesson() -> void:
+	if not tutorial_mode or tutorial_director == null or tutorial_lesson_snapshot.is_empty():
+		return
+	var restored := LongMarchState.new(0)
+	var result := restored.load_serialized(tutorial_lesson_snapshot)
+	if not bool(result.get("ok", false)):
+		_set_event("Lesson reset failed: %s." % String(result.get("reason", "snapshot unavailable")))
+		return
+	state = restored
+	if tutorial_director_snapshots.has(tutorial_director.lesson_id):
+		tutorial_director.restore(tutorial_director_snapshots[tutorial_director.lesson_id])
+	fortress_panel.state = state
+	selected_module_cell = Vector2i(-1, -1)
+	selected_module_id = "steam_lance_engine" if tutorial_director.lesson_id == "place_engine" else ("repeater_gun" if tutorial_director.lesson_id == "place_weapon" else selected_module_id)
+	_select_module_option(selected_module_id)
+	journey_transition_active = false
+	journey_arrival_active = false
+	contact_inspection_active = false
+	_set_event("Lesson reset. The fortress has returned to the start of this order.")
+	_refresh_ui()
+
+func _repeat_tutorial_lesson(lesson_id: String) -> void:
+	if not tutorial_mode or tutorial_director == null or not tutorial_lesson_snapshots.has(lesson_id):
+		return
+	var restored := LongMarchState.new(0)
+	var snapshot: Dictionary = tutorial_lesson_snapshots[lesson_id]
+	var result := restored.load_serialized(snapshot)
+	if not bool(result.get("ok", false)):
+		return
+	state = restored
+	fortress_panel.state = state
+	tutorial_director.lesson_id = lesson_id
+	if tutorial_director_snapshots.has(lesson_id):
+		tutorial_director.restore(tutorial_director_snapshots[lesson_id])
+	tutorial_director.receipt = "LESSON REOPENED · Complete the current order to continue."
+	tutorial_lesson_snapshot = snapshot.duplicate(true)
+	journey_transition_active = lesson_id == "travel"
+	journey_arrival_active = false
+	contact_inspection_active = false
+	if journey_transition_active:
+		journey_transition_view = _restore_journey_transition_view()
+	tutorial_completion_view.visible = false
+	_refresh_ui()
+	_tutorial_show_me.call_deferred()
+
+func _tutorial_show_me() -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	match tutorial_director.lesson_id:
+		"place_engine":
+			selected_module_id = "steam_lance_engine"
+			selected_module_cell = Vector2i(-1, -1)
+			_select_module_option(selected_module_id)
+			_focus_control(focus_chassis_button)
+		"place_weapon":
+			selected_module_id = "repeater_gun"
+			selected_module_cell = Vector2i(-1, -1)
+			placement_rotated = true
+			_select_module_option(selected_module_id)
+			_focus_control(focus_chassis_button)
+		"inspect_machine", "damage":
+			if state.can_refit():
+				_focus_chassis_for_refit()
+			else:
+				_focus_chassis_for_combat()
+		"plan_road":
+			_focus_control(route_option)
+		"travel":
+			if journey_transition.visible:
+				journey_transition.focus_default()
+		"read_contact", "respond", "victory":
+			if road_contact.visible:
+				road_contact.focus_default()
+		"repair":
+			_focus_control(settlement_repair_button)
+		"complete":
+			march_on_requested.emit("ashgate_lowlands")
 
 func _connect_desk_focus_scrolling() -> void:
 	var controls: Array[Control] = [
@@ -1508,7 +1847,7 @@ func _hide_feedback() -> void:
 		feedback_return_context = "results"
 		playtest_notes_closed.emit()
 	else:
-		_focus_control(feedback_button)
+		_focus_control(debrief_panel.notes_button if debrief_panel != null and debrief_panel.visible else feedback_button)
 
 func _save_feedback() -> void:
 	_journal_event("feedback_saved", {"phase": state.phase, "replay_score": feedback_score_option.selected + 1})
@@ -1603,6 +1942,42 @@ func _state_journal_summary() -> Dictionary:
 		"offline_systems": int(dependencies.get("offline", 0))
 	}
 
+func _fortress_presentation_snapshot(active_target_id: String = "") -> Dictionary:
+	var modules: Array[Dictionary] = []
+	var damaged_count := 0
+	var offline_count := 0
+	for instance in state.modules:
+		var module_id := String(instance.get("id", ""))
+		var definition := state.module_definition(module_id)
+		var family := String(definition.get("family", "cargo"))
+		if "generator" in definition.get("tags", []):
+			family = "power"
+		var dependency := state.dependency_status(instance)
+		var state_name := String(dependency.get("state", "offline"))
+		var damaged := int(instance.get("durability", 0)) < int(definition.get("durability", 1))
+		if damaged:
+			damaged_count += 1
+		if state_name == "offline":
+			offline_count += 1
+		modules.append({
+			"id": module_id,
+			"family": family,
+			"state": state_name,
+			"damaged": damaged,
+			"sealed": bool(instance.get("sealed", false)),
+			"targeted": module_id == active_target_id
+		})
+	return {
+		"modules": modules,
+		"hull": state.hull_condition,
+		"damaged_count": damaged_count,
+		"offline_count": offline_count,
+		"active_target_id": active_target_id,
+		"region_id": state.campaign_region_id,
+		"heat": state.heat,
+		"heat_limit": LongMarchState.BASE_HEAT_LIMIT
+	}
+
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group := VBoxContainer.new()
 	var label := Label.new()
@@ -1668,6 +2043,44 @@ func focus_current_action() -> void:
 	if feedback_overlay != null and feedback_overlay.visible:
 		_focus_control(feedback_clear_text)
 		return
+	if debrief_panel != null and debrief_panel.visible:
+		debrief_panel.focus_default()
+		return
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.focus_default()
+		return
+	if journey_transition != null and journey_transition.visible:
+		journey_transition.focus_default()
+		return
+	if journey_arrival != null and journey_arrival.visible:
+		journey_arrival.focus_default()
+		return
+	if roadside_event != null and roadside_event.visible:
+		roadside_event.focus_default()
+		return
+	if road_contact != null and road_contact.visible:
+		road_contact.focus_default()
+		return
+	if tutorial_mode and tutorial_objective_view != null and tutorial_objective_view.visible:
+		_focus_control(tutorial_objective_view.show_me_button)
+		return
+	if journey_planner != null and journey_planner.visible:
+		if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
+			return
+		journey_planner.focus_default()
+		return
+	if settlement_hub != null and settlement_hub.visible:
+		settlement_hub.focus_default()
+		return
+	if _settlement_hub_available() and not settlement_hub_active:
+		if settlement_detail_mode == "workshop" and _focus_control(focus_chassis_button):
+			return
+		if settlement_detail_mode == "journey":
+			if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
+				return
+			for button in campaign_node_buttons:
+				if _focus_control(button):
+					return
 	if state.phase == "results":
 		if not results_chassis_reviewed and _focus_control(results_inspect_button):
 			return
@@ -1701,6 +2114,7 @@ func _ensure_current_focus() -> void:
 
 func _on_departure_option_changed(_index: int) -> void:
 	_refresh_ui()
+	_refresh_tutorial_ui()
 
 func _on_guard_contract_pressed(accept: bool) -> void:
 	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else state.choose_guard_contract(accept)
@@ -1714,6 +2128,47 @@ func _on_guard_contract_pressed(accept: bool) -> void:
 	if bool(result.get("ok", false)):
 		encounter_label.text = "CONTRACT DECISION\n%s" % String(result.get("message", "Contract decision recorded."))
 		focus_current_action.call_deferred()
+
+func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
+	match action_id:
+		"accept_assignment":
+			_on_guard_contract_pressed(true)
+		"decline_assignment":
+			_on_guard_contract_pressed(false)
+		"open_workshop":
+			settlement_hub_active = false
+			settlement_detail_mode = "workshop"
+			_set_event("The fortress enters the workshop. Inspect dependencies and refit the chassis; return to the bazaar when ready.")
+			_refresh_ui()
+			_focus_control.call_deferred(focus_chassis_button)
+		"review_supplies":
+			settlement_hub_active = false
+			settlement_detail_mode = "workshop"
+			_set_event("The quartermaster opens the fortress stores. Review carried modules, fuel, and current capacity.")
+			_refresh_ui()
+			_focus_control.call_deferred(module_option)
+		"plan_journey":
+			if _active_contract_status() == "offered":
+				_set_event("Answer the settlement assignment before planning the first road.")
+				_refresh_ui()
+				return
+			settlement_hub_active = false
+			settlement_detail_mode = "journey"
+			journey_planner_active = true
+			_set_event("The departure gate opens the route table. Inspect a highlighted destination, then confirm the journey separately.")
+			_refresh_ui()
+			focus_current_action.call_deferred()
+
+func _on_return_to_settlement_hub() -> void:
+	if not _settlement_hub_available():
+		return
+	selected_campaign_node_id = ""
+	settlement_hub_active = true
+	settlement_detail_mode = "hub"
+	journey_planner_active = false
+	_set_event("Returned to the settlement bazaar. No route, fuel, or time was committed.")
+	_refresh_ui()
+	settlement_hub.focus_default.call_deferred()
 
 func _on_campaign_node_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_node_buttons.size():
@@ -1731,6 +2186,8 @@ func _on_campaign_node_selected(node_id: String) -> void:
 	var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
 	_set_event("Route selected: %s. Review its costs and forecast, then commit when ready. %s cancels selection." % [String(preview.get("name", node_id)), _cancel_shortcut(false)])
 	_refresh_ui()
+	if journey_planner != null and journey_planner.visible:
+		journey_planner.reveal_commit_context()
 	if not _focus_control(campaign_commit_button):
 		_focus_control(campaign_cancel_button)
 	_show_selected_route_preview(node_id)
@@ -1742,6 +2199,8 @@ func _clear_campaign_route_selection() -> bool:
 	selected_campaign_node_id = ""
 	_set_event("Route preview cancelled. No fuel, time, or pressure was spent.")
 	_refresh_ui()
+	if journey_planner != null and journey_planner.visible:
+		journey_planner.show_route_overview()
 	var previous_button := campaign_map.button_for(previous_selection) as Button
 	if previous_button != null and not previous_button.disabled:
 		_focus_control(previous_button)
@@ -1768,6 +2227,11 @@ func _show_selected_route_preview(node_id: String) -> void:
 	var selected_detail := campaign_map.detail_for(node_id)
 	var node_name := String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id)).to_upper()
 	var final_warning := "\nFINAL COMMITMENT · Failure ends the run; there is no retreat." if node_id == state.campaign_final_node_id() else ""
+	if journey_planner != null and journey_planner.visible:
+		var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
+		var concise_detail := "%d day%s · %d fuel · %s risk" % [int(preview.get("days", 0)), "" if int(preview.get("days", 0)) == 1 else "s", int(preview.get("fuel", 0)), String(preview.get("risk_band", "unknown")).to_upper()]
+		_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, concise_detail, "\nBLOCKED · %s" % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
+		return
 	_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
 
 func _on_campaign_route_committed(node_id: String) -> void:
@@ -1775,15 +2239,138 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		_set_event("Select a route before committing the fortress.")
 		return
 	var doctrine := _selected_id(doctrine_option)
+	var origin_id := state.current_location
+	var day_before := state.day
+	var fuel_before := state.fuel
+	var pressure_before := state.campaign_pressure
+	var route_preview := state.campaign_node_preview(node_id, doctrine)
 	var result := state.begin_campaign_route(node_id, doctrine)
 	if bool(result.get("ok", false)):
 		selected_campaign_node_id = ""
+		settlement_hub_active = true
+		settlement_detail_mode = "hub"
+		journey_transition_active = true
+		journey_arrival_active = false
+		journey_arrival_view = {}
+		journey_planner_active = false
+		journey_transition_view = _build_journey_transition_view(origin_id, node_id, route_preview, day_before, fuel_before, pressure_before)
+		journey_departure_snapshot = {"origin_id": origin_id, "destination_id": node_id, "day": day_before, "fuel": fuel_before, "hull": state.hull_condition, "money": state.money, "pressure": pressure_before, "doctrine": doctrine}
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
 		_checkpoint("route_started")
 	else:
 		_set_event("Route blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
+
+func _build_journey_transition_view(origin_id: String, destination_id: String, preview: Dictionary, day_before: int, fuel_before: int, pressure_before: int) -> Dictionary:
+	var origin_name := String(LongMarchState.JOURNEY_NODES.get(origin_id, {}).get("name", origin_id))
+	var destination_name := String(LongMarchState.JOURNEY_NODES.get(destination_id, {}).get("name", destination_id))
+	var visibility := String(preview.get("visibility", "unscouted"))
+	var threats: Array = preview.get("threats", [])
+	var contact_text := ", ".join(threats) if not threats.is_empty() else String(preview.get("threat_hint", "uncertain movement ahead"))
+	var detail := "%s intelligence: %s. The fortress is moving through this road now; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, destination_name]
+	return {
+		"region_id": state.campaign_region_id,
+		"origin_id": origin_id,
+		"origin_name": origin_name,
+		"destination_id": destination_id,
+		"destination_name": destination_name,
+		"status": "%s CONTACT AHEAD" % visibility.to_upper(),
+		"promise": _journey_promise_summary(),
+		"phase": "PHASE · DEPARTING · COSTS COMMITTED · ARRIVAL PENDING",
+		"detail": detail,
+		"next_decision": "NEXT · Read %s intent and counter, then enter contact." % contact_text,
+		"day_receipt": "DAY %d → %d  ·  +%d" % [day_before, state.day, state.day - day_before],
+		"fuel_receipt": "%d → %d  ·  −%d" % [fuel_before, state.fuel, fuel_before - state.fuel],
+		"pressure_receipt": "%d → %d  ·  +%d" % [pressure_before, state.campaign_pressure, state.campaign_pressure - pressure_before],
+		"heat_receipt": "%d/%d" % [state.heat, LongMarchState.BASE_HEAT_LIMIT],
+		"fortress": _fortress_presentation_snapshot(),
+		"action_label": "CONTINUE TO CONTACT"
+	}
+
+func _restore_journey_transition_view() -> Dictionary:
+	var destination_id := state.campaign_target_node
+	var origin_id := String(state.campaign_path[-1]) if not state.campaign_path.is_empty() else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
+	var preview := state.campaign_node_preview(destination_id, state.encounter_target_doctrine)
+	var days := int(preview.get("days", 0))
+	var fuel_cost := int(preview.get("fuel", 0))
+	var pressure_gain := int(preview.get("pressure_gain", 0))
+	var matching_snapshot := String(journey_departure_snapshot.get("destination_id", "")) == destination_id
+	var day_before := int(journey_departure_snapshot.get("day", state.day - days)) if matching_snapshot else state.day - days
+	var fuel_before := int(journey_departure_snapshot.get("fuel", state.fuel + fuel_cost)) if matching_snapshot else state.fuel + fuel_cost
+	var pressure_before := int(journey_departure_snapshot.get("pressure", state.campaign_pressure - pressure_gain)) if matching_snapshot else state.campaign_pressure - pressure_gain
+	return _build_journey_transition_view(origin_id, destination_id, preview, day_before, fuel_before, pressure_before)
+
+func _journey_promise_summary() -> String:
+	if state.campaign_region_id == "flooded_veyru":
+		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "the assigned carrier")) if not state.veyru_medicine_carrier_id.is_empty() else "no assigned carrier"
+		match state.veyru_contract_status:
+			"accepted":
+				return "PROMISE · Deliver Lantern Quay's sealed medicines in %s." % carrier_name
+			"completed":
+				return "PROMISE KEPT · Lantern Quay's medicines reached the Dry Archive."
+			"failed":
+				return "PROMISE BROKEN · The medicine carrier failed; the march continues."
+			_:
+				return "PROMISE DECLINED · Preserve cargo freedom instead of carrying the medicine cases."
+	match state.guard_contract_status:
+		"accepted":
+			return "PROMISE · Guard Morrowline's parts convoy through the Lowlands."
+		"completed":
+			return "PROMISE KEPT · Morrowline's parts convoy arrived under guard."
+		"failed":
+			return "PROMISE BROKEN · The parts convoy did not reach Morrowline."
+		_:
+			return "PROMISE DECLINED · Travel without Morrowline's convoy obligation."
+
+func _on_journey_transition_continued() -> void:
+	if not journey_transition_active:
+		return
+	journey_transition_active = false
+	if tutorial_mode:
+		_tutorial_advance("read_contact", "TRAVEL COMPLETE · Fuel and time are already spent. The road remains contested until contact is clear.")
+	_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
+	_refresh_ui()
+	road_contact.focus_default.call_deferred()
+
+func _on_journey_arrival_continued() -> void:
+	if not journey_arrival_active:
+		return
+	journey_arrival_active = false
+	journey_arrival_view = {}
+	_set_event("Arrival acknowledged. The fortress is ready for its next local order.")
+	_refresh_ui()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.focus_default()
+	else:
+		focus_current_action.call_deferred()
+
+func _open_debrief_inspection() -> void:
+	if state.phase != "results":
+		return
+	debrief_inspection_active = true
+	results_chassis_reviewed = true
+	left_scroll.scroll_vertical = 0
+	right_scroll.scroll_vertical = 0
+	_refresh_ui()
+	_focus_chassis_for_results.call_deferred()
+
+func _open_debrief_notes() -> void:
+	feedback_return_context = "results"
+	_show_feedback()
+
+func _on_journey_planner_returned() -> void:
+	selected_campaign_node_id = ""
+	journey_planner_active = false
+	if _settlement_hub_available():
+		_on_return_to_settlement_hub()
+		return
+	_refresh_ui()
+	if state.phase == "settlement":
+		if recovery_panel != null and recovery_panel.visible:
+			recovery_panel.routes_button.call_deferred("grab_focus")
+		else:
+			_focus_control.call_deferred(settlement_routes_button)
 
 func _on_campaign_event_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_event_buttons.size():
@@ -1808,12 +2395,21 @@ func _on_campaign_event_pressed(index: int) -> void:
 			encounter_label.text = "DECISION CONTINUES · %s\n%s" % [String(next_event.get("title", "Local event")).to_upper(), String(result.get("message", "Decision recorded."))]
 			_focus_first_campaign_event_choice()
 
+func _on_roadside_event_choice(choice_id: String) -> void:
+	for index in range(campaign_event_buttons.size()):
+		if String(campaign_event_buttons[index].get_meta("choice_id", "")) == choice_id:
+			_on_campaign_event_pressed(index)
+			return
+
 func _current_guidance_action() -> String:
 	var guidance := _current_guidance()
 	var separator := guidance.find(" · ")
 	return guidance.substr(separator + 3) if separator >= 0 else guidance
 
 func _focus_first_campaign_event_choice() -> void:
+	if roadside_event != null and roadside_event.visible:
+		roadside_event.focus_default()
+		return
 	for button in campaign_event_buttons:
 		if _focus_control(button):
 			_on_desk_control_focused(button)
@@ -1857,6 +2453,9 @@ func _focus_chassis_for_refit() -> void:
 func _focus_chassis_for_combat() -> void:
 	if state.phase not in ["battle", "final_battle"]:
 		return
+	contact_inspection_active = true
+	if road_contact != null:
+		road_contact.visible = false
 	var active_target_id := _active_combat_target_id()
 	if not active_target_id.is_empty():
 		for instance in state.modules:
@@ -1874,8 +2473,11 @@ func _focus_chassis_for_results() -> void:
 	if not results_chassis_reviewed:
 		results_chassis_reviewed = true
 		_refresh_ui()
-	if selected_module_cell.x >= 0:
-		fortress_panel.cursor_cell = selected_module_cell
+	left_scroll.scroll_vertical = 0
+	right_scroll.scroll_vertical = 0
+	var selected_instance := _selected_installed_module()
+	if not selected_instance.is_empty():
+		fortress_panel.cursor_cell = Vector2i(selected_instance.get("position", Vector2i.ZERO))
 	elif not state.modules.is_empty():
 		fortress_panel.cursor_cell = Vector2i(state.modules[0].get("position", Vector2i.ZERO))
 	fortress_panel.queue_redraw()
@@ -1910,8 +2512,17 @@ func _sync_new_active_combat_target() -> void:
 	_select_module_option(active_target_id)
 
 func _on_fortress_focus_exit_requested() -> void:
-	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(combat_inspect_button):
-		_focus_control(combat_inspect_button)
+	if state.phase in ["battle", "final_battle"]:
+		contact_inspection_active = false
+		_refresh_ui()
+		if road_contact != null and road_contact.visible:
+			road_contact.inspect_button.grab_focus()
+		elif _control_can_receive_focus(combat_inspect_button):
+			_focus_control(combat_inspect_button)
+	elif state.phase == "results" and debrief_inspection_active:
+		debrief_inspection_active = false
+		_refresh_ui()
+		debrief_panel.inspect_button.call_deferred("grab_focus")
 	elif state.phase == "results" and _control_can_receive_focus(results_inspect_button):
 		_focus_control(results_inspect_button)
 	elif _control_can_receive_focus(focus_chassis_button):
@@ -2073,6 +2684,547 @@ func _campaign_departure_block_reason(node_id: String) -> String:
 func current_location_is_region_start() -> bool:
 	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
 
+func _settlement_hub_available() -> bool:
+	return state != null and state.campaign_active and state.phase == "refit" and current_location_is_region_start()
+
+func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
+	var is_veyru := state.campaign_region_id == "flooded_veyru"
+	var contract_status := _active_contract_status()
+	var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+	var contract_name := "SEALED MEDICINE DELIVERY" if is_veyru else "MORROWLINE CONVOY GUARD"
+	var assignment_body := "Carry sealed medicine cases to the Dry Archive. Flood contacts will value the reserved carrier, but successful delivery pays 28 Ashmarks and 2 trust."
+	var assignment_accept_enabled := true
+	if is_veyru:
+		var medicine_status := state.veyru_medicine_contract_status()
+		var carrier_name := String(medicine_status.get("carrier_name", "No carrier"))
+		assignment_body += "\n\nReserved carrier: %s." % carrier_name
+		assignment_accept_enabled = bool(medicine_status.get("available", false))
+	else:
+		assignment_body = "Guard Morrowline's exposed parts wagon. Each enemy on the approach gains 1 HP; arrival pays 30 Ashmarks and 2 trust."
+	var assignment_station := {
+		"title": contract_name,
+		"status": "DECISION REQUIRED" if contract_status == "offered" else contract_status.replace("_", " ").to_upper(),
+		"button_status": "CHOOSE" if contract_status == "offered" else contract_status.replace("_", " ").to_upper(),
+		"body": assignment_body if contract_status == "offered" else ("The fortress accepted this assignment. Its consequences now travel with the march." if contract_status == "accepted" else "The fortress declined this assignment. The first roads are open without its obligation."),
+		"tone": "warning" if contract_status == "offered" else ("safe" if contract_status == "accepted" else "neutral")
+	}
+	if contract_status == "offered":
+		assignment_station["primary"] = {
+			"id": "accept_assignment",
+			"label": "ACCEPT ASSIGNMENT",
+			"enabled": assignment_accept_enabled,
+			"tooltip": "Accept the obligation and its stated consequences."
+		}
+		assignment_station["secondary"] = {
+			"id": "decline_assignment",
+			"label": "DECLINE · TRAVEL UNBOUND",
+			"enabled": true,
+			"tooltip": "Decline without spending fuel or time."
+		}
+	var departure_ready := contract_status != "offered"
+	return {
+		"location_id": state.current_location,
+		"location_name": location_name,
+		"context": "FORTRESS AT REST · %s" % ("Choose an assignment or inspect a bazaar station." if contract_status == "offered" else "Prepare the fortress, then plan the first road."),
+		"preferred_station": "assignment_board" if contract_status == "offered" else "departure_gate",
+		"values": {
+			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
+			"fuel": str(snapshot.get("fuel", state.fuel)),
+			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
+			"heat": "%d/%d" % [int(snapshot.get("heat", 0)), int(snapshot.get("heat_limit", LongMarchState.BASE_HEAT_LIMIT))],
+			"mass": "%d/%d" % [int(snapshot.get("mass", 0)), int(snapshot.get("mass_limit", LongMarchState.BASE_MASS_LIMIT))],
+			"money": str(snapshot.get("money", state.money)),
+			"context": "TRUST %d" % state.settlement_trust
+		},
+		"fortress": _fortress_presentation_snapshot(),
+		"stations": {
+			"workshop": {
+				"title": "Chassis Workshop",
+				"status": "REFIT AVAILABLE",
+				"button_status": "REFIT",
+				"body": "Inspect the walking fortress, trace system dependencies, rotate stored modules, and repair the layout before departure.",
+				"tone": "safe",
+				"primary": {"id": "open_workshop", "label": "ENTER WORKSHOP", "enabled": true, "tooltip": "Open the detailed chassis workbench."}
+			},
+			"quartermaster": {
+				"title": "Quartermaster Stores",
+				"status": "%d ASHMARKS · %d FUEL" % [state.money, state.fuel],
+				"button_status": "STORES",
+				"body": "Review carried modules and current capacity. Trading inventory is not yet available in this settlement slice.",
+				"tone": "neutral",
+				"primary": {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}
+			},
+			"signal_broker": {
+				"title": "Signal Broker",
+				"status": "NO LOCAL REPORTS",
+				"button_status": "QUIET",
+				"body": "Route intelligence comes from working signal equipment and people met on the road. No report is for sale here yet.",
+				"tone": "muted"
+			},
+			"hiring_post": {
+				"title": "Hiring Post",
+				"status": "NO CREW AVAILABLE",
+				"button_status": "EMPTY",
+				"body": "Specialists are encountered through authored locations and events. The hiring board is empty at this stop.",
+				"tone": "muted"
+			},
+			"assignment_board": assignment_station,
+			"departure_gate": {
+				"title": "Departure Gate",
+				"status": "ROUTES READY" if departure_ready else "ASSIGNMENT BLOCKS DEPARTURE",
+				"button_status": "PLAN JOURNEY" if departure_ready else "LOCKED",
+				"body": "Open the regional route table. Selecting a destination only previews its cost and intelligence; a separate commit starts travel." if departure_ready else "The settlement requires an answer at the assignment board before it will clear the fortress to leave.",
+				"tone": "safe" if departure_ready else "warning",
+				"primary": {"id": "plan_journey", "label": "PLAN JOURNEY", "enabled": departure_ready, "tooltip": "Open the regional map without committing a route."}
+			}
+		}
+	}
+
+func _refresh_settlement_hub(snapshot: Dictionary) -> void:
+	if settlement_hub == null or main_columns == null:
+		return
+	var available := _settlement_hub_available()
+	var show_hub := available and settlement_hub_active
+	settlement_hub.visible = show_hub
+	main_columns.visible = not show_hub
+	settlement_hub_return_button.visible = available and not show_hub
+	if available:
+		var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", "settlement"))
+		settlement_hub_return_button.text = "RETURN TO %s BAZAAR" % location_name.to_upper()
+		settlement_hub.configure(_settlement_hub_view(snapshot))
+
+func _refresh_journey_transition() -> void:
+	if journey_transition == null:
+		return
+	if state.encounter_step > 0 or state.phase not in ["battle", "final_battle"]:
+		journey_transition_active = false
+	var show_transition := journey_transition_active and state.encounter_active
+	journey_transition.visible = show_transition
+	if not show_transition:
+		return
+	if journey_transition_view.is_empty():
+		journey_transition_view = _restore_journey_transition_view()
+	settlement_hub.visible = false
+	main_columns.visible = false
+	journey_planner.visible = false
+	journey_transition.configure(journey_transition_view)
+
+func _journey_planner_should_show() -> bool:
+	if not state.campaign_active or not state.campaign_event_pending.is_empty():
+		return false
+	if _settlement_hub_available():
+		return not settlement_hub_active and settlement_detail_mode == "journey"
+	if state.phase == "map":
+		return true
+	return state.phase == "settlement" and journey_planner_active
+
+func _refresh_journey_planner(snapshot: Dictionary) -> void:
+	if journey_planner == null:
+		return
+	var show_planner := _journey_planner_should_show()
+	journey_planner.visible = show_planner
+	if not show_planner:
+		return
+	main_columns.visible = false
+	settlement_hub.visible = false
+	var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+	journey_planner.configure({
+		"region_name": state.campaign_region_name(),
+		"location_name": location_name,
+		"order": _current_guidance(),
+		"route_selected": not selected_campaign_node_id.is_empty(),
+		"can_return": _settlement_hub_available() or state.phase == "settlement",
+		"return_label": "RETURN TO %s BAZAAR" % location_name.to_upper() if _settlement_hub_available() else "RETURN TO RECOVERY",
+		"values": {
+			"day": str(snapshot.get("day", state.day)),
+			"fuel": str(snapshot.get("fuel", state.fuel)),
+			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
+			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
+			"heat": "%d/%d" % [int(snapshot.get("heat", 0)), int(snapshot.get("heat_limit", LongMarchState.BASE_HEAT_LIMIT))],
+			"mass": "%d/%d" % [int(snapshot.get("mass", 0)), int(snapshot.get("mass_limit", LongMarchState.BASE_MASS_LIMIT))],
+			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]
+		}
+	})
+
+func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> void:
+	if road_contact == null:
+		return
+	var battle_active := state.phase in ["battle", "final_battle"] and state.encounter_active
+	var show_contact := battle_active and not journey_transition_active and not contact_inspection_active
+	road_contact.visible = show_contact
+	if not show_contact:
+		return
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	var active_target_id := ""
+	for enemy in combat_view.get("enemies", []):
+		if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)):
+			active_target_id = String(enemy.get("target", "hull"))
+			break
+	var action_views: Array[Dictionary] = []
+	for button in intervention_buttons:
+		var intervention_id := String(button.get_meta("intervention_id", ""))
+		action_views.append({
+			"id": intervention_id,
+			"label": button.text,
+			"tooltip": String(intervention_preview_texts.get(intervention_id, button.tooltip_text)),
+			"enabled": not button.disabled
+		})
+	var recent_report: Array[String] = []
+	for report_index in range(maxi(0, state.encounter_report.size() - 6), state.encounter_report.size()):
+		recent_report.append(String(state.encounter_report[report_index]))
+	road_contact.configure({
+		"region_id": state.campaign_region_id,
+		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)),
+		"active": state.encounter_active,
+		"step": state.encounter_step,
+		"order": _current_guidance(),
+		"warning": _critical_combat_warning(),
+		"advance_label": _advance_encounter_action_text(),
+		"inspect_label": combat_inspect_button.text,
+		"intervention_heading": intervention_title.text,
+		"intervention_help": intervention_help_label.text,
+		"interventions": action_views,
+		"enemies": combat_view.get("enemies", []),
+		"enemy_definitions": LongMarchState.ENCOUNTER_ENEMIES,
+		"target_names": combat_view.get("target_names", {}),
+		"recent_report": recent_report,
+		"active_target_id": active_target_id,
+		"fortress": _fortress_presentation_snapshot(active_target_id),
+		"fortress_before": contact_fortress_before.duplicate(true),
+		"values": {
+			"hull": "%d/10" % state.hull_condition,
+			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
+			"heat": "%d/%d" % [state.heat, LongMarchState.BASE_HEAT_LIMIT],
+			"fuel": str(state.fuel),
+			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure],
+			"step": "%d / 6" % state.encounter_step,
+			"doctrine": state.encounter_target_doctrine.replace("_", " ").to_upper()
+		}
+	})
+
+func _refresh_journey_arrival() -> void:
+	if journey_arrival == null:
+		return
+	journey_arrival.visible = journey_arrival_active
+	if not journey_arrival_active:
+		return
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	roadside_event.visible = false
+	main_columns.visible = false
+	journey_arrival.configure(journey_arrival_view)
+
+func _refresh_debrief() -> void:
+	if debrief_panel == null:
+		return
+	var show_debrief := state.phase == "results" and not journey_arrival_active and not debrief_inspection_active and not tutorial_mode
+	debrief_panel.visible = show_debrief
+	if not show_debrief:
+		return
+	main_columns.visible = false
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	roadside_event.visible = false
+	journey_arrival.visible = false
+	debrief_panel.configure(_debrief_view())
+
+func _refresh_recovery_panel(snapshot: Dictionary) -> void:
+	if recovery_panel == null:
+		return
+	var show_recovery := state.phase == "settlement" and state.campaign_active and not tutorial_mode and not journey_arrival_active and state.campaign_event_pending.is_empty() and not journey_planner_active
+	recovery_panel.visible = show_recovery
+	if not show_recovery:
+		return
+	main_columns.visible = false
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	roadside_event.visible = false
+	journey_arrival.visible = false
+	debrief_panel.visible = false
+	var location_name := _recovery_location_name()
+	var pressure_name := state.campaign_pressure_name()
+	recovery_panel.configure({
+		"region_id": state.campaign_region_id,
+		"location_id": state.current_location,
+		"location_name": location_name,
+		"context": "%s offers %d finite service %s before the next road." % [location_name, state.settlement_actions_remaining, "opportunity" if state.settlement_actions_remaining == 1 else "opportunities"],
+		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells." if state.current_location == "morrowline_camp" else "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores.",
+		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass." if state.current_location == "morrowline_camp" else "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road.",
+		"values": {
+			"hull": "%d/10" % state.hull_condition,
+			"fuel": str(state.fuel),
+			"money": str(state.money),
+			"actions": str(state.settlement_actions_remaining),
+			"trust": str(state.settlement_trust),
+			"pressure": "%s %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]
+		},
+		"repair_text": settlement_repair_button.text,
+		"repair_tooltip": settlement_repair_button.tooltip_text,
+		"repair_disabled": settlement_repair_button.disabled,
+		"refuel_text": settlement_refuel_button.text,
+		"refuel_tooltip": settlement_refuel_button.tooltip_text,
+		"refuel_disabled": settlement_refuel_button.disabled,
+		"hull_text": settlement_hull_button.text,
+		"hull_tooltip": settlement_hull_button.tooltip_text,
+		"hull_disabled": settlement_hull_button.disabled,
+		"routes_text": settlement_routes_button.text,
+		"receipt": last_recovery_receipt if not last_recovery_receipt.is_empty() else "%s reached. No local service has been spent; %s remains at %s %d." % [location_name, pressure_name, state.campaign_pressure_band().replace("_", " ").capitalize(), state.campaign_pressure],
+		"caption": "%s · ONE ACTION IS ONE LOST OPPORTUNITY" % location_name.to_upper(),
+		"fortress": _fortress_presentation_snapshot()
+	})
+
+func _on_recovery_repair_requested() -> void:
+	_on_settlement_repair_pressed()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.repair_button.call_deferred("grab_focus")
+
+func _on_recovery_refuel_requested() -> void:
+	_on_settlement_refuel_pressed()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.refuel_button.call_deferred("grab_focus")
+
+func _on_recovery_hull_requested() -> void:
+	_on_settlement_hull_pressed()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.hull_button.call_deferred("grab_focus")
+
+func _debrief_view() -> Dictionary:
+	var result_id := state.final_result
+	var result_name := result_id.replace("_", " ").capitalize()
+	var headline := "FAILED"
+	var tone := "critical"
+	if result_id in ["decisive_march", "archive_kept"]:
+		headline = "DECISIVE"
+		tone = "stable"
+	elif result_id in ["scarred_march", "archive_scarred"]:
+		headline = "SCARRED"
+		tone = "scarred"
+	var timeline: Array[Dictionary] = []
+	var visited: Array[String] = state.campaign_path.duplicate()
+	if state.current_location not in visited and state.current_location != ("ashgate_depot" if state.campaign_region_id == "ashgate_lowlands" else "lantern_quay"):
+		visited.append(state.current_location)
+	for index in range(1, mini(visited.size(), 6)):
+		var node_id := visited[index]
+		var is_last := index == visited.size() - 1
+		var status := "FINAL COMMITMENT" if is_last and result_id in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else ("MARCH ENDED" if is_last and result_id in ["march_failed", "veyru_lost"] else "ROAD SECURED")
+		timeline.append({
+			"name": String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id.replace("_", " ").capitalize())),
+			"status": status,
+			"tone": "critical" if status == "MARCH ENDED" else ("scarred" if tone == "scarred" and is_last else "stable")
+		})
+	var path_names: Array[String] = []
+	for node_id in visited:
+		path_names.append(String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id.replace("_", " ").capitalize())))
+	var route_span := "%s → %s" % [path_names[0], path_names[path_names.size() - 1]] if not path_names.is_empty() else "Route unavailable"
+	var dependencies := state.dependency_summary()
+	var damaged_count := 0
+	for module in state.modules:
+		var module_id := String(module.get("id", ""))
+		if int(module.get("durability", 0)) < int(state.module_definition(module_id).get("durability", 0)):
+			damaged_count += 1
+	var promises: Array[String] = []
+	var contract_status := _active_contract_status().replace("_", " ").capitalize()
+	promises.append("Contract · %s  |  Doctrine · %s" % [contract_status, state.encounter_target_doctrine.replace("_", " ").capitalize()])
+	var carried: Array[String] = []
+	if not state.specialist_id.is_empty():
+		carried.append(state.specialist_name())
+	if "soot_orchard" in state.campaign_path:
+		carried.append("Soot Orchard workers aboard" if state.workers_rescued else "Soot Orchard workers left behind")
+	if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty():
+		carried.append("sealed medicines in %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "carrier")))
+	if not carried.is_empty():
+		promises.append("Carried · %s" % " · ".join(carried))
+	promises.append("Road state · %s %d  |  Trust · %d" % [state.campaign_pressure_band().replace("_", " ").capitalize(), state.campaign_pressure, state.settlement_trust])
+	var decision_record := _campaign_decision_record_text()
+	if decision_record not in ["no route events on this path", "no regional decisions recorded"]:
+		promises.append("Key choices · %s" % decision_record)
+	if state.campaign_decisions.has("mara_workbench_choice"):
+		promises.append("Forge-core promise · %s" % state.mara_debrief_line().trim_prefix("Mara Flint — "))
+	for occurrence_line in state.occurrence_debrief_lines():
+		promises.append(String(occurrence_line).replace("Road occurrence — ", "Occurrence · "))
+	var damage_text := _result_system_condition_text().replace("Damage: ", "Damaged systems · ").replace("\nUnavailable: ", "\nUnavailable systems · ")
+	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
+	var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
+	var next_region_result := String(starting_region_results.get(next_region_id, ""))
+	return {
+		"region_id": state.campaign_region_id,
+		"region_name": state.campaign_region_name(),
+		"day": state.day,
+		"run_code": current_run_code(),
+		"outcome_label": "%s · %s" % ["JOURNEY COMPLETE" if tone != "critical" else "JOURNEY ENDED", result_name.to_upper()],
+		"headline": headline,
+		"tone": tone,
+		"timeline": timeline,
+		"journey": "ROUTE SUMMARY\n%s\n\n%d of 5 encounters secured\n%s · %s %d" % [route_span, state.campaign_encounters_completed, state.campaign_pressure_name(), state.campaign_pressure_band().replace("_", " ").capitalize(), state.campaign_pressure],
+		"commitments": "\n".join(promises),
+		"consequence": "%s\n\nCAUSE → %s" % [_result_summary_text(), _debrief_causal_chain()],
+		"condition": "HULL %d/10 · FUEL %d · HEAT %d/%d\n%d ready · %d strained · %d offline\n%s" % [state.hull_condition, state.fuel, state.heat, LongMarchState.BASE_HEAT_LIMIT, int(dependencies.get("ready", 0)), int(dependencies.get("strained", 0)), int(dependencies.get("offline", 0)), damage_text],
+		"experiment": _result_replay_text().trim_prefix("NEXT RUN · "),
+		"march_on_label": "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name],
+		"fortress": _fortress_presentation_snapshot(),
+		"damaged_count": damaged_count,
+		"offline_count": int(dependencies.get("offline", 0))
+	}
+
+func _debrief_causal_chain() -> String:
+	var doctrine := state.encounter_target_doctrine.replace("_", " ").capitalize()
+	match state.final_result:
+		"decisive_march":
+			return "%s doctrine → every final contact defeated → Meridian Pass opened." % doctrine
+		"archive_kept":
+			var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "medicine carrier"))
+			return "%s remained operational → sealed medicines arrived → the archive commitment held." % carrier_name
+		"archive_scarred":
+			if state.veyru_contract_status != "completed":
+				return "Medicine carrier exposed → delivery ended %s → the archive was secured at a cost." % state.veyru_contract_status.replace("_", " ")
+			return "Final-road damage → hull fell to %d/10 → the archive was secured at a cost." % state.hull_condition
+		"scarred_march":
+			var remaining_contacts := _undefeated_final_contacts()
+			if not remaining_contacts.is_empty():
+				return "%s survived step 6 → the road remained contested → the decisive threshold was missed." % ", ".join(remaining_contacts)
+			if state.settlement_actions_remaining > 0:
+				return "%d unused Morrowline service action%s → hull ended at %d/10 → the decisive threshold was missed." % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s", state.hull_condition]
+			return "Accumulated damage → hull ended at %d/10 → the decisive threshold was missed." % state.hull_condition
+		"march_failed", "veyru_lost":
+			if state.hull_condition <= 0:
+				return "Uncontained impacts → hull reached zero → the march stopped."
+			var diagnosis := _movement_failure_diagnosis()
+			return "%s → movement failed → the march stopped." % String(diagnosis.get("cause", "The movement chain broke"))
+	return "The road's commitments and damage produced an unclassified result."
+
+func _refresh_roadside_event(snapshot: Dictionary) -> void:
+	if roadside_event == null:
+		return
+	var event := state.campaign_event_details()
+	var show_event := not event.is_empty() and not journey_arrival_active and state.phase not in ["battle", "final_battle", "results"]
+	roadside_event.visible = show_event
+	if not show_event:
+		return
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	var event_id := String(event.get("id", state.campaign_event_pending))
+	var occurrence := event_id in LongMarchState.OCCURRENCE_DEFS
+	roadside_event.configure({
+		"event_id": event_id,
+		"region_id": state.campaign_region_id,
+		"context": "ROADSIDE OCCURRENCE" if occurrence else "LOCATION DECISION",
+		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location)),
+		"title": String(event.get("title", "Roadside decision")),
+		"body": String(event.get("body", "The fortress waits for an order.")),
+		"choices": event.get("choices", []),
+		"story": _roadside_event_story(event_id, event),
+		"guidance": "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete.",
+		"values": {
+			"day": str(snapshot.get("day", state.day)),
+			"fuel": str(snapshot.get("fuel", state.fuel)),
+			"hull": "%d/10" % state.hull_condition,
+			"ashmarks": str(state.money),
+			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure],
+			"trust": str(state.settlement_trust)
+		},
+		"fortress": _fortress_presentation_snapshot()
+	})
+
+func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
+	if event_id == "mara_workbench_choice":
+		var choices: Array = event.get("choices", [])
+		var repair_target := String(choices[0].get("label", "Rebuild the damaged system")).trim_prefix("Rebuild ") if not choices.is_empty() else "the damaged system"
+		return {
+			"motif": "mara_core_choice",
+			"heading": "MARA'S FORGE CORE · ONE USE ONLY",
+			"detail": "Machine: restore %s now (+1 day, +1 pressure). Shelter: reduce every Refugee Bunk hit by 1; no repair now." % repair_target,
+			"target_name": repair_target
+		}
+	if event_id == "mara_followup":
+		var preview := state.mara_followup_preview()
+		var repair_path := String(preview.get("path", "")) == "repair"
+		var target_name := String(state.module_definition(state.mara_repaired_module_id).get("name", "repaired system")) if repair_path else "Refugee Bunk"
+		return {
+			"motif": "mara_core_callback",
+			"heading": "FOURTH-ROAD PROMISE CHECK · %s" % ("HELD" if bool(preview.get("held", false)) else "FAILED"),
+			"detail": "%s was the workbench commitment. %s" % [target_name, String(preview.get("effect", "No result available"))],
+			"target_name": target_name,
+			"held": bool(preview.get("held", false))
+		}
+	if event_id == "drain_pumps":
+		return {
+			"motif": "pump_gallery_choice",
+			"heading": "OLD DRAIN · ONE DAY AGAINST TWO WATER",
+			"detail": "Hold: spend 1 day to lower rising water by 2. Leave: spend no time and carry the current flood clock into every remaining road."
+		}
+	if event_id == "the_last_dry_room":
+		var choices: Array = event.get("choices", [])
+		return {
+			"motif": "dry_room_choice",
+			"heading": "ONE SEALED ROOM · TWO CLAIMS",
+			"detail": "Families: %s. Repair stock: %s." % [String(choices[0].get("effect", "shelter the families")) if choices.size() > 0 else "shelter the families", String(choices[1].get("effect", "preserve the parts")) if choices.size() > 1 else "preserve the parts"]
+		}
+	return {}
+
+func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dictionary:
+	var outcome := String(result.get("outcome", state.encounter_outcome))
+	var retreat := outcome == "forced_retreat"
+	var origin_id := String(before.get("origin_id", state.current_location))
+	var destination_id := String(result.get("recovered_to", state.current_location)) if retreat else String(before.get("destination_id", state.current_location))
+	if destination_id.is_empty():
+		destination_id = state.current_location
+	var origin_name := String(LongMarchState.JOURNEY_NODES.get(origin_id, {}).get("name", origin_id.replace("_", " ").capitalize()))
+	var destination_name := String(LongMarchState.JOURNEY_NODES.get(destination_id, {}).get("name", destination_id.replace("_", " ").capitalize()))
+	var snapshot := state.summary()
+	var dependencies: Dictionary = snapshot.get("dependencies", {})
+	var recent_report: Array[String] = []
+	var report: Array = result.get("report", [])
+	for index in range(maxi(0, report.size() - 4), report.size()):
+		recent_report.append(String(report[index]))
+	var outcome_copy := outcome.replace("_", " ").capitalize()
+	var summary := "The fortress has withdrawn to %s. Repairs preserve the run, but time, pressure, and Ashmarks have already changed." % destination_name if retreat else "%s is secured. The fortress is at rest; review the road receipt before issuing the next local order." % destination_name
+	var action_label := "CONTINUE TO MARCH DEBRIEF" if state.phase == "results" else ("ENTER %s" % ("BAZAAR" if state.phase in ["refit", "settlement"] else ("LOCAL DECISION" if not state.campaign_event_pending.is_empty() else "JOURNEY MAP")))
+	return {
+		"region_id": state.campaign_region_id,
+		"origin_name": origin_name,
+		"destination_name": destination_name,
+		"retreat": retreat,
+		"outcome_label": "FORCED RETREAT" if retreat else outcome_copy,
+		"summary": summary,
+		"report": recent_report,
+		"action_label": action_label,
+		"fortress": _fortress_presentation_snapshot(),
+		"receipts": {
+			"outcome": outcome_copy,
+			"hull": "%d → %d" % [int(before.get("hull", state.hull_condition)), state.hull_condition],
+			"ashmarks": "%d → %d  ·  %s" % [int(before.get("money", state.money)), state.money, _signed_change(state.money - int(before.get("money", state.money)))],
+			"pressure": "%d → %d  ·  %s" % [int(before.get("pressure", state.campaign_pressure)), state.campaign_pressure, _signed_change(state.campaign_pressure - int(before.get("pressure", state.campaign_pressure)))],
+			"systems": "%d ready · %d strained\n%d offline" % [int(dependencies.get("ready", 0)), int(dependencies.get("strained", 0)), int(dependencies.get("offline", 0))]
+		}
+	}
+
+func _signed_change(value: int) -> String:
+	return "+%d" % value if value > 0 else str(value)
+
+func _apply_start_detail_visibility() -> void:
+	if not _settlement_hub_available() or settlement_hub_active:
+		return
+	var show_workshop := settlement_detail_mode == "workshop"
+	var show_journey := settlement_detail_mode == "journey"
+	contract_group.visible = false
+	for control in [refit_title, module_group, focus_chassis_button, refit_actions, refit_label, dependency_card_panel]:
+		control.visible = show_workshop
+	for control in [campaign_title, campaign_pressure_label, campaign_path_label, campaign_map, campaign_commit_button.get_parent(), doctrine_group, doctrine_detail_label, route_preview_label]:
+		control.visible = show_journey
+	campaign_comparison_panel.visible = show_journey and campaign_comparison_panel.visible
+	campaign_commit_intel_label.visible = show_journey and campaign_commit_intel_label.visible
+	asset_row.visible = show_workshop
+
 func _active_contract_status() -> String:
 	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
 
@@ -2088,11 +3240,17 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		_select_module_option(selected_module_id)
 		var selection_context := " and refitting" if state.can_refit() else (" or an encounter order" if state.phase in ["battle", "final_battle"] else (" in the final chassis" if state.phase == "results" else ""))
 		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), selection_context])
+		_tutorial_observe_inspection(selected_module_id)
+		if state.phase in ["battle", "final_battle"]:
+			contact_inspection_active = false
 		_refresh_ui()
 		if state.phase in ["battle", "final_battle"]:
-			_focus_control(intervention_buttons[1] if not intervention_buttons[1].disabled else advance_encounter_button)
+			if road_contact != null and road_contact.visible:
+				_focus_control(road_contact.intervention_buttons[1] if not road_contact.intervention_buttons[1].disabled else road_contact.advance_button)
+			else:
+				_focus_control(intervention_buttons[1] if not intervention_buttons[1].disabled else advance_encounter_button)
 		elif state.phase == "results":
-			fortress_panel.grab_focus()
+			fortress_panel.call_deferred("grab_focus")
 		return
 	if not state.can_refit():
 		_set_event("Refit is locked while the fortress is on the road. Select an installed module to inspect or seal it.")
@@ -2106,6 +3264,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			_set_event("Moved %s to cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
 			_journal_event("module_moved", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
 			_checkpoint("module_moved")
+			_tutorial_observe_state()
 		else:
 			_set_event("Move blocked: %s." % String(result.get("reason", "unknown")))
 	else:
@@ -2118,6 +3277,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			_set_event("Installed %s at cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
 			_journal_event("module_installed", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
 			_checkpoint("module_installed")
+			_tutorial_observe_state()
 		else:
 			_set_event("Placement blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -2171,10 +3331,17 @@ func _on_remove_pressed() -> void:
 
 func _on_travel_pressed() -> void:
 	var route_id := _selected_id(route_option)
-	var result := state.begin_journey(route_id, _selected_id(doctrine_option))
+	var before := {"origin_id": state.current_location, "destination_id": state.journey_destination, "hull": state.hull_condition, "money": state.money, "pressure": state.campaign_pressure}
+	var result := state.begin_tutorial_journey(_selected_id(doctrine_option)) if tutorial_mode else state.begin_journey(route_id, _selected_id(doctrine_option))
 	if not bool(result.get("ok", false)):
 		_set_event("Departure blocked: %s." % String(result.get("reason", "unknown")))
 	else:
+		journey_departure_snapshot = before
+		if tutorial_mode:
+			_tutorial_advance("travel", "ROAD COMMITTED · The Long Road spent %d fuel and %d days before contact." % [int(result.get("fuel", 0)), int(result.get("days", 0))])
+			journey_transition_active = true
+			journey_arrival_active = false
+			journey_transition_view = _build_journey_transition_view("ashgate_depot", "rill_crossing", {"visibility": "known", "threats": ["Road Raider"]}, int(before.get("day", 1)), int(before.get("fuel", state.fuel)), int(before.get("pressure", 0)))
 		_set_event("Journey begun. Forecast: %s. Advance one battle step at a time." % ", ".join(result.get("forecast", {}).get("threats", [])))
 		_journal_event("route_started", {"route": route_id, "doctrine": _selected_id(doctrine_option), "risk": state.current_route_risk, "pressure": state.encounter_pressure})
 	_refresh_ui()
@@ -2191,12 +3358,32 @@ func _encounter_checkpoint_reason(resolved: bool) -> String:
 	return "encounter_resolved"
 
 func _on_advance_encounter_pressed() -> void:
+	if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "read_contact" and not tutorial_director.premature_advance_seen:
+		tutorial_director.premature_advance_seen = true
+		_set_event("READ BEFORE ADVANCING · The Road Raider is two steps away, seeks cargo or exterior systems, and is countered by the Repeater Gun. Press Advance again when ready.")
+		_refresh_tutorial_ui()
+		return
+	if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "read_contact":
+		_tutorial_advance("respond", "CONTACT READ · You know the approach, preferred targets, counter, and next possible consequence.")
+	var before: Dictionary = journey_departure_snapshot.duplicate(true) if not journey_departure_snapshot.is_empty() else {
+		"origin_id": state.current_location,
+		"destination_id": state.campaign_target_node if state.campaign_active else state.journey_destination,
+		"hull": state.hull_condition,
+		"money": state.money,
+		"pressure": state.campaign_pressure
+	}
+	contact_fortress_before = _fortress_presentation_snapshot()
 	var result := state.advance_encounter(1.0)
 	var encounter_resolved := bool(result.get("resolved", false))
 	if not bool(result.get("ok", false)):
 		_set_event("Journey battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif encounter_resolved:
+		journey_arrival_active = true
+		journey_arrival_view = _build_journey_arrival_view(result, before)
+		journey_departure_snapshot = {}
 		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
+		if tutorial_mode:
+			_tutorial_advance("repair", "ROAD SECURED · The fortress survived the contact and reached its recovery siding.")
 		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})
 		if state.phase == "results" and not result_recorded:
 			result_recorded = true
@@ -2204,6 +3391,8 @@ func _on_advance_encounter_pressed() -> void:
 	else:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
 		_journal_event("encounter_step", {"leg": state.journey_leg, "step": state.encounter_step, "hull": state.hull_condition})
+		if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "damage" and _most_damaged_installed_module().is_empty():
+			_set_event("The target remains protected for now. Advance once more and watch the damage report.")
 	if bool(result.get("ok", false)):
 		_checkpoint(_encounter_checkpoint_reason(encounter_resolved))
 	_refresh_ui()
@@ -2228,16 +3417,20 @@ func _on_settlement_repair_pressed() -> void:
 		return
 	var result := state.settlement_repair(String(selected.get("id", "")))
 	var service_message := "%s restored +%d durability for %d Ashmarks. %s." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
+	last_recovery_receipt = service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
 		_checkpoint("settlement_service")
+		if tutorial_mode:
+			_tutorial_advance("complete", "SYSTEM RESTORED · The repaired module and its dependent systems are ready for the next road.")
 	_refresh_ui()
 	encounter_label.text = "%s\n%s" % ["SERVICE COMPLETE" if bool(result.get("ok", false)) else "SERVICE UNAVAILABLE", service_message]
 
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
 	var service_message := "+%d fuel loaded for %d Ashmarks. %s." % [int(result.get("fuel_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
+	last_recovery_receipt = service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -2248,6 +3441,7 @@ func _on_settlement_refuel_pressed() -> void:
 func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
 	var service_message := "+%d hull restored for %d Ashmarks. %s." % [int(result.get("hull_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown"))
+	last_recovery_receipt = service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -2258,6 +3452,8 @@ func _on_settlement_hull_pressed() -> void:
 func _on_settlement_routes_pressed() -> void:
 	if state.phase != "settlement" or not state.campaign_active:
 		return
+	journey_planner_active = true
+	_refresh_ui()
 	for raw_node_id in state.campaign_available_nodes():
 		var node_id := String(raw_node_id)
 		var node_button := campaign_map.button_for(node_id) as Button
@@ -2289,20 +3485,40 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 		_set_event("Intervention used: %s." % String(result.get("effect", intervention_id.replace("_", " ").capitalize())))
 		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
 		_checkpoint("intervention_used")
+		if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "respond":
+			_tutorial_advance("damage", "ORDER ISSUED · Read the receipt before advancing; it names the protection, redirect, or power change.")
 	_refresh_ui()
 
 func save_run(silent: bool = false) -> bool:
-	var backup_result := _preserve_valid_save_backup()
+	return _save_run_to_paths(SAVE_PATH, SAVE_BACKUP_PATH, silent)
+
+func save_tutorial_run(silent: bool = false) -> bool:
+	return _save_run_to_paths(TUTORIAL_SAVE_PATH, TUTORIAL_BACKUP_PATH, silent)
+
+func _save_run_to_paths(save_path: String, backup_path: String, silent: bool) -> bool:
+	var backup_result := _preserve_valid_save_backup(save_path, backup_path)
 	if not bool(backup_result.get("ok", false)):
 		_set_event("Save failed before overwrite: %s." % String(backup_result.get("reason", "backup could not be written")))
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
 		return false
 	var payload := state.serialize()
+	payload["tutorial_mode"] = tutorial_mode
+	if tutorial_mode and tutorial_director != null:
+		payload["tutorial_progress"] = tutorial_director.serialize()
+		payload["tutorial_lesson_snapshot"] = tutorial_lesson_snapshot.duplicate(true)
+		payload["tutorial_lesson_snapshots"] = tutorial_lesson_snapshots.duplicate(true)
+		payload["tutorial_director_snapshots"] = tutorial_director_snapshots.duplicate(true)
 	payload["build_version"] = String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	payload["saved_at_unix"] = int(Time.get_unix_time_from_system())
+	payload["presentation"] = {
+		"journey_departure_snapshot": journey_departure_snapshot.duplicate(true),
+		"journey_arrival_active": journey_arrival_active,
+		"journey_arrival_view": journey_arrival_view.duplicate(true),
+		"last_recovery_receipt": last_recovery_receipt
+	}
 	file.store_string(JSON.stringify(payload))
 	file.close()
 	if not silent:
@@ -2311,22 +3527,22 @@ func save_run(silent: bool = false) -> bool:
 		_refresh_ui()
 	return true
 
-func _preserve_valid_save_backup() -> Dictionary:
-	if not FileAccess.file_exists(SAVE_PATH):
+func _preserve_valid_save_backup(save_path: String = SAVE_PATH, backup_path: String = SAVE_BACKUP_PATH) -> Dictionary:
+	if not FileAccess.file_exists(save_path):
 		return {"ok": true, "backed_up": false}
-	var existing_text := FileAccess.get_file_as_string(SAVE_PATH)
+	var existing_text := FileAccess.get_file_as_string(save_path)
 	if not _serialized_save_text_is_valid(existing_text):
 		return {"ok": true, "backed_up": false}
-	var previous_backup := FileAccess.get_file_as_string(SAVE_BACKUP_PATH) if FileAccess.file_exists(SAVE_BACKUP_PATH) else ""
-	var backup_file := FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+	var previous_backup := FileAccess.get_file_as_string(backup_path) if FileAccess.file_exists(backup_path) else ""
+	var backup_file := FileAccess.open(backup_path, FileAccess.WRITE)
 	if backup_file == null:
 		return {"ok": false, "reason": "backup could not be opened: %s" % error_string(FileAccess.get_open_error())}
 	backup_file.store_string(existing_text)
 	backup_file.close()
-	if _serialized_save_text_is_valid(FileAccess.get_file_as_string(SAVE_BACKUP_PATH)):
+	if _serialized_save_text_is_valid(FileAccess.get_file_as_string(backup_path)):
 		return {"ok": true, "backed_up": true}
 	if not previous_backup.is_empty():
-		var restore_file := FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+		var restore_file := FileAccess.open(backup_path, FileAccess.WRITE)
 		if restore_file != null:
 			restore_file.store_string(previous_backup)
 			restore_file.close()
@@ -2345,10 +3561,16 @@ func _on_save_pressed() -> void:
 	save_run()
 
 func load_saved_run() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
+	return _load_saved_run_from_path(SAVE_PATH)
+
+func load_tutorial_run() -> bool:
+	return _load_saved_run_from_path(TUTORIAL_SAVE_PATH)
+
+func _load_saved_run_from_path(save_path: String) -> bool:
+	if not FileAccess.file_exists(save_path):
 		_set_event("No local march checkpoint exists yet.")
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
 		_set_event("Load failed: %s." % error_string(FileAccess.get_open_error()))
 		return false
@@ -2362,7 +3584,28 @@ func load_saved_run() -> bool:
 		_set_event("Load failed: %s." % String(result.get("reason", "unknown")))
 		return false
 	state = restored
+	tutorial_mode = bool(parsed.get("tutorial_mode", false))
+	if tutorial_mode:
+		if tutorial_director == null:
+			tutorial_director = TutorialDirectorScript.new()
+		tutorial_director.restore(parsed.get("tutorial_progress", {}))
+		tutorial_lesson_snapshot = Dictionary(parsed.get("tutorial_lesson_snapshot", state.serialize())).duplicate(true)
+		tutorial_lesson_snapshots = Dictionary(parsed.get("tutorial_lesson_snapshots", {tutorial_director.lesson_id: tutorial_lesson_snapshot})).duplicate(true)
+		tutorial_director_snapshots = Dictionary(parsed.get("tutorial_director_snapshots", {tutorial_director.lesson_id: tutorial_director.serialize()})).duplicate(true)
 	starting_region_id = state.campaign_region_id
+	var presentation: Dictionary = parsed.get("presentation", {})
+	settlement_hub_active = true
+	settlement_detail_mode = "hub"
+	journey_arrival_active = bool(presentation.get("journey_arrival_active", false)) and not state.encounter_active
+	journey_arrival_view = Dictionary(presentation.get("journey_arrival_view", {})).duplicate(true) if journey_arrival_active else {}
+	journey_departure_snapshot = Dictionary(presentation.get("journey_departure_snapshot", {})).duplicate(true)
+	journey_transition_active = not journey_arrival_active and state.phase in ["battle", "final_battle"] and state.encounter_active and state.encounter_step == 0
+	journey_transition_view = _restore_journey_transition_view() if journey_transition_active else {}
+	journey_planner_active = false
+	contact_inspection_active = false
+	debrief_inspection_active = false
+	contact_fortress_before = {}
+	last_recovery_receipt = String(presentation.get("last_recovery_receipt", ""))
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
@@ -2376,6 +3619,7 @@ func load_saved_run() -> bool:
 	results_chassis_reviewed = false
 	last_rendered_phase = ""
 	_journal_event("run_loaded", {"phase": state.phase, "day": state.day})
+	_refresh_tutorial_ui()
 	_refresh_ui()
 	return true
 
@@ -2394,6 +3638,12 @@ func _on_play_again_pressed() -> void:
 		play_again_requested.emit()
 		return
 	start_replay_from_results()
+
+func focus_replay_action() -> void:
+	_focus_control(debrief_panel.replay_button if debrief_panel != null and debrief_panel.visible else play_again_button)
+
+func focus_march_on_action() -> void:
+	_focus_control(debrief_panel.march_on_button if debrief_panel != null and debrief_panel.visible else march_on_button)
 
 func _on_march_on_pressed() -> void:
 	if state.phase != "results":
@@ -2415,7 +3665,7 @@ func _on_results_title_pressed() -> void:
 	if not save_run():
 		_set_event("Could not save the completed result. It remains open; use Pause to review save options.")
 		_refresh_ui()
-		_focus_control(results_title_button)
+		_focus_control(debrief_panel.title_button if debrief_panel != null and debrief_panel.visible else results_title_button)
 		return
 	_journal_event("return_to_title", {"phase": state.phase, "result": state.final_result})
 	return_to_title_requested.emit()
@@ -2738,6 +3988,7 @@ func _refresh_ui() -> void:
 		combat_inspect_button.text = "INSPECT CHASSIS · %s" % ("REVIEW DAMAGE" if state.encounter_intervention_used else "CHOOSE SEAL TARGET")
 	results_inspect_button.visible = state.phase == "results"
 	results_inspect_button.disabled = state.modules.is_empty()
+	fortress_panel.custom_minimum_size.y = 230.0 if state.phase == "results" else 260.0
 	fortress_panel.refresh_interaction_copy()
 	intervention_title.visible = is_battle_phase
 	intervention_help_label.visible = is_battle_phase
@@ -2985,11 +4236,55 @@ func _refresh_ui() -> void:
 			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull" and target_id not in fortress_panel.combat_target_ids:
 				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
+	if tutorial_mode:
+		var tutorial_lesson := tutorial_director.lesson_id
+		var tutorial_refit_lesson := tutorial_lesson in ["place_engine", "place_weapon", "inspect_machine"]
+		subtitle_label.text = "THE FIRST WATCH · Ashgate Muster Yard"
+		journey_label.text = "MUSTER YARD DRILL\nBuild the dependency chains, then take the fortress onto one controlled road contact."
+		if state.phase == "refit":
+			encounter_label.text = "CURRENT LESSON\n%s" % String(tutorial_director.current_copy().get("action", "Prepare the fortress."))
+			encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
+		for hidden_metric in ["day", "money"]:
+			if metric_panels.has(hidden_metric):
+				metric_panels[hidden_metric].visible = false
+		guidance_label.visible = false
+		run_flow_heading_row.visible = false
+		run_flow_tracker.visible = false
+		asset_row.visible = false
+		refit_title.visible = tutorial_refit_lesson
+		module_group.visible = tutorial_refit_lesson
+		focus_chassis_button.visible = tutorial_refit_lesson
+		refit_actions.visible = tutorial_refit_lesson
+		refit_label.visible = tutorial_refit_lesson
+		dependency_card_panel.visible = tutorial_refit_lesson
+		doctrine_group.visible = tutorial_lesson == "plan_road"
+		doctrine_detail_label.visible = tutorial_lesson == "plan_road"
+		route_group.visible = tutorial_lesson == "plan_road"
+		route_preview_label.visible = tutorial_lesson == "plan_road"
+		travel_button.visible = tutorial_lesson == "plan_road"
+		settlement_refuel_button.visible = false
+		settlement_hull_button.visible = false
+		settlement_routes_button.visible = false
+		final_journey_button.visible = false
+		how_to_play_button.visible = false
+	_apply_start_detail_visibility()
+	_refresh_settlement_hub(snapshot)
+	_refresh_journey_planner(snapshot)
+	_refresh_journey_transition()
+	_refresh_road_contact(snapshot, combat_view)
+	_refresh_roadside_event(snapshot)
+	_refresh_journey_arrival()
+	_refresh_debrief()
+	_refresh_recovery_panel(snapshot)
+	_refresh_tutorial_ui()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
 	_ensure_current_focus()
 
 func _current_guidance() -> String:
+	if tutorial_mode and tutorial_director != null:
+		var tutorial_copy := tutorial_director.current_copy()
+		return "FIRST WATCH · %s" % String(tutorial_copy.get("action", "Follow the current lesson."))
 	if state.phase == "results":
 		return "DEBRIEF · Final chassis reviewed. Record playtest notes while the decisions are fresh." if results_chassis_reviewed else "DEBRIEF · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
 	if state.phase in ["battle", "final_battle"]:
@@ -3023,6 +4318,11 @@ func _current_guidance() -> String:
 		return "CURRENT ORDER · Advance the encounter and watch for a new target. %s" % order_status
 	if not state.campaign_event_pending.is_empty():
 		return "DECISION REQUIRED · Resolve the local event below before the fortress can depart."
+	if _settlement_hub_available() and not settlement_hub_active:
+		if settlement_detail_mode == "workshop":
+			return "WORKSHOP · Inspect dependencies and refit the chassis. Return to the bazaar when preparation is complete."
+		if settlement_detail_mode == "journey" and selected_campaign_node_id.is_empty():
+			return "ROUTE TABLE · Select one highlighted destination to inspect it; Commit is a separate action."
 	if _active_contract_status() == "offered":
 		return "CURRENT ORDER · Decide whether to carry Lantern Quay's sealed medicines. This unlocks the first roads." if state.campaign_region_id == "flooded_veyru" else "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
 	if not selected_campaign_node_id.is_empty():
@@ -3050,6 +4350,8 @@ func _current_action_jump_label() -> String:
 		return "GO TO BATTLE STEP ↓"
 	if not state.campaign_event_pending.is_empty():
 		return "GO TO DECISION ↓"
+	if _settlement_hub_available() and not settlement_hub_active and (settlement_detail_mode == "workshop" or selected_campaign_node_id.is_empty()):
+		return "GO TO CHASSIS ↓" if settlement_detail_mode == "workshop" else "GO TO ROUTES ↓"
 	if _active_contract_status() == "offered":
 		return "GO TO CONTRACT ↓"
 	if not selected_campaign_node_id.is_empty() and _campaign_departure_block_reason(selected_campaign_node_id).is_empty():
@@ -3389,6 +4691,7 @@ class FortressPanel extends Control:
 	var family_colors := {
 		"engine": Color("#b86f4b"),
 		"weapon": Color("#b44949"),
+		"power": Color("#a78845"),
 		"workshop": Color("#b69555"),
 		"crew_room": Color("#557fa1"),
 		"armor": Color("#6f7b84"),
@@ -3678,7 +4981,8 @@ class FortressPanel extends Control:
 		for instance in state.modules:
 			var definition := state.module_definition(String(instance.get("id", "")))
 			var rect := _module_rect(instance)
-			var color: Color = family_colors.get(String(definition.get("family", "")), Color("#8b8b8b"))
+			var family := "power" if "generator" in definition.get("tags", []) else String(definition.get("family", ""))
+			var color: Color = family_colors.get(family, Color("#8b8b8b"))
 			var dependency := state.dependency_status(instance)
 			var state_name := String(dependency.get("state", "offline"))
 			var fill_color := color
@@ -3690,6 +4994,7 @@ class FortressPanel extends Control:
 			draw_rect(rect, Color("#f0db9a") if bool(instance.get("exterior", false)) else Color("#b9c3bf"), false, 3.0 if bool(instance.get("exterior", false)) else 1.0)
 			if state_name != "ready":
 				draw_rect(rect.grow(-3), Color("#e3ad55") if state_name == "strained" else Color("#e06f61"), false, 2.0)
+			FortressSilhouetteRenderer.draw_family_mark(self, rect.grow(-9), family, Color(1.0, 1.0, 1.0, 0.20))
 			_draw_module_name(rect, String(definition.get("name", instance.get("id", ""))))
 			var maximum := maxi(1, int(definition.get("durability", 1)))
 			var durability := maxi(0, int(instance.get("durability", 0)))
@@ -3697,6 +5002,16 @@ class FortressPanel extends Control:
 			var bar_rect := Rect2(rect.position + Vector2(4, rect.size.y - 7), Vector2(rect.size.x - 8, 4))
 			draw_rect(bar_rect, Color("#172026"), true)
 			draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x * durability_ratio, bar_rect.size.y)), Color("#73c99b") if durability_ratio > 0.5 else (Color("#e8c58e") if durability_ratio > 0.25 else Color("#ef8375")), true)
+			if bool(instance.get("sealed", false)):
+				draw_rect(rect.grow(-5), Color("#f0d28f"), false, 3.0)
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(rect.size.x - 24, 14), "S", HORIZONTAL_ALIGNMENT_CENTER, 18, 11, Color("#fff0ba"))
+			elif state_name == "offline":
+				draw_line(rect.position + Vector2(6, 6), rect.end - Vector2(6, 6), Color("#ff8a7e"), 3.0)
+				draw_line(Vector2(rect.end.x - 6, rect.position.y + 6), Vector2(rect.position.x + 6, rect.end.y - 6), Color("#ff8a7e"), 3.0)
+			elif state_name == "strained":
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(rect.size.x - 24, 15), "!", HORIZONTAL_ALIGNMENT_CENTER, 18, 13, Color("#fff0ba"))
+			if durability < maximum:
+				draw_polyline(PackedVector2Array([rect.position + Vector2(rect.size.x * 0.72, 4), rect.position + Vector2(rect.size.x * 0.58, rect.size.y * 0.38), rect.position + Vector2(rect.size.x * 0.70, rect.size.y * 0.58), rect.position + Vector2(rect.size.x * 0.54, rect.size.y - 8)]), Color("#ffd28e"), 2.0)
 			if String(instance.get("id", "")) in combat_target_ids:
 				draw_rect(rect.grow(3), Color("#ff806f"), false, 4.0)
 			if selected_cell in state.occupied_cells(instance):

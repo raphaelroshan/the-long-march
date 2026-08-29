@@ -33,13 +33,20 @@ run_checked() {
 
 python3 tools/validate_versions.py --repo .
 python3 tools/validate_flooded_veyru.py --data content/flooded_veyru.json
+python3 tests/test_playtest_summary.py
 run_checked "" "$GODOT_BIN" --headless --path . --import
 run_checked "PASS: The Long March fortress-state tests" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_state.gd
 run_checked "PASS: The Long March local playtest journal" "$GODOT_BIN" --headless --path . --script res://tests/test_playtest_journal.gd
 run_checked "PASS: The Long March campaign progress" "$GODOT_BIN" --headless --path . --script res://tests/test_campaign_progress.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
+run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd
+run_checked "PASS: The Long March road-contact presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_road_contact_presentation.gd
+run_checked "PASS: The Long March roadside-event presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_roadside_event_presentation.gd
+run_checked "PASS: The Long March recovery panel" "$GODOT_BIN" --headless --path . --script res://tests/test_recovery_panel.gd
 run_checked "PASS: The Long March controller layout" "$GODOT_BIN" --headless --path . --script res://tests/test_controller_layout.gd
+run_checked "PASS: The Long March settlement hub" "$GODOT_BIN" --headless --path . --script res://tests/test_settlement_hub.gd
 run_checked "PASS: The Long March application shell" "$GODOT_BIN" --headless --path . --script res://tests/test_app_shell.gd
+run_checked "PASS: The Long March guided tutorial" "$GODOT_BIN" --headless --path . --script res://tests/test_guided_tutorial.gd
 run_checked "PASS: The Long March complete prototype flow" "$GODOT_BIN" --headless --path . --script res://tests/test_prototype_flow.gd
 run_checked "PASS: The Long March Flooded Veyru UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_veyru_flow.gd

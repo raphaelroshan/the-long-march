@@ -2,11 +2,14 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.267`
+**Current code baseline:** `0.3.0-alpha.283`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
+**Current PR baseline:** PR #41 `0.3.0-alpha.283` — First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, private-alpha evidence workflow, shared-fortress continuity, journey handoff, battle rhythm, and the first settlement-identity pass.
+**Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
+**Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
 
@@ -33,10 +36,12 @@ The implemented slice includes the following capabilities:
 | Character | Iven Pell changes forecasting and route safety; Mara Flint changes workshop recovery and a later route consequence. Other specialists remain designed extension points. |
 | Recovery | Non-final defeats retreat to a valid regional anchor with explicit time, money, pressure, and limping-state costs. Meridian Pass and the Dry Archive are declared final commitments. |
 | Persistence | Versioned saves, backup recovery, incompatible-save handling, isolated profiles, local playtest notes, and explicit Continue/New Run behavior exist. |
-| Presentation | The fortress remains the main decision surface. The UI shows modules, dependencies, route state, threat forecast, encounter progress, services, receipts, and debrief information. |
+| Presentation | Ashgate Depot and Lantern Quay now open as fortress-centered bazaars with six stable stations. Plan Journey has a full-frame readiness/map/dossier layout, and route commitment enters a mandatory side-on moving-fortress road screen with exact cost receipts before combat. The UI also shows modules, dependencies, threat forecasts, encounter progress, services, and debrief information. |
 | Packaging | Local and CI verification includes Godot tests, policy/content checks, Windows/macOS export scripts, packaged smoke coverage, offline boundaries, input, scaling, pause, save path, and teardown checks. |
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
+
+The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, full-frame route planner, focused workshop mode, atomic route-commit boundary, mandatory side-on road bridge, animated fortress contact, arrival receipt, roadside event tableau, canonical First Watch tutorial, shared fortress silhouette, recovery tableaux, place-specific choices, terminal Debrief, and private-alpha evidence workflow are implemented in PR #41. The tutorial has an isolated checkpoint, three-page prologue, action-led placement and dependency lessons, a deterministic road contact using the normal combat rules, damage and repair teaching, lesson reset/replay, and a certification handoff into Ashgate. The remaining first-run work is human validation, bespoke art/audio, and revisions driven by observed confusion rather than additional explanatory copy.
 
 ---
 
@@ -526,7 +531,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; save-aware close, explicit Charter reset, validated Continue backup recovery, pause-accessible contextual playtest notes, bounded large-text support, clean first-launch reset, a controller-accessible feedback export handoff, persistent interface-audio feedback, a bounded high-contrast mode, a controller confirm/cancel convention preference, in-game build/local-data transparency, action-aware title journey previews, a pause-accessible March Record, current-order focus recovery, phase-aware Field Briefing navigation, separate pause return/reorientation paths, a grouped focus-aware Settings hierarchy, direct two-chapter Field Guide launches, explicit saved-versus-discarded title return receipts, distinct passive chassis inspection versus active edit presentation, collision-safe and phase-aware checkpoint receipts, phase-aware battle/debrief chassis review, an inspect-first debrief handoff, fitted phase-labelled chassis detail copy, a fixed pointer-accessible stage header, exact pointer-Pause resume restoration, consistent playtest-build identity, clean route-section focus anchoring, unclipped battle-order focus, and explicit event-to-next-action handoffs are complete through `0.3.0-alpha.267`.
+**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, last-secured-location travel semantics, automated First Watch tutorial, dedicated terminal Debrief, shared stateful fortress silhouette, staged attack replay, dedicated field recovery, three event-specific commitment tableaux, and the local five-session evidence workflow are complete through `0.3.0-alpha.279`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 
@@ -934,3 +939,141 @@ References are internal repository documents listed in Section 10; no external s
 [7] [Agent Feeding Guide](agent_feeding_guide.md)
 [8] [Decision Log](decision_log.md)
 [9] [Setup](setup.md)
+
+
+---
+
+# 10. Post-PR41 game-quality execution roadmap
+
+PR #41 establishes the first coherent journey shell. It is not the final alpha. The next work must turn that shell into a convincing, replayable moving-fortress experience without expanding into a full continent prematurely.
+
+The project should now optimize for **continuity of place, clarity of commitment, and human comprehension**. The player must feel that the same fortress leaves a settlement, crosses a dangerous road, suffers a specific consequence, reaches a place with its own needs, and returns to the next decision carrying history.
+
+## 10.1 Long Road 9 — Human-proven first thirty minutes
+
+**Objective:** Validate the existing First Watch and quick path with five consented, uncoached human sessions before adding major campaign breadth.
+
+Use `docs/private_alpha_session_sheet.md` and one exact artifact cohort. Test both First Watch and the quick path across the documented input and display combinations. Record only observed behavior. Do not infer comprehension from completion, and do not replace human evidence with automated screenshots.
+
+Triage findings through three questions: did the player know what to do, did they know why it mattered, and did they understand what happened? Fix repeated high-severity confusion before adding more explanatory text. Prioritize unclear current-order handoffs, route commitment, combat target interpretation, recovery choice, settlement service purpose, and final Debrief comprehension.
+
+**Exit gate:** Five session records exist, repeated findings are summarized, the artifact identity is exact, and the owner has approved the disposition of each high-severity issue.
+
+## 10.2 Long Road 10 — Fortress visual identity and continuity
+
+**Objective:** Make the fortress feel like an inhabited moving place across rest, travel, contact, recovery, and Debrief.
+
+**Status:** Long Road 10.1 is complete in `0.3.0-alpha.280`: the visual-state inventory, single-condition family bays, exterior target brackets, and first Ashgate/Veyru hull treatment are implemented. Bespoke authored art and human recognition testing remain open.
+
+The current shared silhouette is the correct structural foundation. Improve it with a restrained authored 2D language: timber, patched plate, canvas, engine housings, signal hardware, cargo restraints, heat stains, dust, rain, and repair marks. Greywatch-like Ashgate should feel industrial and exposed; Flooded Veyru should feel damp, improvised, and crowded by water infrastructure. These are visual and place cues, not new simulation rules.
+
+Create a visual state inventory for idle, selected, strained, disabled, damaged, overheated, breached, repaired, departing, traveling, under contact, retreating, and arrived. Each state must remain understandable at normal play distance and in high-contrast, large-text, and reduced-motion modes.
+
+**Exit gate:** The player can recognize the same fortress in at least four journey chapters, identify the damaged system without reading raw logs, and distinguish Ashgate from Veyru by place treatment rather than only title text.
+
+## 10.3 Long Road 11 — Journey rhythm and transitions
+
+**Objective:** Make travel feel like a sequence of commitments instead of a chain of menus.
+
+**Status:** Long Road 11.1 is complete in `0.3.0-alpha.281`: departure now preserves the origin/destination, accepted or declined promise, exact committed day/fuel/pressure/heat receipt, explicit departing phase, next contact decision, and focus across save/load. Contact-to-arrival rhythm remains open.
+
+The target rhythm is:
+
+```text
+settlement receipt
+→ choose promise or route
+→ refit and assign
+→ commit exact cost
+→ depart
+→ short travel beat
+→ contact, event, or arrival
+→ consequence receipt
+→ next commitment
+```
+
+Keep transitions short and skippable. The player should always know whether the fortress is preparing, leaving, traveling, under contact, recovering, or arriving. Use movement, weather, sound, and a small amount of contextual text to bridge chapters. Do not add cinematic sequences that delay the decision or remove control.
+
+**Exit gate:** A tester can describe where the fortress is, what it has committed to, and what decision comes next after every transition. Save/load at each transition must restore the same authoritative phase and focus target.
+
+## 10.4 Long Road 12 — Battle cause-and-effect pass
+
+**Objective:** Make automatic encounters read as consequences of the chassis and route plan.
+
+**Status:** Long Road 12.1 is complete in `0.3.0-alpha.282`: the shared contact header and center-stage banner now name Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle without changing authoritative step resolution. Threat-specific timing and broader human validation remain open.
+
+Every meaningful encounter should stage forecast, approach, target commitment, attack wind-up, defender response, impact, dependency consequence, and settling beat. The player should see why a Burrower reached the Boiler Heart, why a Storm Front raised heat, or why a Flood Surge threatened the lower chassis. Threats need distinct silhouettes and attack signatures; target lines and effects must remain sparse enough to read.
+
+The existing step-based simulation remains authoritative. Presentation may interpolate or stage around a resolved step, but it may not invent damage, alter target order, consume random streams, or change the replay key. Pause and manual step must freeze or advance simulation and presentation together.
+
+**Exit gate:** Before the first meaningful impact, a tester can name the threat, likely target, visible counter, and risk if ignored. After the impact, they can identify the resulting module, budget, or route consequence.
+
+## 10.5 Long Road 13 — Settlement identity and meaningful services
+
+**Objective:** Make settlements feel like breathing spaces with distinct practical pressures rather than interchangeable service menus.
+
+**Status:** Long Road 13.1 is complete for Morrowline in `0.3.0-alpha.283`: its field-recovery tableau now shows the convoy shelter's canvas repair bays, parts wagons, and departure lamp while framing the movement/repair-chain versus fuel/hull choice. Other settlements remain separate slices.
+
+Ashgate Depot, Morrowline Camp, Lantern Quay, and Evacuation Camp should each have a visual motif, a dominant local problem, a recognizable service priority, and one human-facing consequence. Service receipts must state cost, restored system, remaining options, and trade-off. Players should be able to choose between at least two reasonable recovery paths instead of buying every service.
+
+The next settlement work should deepen one existing location at a time. A place-specific character or event must alter a real operational decision—fuel, parts, refuge, trust, route safety, cargo, or schedule. Do not add a generalized relationship meter or service currency.
+
+**Exit gate:** A player can explain why two settlements feel different and can describe what a service restores and what it leaves exposed.
+
+## 10.6 Long Road 14 — Controlled content breadth
+
+**Objective:** Add variety only after the existing journey is readable and human-proven.
+
+The first expansion should add one facility family, one specialist, one threat family, and one small route branch. Each must be a complete teaching slice:
+
+```text
+player question
+→ stable data definition
+→ physical placement or route rule
+→ visible counter
+→ visible weakness or cost
+→ isolated teaching situation
+→ combination situation
+→ recovery consequence
+→ deterministic tests
+→ save/replay coverage
+→ visual evidence
+```
+
+Recommended order is Water Condenser, one specialist such as Sela Vonn, one threat such as Signal Hunter or Bridgebreaker, and a single new branch in an existing region. Do not add a third region until both current chapters remain independently understandable and replayable.
+
+**Exit gate:** Each addition creates at least two viable fortress or route plans and does not obsolete an existing module, specialist, or intervention.
+
+## 10.7 Long Road 15 — Campaign consequences and replay
+
+**Objective:** Make the broader journey remember what the player protected, abandoned, carried, or promised without making individual chapters disposable.
+
+Use a small number of regional dimensions—such as route access, refuge stability, trust, public knowledge, and pressure—rather than a large reputation matrix. A completed or failed contract should create a visible later condition: a safer route with a cost, a displaced settlement, a new broker, a shortage, a changed refuge obligation, or a new faction offer.
+
+Failure should be a change of road, not a content vacuum. If a player declines a rescue, another group may organize relief; if they prioritize speed, a settlement may become more dependent on the fortress; if they hide a route danger, later travelers may pay the price. The replacement response must be causal, inspectable, and playable.
+
+Endings should compose from accumulated conditions rather than require one exact chain. A mobile relief network, a self-sufficient regional settlement, a militarized corridor, or a commercially prosperous but opaque route can all be coherent outcomes.
+
+**Exit gate:** At least two different decision histories produce distinct but understandable later states, and the player can identify what earlier decision caused the difference.
+
+## 10.8 Long Road 16 — Private-alpha hardening
+
+**Objective:** Package a stable internal build that can survive repeated human observation.
+
+Complete the existing technical matrix for Windows and macOS packaging, offline play, save migration, malformed and future saves, backup recovery, clean reinstall, controller navigation, large text, high contrast, reduced motion, pause, safe close, route transitions, active events, recovery, and terminal Debrief. Add performance checks for the first thirty minutes at supported window sizes. Preserve local-only playtest notes and exact artifact provenance.
+
+**Exit gate:** `bash scripts/verify.sh` and all applicable validators pass; package smoke is clean; the artifact has a manifest, observer brief, known-limitations list, rollback path, and exact source revision; the owner explicitly approves the private-alpha cohort.
+
+## 10.9 Non-negotiable post-PR41 invariants
+
+- `FortressState` remains the authority for modules, dependencies, resources, routes, combat, interventions, events, services, persistence, and outcomes.
+- The same seed and command sequence produce the same authoritative result regardless of viewport, input device, speed, pause, text scale, contrast, or motion settings.
+- The fortress remains the primary visual subject in preparation, travel, contact, recovery, and Debrief.
+- Every route, service, threat, and event exposes its cost, uncertainty, or consequence before commitment when that information is available.
+- Partial failure creates a changed but understandable journey whenever the authored contract permits recovery.
+- New content introduces a question before it introduces complexity, and every new pressure has a readable counter.
+- Automated tests prove deterministic behavior and package safety; they do not claim that humans understood or enjoyed the game.
+- The repository may be public source, but the build remains private alpha until explicit owner approval. No storefront-ready or public-release claim is implied by CI success.
+
+## 10.10 Recommended next task
+
+The next agent task should be **Long Road 9.1: run the five-session human validation protocol against PR #41’s exact artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and Morrowline's Long Road 13.1 slice are complete. If implementation must continue before sessions are available, deepen **one other existing settlement** through the same place-specific, command-preserving treatment; do not add a new region or currency.

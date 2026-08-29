@@ -106,11 +106,14 @@ var current_day: int = 0
 var current_pressure: int = 0
 var commit_button: Button
 var high_contrast_enabled: bool = false
+var compact_commit_labels: bool = false
 
 func _init() -> void:
 	custom_minimum_size = MAP_SIZE
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	resized.connect(_layout_node_buttons)
 	_apply_region_layout(region_id)
 	_build_node_buttons()
 	commit_button = Button.new()
@@ -125,6 +128,7 @@ func _init() -> void:
 	commit_button.add_theme_stylebox_override("pressed", _style(Color("#1d3c34"), Color("#ffffff"), 2))
 	commit_button.add_theme_stylebox_override("focus", _style(Color("#285348"), Color("#ffffff"), 3))
 	add_child(commit_button)
+	_layout_node_buttons.call_deferred()
 
 func _build_node_buttons() -> void:
 	for node_id in node_order:
@@ -142,6 +146,15 @@ func _build_node_buttons() -> void:
 		node_buttons.append(button)
 		buttons_by_id[node_id] = button
 		add_child(button)
+	_layout_node_buttons.call_deferred()
+
+func _layout_node_buttons() -> void:
+	var offset := Vector2(maxf(0.0, (size.x - MAP_SIZE.x) * 0.5), maxf(0.0, (size.y - MAP_SIZE.y) * 0.5))
+	for node_id in node_order:
+		var button := buttons_by_id.get(node_id) as Button
+		if button != null:
+			button.position = Vector2(node_positions.get(node_id, Vector2.ZERO)) + offset
+	queue_redraw()
 
 func _apply_region_layout(next_region_id: String) -> void:
 	var layout: Dictionary = REGION_LAYOUTS.get(next_region_id, REGION_LAYOUTS["ashgate_lowlands"])
@@ -451,11 +464,11 @@ func configure(view: Dictionary) -> void:
 			commit_button.tooltip_text = departure_block_reason if not departure_block_reason.is_empty() else "The fortress cannot depart in its current state."
 		elif visibility == "unscouted":
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\nRISK UNKNOWN · HEAT %d/%d · PRESSURE UNKNOWN" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, predicted_heat, heat_limit]
+			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\nRISK UNKNOWN · HEAT %d/%d" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, predicted_heat, heat_limit] if compact_commit_labels else "%s · %s\nDAY %d→%d · FUEL %d→%d\nRISK UNKNOWN · HEAT %d/%d · PRESSURE UNKNOWN" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, predicted_heat, heat_limit]
 			commit_button.tooltip_text = "Pay %d fuel and advance %d day%s into an unscouted encounter.%s" % [fuel_cost, days, "" if days == 1 else "s", " Failure ends the run; there is no retreat." if selected_node in final_nodes else ""]
 		else:
 			var days := int(selected_preview.get("days", 0))
-			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\n%s RISK (%.0f%%) · HEAT %d/%d · PRESSURE %d→%d" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, current_pressure, pressure_after]
+			commit_button.text = "%s · %s\nDAY %d→%d · FUEL %d→%d\n%s RISK %.0f%% · HEAT %d/%d · P %d→%d" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, current_pressure, pressure_after] if compact_commit_labels else "%s · %s\nDAY %d→%d · FUEL %d→%d\n%s RISK (%.0f%%) · HEAT %d/%d · PRESSURE %d→%d" % [commit_prefix, String(short_names.get(selected_node, selected_node)).to_upper(), current_day, day_after, current_fuel, fuel_after, _risk_band(risk), risk * 100.0, predicted_heat, heat_limit, current_pressure, pressure_after]
 			commit_button.tooltip_text = "Pay the displayed route costs and begin this encounter.%s" % [" Failure ends the run; there is no retreat." if selected_node in final_nodes else ""]
 	elif not available_nodes.is_empty():
 		commit_button.text = "Select a route to continue"
@@ -478,7 +491,8 @@ func button_for(node_id: String) -> Button:
 	return buttons_by_id.get(node_id)
 
 func _node_center(node_id: String) -> Vector2:
-	return Vector2(node_positions.get(node_id, Vector2.ZERO)) + NODE_SIZE * 0.5
+	var button := buttons_by_id.get(node_id) as Button
+	return button.position + NODE_SIZE * 0.5 if button != null else Vector2(node_positions.get(node_id, Vector2.ZERO)) + NODE_SIZE * 0.5
 
 func _path_contains_edge(from_id: String, to_id: String) -> bool:
 	for index in range(secured_path.size() - 1):
@@ -487,8 +501,8 @@ func _path_contains_edge(from_id: String, to_id: String) -> bool:
 	return false
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#05090c") if high_contrast_enabled else Color("#141e24"), true)
-	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#a8b8bd") if high_contrast_enabled else Color("#34454c"), false, 2.0 if high_contrast_enabled else 1.0)
+	draw_rect(Rect2(Vector2.ZERO, size), Color("#05090c") if high_contrast_enabled else Color("#141e24"), true)
+	draw_rect(Rect2(Vector2.ZERO, size), Color("#a8b8bd") if high_contrast_enabled else Color("#34454c"), false, 2.0 if high_contrast_enabled else 1.0)
 	for raw_source in campaign_edges.keys():
 		var source := String(raw_source)
 		for raw_target in campaign_edges.get(source, []):

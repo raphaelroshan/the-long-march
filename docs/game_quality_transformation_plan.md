@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.267`
+**Current baseline:** `0.3.0-alpha.283`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -644,6 +644,8 @@ Tasks:
 
 ### Phase 2 — Fortress visual identity
 
+**Status:** The first shared code-native silhouette, single-condition module-bay grammar, and Ashgate/Veyru place treatment are complete through `0.3.0-alpha.280`; bespoke production art and human recognition testing remain open.
+
 **Objective:** Make the chassis feel like a physical inhabited machine.
 
 Tasks:
@@ -657,6 +659,8 @@ Tasks:
 **Exit:** A screenshot of the fortress communicates its operating identity without reading every label.
 
 ### Phase 3 — Map and travel game feel
+
+**Status:** The first save-safe settlement-to-route-to-departure handoff is complete in `0.3.0-alpha.281`; contact-to-arrival pacing and broader route-specific transitions remain open.
 
 **Objective:** Make routes feel like roads with stakes.
 
@@ -672,6 +676,8 @@ Tasks:
 
 ### Phase 4 — Encounter game feel
 
+**Status:** The first target-lock, threat-signature, impact, dependency-consequence, and explicit Forecast-to-Settle phase grammar is complete through `0.3.0-alpha.282`; audio cues and broader human timing validation remain open.
+
 **Objective:** Make automatic encounters feel like the fortress is acting and suffering.
 
 Tasks:
@@ -685,6 +691,8 @@ Tasks:
 **Exit:** A tester can explain the last impact and identify what system it changed.
 
 ### Phase 5 — Settlement and event presentation
+
+**Status:** Dedicated Morrowline/Evacuation Camp recovery plus distinct Mara forge-core, Pump Gallery, and Last Dry Room commitments are complete through `0.3.0-alpha.278`; broader authored-event coverage and human memory validation remain open.
 
 **Objective:** Make breathing spaces and obligations memorable.
 
@@ -700,6 +708,8 @@ Tasks:
 
 ### Phase 6 — Debrief and replay
 
+**Status:** The first dedicated terminal Debrief slice is complete in `0.3.0-alpha.272`; human comprehension and replay-intent validation remain open.
+
 **Objective:** Make each completed or failed march teach the next march.
 
 Tasks:
@@ -713,6 +723,8 @@ Tasks:
 **Exit:** Testers can explain their outcome and choose a specific alternative.
 
 ### Phase 7 — Human private alpha
+
+**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, and capture matrix are complete in `0.3.0-alpha.279`; five consented uncoached sessions and evidence-led fixes require human testers.
 
 **Objective:** Replace assumptions with observed behavior.
 
@@ -932,27 +944,18 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from current remote main, implement the first game-quality slice:
-a dedicated terminal Debrief panel for The Long Road.
+Starting from `0.3.0-alpha.279`, run five consented, uncoached private-alpha
+sessions using `docs/private_alpha_session_sheet.md`.
 
-Replace the reused operational/service presentation after a chapter’s final
-commitment with a clear journey conclusion. Preserve the fortress and route
-visuals, but show:
+Include First Watch, at least two Ashgate runs, and at least two Flooded Veyru
+runs across keyboard/mouse and controller. Generate a Markdown sheet from each
+local feedback export, add only direct observations and tester quotes, and group
+repeated failures by severity. Implement and verify the three highest repeated
+comprehension fixes before adding another region or expanding the item catalog.
 
-- Decisive, Scarred, Retreated, or Failed headline.
-- Five-encounter journey timeline.
-- Route and doctrine/contract summary.
-- Key facility, crew, cargo, trust, and pressure consequences.
-- One causal chain explaining the result.
-- Persistent damage or rescued/abandoned obligations.
-- One state-specific replay experiment.
-- Continue/replay/title actions with controller and keyboard focus.
-
-Keep all rules in the authoritative state. Do not add new combat math,
-regions, factions, currencies, or campaign systems. Add deterministic state
-and UI tests, save/load coverage at debrief, visual captures at the supported
-logical viewport and scaling, and run the complete verification suite.
-Report exact files, tests, captures, risks, and one next bounded task.
+This gate requires human participants. Automated agents may prepare builds,
+capture states, summarize local exports, and implement the resulting fixes, but
+must not fabricate sessions, quotes, emotions, or qualitative conclusions.
 ```
 
 ---
@@ -964,6 +967,6 @@ Report exact files, tests, captures, risks, and one next bounded task.
 [3] [`docs/agent_feeding_guide.md`](agent_feeding_guide.md) — current staged agent prompts.
 [4] [`design/design_prompt.md`](../design/design_prompt.md) — product identity, central promise, and design constraints.
 [5] [`design/events_occurrences_bible.md`](../design/events_occurrences_bible.md) — future event and occurrence library.
-[6] [`docs/p16_human_playtest_protocol.md`](p16_human_playtest_protocol.md) — current human-playtest protocol.
+[6] [`docs/private_alpha_session_sheet.md`](private_alpha_session_sheet.md) — five-session evidence sheet and capture matrix.
 
 This document is an internal implementation plan. It does not claim that the listed visual, audio, UX, or campaign work is already implemented.

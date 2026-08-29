@@ -3,6 +3,9 @@ extends SceneTree
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
+const TUTORIAL_SAVE_PATH := "user://the_long_march_tutorial.save"
+const TUTORIAL_BACKUP_PATH := "user://the_long_march_tutorial.backup.save"
+const TUTORIAL_COMPLETE_PATH := "user://the_long_march_tutorial.complete"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
@@ -17,7 +20,7 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _remove_local_test_files() -> void:
-	for path in [SAVE_PATH, SAVE_BACKUP_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH, FEEDBACK_PRESERVE_PATH]:
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, TUTORIAL_SAVE_PATH, TUTORIAL_BACKUP_PATH, TUTORIAL_COMPLETE_PATH, ONBOARDING_PATH, JOURNAL_PATH, SETTINGS_PATH, PROGRESS_PATH, FEEDBACK_PRESERVE_PATH]:
 		var absolute_path := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute_path):
 			DirAccess.remove_absolute(absolute_path)
@@ -58,28 +61,28 @@ func _run() -> void:
 	_expect(not auto_accept_quit, "the application should intercept operating-system close requests instead of accepting them before save review")
 	_expect(app.menu_view.visible, "the application should open on the title menu")
 	_expect(app.game_view == null, "the playable stage should not begin behind the title menu")
-	_expect(app.title_build_label.text.begins_with("TWO PLAYABLE REGIONS · PLAYTEST BUILD") and app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and not app.title_build_label.text.contains("ALPHA · v"), "the title should expose one clear playtest-build identity without duplicating the alpha channel")
+	_expect(app.title_build_label.text.begins_with("A MOVING FORTRESS JOURNEY") and app.title_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the title should present a player-facing game identity and retain the exact build version")
 	_expect(app._checkpoint_label("route_secured") == "Road secured" and app._checkpoint_label("recovery_reached") == "Recovery reached" and app._checkpoint_label("run_ended") == "Run ended", "resolved checkpoints should use player-facing transition labels instead of the generic battle-step receipt")
-	_expect(app.start_button.has_focus(), "Start Game should receive initial keyboard or controller focus")
+	_expect(app.tutorial_button.has_focus(), "Learn to Command should receive initial keyboard or controller focus")
 	_expect(not app.title_return_notice_panel.visible and app.title_return_notice.is_empty() and app.save_status_label.visible, "a clean launch should show normal save guidance without inventing a prior-session return receipt")
-	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.quick_start_button, "title navigation should move down from Guided Start to Quick Start")
+	_expect(app.tutorial_button.get_node_or_null(app.tutorial_button.focus_neighbor_bottom) == app.start_button, "title navigation should move from Learn to Command into the full Ashgate journey")
 	_expect(app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_left) == app.guide_button and app.settings_button.get_node_or_null(app.settings_button.focus_neighbor_right) != null, "title navigation should traverse the utility row explicitly")
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "Continue should stay out of the action stack when no local save exists")
-	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_neighbor_bottom) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.settings_button, "no-save navigation should include both playable regions while routing around disabled Continue")
-	_expect(app.quick_start_button.get_node_or_null(app.quick_start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.start_button, "no-save Tab navigation should include Veyru, skip Continue, and wrap through visible title actions")
+	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.settings_button, "no-save navigation should include both playable regions while routing around hidden replay actions")
+	_expect(app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button and app.quit_button.get_node_or_null(app.quit_button.focus_next) == app.tutorial_button, "no-save Tab navigation should include the tutorial and both regions while skipping Continue")
 	_expect(app.guide_button.text == "FIELD GUIDE" and app.save_status_label.text.contains("Autosave begins after your first committed decision"), "the title should explain the first automatic checkpoint in player-facing language")
 	_expect(app.guide_quick_start_button.text == "QUICK START · ASHGATE" and app.guide_veyru_start_button.text == "START · FLOODED VEYRU", "the no-save Field Guide should offer direct starts for both playable chapters")
-	_expect(app.title_preview_id == "ashgate_guided" and app.title_preview_title_label.text == "Learn the machine" and app.title_preview_eyebrow_label.text.contains("GUIDED FIRST JOURNEY"), "initial title focus should preview the guided Ashgate journey rather than leaving the chapter choice abstract")
-	_expect(app.title_region_briefing_label.text.contains("seven short Marchmaster cards") and app.title_preview_scope_label.text.contains("BLOCKADE WATCH") and app.title_preview_scope_label.text.contains("SIEGE BEAST"), "the guided preview should name its teaching path, regional pressure, recovery, and finale")
-	_expect(app.title_preview_rule_title_labels[0].text == "Build around a promise" and app.title_preview_rule_detail_labels[1].text.contains("known, forecast, and unscouted"), "the Ashgate preview should explain its opening obligation and information model")
+	_expect(app.title_preview_id == "tutorial" and app.title_preview_title_label.text == "Learn by commanding" and app.title_preview_eyebrow_label.text.contains("INTERACTIVE TUTORIAL"), "initial title focus should preview the playable First Watch tutorial")
+	_expect(app.title_region_briefing_label.text.contains("Place the systems") and app.title_preview_scope_label.text.contains("PLACEMENT") and app.title_preview_scope_label.text.contains("REPAIR"), "the tutorial preview should name its action-led path from placement through recovery")
+	_expect(app.title_preview_rule_title_labels[0].text == "Build a working machine" and app.title_preview_rule_detail_labels[1].text.contains("approaching enemy"), "the tutorial preview should explain preparation and contact analysis")
 	app.veyru_start_button.mouse_entered.emit()
 	_expect(app.title_preview_id == "veyru" and app.title_preview_title_label.text == "Outrun rising water" and app.title_region_briefing_label.text.contains("sealed medicine") and app.title_preview_scope_label.text.contains("EVACUATION CAMP"), "mouse hover should preview Veyru's distinct pressure, obligation, and recovery point before launch")
 	app.veyru_start_button.mouse_exited.emit()
-	_expect(app.title_preview_id == "ashgate_guided", "leaving a mouse preview should restore the journey associated with keyboard or controller focus")
+	_expect(app.title_preview_id == "tutorial", "leaving a mouse preview should restore the tutorial associated with keyboard or controller focus")
 	app.guide_button.grab_focus()
 	app.veyru_start_button.mouse_entered.emit()
 	app.veyru_start_button.mouse_exited.emit()
-	_expect(app.title_preview_id == "ashgate_guided", "utility focus should retain the last journey selection after a temporary pointer preview")
+	_expect(app.title_preview_id == "tutorial", "utility focus should retain the last journey selection after a temporary pointer preview")
 	app.start_button.grab_focus()
 	_expect(_tree_contains_text(app.menu_view, "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER") and _tree_contains_text(app.menu_view, "BATTLES RESOLVE STEP BY STEP"), "the title should state the boundary between player decisions and automatic battle resolution before starting")
 	_expect(_tree_contains_text(app.menu_view, "15–25 MINUTES") and _tree_contains_text(app.menu_view, "FINALE · SIEGE BEAST"), "the focused title preview should state the selected journey's expected length and finale")
@@ -91,12 +94,12 @@ func _run() -> void:
 	completed_briefing.store_string("completed for title test")
 	completed_briefing.close()
 	app._refresh_title_state()
-	_expect(not app.quick_start_button.visible and app.start_button.text == "START GAME · ASHGATE DEPOT", "a completed briefing should collapse the two equivalent fresh-start actions into one clear Start Game action")
+	_expect(not app.quick_start_button.visible and app.start_button.text == "START JOURNEY · ASHGATE LOWLANDS", "a completed legacy briefing should leave one clear campaign start beside the separate tutorial")
 	_expect(app.title_preview_title_label.text == "Return to Ashgate" and app.title_preview_eyebrow_label.text.contains("RETURNING JOURNEY") and app.title_region_briefing_label.text.contains("can be reset in Settings"), "the returning-player Ashgate preview should not promise that the completed briefing will reopen")
 	_expect(app.start_button.get_node_or_null(app.start_button.focus_neighbor_bottom) == app.veyru_start_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button, "completed-briefing navigation should skip the hidden Quick Start action while retaining Veyru")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ONBOARDING_PATH))
 	app._refresh_title_state()
-	_expect(app.quick_start_button.visible and app.start_button.text.contains("GUIDED FIRST RUN"), "removing the briefing marker should restore the explicit guided and quick-start choices")
+	_expect(not app.quick_start_button.visible and app.start_button.text.contains("ASHGATE LOWLANDS"), "removing the legacy briefing marker should retain one clear full-journey action")
 	var invalid_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	invalid_save.store_string("{not valid save data")
 	invalid_save.close()
@@ -104,7 +107,7 @@ func _run() -> void:
 	_expect(not app.continue_button.visible and app.continue_button.disabled, "invalid save data should never expose Continue as an actionable choice")
 	_expect(app.save_status_label.text.contains("Invalid data"), "the title screen should explain why a save is unavailable")
 	_expect(app.save_recovery_button.visible and app.save_recovery_button.text == "REMOVE UNUSABLE SAVE" and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_neighbor_bottom) == app.save_recovery_button, "an invalid save should expose an accurately named recovery action after both new-run choices")
-	_expect(not app.quick_start_button.visible and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.save_recovery_button and app.save_recovery_button.get_node_or_null(app.save_recovery_button.focus_next) == app.guide_button, "invalid-save navigation should collapse redundant Quick Start while retaining both regions and recovery")
+	_expect(not app.quick_start_button.visible and app.tutorial_button.get_node_or_null(app.tutorial_button.focus_next) == app.start_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.save_recovery_button, "invalid-save navigation should retain the tutorial, both regions, and recovery while collapsing the replay shortcut")
 	app._continue_game()
 	await process_frame
 	_expect(app.save_recovery_button.has_focus(), "a failed Continue attempt should focus the newly available recovery action")
@@ -114,7 +117,7 @@ func _run() -> void:
 	_expect(app.confirmation_view.visible and app.confirmation_confirm_button.text == "REMOVE SAVE" and app.confirmation_cancel_button.text == "KEEP FILE" and app.confirmation_body_label.text.contains("cannot be loaded by this build"), "invalid-save removal should require an accurate, specific confirmation")
 	app.confirmation_confirm_button.pressed.emit()
 	await process_frame
-	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.save_recovery_button.visible and app.start_button.has_focus(), "confirmed recovery should remove the invalid save and restore the primary start action")
+	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)) and not app.save_recovery_button.visible and app.tutorial_button.has_focus(), "confirmed recovery should remove the invalid save and restore Learn to Command as the primary action")
 	var incompatible_save := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	incompatible_save.store_string(JSON.stringify({"save_version": 999}))
 	incompatible_save.close()
@@ -241,7 +244,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.title_return_notice_kind == "discarded" and app.title_return_notice_label.text.contains("UNSAVED ASHGATE LOWLANDS CHANGES DISCARDED") and app.title_return_notice_label.text.contains("No Continue checkpoint was created"), "leaving a never-saved run should state plainly that no resumable checkpoint exists")
-	_expect(not app.continue_button.visible and app.start_button.has_focus(), "an unsaved no-checkpoint return should preserve the normal first-run title action and focus")
+	_expect(not app.continue_button.visible and app.tutorial_button.has_focus(), "an unsaved no-checkpoint return should preserve the tutorial-first title action and focus")
 
 	app.guide_button.pressed.emit()
 	await process_frame
@@ -261,7 +264,8 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the Field Guide should open Flooded Veyru directly as a separate chapter at Lantern Quay")
-	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across controls, map, and combat presentation")
+	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled and app.game_view.settlement_hub.high_contrast_enabled and app.game_view.journey_transition.high_contrast_enabled and app.game_view.road_contact.high_contrast_enabled and app.game_view.roadside_event.high_contrast_enabled and app.game_view.journey_arrival.high_contrast_enabled and app.game_view.debrief_panel.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across settlement, travel, map, contact, roadside-event, arrival, and debrief presentation")
+	_expect(app.game_view.reduced_motion_enabled and app.game_view.journey_transition.reduced_motion and app.game_view.journey_transition.march_canvas.reduced_motion and app.game_view.road_contact.reduced_motion and app.game_view.road_contact.contact_canvas.reduced_motion, "a newly opened playable stage should apply the persisted reduced-motion preference to road and contact animation")
 	_expect(app.game_view.controller_layout_id == "east_confirm" and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.focus_chassis_button.text.contains("ARROWS + B") and app.game_view.focus_chassis_button.tooltip_text.contains("B / Enter") and app.game_view.fortress_panel.controller_cancel_label == "A", "a newly opened playable stage should inherit the remapped face buttons in both its visible edit action and detailed instructions")
 	var controller_copy_phase: String = app.game_view.state.phase
 	app.game_view.state.phase = "results"
@@ -269,9 +273,10 @@ func _run() -> void:
 	_expect(app.pause_hint_label.text == "A / Esc returns to debrief", "changing controller layout should preserve the debrief-specific pause return hint")
 	app.game_view.state.phase = controller_copy_phase
 	app._refresh_controller_copy()
-	var stage_audio_callback := Callable(app.interface_audio, "_on_button_pressed").bind(app.game_view.contract_accept_button)
-	_expect(app.game_view.contract_accept_button.pressed.is_connected(stage_audio_callback), "buttons created inside the playable stage should inherit the same interface feedback as title controls")
-	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.contract_accept_button.has_focus(), "Veyru should skip the Ashgate briefing and focus its medicine decision")
+	var veyru_assignment_button: Button = app.game_view.settlement_hub.station_buttons["assignment_board"]
+	var stage_audio_callback := Callable(app.interface_audio, "_on_button_pressed").bind(veyru_assignment_button)
+	_expect(veyru_assignment_button.pressed.is_connected(stage_audio_callback), "buttons created inside the settlement stage should inherit the same interface feedback as title controls")
+	_expect(not app.game_view.onboarding_overlay.visible and app.game_view.settlement_hub.visible and veyru_assignment_button.has_focus() and app.game_view.settlement_hub.detail_body.text.contains("Parts Crate"), "Veyru should skip the Ashgate briefing and focus its medicine assignment in the bazaar")
 	app._request_application_close()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.pending_confirmation == "quit_save" and app.confirmation_title_label.text == "Save before quitting?" and app.confirmation_confirm_button.text == "SAVE & QUIT", "closing a fresh unsaved stage should stop at an explicit local save boundary")
@@ -280,7 +285,7 @@ func _run() -> void:
 	_expect(int(quit_probe["count"]) == 1 and app.confirmation_view.visible and app.pending_confirmation == "quit_save", "a second close request should not bypass or dismiss an open save-before-quit confirmation")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
-	_expect(not app.confirmation_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and app.game_view.contract_accept_button.has_focus(), "cancelling a window close should restore the exact live-stage focus and processing state")
+	_expect(not app.confirmation_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_INHERIT and veyru_assignment_button.has_focus(), "cancelling a window close should restore the exact live-stage focus and processing state")
 	_expect(app.game_view.contract_title.text == "LANTERN QUAY CONTRACT" and app.game_view.contract_accept_button.text.contains("PARTS CRATE") and app.game_view.campaign_map.button_for("pump_gallery") != null, "the Veyru stage should expose its named carrier and regional map immediately")
 	var veyru_opening_record: String = app.game_view.current_run_record_text()
 	_expect(app.game_view.current_run_code() == "VEY-2204" and veyru_opening_record.contains("FLOODED VEYRU · DAY 1 · Lantern Quay") and veyru_opening_record.contains("sealed medicines"), "Veyru should expose a distinct reproducible run identity and chapter-aware March Record")
@@ -304,7 +309,9 @@ func _run() -> void:
 	app.confirmation_cancel_button.pressed.emit()
 	app.resume_button.pressed.emit()
 	await process_frame
-	app.game_view.contract_accept_button.pressed.emit()
+	app.game_view.settlement_hub.station_buttons["assignment_board"].pressed.emit()
+	await process_frame
+	app.game_view.settlement_hub.primary_action_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.state.veyru_contract_status == "accepted" and app.game_view.campaign_path_label.text.contains("Carrier: Parts Crate") and app.game_view.campaign_map.status_for("pump_gallery") == "available", "accepting the medicine contract through the UI should record its carrier and open the Veyru roads")
 	app.game_view.state.phase = "results"
@@ -313,21 +320,27 @@ func _run() -> void:
 	app.game_view.state.final_result = "archive_scarred"
 	app.game_view.state.campaign_decisions["archive_broadcast"] = "broadcast_archive"
 	app.game_view._refresh_ui()
-	_expect(app.game_view.results_record_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.game_view.results_record_label.text.contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief should state the regional development and its later route effect")
+	_expect(app.game_view._result_record_text().contains("PUBLIC ARCHIVE SIGNAL") and app.game_view._result_record_text().contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief record should preserve the regional development and its later route effect")
+	app.text_scale_percent = 110
+	app._apply_text_scale()
+	await process_frame
+	_expect(app.game_view.debrief_panel.commitments_label.get_theme_font_size("normal_font_size") == 13 and app.game_view.debrief_panel.title_button.get_global_rect().end.y <= app.game_view.debrief_panel.get_global_rect().end.y + 1.0, "the terminal debrief should scale its dense record copy and keep all primary actions visible at 110% text")
+	app.text_scale_percent = 100
+	app._apply_text_scale()
 	app._on_checkpoint_reached("encounter_advanced")
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.has_development("veyru_public_archive_signal") and app.campaign_progress.result_for_region("flooded_veyru") == "archive_scarred", "surviving after the public broadcast should persist the regional development and Veyru result outside the replaceable Continue slot")
 	app._capture_title_return_notice()
 	_expect(app.title_return_notice_kind == "saved" and app.title_return_notice.contains("RESULT SAVED") and app.title_return_notice.contains("Flooded Veyru debrief remains available under Continue"), "a saved terminal state should produce a debrief-specific title receipt rather than a generic checkpoint message")
 	app._clear_title_return_notice()
-	_expect(app.game_view.march_on_button.text == "MARCH ON · ASHGATE LOWLANDS", "the Veyru debrief should offer the other unfinished chapter as its primary onward path")
-	app.game_view.march_on_button.pressed.emit()
+	_expect(app.game_view.debrief_panel.march_on_button.text == "MARCH ON · ASHGATE LOWLANDS", "the Veyru debrief should offer the other unfinished chapter as its primary onward path")
+	app.game_view.debrief_panel.march_on_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Continue to Ashgate Lowlands?" and app.confirmation_confirm_button.text == "MARCH ON" and app.confirmation_cancel_button.text == "STAY AT DEBRIEF", "March On should use a chapter-aware, result-preserving confirmation")
 	_expect(app.confirmation_body_label.text.contains("result is recorded in the March Charter") and app.confirmation_body_label.text.contains("Continue keeps its current checkpoint"), "March On confirmation should distinguish durable Charter history from the replaceable Continue slot")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
-	_expect(not app.confirmation_view.visible and app.game_view.march_on_button.has_focus() and app.game_view.state.phase == "results", "cancelling March On should restore the intact debrief and onward action")
-	app.game_view.play_again_button.pressed.emit()
+	_expect(not app.confirmation_view.visible and app.game_view.debrief_panel.march_on_button.has_focus() and app.game_view.state.phase == "results", "cancelling March On should restore the intact debrief and onward action")
+	app.game_view.debrief_panel.replay_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Replay Flooded Veyru?" and app.confirmation_body_label.text.contains("fresh Flooded Veyru"), "Veyru replay should not describe the replacement run as Ashgate")
 	app.confirmation_confirm_button.pressed.emit()
@@ -368,27 +381,29 @@ func _run() -> void:
 	_expect(not app.menu_view.visible and app.game_view != null, "Quick Start should open the playable Ashgate stage")
 	_expect(not app.game_view.onboarding_overlay.visible, "Quick Start should skip the briefing for repeated flow tests")
 	_expect(not FileAccess.file_exists(ProjectSettings.globalize_path(ONBOARDING_PATH)), "Quick Start should not permanently mark the briefing complete")
-	_expect(app.game_view.contract_accept_button.has_focus(), "Quick Start should focus the first required Ashgate decision")
-	_expect(app.game_view.pause_button.visible and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.pause_button.focus_mode == Control.FOCUS_NONE, "the live stage should expose a pointer-active Pause action without inserting it into keyboard or controller focus")
-	app.game_view.contract_decline_button.grab_focus()
-	app.game_view.pause_button.pressed.emit()
+	var ashgate_assignment_button: Button = app.game_view.settlement_hub.station_buttons["assignment_board"]
+	var ashgate_hiring_button: Button = app.game_view.settlement_hub.station_buttons["hiring_post"]
+	_expect(app.game_view.settlement_hub.visible and ashgate_assignment_button.has_focus(), "Quick Start should focus the first required Ashgate assignment")
+	_expect(app.game_view.settlement_hub.pause_button.visible and app.game_view.settlement_hub.pause_button.focus_mode == Control.FOCUS_NONE, "the settlement should expose a pointer-active Pause action without inserting it into keyboard or controller focus")
+	ashgate_hiring_button.grab_focus()
+	app.game_view.settlement_hub.pause_button.pressed.emit()
 	await process_frame
 	_expect(app.pause_view.visible and app.game_view.process_mode == Node.PROCESS_MODE_DISABLED, "the visible stage pause action should open and suspend the march")
-	_expect(app.paused_stage_focus == app.game_view.contract_decline_button, "opening Pause through its pointer action should retain the actual stage control as the Resume Here target")
+	_expect(app.paused_stage_focus == ashgate_hiring_button, "opening Pause through its pointer action should retain the actual settlement station as the Resume Here target")
 	_expect(app.pause_save_status_label.text.contains("No decision checkpoint yet") and app.pause_save_status_label.text.contains("Save March"), "pause should explain how a fresh run receives its first checkpoint instead of only reporting that it is unsaved")
 	_expect(app.resume_button.text == "RESUME HERE" and app.resume_button.tooltip_text.contains("exact stage control") and app.pause_order_button.text == "GO TO CONTRACT" and app.pause_order_button.tooltip_text.contains("without activating it"), "Pause should separate exact focus restoration from returning to the required contract")
 	app.resume_button.pressed.emit()
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.contract_decline_button.has_focus(), "Resume Here should restore the stage control retained across pointer-opened Pause")
-	app.game_view.pause_button.pressed.emit()
+	_expect(not app.pause_view.visible and ashgate_hiring_button.has_focus(), "Resume Here should restore the settlement station retained across pointer-opened Pause")
+	app.game_view.settlement_hub.pause_button.pressed.emit()
 	await process_frame
 	var pause_order_state: Dictionary = app.game_view.state.serialize()
 	app.pause_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.contract_accept_button.has_focus(), "Go to Contract from Pause should resume at the first required action rather than the previously focused decline action")
+	_expect(not app.pause_view.visible and ashgate_assignment_button.has_focus(), "Go to Contract from Pause should resume at the first required assignment rather than the previously focused station")
 	_expect(app._saved_values_match(pause_order_state, app.game_view.state.serialize()), "returning to the current order from Pause should not activate or mutate it")
-	app.game_view.contract_decline_button.grab_focus()
+	ashgate_hiring_button.grab_focus()
 	app._show_pause()
 	await process_frame
 	app.restart_button.pressed.emit()
@@ -398,20 +413,27 @@ func _run() -> void:
 	await process_frame
 	app.resume_button.pressed.emit()
 	await process_frame
-	_expect(app.game_view.contract_decline_button.has_focus(), "resuming should restore the stage control that had focus")
+	_expect(ashgate_hiring_button.has_focus(), "resuming should restore the settlement station that had focus")
 	app.text_scale_percent = 110
 	app._apply_text_scale()
 	await process_frame
-	app.game_view.contract_decline_button.pressed.emit()
+	ashgate_assignment_button.pressed.emit()
+	await process_frame
+	app.game_view.settlement_hub.secondary_action_button.pressed.emit()
 	await process_frame
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(SAVE_PATH)), "confirming the first campaign decision should create an automatic checkpoint")
 	_expect(app.last_checkpoint_reason == "contract_answered", "the application should report the latest automatic checkpoint reason")
 	_expect(app.checkpoint_toast.visible and app.checkpoint_toast_label.text == "SAVED · CONTRACT DECISION", "a successful automatic checkpoint should produce a compact player-facing notice")
+	app.game_view.settlement_hub.station_buttons["departure_gate"].pressed.emit()
+	await process_frame
+	app.game_view.settlement_hub.primary_action_button.pressed.emit()
+	await process_frame
+	await process_frame
 	app.game_view.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
-	_expect(app.game_view.pause_button.text.contains("ROUTE REVIEW"), "the toast-clearance regression should exercise the widest contextual Pause label")
+	_expect(app.game_view.journey_planner.pause_button.text.contains("ROUTE REVIEW"), "the toast-clearance regression should exercise the widest contextual Pause label")
 	var toast_rect: Rect2 = app.checkpoint_toast.get_global_rect()
-	var stage_pause_rect: Rect2 = app.game_view.pause_button.get_global_rect()
+	var stage_pause_rect: Rect2 = app.game_view.journey_planner.pause_button.get_global_rect()
 	_expect(not toast_rect.intersects(stage_pause_rect) and toast_rect.end.x <= stage_pause_rect.position.x - 8.0, "checkpoint notices should retain a visible gap before the persistent Pause control at 110% text")
 	app.game_view.campaign_cancel_button.pressed.emit()
 	await process_frame
@@ -459,10 +481,10 @@ func _run() -> void:
 	_expect(not app.menu_view.visible and app.game_view != null, "Start Game should open the playable Ashgate stage")
 	_expect(app.game_view.state.phase == "refit", "a new stage should begin at the Ashgate refit")
 	_expect(app.game_view.campaign_map.visible, "the opening stage should expose the playable campaign map")
-	_expect(app.game_view.onboarding_overlay.visible, "the guided Start Game path should open the Marchmaster briefing")
-	_expect(app.game_view.onboarding_next_button.has_focus(), "the guided path should focus the briefing's next action")
+	_expect(not app.game_view.onboarding_overlay.visible, "the full Ashgate journey should no longer duplicate the separate interactive tutorial")
+	_expect(app.game_view.get_viewport().gui_get_focus_owner() != app.game_view.onboarding_next_button, "the full journey should focus its current in-world order rather than a briefing card")
 	_expect(not app.game_view.save_button.visible and not app.game_view.load_button.visible, "pause-owned persistence controls should not be duplicated in the live stage")
-	_expect(app.game_view.onboarding_skip_button.text == "SKIP FOR THIS RUN" and app.game_view.onboarding_progress_label.text.contains("A / Esc closes for this run"), "the first-run briefing should describe Skip and the active cancel button as temporary choices")
+	_expect(app.game_view.onboarding_skip_button.text.to_upper().contains("BRIEFING"), "the optional field briefing should retain an explicitly labelled close or skip action")
 	app.text_scale_percent = 110
 	app._apply_text_scale()
 	_expect(app.game_view.theme.default_font_size == 15 and app.game_view.phase_badge.get_theme_font_size("font_size") == 13, "the selected text size should apply to a newly created playable stage and its explicit status text")
@@ -488,7 +510,7 @@ func _run() -> void:
 	_expect(app.pause_notes_button.get_node_or_null(app.pause_notes_button.focus_neighbor_bottom) == app.restart_button, "pause navigation should retain local playtest notes before destructive session controls")
 	_expect(app.title_button.get_node_or_null(app.title_button.focus_next) == app.resume_button and app.resume_button.get_node_or_null(app.resume_button.focus_previous) == app.title_button and app.resume_button.get_node_or_null(app.resume_button.focus_next) == app.pause_order_button, "the pause menu should trap Tab navigation inside its visible actions and include the order return")
 	_expect(app.pause_summary_label.text.contains("Ashgate Depot") and app.pause_summary_label.text.contains("0/5") and app.pause_summary_label.text.contains("RUN ASH-1107"), "the pause menu should summarize the current run and expose its reproducible identity")
-	_expect(app.pause_build_label.text.begins_with("PLAYTEST BUILD") and app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should preserve the same labelled build identity as the title")
+	_expect(app.pause_build_label.text.begins_with("BUILD") and app.pause_build_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the pause menu should retain a compact build identity without debug-facing language")
 	var state_before_record: Dictionary = app.game_view.state.serialize()
 	app.pause_record_button.pressed.emit()
 	await process_frame
@@ -638,9 +660,9 @@ func _run() -> void:
 	_expect(app.title_return_notice_panel.visible and app.title_return_notice_kind == "saved" and app.title_return_notice_label.text.contains("CHECKPOINT SAVED") and app.title_return_notice_label.text.contains("Ashgate Lowlands · Day 1 at Ashgate Depot"), "Save & Return should provide the same explicit title checkpoint receipt as a safe return")
 	_expect(not app.continue_button.disabled, "Save & Return should enable Continue on the title menu")
 	_expect(app.save_status_label.text.contains("Next · Answer convoy contract") and app.save_status_label.text.contains("Fuel 6"), "the active checkpoint summary should identify the exact decision waiting after Continue without losing resource context")
-	_expect(app.continue_button.get_index() < app.start_button.get_index() and app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.start_button, "a valid save should place Continue first visually and route downward into fresh-start actions")
-	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.start_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button and app.veyru_start_button.get_node_or_null(app.veyru_start_button.focus_next) == app.guide_button, "save-aware Tab navigation should follow Continue, guided Ashgate, Veyru, then utility actions")
-	_expect(app.start_button.text.begins_with("NEW ASHGATE") and not app.quick_start_button.visible, "existing progress should keep one clear Ashgate start on the title instead of crowding out checkpoint details")
+	_expect(app.continue_button.get_index() < app.tutorial_button.get_index() and app.continue_button.get_node_or_null(app.continue_button.focus_neighbor_bottom) == app.tutorial_button, "a valid save should place Continue first visually and route downward into the tutorial and fresh journeys")
+	_expect(app.continue_button.get_node_or_null(app.continue_button.focus_next) == app.tutorial_button and app.tutorial_button.get_node_or_null(app.tutorial_button.focus_next) == app.start_button and app.start_button.get_node_or_null(app.start_button.focus_next) == app.veyru_start_button, "save-aware Tab navigation should follow Continue, tutorial, Ashgate, then Veyru")
+	_expect(app.start_button.text.begins_with("NEW JOURNEY") and not app.quick_start_button.visible, "existing progress should keep one clear Ashgate journey beside the separate tutorial")
 	_expect(app.continue_button.has_focus(), "a valid save should make Continue the default title action")
 	_expect(app.continue_button.text.contains("DAY 1") and app.continue_button.text.contains("ASHGATE DEPOT"), "Continue should identify the saved day and location before loading")
 	_expect(app.save_status_label.text.contains("Watch") and app.save_status_label.text.contains("Refit") and app.save_status_label.text.contains("0/5"), "the title should identify checkpoint condition, phase, and encounter progress")
@@ -781,7 +803,7 @@ func _run() -> void:
 	completed_save.store_string(JSON.stringify(completed_payload))
 	completed_save.close()
 	app._refresh_title_state()
-	_expect(app.start_button.text == "PLAY ASHGATE · GUIDED BRIEFING" and app.quick_start_button.text == "REPLAY ASHGATE · SKIP BRIEFING", "a completed checkpoint should offer Ashgate replay actions instead of implying an unfinished new game")
+	_expect(app.start_button.text == "PLAY AGAIN · ASHGATE LOWLANDS" and app.quick_start_button.text == "REPLAY ASHGATE · SKIP BRIEFING", "a completed checkpoint should offer an Ashgate replay action without conflating it with the tutorial")
 	_expect(app.guide_quick_start_button.text == "START NEW · ASHGATE" and app.guide_veyru_start_button.text == "REPLAY · FLOODED VEYRU", "the Field Guide should derive replay vocabulary from each chapter's March Charter result rather than the unrelated Continue result")
 	app.start_button.pressed.emit()
 	await process_frame
@@ -857,8 +879,8 @@ func _run() -> void:
 	app.pause_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.results_inspect_button.has_focus(), "Go to Chassis Review should return from debrief options at the first interpretation action")
-	app.game_view.results_inspect_button.pressed.emit()
+	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.debrief_panel.inspect_button.has_focus(), "Go to Chassis Review should return from debrief options at the first interpretation action")
+	app.game_view.debrief_panel.inspect_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.fortress_panel.has_focus() and app.game_view.results_chassis_reviewed, "entering final chassis review should advance the debrief's transient next-action guidance")
 	app._show_pause()
@@ -867,7 +889,7 @@ func _run() -> void:
 	app.pause_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from reviewed debrief options at the required result action")
+	_expect(not app.pause_view.visible and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from reviewed chassis inspection at the required result action")
 	_expect(app._saved_values_match(paused_result_state, app.game_view.state.serialize()), "chassis review and Go to Feedback should preserve the completed result without opening the form")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
@@ -876,7 +898,7 @@ func _run() -> void:
 	_expect(app.game_view.state.phase == "results", "opening replay confirmation should preserve the completed run")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
-	_expect(not app.confirmation_view.visible and app.game_view.state.phase == "results" and app.game_view.play_again_button.has_focus(), "cancelling replay should return to the intact result action")
+	_expect(not app.confirmation_view.visible and app.game_view.state.phase == "results" and app.game_view.play_again_button.has_focus(), "cancelling replay from chassis review should return to its visible result action")
 	_expect(app.game_view.save_run(true), "the replay confirmation test should be able to persist the completed result")
 	app._show_pause()
 	await process_frame
@@ -907,8 +929,8 @@ func _run() -> void:
 	app._on_checkpoint_reached("encounter_advanced")
 	app.game_view._refresh_ui()
 	_expect(app.campaign_progress.survived_region_count() == 2 and app.campaign_progress.result_for_region("ashgate_lowlands") == "scarred_march", "surviving both chapters should complete the bounded March Charter")
-	_expect(app.game_view.march_on_button.text == "REVISIT · FLOODED VEYRU", "after both regions survive, the debrief should frame March On as a deliberate revisit")
-	app.game_view.march_on_button.pressed.emit()
+	_expect(app.game_view.debrief_panel.march_on_button.text == "REVISIT · FLOODED VEYRU", "after both regions survive, the debrief should frame March On as a deliberate revisit")
+	app.game_view.debrief_panel.march_on_button.pressed.emit()
 	await process_frame
 	app.confirmation_confirm_button.pressed.emit()
 	await process_frame
@@ -982,7 +1004,7 @@ func _run() -> void:
 	_expect(FileAccess.file_exists(FEEDBACK_PRESERVE_PATH) and FileAccess.get_file_as_string(FEEDBACK_PRESERVE_PATH) == "tester-owned export", "clean-start reset should preserve previously exported playtest reports exactly")
 	_expect(not app.fullscreen_enabled and app.text_scale_percent == 100 and not app.high_contrast_enabled and app.title_veil.color.a < 0.5 and app.controller_layout_id == "south_confirm" and InputMap.event_is_action(_joy_button_for_test(JOY_BUTTON_A), "ui_accept") and InputMap.event_is_action(_joy_button_for_test(JOY_BUTTON_B), "ui_cancel") and not app.reduced_motion and app.interface_audio_percent == 70 and app.interface_audio.volume_percent == 70 and app.autosave_enabled and app.theme.default_font_size == 16, "clean-start reset should immediately restore every device preference default")
 	_expect(app.campaign_progress.developments.is_empty() and app.campaign_progress.region_results.is_empty() and app.title_charter_label.text.contains("0/2 REGIONS SURVIVED"), "clean-start reset should rebuild an empty in-memory March Charter")
-	_expect(not app.continue_button.visible and app.quick_start_button.visible and app.start_button.text.contains("GUIDED FIRST RUN"), "clean-start reset should immediately restore the first-launch title flow")
+	_expect(not app.continue_button.visible and not app.quick_start_button.visible and app.start_button.text.contains("ASHGATE LOWLANDS") and not app.tutorial_button.disabled, "clean-start reset should immediately restore the tutorial-first launch flow")
 	_expect(app.reset_playtest_button.disabled and app.settings_status_label.text.contains("Exported feedback reports were kept") and app.settings_close_button.has_focus(), "successful clean-start reset should disable itself, report preservation, and focus an enabled return action")
 
 	_remove_local_test_files()

@@ -444,6 +444,74 @@ func start_campaign() -> Dictionary:
 	log.append("The Ashgate Lowlands map is open. Choose whether to guard Morrowline's parts convoy before taking the first road.")
 	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
 
+func start_tutorial() -> Dictionary:
+	campaign_active = false
+	campaign_region_id = "ashgate_lowlands"
+	campaign_encounters_completed = 0
+	campaign_path = ["ashgate_depot"]
+	campaign_target_node = ""
+	campaign_last_safe_node = "ashgate_depot"
+	campaign_pressure = 0
+	campaign_retreats = 0
+	campaign_event_pending = ""
+	campaign_decisions.clear()
+	guard_contract_status = "unoffered"
+	veyru_contract_status = "unoffered"
+	settlement_trust = 0
+	specialist_id = ""
+	journey_node = "ashgate_depot"
+	journey_destination = ""
+	journey_route = ""
+	journey_leg = 0
+	current_location = "ashgate_depot"
+	phase = "refit"
+	fuel = 5
+	money = 24
+	hull_condition = 10
+	settlement_actions_remaining = 1
+	journey_complete = false
+	run_complete = false
+	final_result = ""
+	encounter_active = false
+	encounter_outcome = ""
+	modules.clear()
+	stored_modules.clear()
+	log.clear()
+	place_module("coal_cell", Vector2i(0, 1))
+	place_module("generator_core", Vector2i(2, 0))
+	place_module("ammunition_lift", Vector2i(4, 0))
+	place_module("crew_quarters", Vector2i(2, 2))
+	place_module("field_workshop", Vector2i(2, 3))
+	stored_modules.append(module_instance("steam_lance_engine", Vector2i(-1, -1)))
+	stored_modules.append(module_instance("repeater_gun", Vector2i(-1, -1), true))
+	_recalculate()
+	log.clear()
+	log.append("Ashgate Muster Yard opens the unfinished fortress for its first command lesson.")
+	return {"ok": true, "summary": summary(), "stored_modules": stored_modules.duplicate(true)}
+
+func begin_tutorial_journey(doctrine: String = "protect_cargo") -> Dictionary:
+	if encounter_active:
+		return {"ok": false, "reason": "an encounter is already active"}
+	if phase != "refit" or current_location != "ashgate_depot":
+		return {"ok": false, "reason": "the training road begins at Ashgate Muster Yard"}
+	var travel_result := travel("safe_road", doctrine)
+	if not bool(travel_result.get("ok", false)):
+		return travel_result
+	journey_route = "safe_road"
+	journey_destination = "morrowline_camp"
+	journey_node = "rill_crossing"
+	current_location = journey_node
+	journey_leg = 1
+	phase = "battle"
+	command_points = 2
+	encounter_target_doctrine = doctrine
+	_configure_encounter(["road_raiders"], "Muster Road", "A controlled contact waits between the muster yard and its recovery siding.")
+	if not encounter_enemies.is_empty():
+		encounter_enemies[0]["hp"] = 7
+		encounter_enemies[0]["max_hp"] = 7
+		encounter_enemies[0]["damage_bonus"] = 1
+	return {"ok": true, "route": "safe_road", "forecast": encounter_forecast(), "encounter": encounter_summary(), "summary": summary()}
+
 func start_flooded_veyru() -> Dictionary:
 	campaign_active = true
 	campaign_region_id = "flooded_veyru"
@@ -924,7 +992,10 @@ func occurrence_debrief_lines() -> Array[String]:
 		var event_id := String(entry.get("event_id", ""))
 		var choice_id := String(entry.get("choice_id", ""))
 		var title := String(OCCURRENCE_DEFS.get(event_id, {}).get("title", event_id.replace("_", " ").capitalize()))
-		lines.append("Road occurrence — %s: %s" % [title, choice_id.replace("_", " ").capitalize()])
+		var outcome := choice_id.replace("_", " ").capitalize()
+		if event_id == "the_last_dry_room":
+			outcome = "families sheltered; repair stock exposed" if choice_id == "shelter_in_dry_room" else "repair stock preserved; families turned away"
+		lines.append("Road occurrence — %s: %s" % [title, outcome])
 	return lines
 
 func campaign_event_details() -> Dictionary:
@@ -983,9 +1054,15 @@ func campaign_event_details() -> Dictionary:
 		"the_last_dry_room":
 			var weakest_id := _weakest_damaged_module_id()
 			var weakest_name := String(module_definition(weakest_id).get("name", "damaged system"))
+			var weakest_index := _module_index_by_id(weakest_id)
+			var weakest_before := int(modules[weakest_index].get("durability", 0)) if weakest_index >= 0 else 0
+			var weakest_maximum := int(module_definition(weakest_id).get("durability", weakest_before))
+			var parts_id := _operational_module_id_with_tag("parts")
+			var parts_index := _module_index_by_id(parts_id)
+			var parts_before := int(modules[parts_index].get("durability", 0)) if parts_index >= 0 else 0
 			return {"id": "the_last_dry_room", "title": "The Last Dry Room", "body": "One sealed compartment can keep the repair stock dry or shelter the families riding beside it. The same floor cannot protect both.", "choices": [
-				{"id": "shelter_in_dry_room", "label": "Give the room to the families", "effect": "Trust +2 · Shelter +1 · Parts Crate -1 durability", "enabled": true, "reason": ""},
-				{"id": "preserve_dry_parts", "label": "Keep the parts dry and repair %s" % weakest_name, "effect": "Weakest system +1 durability · Trust -1", "enabled": not weakest_id.is_empty(), "reason": "No installed system is damaged" if weakest_id.is_empty() else ""}
+				{"id": "shelter_in_dry_room", "label": "Give the room to the families", "effect": "Trust %d→%d · Shelter +1 · Parts Crate %d→%d" % [settlement_trust, settlement_trust + 2, parts_before, maxi(0, parts_before - 1)], "enabled": true, "reason": ""},
+				{"id": "preserve_dry_parts", "label": "Keep the parts dry and repair %s" % weakest_name, "effect": "%s %d→%d durability · Trust %d→%d" % [weakest_name, weakest_before, mini(weakest_maximum, weakest_before + 1), settlement_trust, settlement_trust - 1], "enabled": not weakest_id.is_empty(), "reason": "No installed system is damaged" if weakest_id.is_empty() else ""}
 			]}
 		"the_miller_with_a_broken_wheel":
 			return {"id": "the_miller_with_a_broken_wheel", "title": "The Miller With a Broken Wheel", "body": "A miller offers sealed fuel tins if the fortress lends its bench and fitter. The repair is small; the stopped column is not.", "choices": [
@@ -1265,7 +1342,6 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 	journey_destination = node_id
 	journey_route = node_id
 	journey_node = node_id
-	current_location = node_id
 	journey_leg = campaign_encounters_completed + 1
 	command_points = 2
 	power_priority = "balanced"
@@ -3011,6 +3087,8 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		return _campaign_recover_from_failure()
 
 	campaign_encounters_completed += 1
+	current_location = arrived_node
+	journey_node = arrived_node
 	if arrived_node not in campaign_path:
 		campaign_path.append(arrived_node)
 	campaign_last_safe_node = arrived_node
@@ -3080,6 +3158,8 @@ func _finish_veyru_encounter(engine_alive: bool) -> Dictionary:
 		return _campaign_recover_from_failure()
 
 	campaign_encounters_completed += 1
+	current_location = arrived_node
+	journey_node = arrived_node
 	if arrived_node not in campaign_path:
 		campaign_path.append(arrived_node)
 	if arrived_node == "veyru_evacuation_camp":
