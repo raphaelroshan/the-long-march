@@ -444,6 +444,74 @@ func start_campaign() -> Dictionary:
 	log.append("The Ashgate Lowlands map is open. Choose whether to guard Morrowline's parts convoy before taking the first road.")
 	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
 
+func start_tutorial() -> Dictionary:
+	campaign_active = false
+	campaign_region_id = "ashgate_lowlands"
+	campaign_encounters_completed = 0
+	campaign_path = ["ashgate_depot"]
+	campaign_target_node = ""
+	campaign_last_safe_node = "ashgate_depot"
+	campaign_pressure = 0
+	campaign_retreats = 0
+	campaign_event_pending = ""
+	campaign_decisions.clear()
+	guard_contract_status = "unoffered"
+	veyru_contract_status = "unoffered"
+	settlement_trust = 0
+	specialist_id = ""
+	journey_node = "ashgate_depot"
+	journey_destination = ""
+	journey_route = ""
+	journey_leg = 0
+	current_location = "ashgate_depot"
+	phase = "refit"
+	fuel = 5
+	money = 24
+	hull_condition = 10
+	settlement_actions_remaining = 1
+	journey_complete = false
+	run_complete = false
+	final_result = ""
+	encounter_active = false
+	encounter_outcome = ""
+	modules.clear()
+	stored_modules.clear()
+	log.clear()
+	place_module("coal_cell", Vector2i(0, 1))
+	place_module("generator_core", Vector2i(2, 0))
+	place_module("ammunition_lift", Vector2i(4, 0))
+	place_module("crew_quarters", Vector2i(2, 2))
+	place_module("field_workshop", Vector2i(2, 3))
+	stored_modules.append(module_instance("steam_lance_engine", Vector2i(-1, -1)))
+	stored_modules.append(module_instance("repeater_gun", Vector2i(-1, -1), true))
+	_recalculate()
+	log.clear()
+	log.append("Ashgate Muster Yard opens the unfinished fortress for its first command lesson.")
+	return {"ok": true, "summary": summary(), "stored_modules": stored_modules.duplicate(true)}
+
+func begin_tutorial_journey(doctrine: String = "protect_cargo") -> Dictionary:
+	if encounter_active:
+		return {"ok": false, "reason": "an encounter is already active"}
+	if phase != "refit" or current_location != "ashgate_depot":
+		return {"ok": false, "reason": "the training road begins at Ashgate Muster Yard"}
+	var travel_result := travel("safe_road", doctrine)
+	if not bool(travel_result.get("ok", false)):
+		return travel_result
+	journey_route = "safe_road"
+	journey_destination = "morrowline_camp"
+	journey_node = "rill_crossing"
+	current_location = journey_node
+	journey_leg = 1
+	phase = "battle"
+	command_points = 2
+	encounter_target_doctrine = doctrine
+	_configure_encounter(["road_raiders"], "Muster Road", "A controlled contact waits between the muster yard and its recovery siding.")
+	if not encounter_enemies.is_empty():
+		encounter_enemies[0]["hp"] = 7
+		encounter_enemies[0]["max_hp"] = 7
+		encounter_enemies[0]["damage_bonus"] = 1
+	return {"ok": true, "route": "safe_road", "forecast": encounter_forecast(), "encounter": encounter_summary(), "summary": summary()}
+
 func start_flooded_veyru() -> Dictionary:
 	campaign_active = true
 	campaign_region_id = "flooded_veyru"

@@ -4,6 +4,7 @@ extends Control
 signal application_quit_requested
 
 const GAME_SCENE = preload("res://scenes/Main.tscn")
+const TUTORIAL_INTRO_SCENE = preload("res://scenes/tutorial/TutorialIntro.tscn")
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const CampaignProgress = preload("res://src/support/campaign_progress.gd")
 const InterfaceAudio = preload("res://src/support/interface_audio.gd")
@@ -12,6 +13,9 @@ const ControllerLayout = preload("res://src/support/controller_layout.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
+const TUTORIAL_SAVE_PATH := "user://the_long_march_tutorial.save"
+const TUTORIAL_BACKUP_PATH := "user://the_long_march_tutorial.backup.save"
+const TUTORIAL_COMPLETE_PATH := "user://the_long_march_tutorial.complete"
 const SETTINGS_PATH := "user://the_long_march_settings.cfg"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const PROGRESS_PATH := "user://the_long_march_progress.json"
@@ -35,11 +39,26 @@ const CHECKPOINT_LABELS := {
 	"settlement_service": "Recovery action",
 	"intervention_used": "Emergency order",
 	"new_run_started": "New march",
+	"tutorial_lesson_completed": "Lesson complete",
 	"manual save": "Manual save",
 	"loaded save": "Loaded save"
 }
+const TUTORIAL_LESSON_LABELS := {
+	"place_engine": "Install the engine",
+	"place_weapon": "Install the weapon",
+	"inspect_machine": "Trace the dependency chains",
+	"plan_road": "Plan the training road",
+	"travel": "Continue through travel",
+	"read_contact": "Read the contact dossier",
+	"respond": "Advance and issue an order",
+	"damage": "Inspect battle damage",
+	"victory": "Secure the road",
+	"repair": "Repair the damaged system",
+	"complete": "Review certification"
+}
 
 var menu_view: Control
+var tutorial_intro: Control
 var title_veil: ColorRect
 var guide_view: Control
 var settings_view: Control
@@ -53,6 +72,7 @@ var confirmation_view: Control
 var checkpoint_toast: PanelContainer
 var checkpoint_toast_label: Label
 var game_view: Control
+var tutorial_button: Button
 var start_button: Button
 var quick_start_button: Button
 var veyru_start_button: Button
@@ -144,8 +164,8 @@ var checkpoint_toast_tween: Tween
 var campaign_progress: CampaignProgress
 var campaign_progress_error: String = ""
 var interface_audio: LongMarchInterfaceAudio
-var title_preview_id: String = "ashgate_guided"
-var focused_title_preview_id: String = "ashgate_guided"
+var title_preview_id: String = "tutorial"
+var focused_title_preview_id: String = "tutorial"
 var title_return_notice: String = ""
 var title_return_notice_kind: String = ""
 
@@ -193,6 +213,7 @@ func _ready() -> void:
 	_apply_display_mode()
 	theme = _create_menu_theme(high_contrast_enabled)
 	_build_title_menu()
+	_build_tutorial_intro()
 	_build_guide_overlay()
 	_build_settings_overlay()
 	_build_data_info_overlay()
@@ -247,7 +268,7 @@ func _build_title_menu() -> void:
 	columns.add_child(left)
 
 	title_build_label = Label.new()
-	title_build_label.text = "TWO PLAYABLE REGIONS · %s" % _playtest_build_label()
+	title_build_label.text = "A MOVING FORTRESS JOURNEY · %s" % _build_version()
 	title_build_label.add_theme_font_size_override("font_size", 13)
 	title_build_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	left.add_child(title_build_label)
@@ -283,11 +304,21 @@ func _build_title_menu() -> void:
 	actions.add_theme_constant_override("separation", 10)
 	action_panel.add_child(actions)
 
+	tutorial_button = Button.new()
+	tutorial_button.name = "TutorialButton"
+	tutorial_button.text = "LEARN TO COMMAND"
+	tutorial_button.custom_minimum_size = Vector2(0, 64)
+	tutorial_button.tooltip_text = "Enter The First Watch, a guided command lesson with its own checkpoint."
+	tutorial_button.pressed.connect(_show_tutorial_intro)
+	_bind_title_preview(tutorial_button, "tutorial")
+	_accent_button(tutorial_button)
+	actions.add_child(tutorial_button)
+
 	start_button = Button.new()
 	start_button.name = "StartGameButton"
-	start_button.text = "START ASHGATE  ·  GUIDED FIRST RUN"
+	start_button.text = "NEW JOURNEY  ·  ASHGATE LOWLANDS"
 	start_button.custom_minimum_size = Vector2(0, 62)
-	start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
+	start_button.tooltip_text = "Begin the full Ashgate journey with its prepared fortress."
 	start_button.pressed.connect(_start_new_game)
 	_bind_title_preview(start_button, "ashgate_guided")
 	_accent_button(start_button)
@@ -424,7 +455,9 @@ func _build_title_menu() -> void:
 	_configure_title_focus()
 
 func _configure_title_focus() -> void:
-	start_button.focus_neighbor_top = start_button.get_path_to(quit_button)
+	tutorial_button.focus_neighbor_top = tutorial_button.get_path_to(quit_button)
+	tutorial_button.focus_neighbor_bottom = tutorial_button.get_path_to(start_button)
+	start_button.focus_neighbor_top = start_button.get_path_to(tutorial_button)
 	start_button.focus_neighbor_bottom = start_button.get_path_to(quick_start_button)
 	quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
 	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(veyru_start_button)
@@ -445,6 +478,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 	var title_actions: Array[Button] = []
 	if has_valid_save:
 		title_actions.append(continue_button)
+	title_actions.append(tutorial_button)
 	title_actions.append(start_button)
 	if show_quick_start:
 		title_actions.append(quick_start_button)
@@ -531,6 +565,15 @@ func _configure_overlay_focus() -> void:
 	title_button.focus_neighbor_bottom = title_button.get_path_to(pause_order_button)
 	_configure_focus_cycle([resume_button, pause_order_button, pause_save_button, save_return_button, pause_record_button, pause_briefing_button, pause_settings_button, pause_notes_button, restart_button, title_button])
 	_configure_focus_pair(confirmation_cancel_button, confirmation_confirm_button)
+
+func _build_tutorial_intro() -> void:
+	tutorial_intro = TUTORIAL_INTRO_SCENE.instantiate()
+	tutorial_intro.name = "TutorialIntroduction"
+	tutorial_intro.visible = false
+	tutorial_intro.connect("begin_requested", Callable(self, "_begin_tutorial"))
+	tutorial_intro.connect("back_requested", Callable(self, "_hide_tutorial_intro"))
+	tutorial_intro.connect("skip_requested", Callable(self, "_skip_tutorial_to_campaign"))
+	add_child(tutorial_intro)
 
 func _configure_focus_pair(first: Control, second: Control) -> void:
 	first.focus_neighbor_left = first.get_path_to(second)
@@ -1250,7 +1293,7 @@ func _build_version() -> String:
 	return "v%s" % String(ProjectSettings.get_setting("application/config/version", "development"))
 
 func _playtest_build_label() -> String:
-	return "PLAYTEST BUILD · %s" % _build_version()
+	return "BUILD · %s" % _build_version()
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
@@ -1376,6 +1419,8 @@ func _apply_visual_contrast() -> void:
 	VisualContrast.apply_to_tree(self, high_contrast_enabled)
 	if game_view != null:
 		game_view.call("set_high_contrast", high_contrast_enabled)
+	if tutorial_intro != null:
+		tutorial_intro.call("set_high_contrast", high_contrast_enabled)
 	_apply_text_scale_to_tree(self)
 	_refresh_contrast_button_styles()
 
@@ -1404,11 +1449,13 @@ func _refresh_data_info(message: String = "") -> void:
 	var data_folder := ProjectSettings.globalize_path("user://")
 	var feedback_count := _feedback_export_count()
 	data_info_context_label.text = "PAUSED MARCH · BUILD & LOCAL DATA" if settings_opened_from_pause else "TITLE MENU · BUILD & LOCAL DATA"
-	data_info_summary_label.text = "BUILD IDENTITY\n%s · %s desktop playtest\n\nOFFLINE BOUNDARY\nNo account login, telemetry SDK, or automatic upload is included. Feedback moves only when you explicitly share an exported JSON report.\n\nLOCAL FILES\nContinue: %s   ·   Recovery backup: %s\nMarch Charter: %s   ·   Preferences: %s\nBriefing record: %s   ·   Playtest journal: %s\nExported feedback reports: %d tester-owned file%s" % [
+	data_info_summary_label.text = "BUILD IDENTITY\n%s · %s desktop build\n\nOFFLINE BOUNDARY\nNo account login, telemetry SDK, or automatic upload is included. Feedback moves only when you explicitly share an exported JSON report.\n\nLOCAL FILES\nCampaign Continue: %s   ·   Campaign backup: %s\nTutorial checkpoint: %s   ·   Tutorial completed: %s\nMarch Charter: %s   ·   Preferences: %s\nBriefing record: %s   ·   Playtest journal: %s\nExported feedback reports: %d tester-owned file%s" % [
 		_build_version(),
 		OS.get_name(),
 		_file_presence(SAVE_PATH),
 		_file_presence(SAVE_BACKUP_PATH),
+		_file_presence(TUTORIAL_SAVE_PATH),
+		_file_presence(TUTORIAL_COMPLETE_PATH),
 		_file_presence(PROGRESS_PATH),
 		_file_presence(SETTINGS_PATH),
 		_file_presence(ONBOARDING_PATH),
@@ -1507,18 +1554,22 @@ func _reset_briefing() -> void:
 
 func _refresh_title_state() -> void:
 	var save_info := _saved_run_info()
+	var tutorial_info := _tutorial_saved_run_info()
 	var has_valid_save := bool(save_info.get("valid", false))
 	var has_invalid_save := bool(save_info.get("exists", false)) and not has_valid_save
 	var has_completed_save := has_valid_save and bool(save_info.get("completed", false))
 	var briefing_complete := FileAccess.file_exists(ONBOARDING_PATH)
 	title_charter_label.text = _march_charter_text()
+	var tutorial_lesson := String(tutorial_info.get("tutorial_lesson", ""))
+	tutorial_button.text = ("REVIEW TRAINING CERTIFICATE" if tutorial_lesson == "complete" else "RESUME TUTORIAL · %s" % String(tutorial_info.get("next_action", "CURRENT LESSON")).to_upper()) if bool(tutorial_info.get("valid", false)) else "LEARN TO COMMAND"
+	tutorial_button.tooltip_text = "Resume The First Watch from its separate tutorial checkpoint." if bool(tutorial_info.get("valid", false)) else "Enter The First Watch, a guided command lesson with its own checkpoint."
 	if briefing_complete:
-		start_button.text = "PLAY AGAIN · ASHGATE DEPOT" if has_completed_save else ("NEW GAME · ASHGATE DEPOT" if has_valid_save else "START GAME · ASHGATE DEPOT")
+		start_button.text = "PLAY AGAIN · ASHGATE LOWLANDS" if has_completed_save else ("NEW JOURNEY · ASHGATE LOWLANDS" if has_valid_save else "START JOURNEY · ASHGATE LOWLANDS")
 		start_button.tooltip_text = "Begin directly at Ashgate Depot. Reset the completed briefing in Settings to see it on the next new game."
 	else:
-		start_button.text = "PLAY ASHGATE · GUIDED BRIEFING" if has_completed_save else ("NEW ASHGATE · GUIDED BRIEFING" if has_valid_save else "START ASHGATE  ·  GUIDED FIRST RUN")
+		start_button.text = "PLAY AGAIN · ASHGATE LOWLANDS" if has_completed_save else ("NEW JOURNEY · ASHGATE LOWLANDS" if has_valid_save else "START JOURNEY · ASHGATE LOWLANDS")
 		start_button.tooltip_text = "Begin at Ashgate Depot with the seven-step Marchmaster briefing."
-	quick_start_button.visible = not briefing_complete and not has_valid_save and not has_invalid_save
+	quick_start_button.visible = false
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
 	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else "START FLOODED VEYRU  ·  RISING WATER")
 	veyru_start_button.tooltip_text = "Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay.%s" % (" Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else "")
@@ -1540,15 +1591,17 @@ func _refresh_title_state() -> void:
 	var actions := start_button.get_parent()
 	if has_valid_save:
 		actions.move_child(continue_button, 0)
+		actions.move_child(tutorial_button, 1)
+		actions.move_child(start_button, 2)
+		actions.move_child(quick_start_button, 3)
+		actions.move_child(veyru_start_button, 4)
+	else:
+		actions.move_child(tutorial_button, 0)
 		actions.move_child(start_button, 1)
 		actions.move_child(quick_start_button, 2)
 		actions.move_child(veyru_start_button, 3)
-	else:
-		actions.move_child(start_button, 0)
-		actions.move_child(quick_start_button, 1)
-		actions.move_child(veyru_start_button, 2)
-		actions.move_child(continue_button, 3)
-		actions.move_child(save_recovery_button, 4)
+		actions.move_child(continue_button, 4)
+		actions.move_child(save_recovery_button, 5)
 	_refresh_title_focus(has_valid_save, has_invalid_save, quick_start_button.visible)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
@@ -1580,7 +1633,8 @@ func _refresh_title_state() -> void:
 	_refresh_title_preview(save_info)
 	_clear_button_accent(start_button)
 	_clear_button_accent(continue_button)
-	_accent_button(continue_button if has_valid_save else start_button)
+	_clear_button_accent(tutorial_button)
+	_accent_button(continue_button if has_valid_save else tutorial_button)
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
 
@@ -1591,6 +1645,15 @@ func _refresh_title_preview(save_info: Dictionary = {}) -> void:
 	var rule_titles: Array[String] = []
 	var rule_details: Array[String] = []
 	match title_preview_id:
+		"tutorial":
+			var tutorial_save := _tutorial_saved_run_info()
+			var tutorial_resumable := bool(tutorial_save.get("valid", false))
+			title_preview_eyebrow_label.text = "THE FIRST WATCH · %s · 20–30 MINUTES" % ("TUTORIAL CHECKPOINT" if tutorial_resumable else "INTERACTIVE TUTORIAL")
+			title_preview_title_label.text = "Resume The First Watch" if tutorial_resumable else "Learn by commanding"
+			title_region_briefing_label.text = "Current order: %s. Tutorial progress is stored separately from campaign Continue." % String(tutorial_save.get("next_action", "Continue training")) if tutorial_resumable else "Place the systems that make the fortress move and fight, read a live contact, survive damage, and repair the machine before entering the campaign."
+			title_preview_scope_label.text = "LESSONS · PLACEMENT   ·   ROAD · CONTACT   ·   RECOVERY · REPAIR"
+			rule_titles = ["Build a working machine", "Read before committing", "Recover after contact"]
+			rule_details = ["Place an engine beside fuel and a weapon beside its ammunition support.", "Plan one short road, inspect the approaching enemy, then choose when to advance.", "Trace battle damage through the dependency chain and restore the system that keeps the march alive."]
 		"continue":
 			if not bool(current_save.get("valid", false)):
 				title_preview_id = "recovery" if bool(current_save.get("exists", false)) else "ashgate_guided"
@@ -1663,7 +1726,23 @@ func _focus_title_primary() -> void:
 	if not continue_button.disabled:
 		continue_button.grab_focus()
 	else:
-		start_button.grab_focus()
+		tutorial_button.grab_focus()
+
+func _tutorial_saved_run_info() -> Dictionary:
+	var info := _saved_run_info_at(TUTORIAL_SAVE_PATH)
+	if not bool(info.get("valid", false)):
+		return info
+	var file := FileAccess.open(TUTORIAL_SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return {"exists": true, "valid": false}
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary or not bool(parsed.get("tutorial_mode", false)):
+		return {"exists": true, "valid": false}
+	var progress: Dictionary = parsed.get("tutorial_progress", {})
+	var lesson_id := String(progress.get("lesson_id", "place_engine"))
+	info["tutorial_lesson"] = lesson_id
+	info["next_action"] = String(TUTORIAL_LESSON_LABELS.get(lesson_id, "Continue training"))
+	return info
 
 func _saved_run_info() -> Dictionary:
 	var primary := _saved_run_info_at(SAVE_PATH)
@@ -1798,7 +1877,27 @@ func _active_region_id() -> String:
 	return String(game_view.get("state").get("campaign_region_id"))
 
 func _start_new_game() -> void:
-	_request_new_game(true)
+	_request_new_game(false)
+
+func _show_tutorial_intro() -> void:
+	if bool(_tutorial_saved_run_info().get("valid", false)):
+		_open_stage(true, false, "ashgate_lowlands", true)
+		return
+	menu_view.visible = false
+	tutorial_intro.call("open")
+
+func _hide_tutorial_intro() -> void:
+	tutorial_intro.visible = false
+	menu_view.visible = true
+	tutorial_button.grab_focus()
+
+func _begin_tutorial() -> void:
+	tutorial_intro.visible = false
+	_open_stage(false, false, "ashgate_lowlands", true)
+
+func _skip_tutorial_to_campaign() -> void:
+	tutorial_intro.visible = false
+	_open_stage(false, false, "ashgate_lowlands")
 
 func _quick_start_game() -> void:
 	_request_new_game(false, "ashgate_lowlands")
@@ -1827,7 +1926,7 @@ func _has_local_save_files() -> bool:
 	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH)
 
 func _has_resettable_playtest_data() -> bool:
-	for path in [SAVE_PATH, SAVE_BACKUP_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH]:
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, TUTORIAL_SAVE_PATH, TUTORIAL_BACKUP_PATH, TUTORIAL_COMPLETE_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH]:
 		if FileAccess.file_exists(path):
 			return true
 	return false
@@ -1854,7 +1953,7 @@ func _clear_local_save_files() -> Dictionary:
 	return result
 
 func _reset_playtest_data() -> Dictionary:
-	var removal := _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH])
+	var removal := _remove_local_files([SAVE_PATH, SAVE_BACKUP_PATH, TUTORIAL_SAVE_PATH, TUTORIAL_BACKUP_PATH, TUTORIAL_COMPLETE_PATH, SETTINGS_PATH, ONBOARDING_PATH, PROGRESS_PATH, PLAYTEST_JOURNAL_PATH])
 	_load_preferences()
 	_apply_display_mode()
 	_apply_text_scale()
@@ -1879,11 +1978,12 @@ func _remove_local_files(paths: Array) -> Dictionary:
 				errors.append("%s: %s" % [path.get_file(), error_string(removal_error)])
 	return {"ok": errors.is_empty(), "reason": "; ".join(errors)}
 
-func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
+func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ashgate_lowlands", as_tutorial: bool = false) -> void:
 	_clear_title_return_notice()
 	if game_view != null:
 		game_view.queue_free()
 	game_view = GAME_SCENE.instantiate()
+	game_view.set("tutorial_mode", as_tutorial)
 	game_view.set("show_onboarding_on_ready", show_briefing)
 	game_view.set("starting_region_id", region_id)
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
@@ -1901,6 +2001,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	_apply_text_scale_to_tree(game_view)
 	move_child(game_view, 0)
 	menu_view.visible = false
+	tutorial_intro.visible = false
 	guide_view.visible = false
 	settings_view.visible = false
 	data_info_view.visible = false
@@ -1911,13 +2012,14 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	settings_opened_from_pause = false
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
 	game_view.modulate = Color.WHITE if reduced_motion else Color(1.0, 1.0, 1.0, 0.0)
-	if load_saved and not bool(game_view.call("load_saved_run")):
+	var loaded_ok := bool(game_view.call("load_tutorial_run" if as_tutorial else "load_saved_run")) if load_saved else true
+	if load_saved and not loaded_ok:
 		var failed_game := game_view
 		game_view = null
 		failed_game.queue_free()
 		menu_view.visible = true
 		_refresh_title_state()
-		(save_recovery_button if save_recovery_button.visible else start_button).grab_focus()
+		(tutorial_button if as_tutorial else (save_recovery_button if save_recovery_button.visible else start_button)).grab_focus()
 		return
 	if load_saved:
 		_record_campaign_progress()
@@ -2007,8 +2109,8 @@ func _refresh_pause_summary(message: String = "") -> void:
 	elif viewing_debrief:
 		if current_run_saved:
 			pause_save_status_label.text = "This result is saved under Continue."
-		elif FileAccess.file_exists(SAVE_PATH):
-			pause_save_status_label.text = "This result is not saved · Continue still points to an earlier checkpoint."
+		elif FileAccess.file_exists(_active_save_path()):
+			pause_save_status_label.text = "This result is not saved · the earlier checkpoint is unchanged."
 		else:
 			pause_save_status_label.text = "This result is not saved yet · use Save Result or Save & Return."
 	elif not autosave_enabled:
@@ -2017,15 +2119,16 @@ func _refresh_pause_summary(message: String = "") -> void:
 		pause_save_status_label.text = "Current decision matches the loaded checkpoint." if current_run_saved else "Unsaved changes since the loaded checkpoint."
 	elif not last_checkpoint_reason.is_empty():
 		pause_save_status_label.text = "Current decision saved · %s" % _checkpoint_label(last_checkpoint_reason) if current_run_saved else "Unsaved changes since · %s" % _checkpoint_label(last_checkpoint_reason)
-	elif FileAccess.file_exists(SAVE_PATH):
+	elif FileAccess.file_exists(_active_save_path()):
 		pause_save_status_label.text = "Current decision is saved." if current_run_saved else "A previous local save is available. Save to capture this decision."
 	else:
 		pause_save_status_label.text = "No decision checkpoint yet · commit a choice or use Save March."
 
 func _current_run_matches_save() -> bool:
-	if game_view == null or not FileAccess.file_exists(SAVE_PATH):
+	var save_path := _active_save_path()
+	if game_view == null or not FileAccess.file_exists(save_path):
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
 		return false
 	var parsed = JSON.parse_string(file.get_as_text())
@@ -2037,6 +2140,17 @@ func _current_run_matches_save() -> bool:
 		return false
 	var run_state = game_view.get("state")
 	return _saved_values_match(saved_state.serialize(), run_state.serialize())
+
+func _active_stage_is_tutorial() -> bool:
+	return game_view != null and bool(game_view.get("tutorial_mode"))
+
+func _active_save_path() -> String:
+	return TUTORIAL_SAVE_PATH if _active_stage_is_tutorial() else SAVE_PATH
+
+func _save_active_stage(silent: bool = false) -> bool:
+	if game_view == null:
+		return false
+	return bool(game_view.call("save_tutorial_run" if _active_stage_is_tutorial() else "save_run", silent))
 
 func _saved_values_match(saved: Variant, live: Variant) -> bool:
 	if saved is Dictionary and live is Dictionary:
@@ -2061,7 +2175,7 @@ func _save_from_pause() -> bool:
 	if game_view == null:
 		return false
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
-	var saved := bool(game_view.call("save_run"))
+	var saved := _save_active_stage()
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
 	var viewing_debrief := String(game_view.get("state").get("phase")) == "results"
 	var success_message := "Result saved. Continue will reopen this debrief." if viewing_debrief else "Saved. Continue will resume from this decision."
@@ -2074,15 +2188,16 @@ func _save_from_pause() -> bool:
 func _on_checkpoint_reached(reason: String) -> void:
 	if game_view == null:
 		return
-	_record_campaign_progress()
+	if not _active_stage_is_tutorial():
+		_record_campaign_progress()
 	if not autosave_enabled:
 		return
-	if bool(game_view.call("save_run", true)):
+	if _save_active_stage(true):
 		last_checkpoint_reason = reason
 		_show_checkpoint_toast(reason)
 
 func _record_campaign_progress() -> void:
-	if game_view == null:
+	if game_view == null or _active_stage_is_tutorial():
 		return
 	var run_state = game_view.get("state")
 	var errors: Array[String] = []
@@ -2198,6 +2313,13 @@ func _request_replay_confirmation() -> void:
 
 func _request_march_on_confirmation(region_id: String) -> void:
 	if game_view == null or region_id not in ["ashgate_lowlands", "flooded_veyru"]:
+		return
+	if _active_stage_is_tutorial() and region_id == "ashgate_lowlands":
+		var marker := FileAccess.open(TUTORIAL_COMPLETE_PATH, FileAccess.WRITE)
+		if marker != null:
+			marker.store_string("completed")
+			marker.close()
+		_open_stage(false, false, "ashgate_lowlands")
 		return
 	if String(game_view.get("state").get("phase")) != "results":
 		return
@@ -2408,7 +2530,7 @@ func _confirm_pending_action() -> void:
 				save_status_label.text = "Save removal incomplete · %s" % String(clear_result.get("reason", "unknown error"))
 				save_recovery_button.grab_focus()
 		elif action == "clear_invalid_save":
-			start_button.grab_focus()
+			tutorial_button.grab_focus()
 		else:
 			_refresh_settings("Continue and its recovery backup were cleared. Start Game begins a fresh march.")
 			settings_close_button.grab_focus()
@@ -2441,6 +2563,7 @@ func _return_to_title() -> void:
 	pause_view.visible = false
 	guide_view.visible = false
 	settings_view.visible = false
+	tutorial_intro.visible = false
 	data_info_view.visible = false
 	run_record_view.visible = false
 	confirmation_view.visible = false
@@ -2465,14 +2588,18 @@ func _capture_title_return_notice() -> void:
 	var location := String(run_state.get("current_location")).replace("_", " ").capitalize()
 	var day := int(run_state.get("day"))
 	var viewing_debrief := String(run_state.get("phase")) == "results"
+	var tutorial_run := _active_stage_is_tutorial()
 	if _current_run_matches_save():
 		title_return_notice_kind = "saved"
+		if tutorial_run:
+			title_return_notice = "RETURN RECEIPT · TUTORIAL CHECKPOINT SAVED\nThe First Watch remains available under Resume Tutorial."
+			return
 		if viewing_debrief:
 			title_return_notice = "RETURN RECEIPT · RESULT SAVED\n%s debrief remains available under Continue." % region_name
 		else:
 			title_return_notice = "RETURN RECEIPT · CHECKPOINT SAVED\n%s · Day %d at %s remains available under Continue." % [region_name, day, location]
 		return
-	var prior_save := _saved_run_info()
+	var prior_save := _tutorial_saved_run_info() if tutorial_run else _saved_run_info()
 	title_return_notice_kind = "discarded"
 	if bool(prior_save.get("valid", false)):
 		var prior_context := "%s result" % String(prior_save.get("result", "completed"))
@@ -2529,8 +2656,9 @@ func _save_and_quit() -> void:
 		_perform_application_quit()
 		return
 	game_view.process_mode = Node.PROCESS_MODE_INHERIT
-	_record_campaign_progress()
-	if bool(game_view.call("save_run")):
+	if not _active_stage_is_tutorial():
+		_record_campaign_progress()
+	if _save_active_stage():
 		last_checkpoint_reason = "manual save"
 		close_request_focus = null
 		close_request_was_paused = false
@@ -2554,6 +2682,10 @@ func _perform_application_quit() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
+		return
+	if tutorial_intro != null and tutorial_intro.visible:
+		_hide_tutorial_intro()
+		get_viewport().set_input_as_handled()
 		return
 	if confirmation_view.visible:
 		_cancel_confirmation()

@@ -11,6 +11,9 @@ const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
 const VisualContrast = preload("res://src/support/visual_contrast.gd")
 const ControllerLayout = preload("res://src/support/controller_layout.gd")
+const TutorialDirectorScript = preload("res://src/tutorial/tutorial_director.gd")
+const TutorialObjectiveViewScript = preload("res://src/ui/tutorial_objective.gd")
+const TutorialCompletionViewScript = preload("res://src/ui/tutorial_completion.gd")
 const CampaignMapView = preload("res://src/ui/campaign_map.gd")
 const CombatPanel = preload("res://src/ui/combat_panel.gd")
 const SettlementHubScene = preload("res://scenes/settlement/SettlementHub.tscn")
@@ -26,6 +29,8 @@ const WORKSHOP_ICON = preload("res://assets/field_workshop_icon.png")
 const SIGNAL_ICON = preload("res://assets/signal_coil_icon.png")
 const SAVE_PATH := "user://the_long_march_prototype.save"
 const SAVE_BACKUP_PATH := "user://the_long_march_prototype.backup.save"
+const TUTORIAL_SAVE_PATH := "user://the_long_march_tutorial.save"
+const TUTORIAL_BACKUP_PATH := "user://the_long_march_tutorial.backup.save"
 const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const RUN_FLOW_STEPS := ["PREP", "ROADS", "RECOVER", "FINAL", "RESULT"]
 const DOCTRINE_DESCRIPTIONS := {
@@ -141,6 +146,7 @@ var journey_arrival_view: Dictionary = {}
 var journey_departure_snapshot: Dictionary = {}
 var roadside_event: RoadsideEventView
 var metric_labels: Dictionary = {}
+var metric_panels: Dictionary = {}
 var subtitle_label: Label
 var pause_button: Button
 var journey_banner: TextureRect
@@ -215,6 +221,8 @@ var guidance_label: Label
 var current_order_button: Button
 var run_flow_panels: Array[PanelContainer] = []
 var run_flow_labels: Array[Label] = []
+var run_flow_heading_row: HBoxContainer
+var run_flow_tracker: HBoxContainer
 var current_run_flow_step: int = 0
 var asset_row: HBoxContainer
 var phase_badge: Label
@@ -263,6 +271,13 @@ var selected_module_cell := Vector2i(-1, -1)
 var placement_rotated: bool = false
 var last_synced_combat_target_id: String = ""
 var show_onboarding_on_ready: bool = true
+var tutorial_mode: bool = false
+var tutorial_director: TutorialDirector
+var tutorial_objective_view: TutorialObjectiveView
+var tutorial_completion_view: TutorialCompletionView
+var tutorial_lesson_snapshot: Dictionary = {}
+var tutorial_lesson_snapshots: Dictionary = {}
+var tutorial_director_snapshots: Dictionary = {}
 var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
 var starting_region_results: Dictionary = {}
@@ -323,6 +338,7 @@ func _add_metric_chip(parent: HBoxContainer, metric_id: String, title: String, t
 	value_label.add_theme_color_override("font_color", Color("#f1e6cf"))
 	stack.add_child(value_label)
 	metric_labels[metric_id] = value_label
+	metric_panels[metric_id] = panel
 	parent.add_child(panel)
 
 func _set_metric(metric_id: String, value: String, color: Color = Color("#f1e6cf")) -> void:
@@ -380,6 +396,7 @@ func _refresh_planning_focus() -> void:
 
 func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	var heading_row := HBoxContainer.new()
+	run_flow_heading_row = heading_row
 	heading_row.add_theme_constant_override("separation", 8)
 	parent.add_child(heading_row)
 	var heading := Label.new()
@@ -397,6 +414,7 @@ func _build_run_flow_tracker(parent: VBoxContainer) -> void:
 	current_order_button.pressed.connect(focus_current_action)
 	heading_row.add_child(current_order_button)
 	var tracker := HBoxContainer.new()
+	run_flow_tracker = tracker
 	tracker.add_theme_constant_override("separation", 4)
 	parent.add_child(tracker)
 	for step_name in RUN_FLOW_STEPS:
@@ -464,6 +482,8 @@ func _ready() -> void:
 	journal = PlaytestJournal.new()
 	_reset_state()
 	_build_ui()
+	if tutorial_mode:
+		_initialize_tutorial_ui()
 	campaign_map.set_high_contrast(high_contrast_enabled)
 	combat_panel.set_high_contrast(high_contrast_enabled)
 	settlement_hub.set_high_contrast(high_contrast_enabled)
@@ -476,6 +496,8 @@ func _ready() -> void:
 	roadside_event.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
+	if tutorial_mode:
+		_refresh_tutorial_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
 	if show_onboarding_on_ready and not FileAccess.file_exists(ONBOARDING_PATH):
 		_show_onboarding()
@@ -559,8 +581,11 @@ func set_reduced_motion(enabled: bool) -> void:
 		road_contact.set_reduced_motion(enabled)
 
 func _reset_state() -> void:
-	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)
-	if starting_region_id == "flooded_veyru":
+	state = LongMarchState.new(3301 if tutorial_mode else (2204 if starting_region_id == "flooded_veyru" else 1107))
+	if tutorial_mode:
+		state.start_tutorial()
+		tutorial_director = TutorialDirectorScript.new()
+	elif starting_region_id == "flooded_veyru":
 		state.place_module("steam_lance_engine", Vector2i(0, 0))
 		state.place_module("coal_cell", Vector2i(0, 1))
 		state.place_module("generator_core", Vector2i(2, 0))
@@ -576,11 +601,12 @@ func _reset_state() -> void:
 		state.place_module("ammunition_lift", Vector2i(2, 1))
 		state.place_module("field_workshop", Vector2i(3, 1))
 		state.place_module("repeater_gun", Vector2i(3, 2), true)
-	state.seed_starter_inventory()
-	if starting_region_id == "flooded_veyru":
-		state.start_flooded_veyru()
-	else:
-		state.start_campaign()
+	if not tutorial_mode:
+		state.seed_starter_inventory()
+		if starting_region_id == "flooded_veyru":
+			state.start_flooded_veyru()
+		else:
+			state.start_campaign()
 	state.set_regional_developments(starting_regional_developments)
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
@@ -598,6 +624,10 @@ func _reset_state() -> void:
 	journey_arrival_active = false
 	journey_arrival_view = {}
 	journey_departure_snapshot = {}
+	if tutorial_mode:
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots = {"place_engine": tutorial_lesson_snapshot.duplicate(true)}
+		tutorial_director_snapshots = {"place_engine": tutorial_director.serialize()}
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -1186,6 +1216,159 @@ func _build_ui() -> void:
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
 	_connect_desk_focus_scrolling()
+
+func _initialize_tutorial_ui() -> void:
+	tutorial_objective_view = TutorialObjectiveViewScript.new()
+	tutorial_objective_view.name = "TutorialObjective"
+	tutorial_objective_view.show_me_requested.connect(_tutorial_show_me)
+	tutorial_objective_view.reset_requested.connect(_reset_tutorial_lesson)
+	tutorial_objective_view.skip_requested.connect(func() -> void: return_to_title_requested.emit())
+	var controls := guidance_label.get_parent()
+	controls.add_child(tutorial_objective_view)
+	controls.move_child(tutorial_objective_view, guidance_label.get_index())
+	tutorial_completion_view = TutorialCompletionViewScript.new()
+	tutorial_completion_view.name = "TutorialCompletion"
+	tutorial_completion_view.visible = false
+	tutorial_completion_view.begin_campaign_requested.connect(func() -> void: march_on_requested.emit("ashgate_lowlands"))
+	tutorial_completion_view.repeat_lesson_requested.connect(_repeat_tutorial_lesson)
+	tutorial_completion_view.title_requested.connect(func() -> void: return_to_title_requested.emit())
+	add_child(tutorial_completion_view)
+
+func _refresh_tutorial_ui() -> void:
+	if not tutorial_mode or tutorial_director == null or tutorial_objective_view == null:
+		return
+	var complete := tutorial_director.lesson_id == "complete"
+	tutorial_objective_view.configure(tutorial_director.current_copy(), tutorial_director.receipt)
+	tutorial_objective_view.visible = not complete and not onboarding_overlay.visible and not feedback_overlay.visible
+	if tutorial_completion_view != null:
+		tutorial_completion_view.visible = complete
+		if complete:
+			tutorial_completion_view.open(tutorial_director.completed_lessons)
+			tutorial_completion_view.move_to_front()
+
+func _tutorial_advance(next_lesson: String, receipt: String) -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	if tutorial_director.advance(next_lesson, receipt):
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots[next_lesson] = tutorial_lesson_snapshot.duplicate(true)
+		tutorial_director_snapshots[next_lesson] = tutorial_director.serialize()
+		_checkpoint("tutorial_lesson_completed")
+		_refresh_tutorial_ui()
+
+func _tutorial_observe_state() -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	var previous := tutorial_director.lesson_id
+	if tutorial_director.observe_state(state):
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots[tutorial_director.lesson_id] = tutorial_lesson_snapshot.duplicate(true)
+		tutorial_director_snapshots[tutorial_director.lesson_id] = tutorial_director.serialize()
+		_checkpoint("tutorial_lesson_completed")
+		if previous == "place_engine":
+			selected_module_id = "repeater_gun"
+			selected_module_cell = Vector2i(-1, -1)
+			placement_rotated = true
+			_select_module_option(selected_module_id)
+		_refresh_tutorial_ui()
+
+func _tutorial_observe_inspection(module_id: String) -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	if tutorial_director.observe_inspection(module_id):
+		tutorial_lesson_snapshot = state.serialize()
+		tutorial_lesson_snapshots[tutorial_director.lesson_id] = tutorial_lesson_snapshot.duplicate(true)
+		tutorial_director_snapshots[tutorial_director.lesson_id] = tutorial_director.serialize()
+		_checkpoint("tutorial_lesson_completed")
+		_refresh_tutorial_ui()
+		return
+	if tutorial_director.lesson_id == "damage":
+		var module: Dictionary = {}
+		for installed in state.modules:
+			if String(installed.get("id", "")) == module_id:
+				module = installed
+				break
+		var maximum := int(state.module_definition(module_id).get("durability", 0))
+		if not module.is_empty() and int(module.get("durability", maximum)) < maximum:
+			_tutorial_advance("victory", "DAMAGE TRACED · Durability changed, and the system card shows whether the dependency chain still holds.")
+
+func _reset_tutorial_lesson() -> void:
+	if not tutorial_mode or tutorial_director == null or tutorial_lesson_snapshot.is_empty():
+		return
+	var restored := LongMarchState.new(0)
+	var result := restored.load_serialized(tutorial_lesson_snapshot)
+	if not bool(result.get("ok", false)):
+		_set_event("Lesson reset failed: %s." % String(result.get("reason", "snapshot unavailable")))
+		return
+	state = restored
+	if tutorial_director_snapshots.has(tutorial_director.lesson_id):
+		tutorial_director.restore(tutorial_director_snapshots[tutorial_director.lesson_id])
+	fortress_panel.state = state
+	selected_module_cell = Vector2i(-1, -1)
+	selected_module_id = "steam_lance_engine" if tutorial_director.lesson_id == "place_engine" else ("repeater_gun" if tutorial_director.lesson_id == "place_weapon" else selected_module_id)
+	_select_module_option(selected_module_id)
+	journey_transition_active = false
+	journey_arrival_active = false
+	contact_inspection_active = false
+	_set_event("Lesson reset. The fortress has returned to the start of this order.")
+	_refresh_ui()
+
+func _repeat_tutorial_lesson(lesson_id: String) -> void:
+	if not tutorial_mode or tutorial_director == null or not tutorial_lesson_snapshots.has(lesson_id):
+		return
+	var restored := LongMarchState.new(0)
+	var snapshot: Dictionary = tutorial_lesson_snapshots[lesson_id]
+	var result := restored.load_serialized(snapshot)
+	if not bool(result.get("ok", false)):
+		return
+	state = restored
+	fortress_panel.state = state
+	tutorial_director.lesson_id = lesson_id
+	if tutorial_director_snapshots.has(lesson_id):
+		tutorial_director.restore(tutorial_director_snapshots[lesson_id])
+	tutorial_director.receipt = "LESSON REOPENED · Complete the current order to continue."
+	tutorial_lesson_snapshot = snapshot.duplicate(true)
+	journey_transition_active = lesson_id == "travel"
+	journey_arrival_active = false
+	contact_inspection_active = false
+	if journey_transition_active:
+		journey_transition_view = _restore_journey_transition_view()
+	tutorial_completion_view.visible = false
+	_refresh_ui()
+	_tutorial_show_me.call_deferred()
+
+func _tutorial_show_me() -> void:
+	if not tutorial_mode or tutorial_director == null:
+		return
+	match tutorial_director.lesson_id:
+		"place_engine":
+			selected_module_id = "steam_lance_engine"
+			selected_module_cell = Vector2i(-1, -1)
+			_select_module_option(selected_module_id)
+			_focus_control(focus_chassis_button)
+		"place_weapon":
+			selected_module_id = "repeater_gun"
+			selected_module_cell = Vector2i(-1, -1)
+			placement_rotated = true
+			_select_module_option(selected_module_id)
+			_focus_control(focus_chassis_button)
+		"inspect_machine", "damage":
+			if state.can_refit():
+				_focus_chassis_for_refit()
+			else:
+				_focus_chassis_for_combat()
+		"plan_road":
+			_focus_control(route_option)
+		"travel":
+			if journey_transition.visible:
+				journey_transition.focus_default()
+		"read_contact", "respond", "victory":
+			if road_contact.visible:
+				road_contact.focus_default()
+		"repair":
+			_focus_control(settlement_repair_button)
+		"complete":
+			march_on_requested.emit("ashgate_lowlands")
 
 func _connect_desk_focus_scrolling() -> void:
 	var controls: Array[Control] = [
@@ -1791,6 +1974,9 @@ func focus_current_action() -> void:
 	if road_contact != null and road_contact.visible:
 		road_contact.focus_default()
 		return
+	if tutorial_mode and tutorial_objective_view != null and tutorial_objective_view.visible:
+		_focus_control(tutorial_objective_view.show_me_button)
+		return
 	if journey_planner != null and journey_planner.visible:
 		if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
 			return
@@ -1841,6 +2027,7 @@ func _ensure_current_focus() -> void:
 
 func _on_departure_option_changed(_index: int) -> void:
 	_refresh_ui()
+	_refresh_tutorial_ui()
 
 func _on_guard_contract_pressed(accept: bool) -> void:
 	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else state.choose_guard_contract(accept)
@@ -2023,6 +2210,8 @@ func _on_journey_transition_continued() -> void:
 	if not journey_transition_active:
 		return
 	journey_transition_active = false
+	if tutorial_mode:
+		_tutorial_advance("read_contact", "TRAVEL COMPLETE · Fuel and time are already spent. The road remains contested until contact is clear.")
 	_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
 	_refresh_ui()
 	road_contact.focus_default.call_deferred()
@@ -2679,6 +2868,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		_select_module_option(selected_module_id)
 		var selection_context := " and refitting" if state.can_refit() else (" or an encounter order" if state.phase in ["battle", "final_battle"] else (" in the final chassis" if state.phase == "results" else ""))
 		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), selection_context])
+		_tutorial_observe_inspection(selected_module_id)
 		if state.phase in ["battle", "final_battle"]:
 			contact_inspection_active = false
 		_refresh_ui()
@@ -2702,6 +2892,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			_set_event("Moved %s to cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
 			_journal_event("module_moved", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
 			_checkpoint("module_moved")
+			_tutorial_observe_state()
 		else:
 			_set_event("Move blocked: %s." % String(result.get("reason", "unknown")))
 	else:
@@ -2714,6 +2905,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			_set_event("Installed %s at cell %d,%d." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), cell.x + 1, cell.y + 1])
 			_journal_event("module_installed", {"module": selected_module_id, "x": cell.x, "y": cell.y, "rotated": placement_rotated})
 			_checkpoint("module_installed")
+			_tutorial_observe_state()
 		else:
 			_set_event("Placement blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
@@ -2768,11 +2960,16 @@ func _on_remove_pressed() -> void:
 func _on_travel_pressed() -> void:
 	var route_id := _selected_id(route_option)
 	var before := {"origin_id": state.current_location, "destination_id": state.journey_destination, "hull": state.hull_condition, "money": state.money, "pressure": state.campaign_pressure}
-	var result := state.begin_journey(route_id, _selected_id(doctrine_option))
+	var result := state.begin_tutorial_journey(_selected_id(doctrine_option)) if tutorial_mode else state.begin_journey(route_id, _selected_id(doctrine_option))
 	if not bool(result.get("ok", false)):
 		_set_event("Departure blocked: %s." % String(result.get("reason", "unknown")))
 	else:
 		journey_departure_snapshot = before
+		if tutorial_mode:
+			_tutorial_advance("travel", "ROAD COMMITTED · The Long Road spends 2 fuel and 2 days before the contact is resolved.")
+			journey_transition_active = true
+			journey_arrival_active = false
+			journey_transition_view = _build_journey_transition_view("ashgate_depot", "rill_crossing", {"visibility": "known", "threats": ["Road Raider"]}, int(before.get("day", 1)), int(before.get("fuel", state.fuel)), int(before.get("pressure", 0)))
 		_set_event("Journey begun. Forecast: %s. Advance one battle step at a time." % ", ".join(result.get("forecast", {}).get("threats", [])))
 		_journal_event("route_started", {"route": route_id, "doctrine": _selected_id(doctrine_option), "risk": state.current_route_risk, "pressure": state.encounter_pressure})
 	_refresh_ui()
@@ -2789,6 +2986,13 @@ func _encounter_checkpoint_reason(resolved: bool) -> String:
 	return "encounter_resolved"
 
 func _on_advance_encounter_pressed() -> void:
+	if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "read_contact" and not tutorial_director.premature_advance_seen:
+		tutorial_director.premature_advance_seen = true
+		_set_event("READ BEFORE ADVANCING · The Road Raider is two steps away, seeks cargo or exterior systems, and is countered by the Repeater Gun. Press Advance again when ready.")
+		_refresh_tutorial_ui()
+		return
+	if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "read_contact":
+		_tutorial_advance("respond", "CONTACT READ · You know the approach, preferred targets, counter, and next possible consequence.")
 	var before: Dictionary = journey_departure_snapshot.duplicate(true) if not journey_departure_snapshot.is_empty() else {
 		"origin_id": state.current_location,
 		"destination_id": state.campaign_target_node if state.campaign_active else state.journey_destination,
@@ -2805,6 +3009,8 @@ func _on_advance_encounter_pressed() -> void:
 		journey_arrival_view = _build_journey_arrival_view(result, before)
 		journey_departure_snapshot = {}
 		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
+		if tutorial_mode:
+			_tutorial_advance("repair", "ROAD SECURED · The fortress survived the contact and reached its recovery siding.")
 		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})
 		if state.phase == "results" and not result_recorded:
 			result_recorded = true
@@ -2812,6 +3018,8 @@ func _on_advance_encounter_pressed() -> void:
 	else:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
 		_journal_event("encounter_step", {"leg": state.journey_leg, "step": state.encounter_step, "hull": state.hull_condition})
+		if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "damage" and _most_damaged_installed_module().is_empty():
+			_set_event("The target remains protected for now. Advance once more and watch the damage report.")
 	if bool(result.get("ok", false)):
 		_checkpoint(_encounter_checkpoint_reason(encounter_resolved))
 	_refresh_ui()
@@ -2840,6 +3048,8 @@ func _on_settlement_repair_pressed() -> void:
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
 		_checkpoint("settlement_service")
+		if tutorial_mode:
+			_tutorial_advance("complete", "SYSTEM RESTORED · The repaired module and its dependent systems are ready for the next road.")
 	_refresh_ui()
 	encounter_label.text = "%s\n%s" % ["SERVICE COMPLETE" if bool(result.get("ok", false)) else "SERVICE UNAVAILABLE", service_message]
 
@@ -2899,18 +3109,32 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 		_set_event("Intervention used: %s." % String(result.get("effect", intervention_id.replace("_", " ").capitalize())))
 		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
 		_checkpoint("intervention_used")
+		if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "respond":
+			_tutorial_advance("damage", "ORDER ISSUED · Read the receipt before advancing; it names the protection, redirect, or power change.")
 	_refresh_ui()
 
 func save_run(silent: bool = false) -> bool:
-	var backup_result := _preserve_valid_save_backup()
+	return _save_run_to_paths(SAVE_PATH, SAVE_BACKUP_PATH, silent)
+
+func save_tutorial_run(silent: bool = false) -> bool:
+	return _save_run_to_paths(TUTORIAL_SAVE_PATH, TUTORIAL_BACKUP_PATH, silent)
+
+func _save_run_to_paths(save_path: String, backup_path: String, silent: bool) -> bool:
+	var backup_result := _preserve_valid_save_backup(save_path, backup_path)
 	if not bool(backup_result.get("ok", false)):
 		_set_event("Save failed before overwrite: %s." % String(backup_result.get("reason", "backup could not be written")))
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: %s." % error_string(FileAccess.get_open_error()))
 		return false
 	var payload := state.serialize()
+	payload["tutorial_mode"] = tutorial_mode
+	if tutorial_mode and tutorial_director != null:
+		payload["tutorial_progress"] = tutorial_director.serialize()
+		payload["tutorial_lesson_snapshot"] = tutorial_lesson_snapshot.duplicate(true)
+		payload["tutorial_lesson_snapshots"] = tutorial_lesson_snapshots.duplicate(true)
+		payload["tutorial_director_snapshots"] = tutorial_director_snapshots.duplicate(true)
 	payload["build_version"] = String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	payload["saved_at_unix"] = int(Time.get_unix_time_from_system())
 	payload["presentation"] = {
@@ -2926,22 +3150,22 @@ func save_run(silent: bool = false) -> bool:
 		_refresh_ui()
 	return true
 
-func _preserve_valid_save_backup() -> Dictionary:
-	if not FileAccess.file_exists(SAVE_PATH):
+func _preserve_valid_save_backup(save_path: String = SAVE_PATH, backup_path: String = SAVE_BACKUP_PATH) -> Dictionary:
+	if not FileAccess.file_exists(save_path):
 		return {"ok": true, "backed_up": false}
-	var existing_text := FileAccess.get_file_as_string(SAVE_PATH)
+	var existing_text := FileAccess.get_file_as_string(save_path)
 	if not _serialized_save_text_is_valid(existing_text):
 		return {"ok": true, "backed_up": false}
-	var previous_backup := FileAccess.get_file_as_string(SAVE_BACKUP_PATH) if FileAccess.file_exists(SAVE_BACKUP_PATH) else ""
-	var backup_file := FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+	var previous_backup := FileAccess.get_file_as_string(backup_path) if FileAccess.file_exists(backup_path) else ""
+	var backup_file := FileAccess.open(backup_path, FileAccess.WRITE)
 	if backup_file == null:
 		return {"ok": false, "reason": "backup could not be opened: %s" % error_string(FileAccess.get_open_error())}
 	backup_file.store_string(existing_text)
 	backup_file.close()
-	if _serialized_save_text_is_valid(FileAccess.get_file_as_string(SAVE_BACKUP_PATH)):
+	if _serialized_save_text_is_valid(FileAccess.get_file_as_string(backup_path)):
 		return {"ok": true, "backed_up": true}
 	if not previous_backup.is_empty():
-		var restore_file := FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+		var restore_file := FileAccess.open(backup_path, FileAccess.WRITE)
 		if restore_file != null:
 			restore_file.store_string(previous_backup)
 			restore_file.close()
@@ -2960,10 +3184,16 @@ func _on_save_pressed() -> void:
 	save_run()
 
 func load_saved_run() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
+	return _load_saved_run_from_path(SAVE_PATH)
+
+func load_tutorial_run() -> bool:
+	return _load_saved_run_from_path(TUTORIAL_SAVE_PATH)
+
+func _load_saved_run_from_path(save_path: String) -> bool:
+	if not FileAccess.file_exists(save_path):
 		_set_event("No local march checkpoint exists yet.")
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
 		_set_event("Load failed: %s." % error_string(FileAccess.get_open_error()))
 		return false
@@ -2977,6 +3207,14 @@ func load_saved_run() -> bool:
 		_set_event("Load failed: %s." % String(result.get("reason", "unknown")))
 		return false
 	state = restored
+	tutorial_mode = bool(parsed.get("tutorial_mode", false))
+	if tutorial_mode:
+		if tutorial_director == null:
+			tutorial_director = TutorialDirectorScript.new()
+		tutorial_director.restore(parsed.get("tutorial_progress", {}))
+		tutorial_lesson_snapshot = Dictionary(parsed.get("tutorial_lesson_snapshot", state.serialize())).duplicate(true)
+		tutorial_lesson_snapshots = Dictionary(parsed.get("tutorial_lesson_snapshots", {tutorial_director.lesson_id: tutorial_lesson_snapshot})).duplicate(true)
+		tutorial_director_snapshots = Dictionary(parsed.get("tutorial_director_snapshots", {tutorial_director.lesson_id: tutorial_director.serialize()})).duplicate(true)
 	starting_region_id = state.campaign_region_id
 	var presentation: Dictionary = parsed.get("presentation", {})
 	settlement_hub_active = true
@@ -3001,6 +3239,7 @@ func load_saved_run() -> bool:
 	results_chassis_reviewed = false
 	last_rendered_phase = ""
 	_journal_event("run_loaded", {"phase": state.phase, "day": state.day})
+	_refresh_tutorial_ui()
 	_refresh_ui()
 	return true
 
@@ -3610,6 +3849,37 @@ func _refresh_ui() -> void:
 			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and not target_id.is_empty() and target_id != "hull" and target_id not in fortress_panel.combat_target_ids:
 				fortress_panel.combat_target_ids.append(target_id)
 	fortress_panel.queue_redraw()
+	if tutorial_mode:
+		var tutorial_lesson := tutorial_director.lesson_id
+		var tutorial_refit_lesson := tutorial_lesson in ["place_engine", "place_weapon", "inspect_machine"]
+		subtitle_label.text = "THE FIRST WATCH · Ashgate Muster Yard"
+		journey_label.text = "MUSTER YARD DRILL\nBuild the dependency chains, then take the fortress onto one controlled road contact."
+		if state.phase == "refit":
+			encounter_label.text = "CURRENT LESSON\n%s" % String(tutorial_director.current_copy().get("action", "Prepare the fortress."))
+			encounter_label.add_theme_color_override("font_color", Color("#d8c389"))
+		for hidden_metric in ["day", "money"]:
+			if metric_panels.has(hidden_metric):
+				metric_panels[hidden_metric].visible = false
+		guidance_label.visible = false
+		run_flow_heading_row.visible = false
+		run_flow_tracker.visible = false
+		asset_row.visible = false
+		refit_title.visible = tutorial_refit_lesson
+		module_group.visible = tutorial_refit_lesson
+		focus_chassis_button.visible = tutorial_refit_lesson
+		refit_actions.visible = tutorial_refit_lesson
+		refit_label.visible = tutorial_refit_lesson
+		dependency_card_panel.visible = tutorial_refit_lesson
+		doctrine_group.visible = tutorial_lesson == "plan_road"
+		doctrine_detail_label.visible = tutorial_lesson == "plan_road"
+		route_group.visible = tutorial_lesson == "plan_road"
+		route_preview_label.visible = tutorial_lesson == "plan_road"
+		travel_button.visible = tutorial_lesson == "plan_road"
+		settlement_refuel_button.visible = false
+		settlement_hull_button.visible = false
+		settlement_routes_button.visible = false
+		final_journey_button.visible = false
+		how_to_play_button.visible = false
 	_apply_start_detail_visibility()
 	_refresh_settlement_hub(snapshot)
 	_refresh_journey_planner(snapshot)
@@ -3617,11 +3887,15 @@ func _refresh_ui() -> void:
 	_refresh_road_contact(snapshot, combat_view)
 	_refresh_roadside_event(snapshot)
 	_refresh_journey_arrival()
+	_refresh_tutorial_ui()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
 	_ensure_current_focus()
 
 func _current_guidance() -> String:
+	if tutorial_mode and tutorial_director != null:
+		var tutorial_copy := tutorial_director.current_copy()
+		return "FIRST WATCH · %s" % String(tutorial_copy.get("action", "Follow the current lesson."))
 	if state.phase == "results":
 		return "DEBRIEF · Final chassis reviewed. Record playtest notes while the decisions are fresh." if results_chassis_reviewed else "DEBRIEF · Inspect the surviving systems, then record playtest notes while the decisions are fresh."
 	if state.phase in ["battle", "final_battle"]:

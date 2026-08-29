@@ -6,6 +6,8 @@ The first playable experience should teach The Long March by letting the player 
 
 The tutorial is not a slideshow, a debug sandbox, or a parallel simplified combat engine. Every completed lesson must use the same module placement, dependency, route, target, damage, intervention, repair, save, focus, and accessibility rules as the main game.
 
+**Implementation status (`0.3.0-alpha.271`):** The complete automated First Watch path is implemented: tutorial-first title hierarchy, three-page prologue, isolated checkpoint/resume, ten action-led lessons using the authoritative simulation, per-lesson reset snapshots, deterministic contact and recovery, certification, lesson replay, and Ashgate handoff. Bespoke illustration/audio and the five first-time human sessions in the exit gates remain required before this flow should be treated as final production onboarding.
+
 Target first-run duration: **12–18 minutes**. A player who reads slowly should finish within 25 minutes. Returning players may skip the prologue without changing their normal campaign seed or save.
 
 ## Product outcome

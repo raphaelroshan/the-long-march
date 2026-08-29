@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.270`
+**Current code baseline:** `0.3.0-alpha.271`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -40,7 +40,7 @@ The implemented slice includes the following capabilities:
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
 
-The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, full-frame route planner, focused workshop mode, atomic route-commit boundary, mandatory side-on road bridge, animated fortress contact, arrival receipt, and roadside event tableau are implemented. The next player-facing problem is the first-run experience: replace the passive briefing and test-oriented launcher language with a canonical interactive prologue that teaches placement, dependencies, route reading, contact analysis, emergency response, damage, repair, and victory through normal commands. The simulation must continue to decide costs, targets, damage, repair, and outcomes; the tutorial director may sequence lessons but cannot manufacture alternate rules.
+The current vertical slice is presentation depth rather than campaign breadth. The starting-settlement bazaar, full-frame route planner, focused workshop mode, atomic route-commit boundary, mandatory side-on road bridge, animated fortress contact, arrival receipt, roadside event tableau, and canonical First Watch tutorial are implemented. The tutorial has an isolated checkpoint, three-page prologue, action-led placement and dependency lessons, a deterministic road contact using the normal combat rules, damage and repair teaching, lesson reset/replay, and a certification handoff into Ashgate. The remaining first-run work is human validation, bespoke art/audio, and revisions driven by observed confusion rather than additional explanatory copy.
 
 ---
 
@@ -530,7 +530,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, and last-secured-location travel semantics are complete through `0.3.0-alpha.270`.
+**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, last-secured-location travel semantics, and the automated First Watch tutorial flow are complete through `0.3.0-alpha.271`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 
