@@ -1040,3 +1040,7 @@ Ashgate Depot now reads as a rail yard through black rails, sleepers, a signal g
 ## 2026-08-30 — A playtest cohort is identified by its bytes
 
 CI and tagged-release artifacts now include a machine-readable manifest containing the visible build version, workflow merge commit, branch head commit, workflow run, completed verification stages, and SHA-256 digest for every packaged build and testing document. The observer brief, session sheet, scope boundaries, source snapshot, and executable travel together as one cohort. This was chosen over identifying sessions only by an alpha label because two exports from the same revision can differ by engine, template, or workflow context; human comparisons require the exact retained binary and instructions, not a plausible rebuild.
+
+## 2026-08-30 — Cross-platform cohorts share identity, not bytes
+
+Windows and macOS exports from the same source now share a cohort ID derived from the visible version and head commit, while every platform keeps its own file sizes and SHA-256 digests. A bundled offline verifier checks all listed files before a session and rejects missing, altered, duplicated, or path-escaping entries. This was chosen over expecting observers to compare hashes by hand because line endings, packaging formats, and executables legitimately differ by platform even when the tested game and instructions belong to one source cohort.

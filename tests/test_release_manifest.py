@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.create_release_manifest import build_manifest
+from tools.verify_release_manifest import verify_manifest
 
 
 def main() -> int:
@@ -41,17 +42,25 @@ def main() -> int:
 			"head-sha",
 			"refs/pull/12/merge",
 			"https://example.invalid/runs/12",
+			"windows",
 			["windows_export", "deterministic_tests", "deterministic_tests"],
 		)
 		assert manifest["schema_version"] == 1
 		assert manifest["product"]["version"] == "0.3.0-alpha.test"
 		assert manifest["source"]["workflow_commit"] == "merge-sha"
 		assert manifest["source"]["head_commit"] == "head-sha"
+		assert manifest["cohort"] == {"id": "0.3.0-alpha.test@head-sha", "platform": "windows"}
 		assert manifest["verification"] == ["deterministic_tests", "windows_export"]
 		assert [entry["role"] for entry in manifest["files"]] == ["observer_brief", "windows_executable"]
 		game_entry = manifest["files"][1]
 		assert game_entry["bytes"] == len(b"deterministic build")
 		assert game_entry["sha256"] == hashlib.sha256(b"deterministic build").hexdigest()
+		assert verify_manifest(manifest, root) == []
+		(root / "build/game.exe").write_bytes(b"changed build")
+		verification_errors = verify_manifest(manifest, root)
+		assert any("size mismatch" in error for error in verification_errors)
+		assert any("SHA-256 mismatch" in error for error in verification_errors)
+		(root / "build/game.exe").write_bytes(b"deterministic build")
 
 		try:
 			build_manifest(
@@ -62,6 +71,7 @@ def main() -> int:
 				"",
 				"ref",
 				"url",
+				"windows",
 				[],
 			)
 		except ValueError as exc:
@@ -78,6 +88,7 @@ def main() -> int:
 				"",
 				"ref",
 				"url",
+				"windows",
 				[],
 			)
 		except ValueError as exc:

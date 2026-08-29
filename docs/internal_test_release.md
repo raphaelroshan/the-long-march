@@ -2,9 +2,15 @@
 
 ## Exact cohort contract
 
-Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records the player-facing version, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, observer brief, session sheet, and scope/limitations document.
+Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records a stable cohort ID, target platform, player-facing version, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, verifier, observer brief, session sheet, and scope/limitations document.
 
-Before the first session, record the manifest's version, `source.workflow_commit`, `source.head_commit`, and executable digest. Before every later session, hash the executable and compare it with the manifest. A different digest is a different cohort even when the visible version label is unchanged. Retain the downloaded artifact outside the repository because ordinary CI artifacts expire.
+Before the first session, run:
+
+```bash
+python tools/verify_release_manifest.py artifacts/release_manifest.json
+```
+
+Record `cohort.id`, `cohort.platform`, `source.workflow_commit`, and the executable digest. Run the verifier again before every later session. Windows and macOS packages may share one cohort ID while retaining different platform-specific file hashes. A digest mismatch means the artifact is incomplete, altered, or mixed even when the visible version label is unchanged. Retain the downloaded artifact outside the repository because ordinary CI artifacts expire.
 
 Rollback means returning to the exact executable named in the retained manifest, not rebuilding the same Git revision with a different engine or export template. The source snapshot is diagnostic evidence; testers should receive only the appropriate packaged build and the observer should use the bundled brief and session sheet.
 
