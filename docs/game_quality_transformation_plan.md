@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.275`
+**Current baseline:** `0.3.0-alpha.276`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -690,7 +690,7 @@ Tasks:
 
 ### Phase 5 — Settlement and event presentation
 
-**Status:** The first dedicated Morrowline and Evacuation Camp recovery tableau is complete in `0.3.0-alpha.275`; authored event identity and human memory validation remain open.
+**Status:** Dedicated Morrowline/Evacuation Camp recovery and Mara's workbench promise/fourth-road callback are complete through `0.3.0-alpha.276`; the remaining authored events and human memory validation remain open.
 
 **Objective:** Make breathing spaces and obligations memorable.
 
@@ -940,20 +940,18 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.275`, implement the next game-quality slice:
-give one existing authored roadside event a distinctive, stateful presentation
-and a later callback.
+Starting from `0.3.0-alpha.276`, implement the next game-quality slice:
+give one remaining authored roadside event a distinct practical visual language.
 
-Use Workshop Can Wait, Wrong Wall, Mara's Second Door, or Old Drain. Keep the
-existing deterministic eligibility, choices, and effects authoritative. Add
-one event-specific visual motif, make each practical cost legible before the
-choice, and surface the consequence in a later route, settlement, encounter,
-or terminal Debrief. Do not add a generic scheduler, currency, region, faction,
-or second event state machine.
+Use The Last Dry Room or The Gallery Still Turns. Keep the existing deterministic
+eligibility, choices, and effects authoritative. Make the contested physical
+resource visible in the tableau, make both opportunity costs legible before the
+choice, and preserve the decision in a later route or terminal record. Do not add
+a generic scheduler, currency, region, faction, or second event state machine.
 
-Add focused UI/state tests, controller and 110% text checks, capture the event
-before commitment and its callback, and run the complete verification suite.
-Report exact files, tests, captures, risks, and one bounded next task.
+Add focused UI/state tests, controller and 110% text checks, capture the decision
+and its later evidence, and run the complete verification suite. Report exact
+files, tests, captures, risks, and one bounded next task.
 ```
 
 ---

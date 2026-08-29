@@ -3011,6 +3011,8 @@ func _debrief_view() -> Dictionary:
 	var decision_record := _campaign_decision_record_text()
 	if decision_record not in ["no route events on this path", "no regional decisions recorded"]:
 		promises.append("Key choices · %s" % decision_record)
+	if state.campaign_decisions.has("mara_workbench_choice"):
+		promises.append("Forge-core promise · %s" % state.mara_debrief_line().trim_prefix("Mara Flint — "))
 	var damage_text := _result_system_condition_text().replace("Damage: ", "Damaged systems · ").replace("\nUnavailable: ", "\nUnavailable systems · ")
 	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
 	var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
@@ -3083,6 +3085,7 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 		"title": String(event.get("title", "Roadside decision")),
 		"body": String(event.get("body", "The fortress waits for an order.")),
 		"choices": event.get("choices", []),
+		"story": _roadside_event_story(event_id, event),
 		"guidance": "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete.",
 		"values": {
 			"day": str(snapshot.get("day", state.day)),
@@ -3094,6 +3097,29 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 		},
 		"fortress": _fortress_presentation_snapshot()
 	})
+
+func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
+	if event_id == "mara_workbench_choice":
+		var choices: Array = event.get("choices", [])
+		var repair_target := String(choices[0].get("label", "Rebuild the damaged system")).trim_prefix("Rebuild ") if not choices.is_empty() else "the damaged system"
+		return {
+			"motif": "mara_core_choice",
+			"heading": "MARA'S FORGE CORE · ONE USE ONLY",
+			"detail": "Machine: restore %s now (+1 day, +1 pressure). Shelter: reduce every Refugee Bunk hit by 1; no repair now." % repair_target,
+			"target_name": repair_target
+		}
+	if event_id == "mara_followup":
+		var preview := state.mara_followup_preview()
+		var repair_path := String(preview.get("path", "")) == "repair"
+		var target_name := String(state.module_definition(state.mara_repaired_module_id).get("name", "repaired system")) if repair_path else "Refugee Bunk"
+		return {
+			"motif": "mara_core_callback",
+			"heading": "FOURTH-ROAD PROMISE CHECK · %s" % ("HELD" if bool(preview.get("held", false)) else "FAILED"),
+			"detail": "%s was the workbench commitment. %s" % [target_name, String(preview.get("effect", "No result available"))],
+			"target_name": target_name,
+			"held": bool(preview.get("held", false))
+		}
+	return {}
 
 func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dictionary:
 	var outcome := String(result.get("outcome", state.encounter_outcome))

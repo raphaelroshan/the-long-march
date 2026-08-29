@@ -13,6 +13,8 @@ var tableau: ScenarioCanvas
 var location_label: Label
 var title_label: Label
 var body_label: Label
+var story_panel: PanelContainer
+var story_label: Label
 var choice_buttons: Array[Button] = []
 var guidance_label: Label
 var high_contrast_enabled: bool = false
@@ -149,10 +151,19 @@ func _build_choice_dock(parent: HBoxContainer) -> void:
 	stack.add_child(title_label)
 	body_label = Label.new()
 	body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body_label.custom_minimum_size = Vector2(0, 110)
+	body_label.custom_minimum_size = Vector2(0, 80)
 	body_label.add_theme_font_size_override("font_size", 13)
 	body_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	stack.add_child(body_label)
+	story_panel = PanelContainer.new()
+	story_panel.visible = false
+	story_panel.add_theme_stylebox_override("panel", _flat_style(Color("#1b292c"), Color("#9a7544"), 2, 5, 8))
+	stack.add_child(story_panel)
+	story_label = Label.new()
+	story_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	story_label.add_theme_font_size_override("font_size", 10)
+	story_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	story_panel.add_child(story_label)
 	var choice_heading := Label.new()
 	choice_heading.text = "ISSUE ONE ORDER"
 	choice_heading.add_theme_font_size_override("font_size", 10)
@@ -180,6 +191,9 @@ func configure(view: Dictionary) -> void:
 	location_label.text = "%s · THE FORTRESS HOLDS POSITION" % String(view.get("location_name", "THE ROAD")).to_upper()
 	title_label.text = String(view.get("title", "A DECISION")).to_upper()
 	body_label.text = String(view.get("body", "The road waits for an order."))
+	var story: Dictionary = view.get("story", {})
+	story_panel.visible = not story.is_empty()
+	story_label.text = "%s\n%s" % [String(story.get("heading", "COMMITMENT")), String(story.get("detail", ""))] if story_panel.visible else ""
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))
@@ -205,6 +219,7 @@ func configure(view: Dictionary) -> void:
 	tableau.event_id = String(view.get("event_id", ""))
 	tableau.region_id = String(view.get("region_id", "ashgate_lowlands"))
 	tableau.fortress_view = view.get("fortress", {}).duplicate(true)
+	tableau.story = story.duplicate(true)
 	tableau.high_contrast_enabled = high_contrast_enabled
 	tableau.queue_redraw()
 	_configure_focus()
@@ -253,6 +268,7 @@ class ScenarioCanvas extends Control:
 	var event_id: String = ""
 	var region_id: String = "ashgate_lowlands"
 	var fortress_view: Dictionary = {}
+	var story: Dictionary = {}
 	var high_contrast_enabled: bool = false
 
 	func _ready() -> void:
@@ -283,7 +299,11 @@ class ScenarioCanvas extends Control:
 			_draw_signal(center)
 		elif event_id == "toll_decision":
 			_draw_barricade(center)
-		elif event_id in ["mara_meeting", "mara_workbench_choice", "mara_followup"]:
+		elif event_id == "mara_workbench_choice":
+			_draw_forge_core_choice(center)
+		elif event_id == "mara_followup":
+			_draw_forge_callback(center)
+		elif event_id == "mara_meeting":
 			_draw_forge(center)
 		elif event_id in ["drain_pumps", "registry_salvage"]:
 			_draw_floodworks(center)
@@ -315,6 +335,51 @@ class ScenarioCanvas extends Control:
 		draw_line(center + Vector2(68, -82), center + Vector2(68, -142), Color("#68655d"), 18.0)
 		for index in range(3):
 			draw_circle(center + Vector2(70 + index * 12, -157 - index * 14), 13.0 + index * 3.0, Color(0.16, 0.19, 0.19, 0.42))
+
+	func _draw_forge_core_choice(center: Vector2) -> void:
+		_draw_forge(center + Vector2(0, 18))
+		var core := center + Vector2(0, -76)
+		draw_circle(core, 31.0, Color(0.95, 0.48, 0.18, 0.22))
+		draw_circle(core, 17.0, Color("#ef9b4d"))
+		draw_circle(core, 7.0, Color("#ffe1a3"))
+		var machine := center + Vector2(-92, -145)
+		var shelter := center + Vector2(92, -145)
+		draw_line(core, machine + Vector2(0, 22), Color("#c18a4c"), 3.0)
+		draw_line(core, shelter + Vector2(0, 22), Color("#c18a4c"), 3.0)
+		draw_circle(machine, 22.0, Color("#34484d"), false, 6.0)
+		draw_line(machine + Vector2(-10, 10), machine + Vector2(12, -12), Color("#e2cc98"), 5.0)
+		draw_rect(Rect2(shelter - Vector2(25, 16), Vector2(50, 32)), Color("#4e6570"), false, 5.0)
+		draw_line(shelter + Vector2(-25, -16), shelter + Vector2(0, -35), Color("#9fd2c2"), 5.0)
+		draw_line(shelter + Vector2(0, -35), shelter + Vector2(25, -16), Color("#9fd2c2"), 5.0)
+		draw_string(ThemeDB.fallback_font, machine + Vector2(-44, 43), "MACHINE", HORIZONTAL_ALIGNMENT_CENTER, 88.0, 10, Color("#e2cc98"))
+		draw_string(ThemeDB.fallback_font, shelter + Vector2(-44, 43), "SHELTER", HORIZONTAL_ALIGNMENT_CENTER, 88.0, 10, Color("#e2cc98"))
+
+	func _draw_forge_callback(center: Vector2) -> void:
+		_draw_forge(center + Vector2(0, 18))
+		var held := bool(story.get("held", false))
+		var status_color := Color("#8bd6ad") if held else Color("#ef8375")
+		var core := center + Vector2(0, -76)
+		var glow := status_color
+		glow.a = 0.20
+		draw_circle(core, 34.0, glow)
+		draw_circle(core, 19.0, status_color, false, 6.0)
+		if held:
+			draw_line(core + Vector2(-8, 0), core + Vector2(-1, 8), status_color, 5.0)
+			draw_line(core + Vector2(-1, 8), core + Vector2(12, -11), status_color, 5.0)
+		else:
+			draw_line(core + Vector2(-11, -11), core + Vector2(11, 11), status_color, 5.0)
+			draw_line(core + Vector2(11, -11), core + Vector2(-11, 11), status_color, 5.0)
+		var target_name := String(story.get("target_name", "THE PROMISE")).to_upper()
+		draw_string(ThemeDB.fallback_font, center + Vector2(-105, -126), target_name, HORIZONTAL_ALIGNMENT_CENTER, 210.0, 10, status_color)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-105, -107), "HELD" if held else "FAILED", HORIZONTAL_ALIGNMENT_CENTER, 210.0, 14, status_color)
+
+	func presentation_signature() -> String:
+		var motif := String(story.get("motif", ""))
+		if motif == "mara_core_choice":
+			return "ONE CORE · MACHINE OR SHELTER"
+		if motif == "mara_core_callback":
+			return "PROMISE CHECK · %s · %s" % ["HELD" if bool(story.get("held", false)) else "FAILED", String(story.get("target_name", "promise")).to_upper()]
+		return "ROADSIDE OCCURRENCE"
 
 	func _draw_floodworks(center: Vector2) -> void:
 		draw_rect(Rect2(center - Vector2(100, 88), Vector2(200, 88)), Color("#3d4c4d"), true)

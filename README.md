@@ -57,6 +57,7 @@ The repository contains an agent-first Godot project with:
 - Authored event choices that show unmet chassis or resource prerequisites directly on locked options.
 - Specialist recruitment that names its unmet relay, crew-space, or supply requirement directly in the action.
 - Immediate decision-consequence reports that state exact mechanical changes and the authoritative next route or recovery action above the fold.
+- Mara Flint's one-core workbench decision now has a distinct machine-versus-shelter tableau, a fourth-road held/failed callback, and a matching forge-core record in the terminal Debrief.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.
 - Doctrine descriptions that disclose targeting, damage, heat, and risk tradeoffs before route commitment.

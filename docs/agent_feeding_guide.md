@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.275`; Feeds A through AP, the automated First Watch tutorial, and the first four game-quality transformation slices are complete. Continue with one bounded authored-event presentation task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.276`; Feeds A through AQ, the automated First Watch tutorial, and the first five game-quality transformation slices are complete. Continue with another bounded authored-event presentation or the first uncoached human-playtest pass from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 
 ### Current Feed A — fortress comprehension
 
@@ -257,6 +257,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.275` through the dedicated Morrowline and Evacuation Camp recovery view.
 
 > Replace the hidden-desk recovery stack with a full-frame breathing space: stable values on the left, the same damaged fortress at rest in the center, and exact before/after service commitments on the right. Keep the authoritative service commands unchanged, persist the latest transaction receipt with the save, preserve route handoff and controller focus, and keep every required action visible at 1280×720 with 110% text.
+
+### Current Feed AQ — Mara's forge-core promise
+
+**Status:** Complete in `0.3.0-alpha.276` through the workbench choice, fourth-road callback, and terminal record.
+
+> Give Mara's one-core decision a distinct machine-versus-shelter tableau. Name the exact system that could be repaired, the immediate day and pressure cost, the persistent Refugee Bunk protection, and the fact that the unchosen need remains exposed. On the fourth road, reuse the motif to show whether the original physical promise held or failed, and preserve that result in the terminal Debrief. Do not change event eligibility, effects, timing, or deterministic replay.
 
 ## Historical prototype feed sequence
 
