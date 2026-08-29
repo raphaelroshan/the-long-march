@@ -23,6 +23,7 @@ const RoadContactScene = preload("res://scenes/journey/RoadContact.tscn")
 const JourneyArrivalScene = preload("res://scenes/journey/JourneyArrival.tscn")
 const RoadsideEventScene = preload("res://scenes/journey/RoadsideEvent.tscn")
 const DebriefPanelScene = preload("res://scenes/debrief/DebriefPanel.tscn")
+const FortressSilhouetteRenderer = preload("res://src/ui/fortress_silhouette.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -1923,6 +1924,39 @@ func _state_journal_summary() -> Dictionary:
 		"offline_systems": int(dependencies.get("offline", 0))
 	}
 
+func _fortress_presentation_snapshot(active_target_id: String = "") -> Dictionary:
+	var modules: Array[Dictionary] = []
+	var damaged_count := 0
+	var offline_count := 0
+	for instance in state.modules:
+		var module_id := String(instance.get("id", ""))
+		var definition := state.module_definition(module_id)
+		var family := String(definition.get("family", "cargo"))
+		if "generator" in definition.get("tags", []):
+			family = "power"
+		var dependency := state.dependency_status(instance)
+		var state_name := String(dependency.get("state", "offline"))
+		var damaged := int(instance.get("durability", 0)) < int(definition.get("durability", 1))
+		if damaged:
+			damaged_count += 1
+		if state_name == "offline":
+			offline_count += 1
+		modules.append({
+			"id": module_id,
+			"family": family,
+			"state": state_name,
+			"damaged": damaged,
+			"sealed": bool(instance.get("sealed", false)),
+			"targeted": module_id == active_target_id
+		})
+	return {
+		"modules": modules,
+		"hull": state.hull_condition,
+		"damaged_count": damaged_count,
+		"offline_count": offline_count,
+		"active_target_id": active_target_id
+	}
+
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group := VBoxContainer.new()
 	var label := Label.new()
@@ -2223,6 +2257,7 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 		"fuel_receipt": "%d → %d  ·  −%d" % [fuel_before, state.fuel, fuel_before - state.fuel],
 		"pressure_receipt": "%d → %d  ·  +%d" % [pressure_before, state.campaign_pressure, state.campaign_pressure - pressure_before],
 		"heat_receipt": "%d/%d" % [state.heat, LongMarchState.BASE_HEAT_LIMIT],
+		"fortress": _fortress_presentation_snapshot(),
 		"action_label": "CONTINUE TO CONTACT"
 	}
 
@@ -2642,6 +2677,7 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 			"money": str(snapshot.get("money", state.money)),
 			"context": "TRUST %d" % state.settlement_trust
 		},
+		"fortress": _fortress_presentation_snapshot(),
 		"stations": {
 			"workshop": {
 				"title": "Chassis Workshop",
@@ -2792,6 +2828,7 @@ func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> voi
 		"enemy_definitions": LongMarchState.ENCOUNTER_ENEMIES,
 		"target_names": combat_view.get("target_names", {}),
 		"active_target_id": active_target_id,
+		"fortress": _fortress_presentation_snapshot(active_target_id),
 		"values": {
 			"hull": "%d/10" % state.hull_condition,
 			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
@@ -2902,6 +2939,7 @@ func _debrief_view() -> Dictionary:
 		"condition": "HULL %d/10 · FUEL %d · HEAT %d/%d\n%d ready · %d strained · %d offline\n%s" % [state.hull_condition, state.fuel, state.heat, LongMarchState.BASE_HEAT_LIMIT, int(dependencies.get("ready", 0)), int(dependencies.get("strained", 0)), int(dependencies.get("offline", 0)), damage_text],
 		"experiment": _result_replay_text().trim_prefix("NEXT RUN · "),
 		"march_on_label": "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name],
+		"fortress": _fortress_presentation_snapshot(),
 		"damaged_count": damaged_count,
 		"offline_count": int(dependencies.get("offline", 0))
 	}
@@ -2962,7 +3000,8 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 			"ashmarks": str(state.money),
 			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure],
 			"trust": str(state.settlement_trust)
-		}
+		},
+		"fortress": _fortress_presentation_snapshot()
 	})
 
 func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dictionary:
@@ -2992,6 +3031,7 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 		"summary": summary,
 		"report": recent_report,
 		"action_label": action_label,
+		"fortress": _fortress_presentation_snapshot(),
 		"receipts": {
 			"outcome": outcome_copy,
 			"hull": "%d → %d" % [int(before.get("hull", state.hull_condition)), state.hull_condition],
@@ -4476,6 +4516,7 @@ class FortressPanel extends Control:
 	var family_colors := {
 		"engine": Color("#b86f4b"),
 		"weapon": Color("#b44949"),
+		"power": Color("#a78845"),
 		"workshop": Color("#b69555"),
 		"crew_room": Color("#557fa1"),
 		"armor": Color("#6f7b84"),
@@ -4765,7 +4806,8 @@ class FortressPanel extends Control:
 		for instance in state.modules:
 			var definition := state.module_definition(String(instance.get("id", "")))
 			var rect := _module_rect(instance)
-			var color: Color = family_colors.get(String(definition.get("family", "")), Color("#8b8b8b"))
+			var family := "power" if "generator" in definition.get("tags", []) else String(definition.get("family", ""))
+			var color: Color = family_colors.get(family, Color("#8b8b8b"))
 			var dependency := state.dependency_status(instance)
 			var state_name := String(dependency.get("state", "offline"))
 			var fill_color := color
@@ -4777,6 +4819,7 @@ class FortressPanel extends Control:
 			draw_rect(rect, Color("#f0db9a") if bool(instance.get("exterior", false)) else Color("#b9c3bf"), false, 3.0 if bool(instance.get("exterior", false)) else 1.0)
 			if state_name != "ready":
 				draw_rect(rect.grow(-3), Color("#e3ad55") if state_name == "strained" else Color("#e06f61"), false, 2.0)
+			FortressSilhouetteRenderer.draw_family_mark(self, rect.grow(-9), family, Color(1.0, 1.0, 1.0, 0.20))
 			_draw_module_name(rect, String(definition.get("name", instance.get("id", ""))))
 			var maximum := maxi(1, int(definition.get("durability", 1)))
 			var durability := maxi(0, int(instance.get("durability", 0)))
@@ -4784,6 +4827,16 @@ class FortressPanel extends Control:
 			var bar_rect := Rect2(rect.position + Vector2(4, rect.size.y - 7), Vector2(rect.size.x - 8, 4))
 			draw_rect(bar_rect, Color("#172026"), true)
 			draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x * durability_ratio, bar_rect.size.y)), Color("#73c99b") if durability_ratio > 0.5 else (Color("#e8c58e") if durability_ratio > 0.25 else Color("#ef8375")), true)
+			if bool(instance.get("sealed", false)):
+				draw_rect(rect.grow(-5), Color("#f0d28f"), false, 3.0)
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(rect.size.x - 24, 14), "S", HORIZONTAL_ALIGNMENT_CENTER, 18, 11, Color("#fff0ba"))
+			elif state_name == "offline":
+				draw_line(rect.position + Vector2(6, 6), rect.end - Vector2(6, 6), Color("#ff8a7e"), 3.0)
+				draw_line(Vector2(rect.end.x - 6, rect.position.y + 6), Vector2(rect.position.x + 6, rect.end.y - 6), Color("#ff8a7e"), 3.0)
+			elif state_name == "strained":
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(rect.size.x - 24, 15), "!", HORIZONTAL_ALIGNMENT_CENTER, 18, 13, Color("#fff0ba"))
+			if durability < maximum:
+				draw_polyline(PackedVector2Array([rect.position + Vector2(rect.size.x * 0.72, 4), rect.position + Vector2(rect.size.x * 0.58, rect.size.y * 0.38), rect.position + Vector2(rect.size.x * 0.70, rect.size.y * 0.58), rect.position + Vector2(rect.size.x * 0.54, rect.size.y - 8)]), Color("#ffd28e"), 2.0)
 			if String(instance.get("id", "")) in combat_target_ids:
 				draw_rect(rect.grow(3), Color("#ff806f"), false, 4.0)
 			if selected_cell in state.occupied_cells(instance):

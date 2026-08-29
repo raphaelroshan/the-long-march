@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.272`
+**Current code baseline:** `0.3.0-alpha.273`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Next build target:** Strengthen the shared fortress silhouette and module/dependency readability without changing simulation math, following Phase 2 of [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
+**Next build target:** Add a staged wind-up, impact, and consequence treatment for one existing threat without changing combat math, following Phase 4 of [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -530,7 +530,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, last-secured-location travel semantics, automated First Watch tutorial, and dedicated terminal Debrief are complete through `0.3.0-alpha.272`.
+**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, last-secured-location travel semantics, automated First Watch tutorial, dedicated terminal Debrief, and shared stateful fortress silhouette are complete through `0.3.0-alpha.273`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 

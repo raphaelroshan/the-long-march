@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.272`
+**Current baseline:** `0.3.0-alpha.273`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -644,6 +644,8 @@ Tasks:
 
 ### Phase 2 — Fortress visual identity
 
+**Status:** The first shared code-native silhouette and module-state grammar is complete in `0.3.0-alpha.273`; bespoke production art and human recognition testing remain open.
+
 **Objective:** Make the chassis feel like a physical inhabited machine.
 
 Tasks:
@@ -934,21 +936,19 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.272`, implement the next game-quality slice:
-strengthen the shared fortress silhouette and module/dependency readability.
+Starting from `0.3.0-alpha.273`, implement the next game-quality slice:
+add a staged wind-up, impact, and consequence treatment for one existing
+threat in the shared road-contact view.
 
-Use one coherent code-native fortress visual across preparation, travel,
-contact, arrival, and Debrief. Give the engine, weapon, power, signal, crew,
-armor, cargo, and workshop families recognizable silhouettes or markings;
-show ready, strained, damaged, targeted, sealed, and offline states without
-relying on color alone. Preserve the current authoritative placement and
-dependency rules and do not add a new module family, battle rule, region,
-faction, currency, or campaign system.
+Use the current deterministic encounter step, target, damage preview, and
+report as the only authority. Show approach, target lock, attack wind-up,
+impact, mitigation or damage, dependency change, and recovery as a readable
+sequence. Preserve reduced-motion parity and do not change enemy damage,
+arrival timing, targeting, interventions, doctrine, or encounter outcomes.
 
-Add focused UI tests, high-contrast and 110% text checks where relevant,
-capture the same fortress before commitment and after damage, and run the
-complete verification suite. Report exact files, tests, captures, risks,
-and one bounded next task.
+Add focused UI tests, high-contrast and reduced-motion checks, capture the
+contact before and after impact, and run the complete verification suite.
+Report exact files, tests, captures, risks, and one bounded next task.
 ```
 
 ---

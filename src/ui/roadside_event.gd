@@ -1,6 +1,8 @@
 class_name RoadsideEventView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal pause_requested
 signal choice_requested(choice_id: String)
 
@@ -202,6 +204,7 @@ func configure(view: Dictionary) -> void:
 	guidance_label.text = String(view.get("guidance", "Choose one response. The listed costs and effects apply immediately."))
 	tableau.event_id = String(view.get("event_id", ""))
 	tableau.region_id = String(view.get("region_id", "ashgate_lowlands"))
+	tableau.fortress_view = view.get("fortress", {}).duplicate(true)
 	tableau.high_contrast_enabled = high_contrast_enabled
 	tableau.queue_redraw()
 	_configure_focus()
@@ -249,6 +252,7 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 class ScenarioCanvas extends Control:
 	var event_id: String = ""
 	var region_id: String = "ashgate_lowlands"
+	var fortress_view: Dictionary = {}
 	var high_contrast_enabled: bool = false
 
 	func _ready() -> void:
@@ -262,23 +266,15 @@ class ScenarioCanvas extends Control:
 			var y := size.y * (0.31 + ridge * 0.05)
 			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#39575d") if flooded else Color("#665c4e"), 26.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.65), Vector2(size.x, size.y * 0.35)), Color("#10282c") if flooded else Color("#31271e"), true)
-		_draw_fortress(Vector2(size.x * 0.28, size.y * 0.63))
+		_draw_fortress()
 		_draw_subject(Vector2(size.x * 0.73, size.y * 0.61))
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 18), "THE ROAD WAITS FOR YOUR ORDER", HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#dfc990"))
 
-	func _draw_fortress(center: Vector2) -> void:
-		var body := Rect2(center - Vector2(132, 64), Vector2(264, 104))
-		var metal := Color("#303837") if high_contrast_enabled else Color("#4b4a41")
-		var edge := Color("#ead69e") if high_contrast_enabled else Color("#9a825a")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 4.0)
-		draw_rect(Rect2(body.position + Vector2(25, -36), Vector2(84, 36)), metal.lightened(0.06), true)
-		draw_rect(Rect2(body.position + Vector2(25, -36), Vector2(84, 36)), edge, false, 3.0)
-		for leg_x in [body.position.x + 46.0, body.position.x + 103.0, body.end.x - 103.0, body.end.x - 46.0]:
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x, body.end.y + 43.0), edge, 9.0)
-			draw_line(Vector2(leg_x - 13.0, body.end.y + 43.0), Vector2(leg_x + 15.0, body.end.y + 43.0), edge, 7.0)
-		for window_x in [body.position.x + 48.0, body.position.x + 102.0, body.position.x + 158.0, body.position.x + 210.0]:
-			draw_rect(Rect2(Vector2(window_x, body.position.y + 31), Vector2(20, 22)), Color("#dfa759"), true)
+	func _draw_fortress() -> void:
+		var view := fortress_view.duplicate(true)
+		view["mode"] = "event"
+		view["high_contrast"] = high_contrast_enabled
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.04, size.y * 0.30), Vector2(size.x * 0.48, size.y * 0.42)), view)
 
 	func _draw_subject(center: Vector2) -> void:
 		if event_id in ["salvage_choice", "the_last_dry_room"]:

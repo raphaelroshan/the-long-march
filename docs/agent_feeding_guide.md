@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.272`; Feeds A through AM, the automated First Watch tutorial, and the first game-quality transformation slice are complete. Continue with a bounded fortress-identity or battle-feedback task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.273`; Feeds A through AN, the automated First Watch tutorial, and the first two game-quality transformation slices are complete. Continue with a bounded battle-feedback task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -239,6 +239,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.272` through the dedicated terminal Debrief.
 
 > Replace the reused operational result desk with a terminal journey tableau. Show the five-road timeline, outcome, route span, doctrine and contract, carried people or cargo, pressure and trust, persistent system condition, one explicit causal chain, and one state-specific replay experiment. Keep final chassis inspection, local notes, replay, March On, save, controller focus, 110% text, and high contrast available without adding new simulation rules.
+
+### Current Feed AN — shared fortress identity
+
+**Status:** Complete in `0.3.0-alpha.273` through the shared stateful silhouette and detailed chassis marks.
+
+> Use one code-native layered fortress renderer across rest, travel, contact, roadside event, arrival, and Debrief. Aggregate installed modules into recognizable engine, weapon, power/crew, workshop, cargo, signal, armor, and sustain bays. Show ready, strained, offline, sealed, damaged, and targeted states with symbols, cracks, outlines, and text as well as color. Preserve authoritative placement and dependency rules.
 
 ## Historical prototype feed sequence
 

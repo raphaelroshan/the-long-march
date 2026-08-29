@@ -1,6 +1,8 @@
 class_name RoadContactView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal pause_requested
 signal advance_requested
 signal inspect_requested
@@ -399,28 +401,12 @@ class ContactCanvas extends Control:
 
 	func _draw_fortress() -> Rect2:
 		var impact_strength := sin(transition_progress * PI) if _active_contact_has_damage() else 0.0
-		var center := Vector2(size.x * 0.47 - impact_strength * 5.0, size.y * 0.57 + impact_strength * 2.0)
-		var body := Rect2(center - Vector2(158, 74), Vector2(316, 124))
-		var metal := Color("#303837") if high_contrast_enabled else Color("#4b4a41")
-		var edge := Color("#ead69e") if high_contrast_enabled else Color("#9a825a")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 4.0)
-		draw_rect(Rect2(body.position + Vector2(28, -42), Vector2(92, 42)), metal.lightened(0.06), true)
-		draw_rect(Rect2(body.position + Vector2(28, -42), Vector2(92, 42)), edge, false, 3.0)
-		draw_rect(Rect2(body.position + Vector2(196, -27), Vector2(72, 27)), metal.darkened(0.08), true)
-		draw_line(body.position + Vector2(232, -27), body.position + Vector2(232, -76), edge, 5.0)
-		draw_line(body.position + Vector2(232, -76), body.position + Vector2(260, -87), Color("#91d6cf"), 3.0)
-		for leg_x in [body.position.x + 50.0, body.position.x + 118.0, body.end.x - 118.0, body.end.x - 50.0]:
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x - 13.0, body.end.y + 50.0), edge, 10.0)
-			draw_line(Vector2(leg_x - 13.0, body.end.y + 50.0), Vector2(leg_x + 18.0, body.end.y + 50.0), edge, 8.0)
-		for window_x in [body.position.x + 54.0, body.position.x + 112.0, body.position.x + 174.0, body.position.x + 236.0]:
-			draw_rect(Rect2(Vector2(window_x, body.position.y + 36), Vector2(24, 26)), Color("#d79b52"), true)
-		var target_anchor := _target_anchor(body, String(current_view.get("active_target_id", "")))
-		if not String(current_view.get("active_target_id", "")).is_empty():
-			var pulse_alpha := 0.28 + impact_strength * 0.32
-			draw_circle(target_anchor, 13.0 + impact_strength * 5.0, Color(0.95, 0.30, 0.24, pulse_alpha))
-			draw_circle(target_anchor, 8.0, Color("#ff8275"), false, 3.0)
-		return body
+		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
+		view["mode"] = "contact"
+		view["impact"] = impact_strength
+		view["high_contrast"] = high_contrast_enabled
+		var rendered := FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.19, size.y * 0.28), Vector2(size.x * 0.56, size.y * 0.46)), view)
+		return rendered.get("body", Rect2())
 
 	func _active_contact_has_damage() -> bool:
 		if transition_progress >= 1.0:

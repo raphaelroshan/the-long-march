@@ -1,6 +1,8 @@
 class_name DebriefPanelView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal pause_requested
 signal inspect_requested
 signal notes_requested
@@ -286,22 +288,8 @@ class DebriefFortressCanvas extends Control:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#071013") if high_contrast_enabled else (Color("#17363d") if flooded else Color("#30383a")), true)
 		draw_circle(Vector2(size.x * 0.78, size.y * 0.18), 42.0, Color(0.95, 0.75, 0.43, 0.17))
 		draw_rect(Rect2(Vector2(0, size.y * 0.68), Vector2(size.x, size.y * 0.32)), Color("#10282c") if flooded else Color("#30271f"), true)
-		var center := Vector2(size.x * 0.48, size.y * 0.62)
-		var body := Rect2(center - Vector2(165, 72), Vector2(330, 118))
-		var metal := Color("#303837") if high_contrast_enabled else Color("#4b4a41")
-		var edge := Color("#ead69e") if high_contrast_enabled else Color("#9a825a")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 4.0)
-		draw_rect(Rect2(body.position + Vector2(30, -42), Vector2(96, 42)), metal.lightened(0.06), true)
-		draw_rect(Rect2(body.position + Vector2(30, -42), Vector2(96, 42)), edge, false, 3.0)
-		for leg_x in [body.position.x + 52.0, body.position.x + 124.0, body.end.x - 124.0, body.end.x - 52.0]:
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x, body.end.y + 44), edge, 10.0)
-			draw_line(Vector2(leg_x - 14, body.end.y + 44), Vector2(leg_x + 17, body.end.y + 44), edge, 8.0)
-		var damaged_count := int(current_view.get("damaged_count", 0))
-		var offline_count := int(current_view.get("offline_count", 0))
-		for index in range(5):
-			var window_color := Color("#78483d") if index < offline_count else (Color("#d07d45") if index < offline_count + damaged_count else Color("#dfa759"))
-			draw_rect(Rect2(body.position + Vector2(45 + index * 55, 36), Vector2(23, 26)), window_color, true)
-		for smoke_index in range(3 + mini(offline_count, 2)):
-			draw_circle(body.position + Vector2(76 + smoke_index * 12, -55 - smoke_index * 13), 9.0 + smoke_index * 2.0, Color(0.13, 0.16, 0.17, 0.38))
+		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
+		view["mode"] = "debrief"
+		view["high_contrast"] = high_contrast_enabled
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.18, size.y * 0.17), Vector2(size.x * 0.64, size.y * 0.58)), view)
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), "THE SAME FORTRESS RETURNS · DAMAGE REMAINS", HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#e2cc98"))

@@ -1,6 +1,8 @@
 class_name SettlementHubView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal pause_requested
 signal action_requested(station_id: String, action_id: String)
 
@@ -322,6 +324,7 @@ func configure(view: Dictionary) -> void:
 	_refresh_station_detail()
 	bazaar_canvas.location_id = String(view.get("location_id", "ashgate_depot"))
 	bazaar_canvas.selected_station_id = selected_station_id
+	bazaar_canvas.fortress_view = view.get("fortress", {}).duplicate(true)
 	bazaar_canvas.high_contrast_enabled = high_contrast_enabled
 	bazaar_canvas.queue_redraw()
 
@@ -364,6 +367,7 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 class BazaarCanvas extends Control:
 	var location_id: String = "ashgate_depot"
 	var selected_station_id: String = "assignment_board"
+	var fortress_view: Dictionary = {}
 	var high_contrast_enabled: bool = false
 
 	func _ready() -> void:
@@ -405,23 +409,7 @@ class BazaarCanvas extends Control:
 			draw_line(Vector2(post_x, rect.position.y), Vector2(post_x, rect.end.y), border.darkened(0.25), 5.0)
 
 	func _draw_fortress() -> void:
-		var center := Vector2(size.x * 0.5, size.y * 0.49)
-		var body := Rect2(center - Vector2(166, 82), Vector2(332, 142))
-		var metal := Color("#2b3130") if high_contrast_enabled else Color("#4a4940")
-		var edge := Color("#d7c08b") if high_contrast_enabled else Color("#8f7954")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 4.0)
-		draw_rect(Rect2(body.position + Vector2(34, -42), Vector2(104, 44)), metal.darkened(0.08), true)
-		draw_rect(Rect2(body.position + Vector2(34, -42), Vector2(104, 44)), edge, false, 3.0)
-		draw_rect(Rect2(body.end - Vector2(96, 24), Vector2(70, 24)), Color("#6f3f2d"), true)
-		for window_index in range(5):
-			var window_pos := body.position + Vector2(30 + window_index * 56, 28)
-			draw_rect(Rect2(window_pos, Vector2(24, 16)), Color("#d79b52"), true)
-			draw_rect(Rect2(window_pos, Vector2(24, 16)), edge, false, 2.0)
-		for leg_x in [body.position.x + 52, body.position.x + 116, body.end.x - 116, body.end.x - 52]:
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x - 12, body.end.y + 48), metal.lightened(0.08), 12.0)
-			draw_line(Vector2(leg_x - 12, body.end.y + 48), Vector2(leg_x - 30, body.end.y + 50), edge, 6.0)
-		draw_line(Vector2(body.position.x + 78, body.position.y - 42), Vector2(body.position.x + 78, body.position.y - 88), edge, 8.0)
-		draw_circle(Vector2(body.position.x + 78, body.position.y - 92), 8.0, Color("#69d8cf"))
-		for smoke_index in range(4):
-			draw_circle(Vector2(body.position.x + 78 - smoke_index * 9, body.position.y - 112 - smoke_index * 13), 11.0 + smoke_index * 4.0, Color(0.12, 0.14, 0.14, 0.34 - smoke_index * 0.05))
+		var view := fortress_view.duplicate(true)
+		view["mode"] = "rest"
+		view["high_contrast"] = high_contrast_enabled
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.25, size.y * 0.27), Vector2(size.x * 0.50, size.y * 0.45)), view)

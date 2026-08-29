@@ -1,6 +1,8 @@
 class_name JourneyTransitionView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal pause_requested
 signal continue_requested
 
@@ -189,6 +191,7 @@ func configure(view: Dictionary) -> void:
 	continue_button.text = String(view.get("action_label", "CONTINUE TO CONTACT"))
 	march_canvas.region_id = String(view.get("region_id", "ashgate_lowlands"))
 	march_canvas.destination_name = destination
+	march_canvas.fortress_view = view.get("fortress", {}).duplicate(true)
 	march_canvas.high_contrast_enabled = high_contrast_enabled
 	march_canvas.reduced_motion = reduced_motion
 	march_canvas.queue_redraw()
@@ -219,6 +222,7 @@ class MarchCanvas extends Control:
 	var high_contrast_enabled: bool = false
 	var reduced_motion: bool = false
 	var travel_offset: float = 0.0
+	var fortress_view: Dictionary = {}
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -254,23 +258,8 @@ class MarchCanvas extends Control:
 		draw_string(ThemeDB.fallback_font, Vector2(size.x * 0.5 - 120, size.y - 22), "CONTACT BEFORE %s" % destination_name.to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 240, 12, Color("#d7c08b"))
 
 	func _draw_fortress() -> void:
-		var center := Vector2(size.x * 0.5, size.y * 0.53)
-		var body := Rect2(center - Vector2(175, 78), Vector2(350, 136))
-		var metal := Color("#303635") if high_contrast_enabled else Color("#4a4940")
-		var edge := Color("#e1cd99") if high_contrast_enabled else Color("#927b56")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 4.0)
-		draw_rect(Rect2(body.position + Vector2(42, -44), Vector2(112, 46)), metal.darkened(0.08), true)
-		draw_rect(Rect2(body.position + Vector2(42, -44), Vector2(112, 46)), edge, false, 3.0)
-		for window_index in range(5):
-			var window_pos := body.position + Vector2(35 + window_index * 58, 30)
-			draw_rect(Rect2(window_pos, Vector2(25, 16)), Color("#e0a354"), true)
-		for leg_index in range(4):
-			var leg_x := body.position.x + 56 + leg_index * 78
-			var stride := sin(travel_offset * 0.06 + leg_index * 1.4) * 16.0 if not reduced_motion else 0.0
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x + stride, body.end.y + 52), metal.lightened(0.08), 13.0)
-			draw_line(Vector2(leg_x + stride, body.end.y + 52), Vector2(leg_x + stride - 24, body.end.y + 54), edge, 6.0)
-		draw_line(Vector2(body.position.x + 86, body.position.y - 44), Vector2(body.position.x + 86, body.position.y - 88), edge, 8.0)
-		for smoke_index in range(4):
-			var drift := fmod(travel_offset * 0.45 + smoke_index * 18.0, 80.0)
-			draw_circle(Vector2(body.position.x + 86 - drift, body.position.y - 100 - smoke_index * 10), 9.0 + smoke_index * 3.0, Color(0.10, 0.12, 0.12, 0.38 - smoke_index * 0.06))
+		var view := fortress_view.duplicate(true)
+		view["mode"] = "travel"
+		view["travel_phase"] = travel_offset if not reduced_motion else 0.0
+		view["high_contrast"] = high_contrast_enabled
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.22, size.y * 0.25), Vector2(size.x * 0.56, size.y * 0.48)), view)

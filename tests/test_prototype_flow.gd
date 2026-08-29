@@ -45,6 +45,7 @@ func _press_campaign_node(node_id: String) -> void:
 			game.campaign_map.commit_button.pressed.emit()
 			await process_frame
 			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "committing a route should present the road before exposing combat controls")
+			_expect(game.journey_transition.current_view.get("fortress", {}).get("modules", []).size() > 0, "committed travel should carry the live fortress identity into its road silhouette")
 			game.journey_transition.continue_button.pressed.emit()
 			await process_frame
 			return
@@ -855,6 +856,7 @@ func _run() -> void:
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
 	_expect(game.debrief_panel.visible and not game.main_columns.visible and not game.journey_banner.visible, "results should open the dedicated terminal debrief and retire the operational desk")
+	_expect(game.debrief_panel.fortress_canvas.current_view.get("fortress", {}).get("modules", []).size() > 0, "the terminal debrief should render the same live module families and condition as the completed march")
 	_expect(game.debrief_panel.headline_label.text == "SCARRED" and game.debrief_panel.outcome_label.text == "JOURNEY COMPLETE · SCARRED MARCH", "the debrief should state the run outcome without success-coding every terminal state")
 	_expect(game.debrief_panel.inspect_button.has_focus(), "a newly opened debrief should focus final fortress review before asking for another commitment")
 	_expect(game.debrief_panel.headline_label.get_global_rect().position.y >= game.debrief_panel.get_global_rect().position.y and game.debrief_panel.inspect_button.get_global_rect().end.y <= game.debrief_panel.get_global_rect().end.y + 1.0, "the terminal debrief should keep both its outcome and first interpretation action visible at 720p")

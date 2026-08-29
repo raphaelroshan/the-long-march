@@ -1,6 +1,8 @@
 class_name JourneyArrivalView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal pause_requested
 signal continue_requested
 
@@ -224,18 +226,9 @@ class ArrivalCanvas extends Control:
 			draw_circle(Vector2(lamp_x, base_y - 82), 7.0, Color("#e4a958"))
 
 	func _draw_resting_fortress(retreat: bool) -> void:
-		var center := Vector2(size.x * 0.32, size.y * 0.61)
-		var body := Rect2(center - Vector2(142, 68), Vector2(284, 112))
-		var metal := Color("#303837") if high_contrast_enabled else Color("#4b4a41")
-		var edge := Color("#e7d49e") if high_contrast_enabled else Color("#9a825a")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 4.0)
-		draw_rect(Rect2(body.position + Vector2(28, -38), Vector2(88, 38)), metal.lightened(0.07), true)
-		draw_rect(Rect2(body.position + Vector2(28, -38), Vector2(88, 38)), edge, false, 3.0)
-		for leg_x in [body.position.x + 48.0, body.position.x + 108.0, body.end.x - 108.0, body.end.x - 48.0]:
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x, body.end.y + 45.0), edge, 10.0)
-			draw_line(Vector2(leg_x - 14.0, body.end.y + 45.0), Vector2(leg_x + 16.0, body.end.y + 45.0), edge, 8.0)
-		for window_x in [body.position.x + 52.0, body.position.x + 108.0, body.position.x + 168.0, body.position.x + 222.0]:
-			draw_rect(Rect2(Vector2(window_x, body.position.y + 34), Vector2(21, 23)), Color("#c98549") if retreat else Color("#dfaa59"), true)
-		for smoke_index in range(3):
-			draw_circle(body.position + Vector2(75 + smoke_index * 13, -57 - smoke_index * 17), 10.0 + smoke_index * 3.0, Color(0.18, 0.21, 0.21, 0.36))
+		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
+		view["mode"] = "arrival"
+		view["high_contrast"] = high_contrast_enabled
+		if retreat:
+			view["damaged_count"] = maxi(1, int(view.get("damaged_count", 0)))
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.05, size.y * 0.31), Vector2(size.x * 0.52, size.y * 0.43)), view)
