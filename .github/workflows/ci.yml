@@ -162,6 +162,7 @@ jobs:
             --head-commit "$COHORT_HEAD_SHA" \
             --ref "$GITHUB_REF" \
             --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --platform windows \
             --verification repository_policy \
             --verification godot_tests_ubuntu \
             --verification godot_tests_windows \
@@ -171,7 +172,8 @@ jobs:
             --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             --file observer_brief=docs/playtest_guide.md \
             --file session_sheet=docs/private_alpha_session_sheet.md \
-            --file scope_and_limitations=docs/internal_test_release.md
+            --file scope_and_limitations=docs/internal_test_release.md \
+            --file manifest_verifier=tools/verify_release_manifest.py
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:
@@ -182,5 +184,6 @@ jobs:
             docs/internal_test_release.md
             docs/playtest_guide.md
             docs/private_alpha_session_sheet.md
+            tools/verify_release_manifest.py
           if-no-files-found: error
           retention-days: 30

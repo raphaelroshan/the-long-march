@@ -32,6 +32,7 @@ def build_manifest(
 	head_commit: str,
 	ref: str,
 	run_url: str,
+	platform: str,
 	verification: list[str],
 ) -> dict[str, Any]:
 	root = root.resolve()
@@ -58,19 +59,25 @@ def build_manifest(
 			}
 		)
 	entries.sort(key=lambda entry: (entry["role"], entry["path"]))
+	version = ci_manifest["prototype_version"]
+	resolved_head = head_commit or commit
 	return {
 		"schema_version": 1,
 		"product": {
 			"slug": ci_manifest["slug"],
 			"display_name": ci_manifest["display_name"],
-			"version": ci_manifest["prototype_version"],
+			"version": version,
 			"playtest_ready": bool(ci_manifest.get("playtest_ready", False)),
 			"release_ready": bool(ci_manifest.get("release_ready", False)),
+		},
+		"cohort": {
+			"id": f"{version}@{resolved_head[:12]}",
+			"platform": platform,
 		},
 		"source": {
 			"repository": ci_manifest["primary_repo"],
 			"workflow_commit": commit,
-			"head_commit": head_commit or commit,
+			"head_commit": resolved_head,
 			"ref": ref,
 			"workflow_run_url": run_url,
 		},
@@ -88,6 +95,7 @@ def main() -> int:
 	parser.add_argument("--head-commit", default="")
 	parser.add_argument("--ref", required=True)
 	parser.add_argument("--run-url", required=True)
+	parser.add_argument("--platform", required=True, choices=("windows", "macos"))
 	parser.add_argument("--file", action="append", type=parse_file, default=[])
 	parser.add_argument("--verification", action="append", default=[])
 	args = parser.parse_args()
@@ -109,6 +117,7 @@ def main() -> int:
 			args.head_commit,
 			args.ref,
 			args.run_url,
+			args.platform,
 			args.verification,
 		)
 	except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:
