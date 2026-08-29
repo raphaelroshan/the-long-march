@@ -46,6 +46,7 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(panel.location_label.text.contains("MORROWLINE CAMP") and panel.context_label.text.contains("2 finite service opportunities"), "the recovery tableau should identify its place and finite opportunity budget")
 	_expect(panel.place_label.text.contains("canvas repair bays") and panel.priority_label.text.contains("movement or repair chain") and panel.priority_label.text.contains("fuel and hull"), "Morrowline should present a place-specific identity and two practical service priorities")
+	_expect(panel.recovery_canvas.presentation_signature().contains("CANVAS REPAIR BAYS") and panel.recovery_canvas.presentation_signature().contains("PARTS WAGONS"), "Morrowline's recovery canvas should expose its authored convoy-shelter motif")
 	_expect(panel.value_labels["hull"].text == "7/10" and panel.value_labels["actions"].text == "2" and panel.value_labels["pressure"].text == "STRAIN 4", "the recovery ledger should expose condition, service opportunities, and road pressure")
 	_expect(panel.repair_button.text.contains("DURABILITY 1→3") and panel.refuel_button.text.contains("FUEL 3→5") and panel.hull_button.text.contains("HULL 7→9"), "every service should show its exact before-and-after state before commitment")
 	_expect(panel.repair_button.has_focus(), "the first legal recovery service should receive default controller focus")
@@ -74,6 +75,16 @@ func _run() -> void:
 	var panel_rect: Rect2 = panel.get_global_rect()
 	_expect(panel.recovery_canvas.high_contrast_enabled, "the recovery fortress tableau should inherit high contrast")
 	_expect(panel_rect.encloses(panel.pause_button.get_global_rect()) and panel_rect.encloses(panel.routes_button.get_global_rect()) and panel.routes_button.is_visible_in_tree(), "the recovery screen should keep pause and route actions visible at 1280×720 with 110% text")
+	var veyru_view: Dictionary = view.duplicate(true)
+	veyru_view["region_id"] = "flooded_veyru"
+	veyru_view["location_id"] = "veyru_evacuation_camp"
+	veyru_view["location_name"] = "Evacuation Camp"
+	veyru_view["place_identity"] = "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores."
+	veyru_view["service_priority"] = "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road."
+	panel.configure(veyru_view)
+	await _settle_ui()
+	_expect(panel.place_label.text.contains("raised flood platform") and panel.priority_label.text.contains("medicine carrier") and panel.priority_label.text.contains("fuel margin"), "Evacuation Camp should present its flood-specific identity and practical service priorities")
+	_expect(panel.recovery_canvas.presentation_signature().contains("RAISED PLATFORM") and panel.recovery_canvas.presentation_signature().contains("WATER PUMP") and panel.recovery_canvas.presentation_signature().contains("SEALED CASES"), "Evacuation Camp's recovery canvas should expose its authored flood-platform motif")
 	panel.queue_free()
 	scaler.queue_free()
 	await process_frame
