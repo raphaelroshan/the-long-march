@@ -59,6 +59,7 @@ The repository contains an agent-first Godot project with:
 - Immediate decision-consequence reports that state exact mechanical changes and the authoritative next route or recovery action above the fold.
 - Mara Flint's one-core workbench decision now has a distinct machine-versus-shelter tableau, a fourth-road held/failed callback, and a matching forge-core record in the terminal Debrief.
 - Pump Gallery frames its old-drain decision as one day held against two points of rising water, then carries that choice into the Veyru route record and Debrief.
+- The Last Dry Room shows its single compartment split between families and repair stock, with exact trust, shelter, module-durability, and terminal-record consequences.
 - Road Raiders, Climbers, Burrowers, Storm Fronts, and Siege Beasts.
 - Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo interventions.
 - Doctrine descriptions that disclose targeting, damage, heat, and risk tradeoffs before route commitment.

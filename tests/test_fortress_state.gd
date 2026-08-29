@@ -842,7 +842,10 @@ func _test_bounded_occurrence_scheduler() -> void:
 	_install_occurrence_loadout(dry_room)
 	_activate_occurrence(dry_room, "the_last_dry_room", "manual_dry_room")
 	var parts_before := int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability)
+	var dry_room_details := dry_room.campaign_event_details()
+	_expect(String(dry_room_details.choices[0].effect).contains("Parts Crate %d→%d" % [parts_before, parts_before - 1]) and String(dry_room_details.choices[1].effect).contains("Steam Lance Engine 2→3"), "the dry-room choice should preview exact physical damage and repair before commitment")
 	_expect(bool(dry_room.resolve_campaign_event("shelter_in_dry_room").get("ok", false)) and dry_room.settlement_trust == 2 and dry_room.shelter_tendency == 1 and int(dry_room.modules[dry_room._module_index_by_id("parts_crate")].durability) == parts_before - 1, "the dry-room shelter choice should exchange physical repair stock for trust and refuge capacity")
+	_expect(dry_room.occurrence_debrief_lines()[0].contains("families sheltered; repair stock exposed"), "the dry-room terminal record should translate the internal choice ID into its remembered consequence")
 	_expect(not bool(dry_room.occurrence_eligibility("the_last_dry_room", "road_arrival", "lower_ash_road").eligible), "a one-shot occurrence should not repeat after resolution")
 
 	var lift := LongMarchState.new(1107)

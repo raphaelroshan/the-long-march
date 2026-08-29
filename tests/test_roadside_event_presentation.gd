@@ -84,6 +84,21 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(event_view.story_label.text.contains("ONE DAY AGAINST TWO WATER") and event_view.choice_buttons[0].text.contains("Rising water -2") and event_view.choice_buttons[1].text.contains("Water unchanged"), "the Pump Gallery should expose the exact time-versus-flood tradeoff before commitment")
 	_expect(event_view.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER" and view_rect.encloses(event_view.choice_buttons[1].get_global_rect()), "the Pump Gallery should retain a distinct pump-and-water motif within the large-text viewport")
+	var dry_room_view: Dictionary = common.duplicate(true)
+	dry_room_view.merge({
+		"event_id": "the_last_dry_room",
+		"title": "The Last Dry Room",
+		"body": "One sealed compartment can keep the repair stock dry or shelter the families riding beside it. The same floor cannot protect both.",
+		"story": {"motif": "dry_room_choice", "heading": "ONE SEALED ROOM · TWO CLAIMS", "detail": "Families: Trust 2→4 · Shelter +1 · Parts Crate 2→1. Repair stock: Field Workshop 1→2 durability · Trust 2→1."},
+		"choices": [
+			{"id": "shelter_in_dry_room", "label": "Give the room to the families", "effect": "Trust 2→4 · Shelter +1 · Parts Crate 2→1", "enabled": true, "reason": ""},
+			{"id": "preserve_dry_parts", "label": "Keep the parts dry and repair Field Workshop", "effect": "Field Workshop 1→2 durability · Trust 2→1", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(dry_room_view)
+	await _settle_ui()
+	_expect(event_view.story_label.text.contains("ONE SEALED ROOM · TWO CLAIMS") and event_view.choice_buttons[0].text.contains("Parts Crate 2→1") and event_view.choice_buttons[1].text.contains("Field Workshop 1→2"), "The Last Dry Room should name both competing physical consequences before commitment")
+	_expect(event_view.tableau.presentation_signature() == "ONE DRY ROOM · FAMILIES OR PARTS" and view_rect.encloses(event_view.choice_buttons[1].get_global_rect()), "The Last Dry Room should retain its own readable compartment motif at 110% text")
 	event_view.queue_free()
 	scaler.queue_free()
 	await process_frame

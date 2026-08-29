@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.277`
+**Current baseline:** `0.3.0-alpha.278`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -690,7 +690,7 @@ Tasks:
 
 ### Phase 5 — Settlement and event presentation
 
-**Status:** Dedicated Morrowline/Evacuation Camp recovery, Mara's workbench promise/fourth-road callback, and Pump Gallery's old-drain commitment are complete through `0.3.0-alpha.277`; the remaining authored events and human memory validation remain open.
+**Status:** Dedicated Morrowline/Evacuation Camp recovery plus distinct Mara forge-core, Pump Gallery, and Last Dry Room commitments are complete through `0.3.0-alpha.278`; broader authored-event coverage and human memory validation remain open.
 
 **Objective:** Make breathing spaces and obligations memorable.
 
@@ -940,18 +940,19 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.277`, implement the next game-quality slice:
-give The Last Dry Room a distinct practical visual language.
+Starting from `0.3.0-alpha.278`, prepare the first human private-alpha evidence
+pass without changing simulation balance.
 
-Keep its existing deterministic eligibility, choices, and effects authoritative.
-Make the single sealed compartment, families, and repair stock visible in the
-tableau; show which physical resource is damaged or restored by each choice; and
-preserve the result in the terminal Debrief. Do not add a generic scheduler,
-currency, region, faction, or second event state machine.
+Create a concise in-repository session sheet for First Watch, Ashgate, and Veyru
+that records first action, placement errors, route prediction, contact prediction,
+recovery reasoning, event recall, debrief comprehension, and replay intent. Add a
+repeatable capture checklist for the supported 1280×720 standard/high-contrast and
+100%/110% text combinations. Keep all collection local and opt-in; do not add
+telemetry, accounts, automatic uploads, or inferred emotion scoring.
 
-Add focused UI/state tests, controller and 110% text checks, capture the decision
-and its terminal evidence, and run the complete verification suite. Report exact
-files, tests, captures, risks, and one bounded next task.
+Validate the sheet against the existing local journal/export flow and document
+the exact owner work needed to run five uncoached sessions. Report automated
+coverage separately from human evidence.
 ```
 
 ---

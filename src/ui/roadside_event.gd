@@ -293,7 +293,9 @@ class ScenarioCanvas extends Control:
 		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.04, size.y * 0.30), Vector2(size.x * 0.48, size.y * 0.42)), view)
 
 	func _draw_subject(center: Vector2) -> void:
-		if event_id in ["salvage_choice", "the_last_dry_room"]:
+		if event_id == "the_last_dry_room":
+			_draw_dry_room_choice(center)
+		elif event_id == "salvage_choice":
 			_draw_ruin(center)
 		elif event_id in ["lost_signal", "archive_broadcast"]:
 			_draw_signal(center)
@@ -317,6 +319,24 @@ class ScenarioCanvas extends Control:
 		for x in [-58.0, -15.0, 32.0, 70.0]:
 			draw_line(center + Vector2(x, -88), center + Vector2(x - 18, -133), Color("#242624"), 8.0)
 			draw_circle(center + Vector2(x - 20, -140), 16.0, Color(0.85, 0.31, 0.16, 0.65))
+
+	func _draw_dry_room_choice(center: Vector2) -> void:
+		var room := Rect2(center - Vector2(74, 105), Vector2(148, 105))
+		draw_rect(room, Color("#202b2d"), true)
+		draw_rect(room, Color("#9aa9a5"), false, 7.0)
+		draw_line(center + Vector2(0, -102), center + Vector2(0, -8), Color("#6d7b78"), 5.0)
+		for offset in [-42.0, -14.0, 14.0]:
+			var person := center + Vector2(offset, -56)
+			draw_circle(person, 8.0, Color("#e2cc98"))
+			draw_line(person + Vector2(0, 8), person + Vector2(0, 30), Color("#e2cc98"), 5.0)
+		for row in range(2):
+			for column in range(2):
+				var crate := Rect2(center + Vector2(16 + column * 27, -76 + row * 29), Vector2(22, 22))
+				draw_rect(crate, Color("#8e6d4f"), true)
+				draw_rect(crate, Color("#d8b177"), false, 2.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-70, 26), "FAMILIES", HORIZONTAL_ALIGNMENT_CENTER, 62.0, 10, Color("#e2cc98"))
+		draw_string(ThemeDB.fallback_font, center + Vector2(9, 26), "PARTS", HORIZONTAL_ALIGNMENT_CENTER, 62.0, 10, Color("#d8b177"))
+		draw_string(ThemeDB.fallback_font, center + Vector2(-92, 53), "ONE SEALED ROOM", HORIZONTAL_ALIGNMENT_CENTER, 184.0, 12, Color("#9fd2c2"))
 
 	func _draw_signal(center: Vector2) -> void:
 		draw_line(center + Vector2(0, 12), center + Vector2(0, -145), Color("#78817c"), 10.0)
@@ -383,6 +403,8 @@ class ScenarioCanvas extends Control:
 			return "PROMISE CHECK · %s · %s" % ["HELD" if bool(story.get("held", false)) else "FAILED", String(story.get("target_name", "promise")).to_upper()]
 		if motif == "pump_gallery_choice":
 			return "OLD DRAIN · ONE DAY OR TWO WATER"
+		if motif == "dry_room_choice":
+			return "ONE DRY ROOM · FAMILIES OR PARTS"
 		return "ROADSIDE OCCURRENCE"
 
 	func _draw_floodworks(center: Vector2) -> void:

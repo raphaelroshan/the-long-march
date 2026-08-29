@@ -992,7 +992,10 @@ func occurrence_debrief_lines() -> Array[String]:
 		var event_id := String(entry.get("event_id", ""))
 		var choice_id := String(entry.get("choice_id", ""))
 		var title := String(OCCURRENCE_DEFS.get(event_id, {}).get("title", event_id.replace("_", " ").capitalize()))
-		lines.append("Road occurrence — %s: %s" % [title, choice_id.replace("_", " ").capitalize()])
+		var outcome := choice_id.replace("_", " ").capitalize()
+		if event_id == "the_last_dry_room":
+			outcome = "families sheltered; repair stock exposed" if choice_id == "shelter_in_dry_room" else "repair stock preserved; families turned away"
+		lines.append("Road occurrence — %s: %s" % [title, outcome])
 	return lines
 
 func campaign_event_details() -> Dictionary:
@@ -1051,9 +1054,15 @@ func campaign_event_details() -> Dictionary:
 		"the_last_dry_room":
 			var weakest_id := _weakest_damaged_module_id()
 			var weakest_name := String(module_definition(weakest_id).get("name", "damaged system"))
+			var weakest_index := _module_index_by_id(weakest_id)
+			var weakest_before := int(modules[weakest_index].get("durability", 0)) if weakest_index >= 0 else 0
+			var weakest_maximum := int(module_definition(weakest_id).get("durability", weakest_before))
+			var parts_id := _operational_module_id_with_tag("parts")
+			var parts_index := _module_index_by_id(parts_id)
+			var parts_before := int(modules[parts_index].get("durability", 0)) if parts_index >= 0 else 0
 			return {"id": "the_last_dry_room", "title": "The Last Dry Room", "body": "One sealed compartment can keep the repair stock dry or shelter the families riding beside it. The same floor cannot protect both.", "choices": [
-				{"id": "shelter_in_dry_room", "label": "Give the room to the families", "effect": "Trust +2 · Shelter +1 · Parts Crate -1 durability", "enabled": true, "reason": ""},
-				{"id": "preserve_dry_parts", "label": "Keep the parts dry and repair %s" % weakest_name, "effect": "Weakest system +1 durability · Trust -1", "enabled": not weakest_id.is_empty(), "reason": "No installed system is damaged" if weakest_id.is_empty() else ""}
+				{"id": "shelter_in_dry_room", "label": "Give the room to the families", "effect": "Trust %d→%d · Shelter +1 · Parts Crate %d→%d" % [settlement_trust, settlement_trust + 2, parts_before, maxi(0, parts_before - 1)], "enabled": true, "reason": ""},
+				{"id": "preserve_dry_parts", "label": "Keep the parts dry and repair %s" % weakest_name, "effect": "%s %d→%d durability · Trust %d→%d" % [weakest_name, weakest_before, mini(weakest_maximum, weakest_before + 1), settlement_trust, settlement_trust - 1], "enabled": not weakest_id.is_empty(), "reason": "No installed system is damaged" if weakest_id.is_empty() else ""}
 			]}
 		"the_miller_with_a_broken_wheel":
 			return {"id": "the_miller_with_a_broken_wheel", "title": "The Miller With a Broken Wheel", "body": "A miller offers sealed fuel tins if the fortress lends its bench and fitter. The repair is small; the stopped column is not.", "choices": [

@@ -1004,3 +1004,7 @@ Mara's one recovered forge core now appears as a visible fork between machine an
 ## 2026-08-30 — Pump Gallery makes delay a physical flood decision
 
 The Gallery Still Turns now draws the old pumps between a hold-position marker and the advancing waterline, while a compact event card states the existing exchange: one day for two points of flood relief, or no delay with the water unchanged. The choice remains owned by `LongMarchState`, and the existing Veyru decision record carries it into the terminal Debrief. This was chosen over adding a bespoke pump minigame because the meaningful action is the campaign-level time tradeoff, not manual machinery operation.
+
+## 2026-08-30 — The dry room shows what cannot be protected together
+
+The Last Dry Room now depicts one divided sealed compartment with families on one side and repair stock on the other. Its authoritative choice preview names exact trust and module-durability transitions before commitment, and the occurrence record translates the stored choice ID into the human consequence carried into Debrief. This was chosen over adding a separate shelter resource screen because the event's value comes from making one physical exclusion memorable while retaining the bounded occurrence system.

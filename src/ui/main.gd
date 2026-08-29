@@ -3013,6 +3013,8 @@ func _debrief_view() -> Dictionary:
 		promises.append("Key choices · %s" % decision_record)
 	if state.campaign_decisions.has("mara_workbench_choice"):
 		promises.append("Forge-core promise · %s" % state.mara_debrief_line().trim_prefix("Mara Flint — "))
+	for occurrence_line in state.occurrence_debrief_lines():
+		promises.append(String(occurrence_line).replace("Road occurrence — ", "Occurrence · "))
 	var damage_text := _result_system_condition_text().replace("Damage: ", "Damaged systems · ").replace("\nUnavailable: ", "\nUnavailable systems · ")
 	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
 	var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
@@ -3124,6 +3126,13 @@ func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
 			"motif": "pump_gallery_choice",
 			"heading": "OLD DRAIN · ONE DAY AGAINST TWO WATER",
 			"detail": "Hold: spend 1 day to lower rising water by 2. Leave: spend no time and carry the current flood clock into every remaining road."
+		}
+	if event_id == "the_last_dry_room":
+		var choices: Array = event.get("choices", [])
+		return {
+			"motif": "dry_room_choice",
+			"heading": "ONE SEALED ROOM · TWO CLAIMS",
+			"detail": "Families: %s. Repair stock: %s." % [String(choices[0].get("effect", "shelter the families")) if choices.size() > 0 else "shelter the families", String(choices[1].get("effect", "preserve the parts")) if choices.size() > 1 else "preserve the parts"]
 		}
 	return {}
 
