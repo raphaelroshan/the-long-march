@@ -7,7 +7,7 @@
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.286`. The active follow-up is `0.3.0-alpha.287`, bundling one-command artifact verification and cross-platform cohort identity without changing game rules.
+**Current merged baseline:** `0.3.0-alpha.287`, bundling one-command artifact verification and cross-platform cohort identity without changing game rules. PR #41 established the First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, and private-alpha evidence workflow.
 **Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -965,6 +965,7 @@ Triage findings through three questions: did the player know what to do, did the
 
 **Status:** Long Road 10.1 is complete in `0.3.0-alpha.280`: the visual-state inventory, single-condition family bays, exterior target brackets, and first Ashgate/Veyru hull treatment are implemented. Bespoke authored art and human recognition testing remain open.
 
+
 The current shared silhouette is the correct structural foundation. Improve it with a restrained authored 2D language: timber, patched plate, canvas, engine housings, signal hardware, cargo restraints, heat stains, dust, rain, and repair marks. Greywatch-like Ashgate should feel industrial and exposed; Flooded Veyru should feel damp, improvised, and crowded by water infrastructure. These are visual and place cues, not new simulation rules.
 
 Create a visual state inventory for idle, selected, strained, disabled, damaged, overheated, breached, repaired, departing, traveling, under contact, retreating, and arrived. Each state must remain understandable at normal play distance and in high-contrast, large-text, and reduced-motion modes.
@@ -976,6 +977,7 @@ Create a visual state inventory for idle, selected, strained, disabled, damaged,
 **Objective:** Make travel feel like a sequence of commitments instead of a chain of menus.
 
 **Status:** Long Road 11.1 is complete in `0.3.0-alpha.281`: departure now preserves the origin/destination, accepted or declined promise, exact committed day/fuel/pressure/heat receipt, explicit departing phase, next contact decision, and focus across save/load. Contact-to-arrival rhythm remains open.
+
 
 The target rhythm is:
 
@@ -1001,6 +1003,7 @@ Keep transitions short and skippable. The player should always know whether the 
 
 **Status:** Long Road 12.1 is complete in `0.3.0-alpha.282`: the shared contact header and center-stage banner now name Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle without changing authoritative step resolution. Threat-specific timing and broader human validation remain open.
 
+
 Every meaningful encounter should stage forecast, approach, target commitment, attack wind-up, defender response, impact, dependency consequence, and settling beat. The player should see why a Burrower reached the Boiler Heart, why a Storm Front raised heat, or why a Flood Surge threatened the lower chassis. Threats need distinct silhouettes and attack signatures; target lines and effects must remain sparse enough to read.
 
 The existing step-based simulation remains authoritative. Presentation may interpolate or stage around a resolved step, but it may not invent damage, alter target order, consume random streams, or change the replay key. Pause and manual step must freeze or advance simulation and presentation together.
@@ -1012,6 +1015,7 @@ The existing step-based simulation remains authoritative. Presentation may inter
 **Objective:** Make settlements feel like breathing spaces with distinct practical pressures rather than interchangeable service menus.
 
 **Status:** Long Road 13.1 is complete across the four current settlements through `0.3.0-alpha.285`: Ashgate Depot uses black rails and depot signaling, Lantern Quay uses a raised flood dock and hanging lamps, Morrowline uses canvas repair bays and parts wagons, and Evacuation Camp uses waterworks and sealed cases. Their service copy frames existing local priorities without adding currencies or commands.
+
 
 Ashgate Depot, Morrowline Camp, Lantern Quay, and Evacuation Camp should each have a visual motif, a dominant local problem, a recognizable service priority, and one human-facing consequence. Service receipts must state cost, restored system, remaining options, and trade-off. Players should be able to choose between at least two reasonable recovery paths instead of buying every service.
 
@@ -1076,4 +1080,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and the four-settlement Long Road 13.1 pass are complete. The `0.3.0-alpha.287` packaging follow-up gives every cohort a shared source identity, platform-specific checksums, exact provenance, a bundled verifier, observer brief, session sheet, and stated limitations. Do not begin controlled content breadth until human evidence exists.
+The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and the four-settlement Long Road 13.1 pass are complete. The `0.3.0-alpha.287` packaging follow-up gives every cohort a shared source identity, platform-specific checksums, exact provenance, a bundled verifier, observer brief, session sheet, and stated limitations. Do not begin controlled content breadth until human evidence exists. If implementation must proceed before sessions are available, use a narrowly scoped visual-state or transition task with no simulation changes and before/after captures at normal and scaled resolution.
