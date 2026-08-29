@@ -2966,7 +2966,7 @@ func _on_travel_pressed() -> void:
 	else:
 		journey_departure_snapshot = before
 		if tutorial_mode:
-			_tutorial_advance("travel", "ROAD COMMITTED · The Long Road spends 2 fuel and 2 days before the contact is resolved.")
+			_tutorial_advance("travel", "ROAD COMMITTED · The Long Road spent %d fuel and %d days before contact." % [int(result.get("fuel", 0)), int(result.get("days", 0))])
 			journey_transition_active = true
 			journey_arrival_active = false
 			journey_transition_view = _build_journey_transition_view("ashgate_depot", "rill_crossing", {"visibility": "known", "threats": ["Road Raider"]}, int(before.get("day", 1)), int(before.get("fuel", state.fuel)), int(before.get("pressure", 0)))
