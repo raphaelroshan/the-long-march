@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.281`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, the first shared-fortress continuity pass, and the first journey-handoff pass are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.282`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, and the first battle-rhythm pass are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
 ### Active Feed 1 — five-session human validation
 
@@ -29,6 +29,8 @@ Improve one transition from settlement to route, route to travel, travel to cont
 ```
 
 ### Active Feed 4 — battle cause-and-effect staging
+
+**Status:** The first shared contact now exposes Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle as a stable phase grammar in `0.3.0-alpha.282`; broader threat-specific timing and human comprehension remain open.
 
 ```text
 Stage one existing deterministic encounter as forecast, approach, target commitment, wind-up, response, impact, dependency consequence, and settling beat. Presentation may interpolate but must not change FortressState, random streams, target order, or replay keys. Add pause, speed, manual-step, same-seed, focus, and visual verification.

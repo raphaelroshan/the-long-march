@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.281`
+**Current code baseline:** `0.3.0-alpha.282`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current PR baseline:** PR #41 `0.3.0-alpha.281` — First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, private-alpha evidence workflow, shared-fortress continuity, and the first journey-handoff pass.
+**Current PR baseline:** PR #41 `0.3.0-alpha.282` — First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, private-alpha evidence workflow, shared-fortress continuity, journey handoff, and the first battle-rhythm pass.
 **Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -999,6 +999,8 @@ Keep transitions short and skippable. The player should always know whether the 
 
 **Objective:** Make automatic encounters read as consequences of the chassis and route plan.
 
+**Status:** Long Road 12.1 is complete in `0.3.0-alpha.282`: the shared contact header and center-stage banner now name Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle without changing authoritative step resolution. Threat-specific timing and broader human validation remain open.
+
 Every meaningful encounter should stage forecast, approach, target commitment, attack wind-up, defender response, impact, dependency consequence, and settling beat. The player should see why a Burrower reached the Boiler Heart, why a Storm Front raised heat, or why a Flood Surge threatened the lower chassis. Threats need distinct silhouettes and attack signatures; target lines and effects must remain sparse enough to read.
 
 The existing step-based simulation remains authoritative. Presentation may interpolate or stage around a resolved step, but it may not invent damage, alter target order, consume random streams, or change the replay key. Pause and manual step must freeze or advance simulation and presentation together.
@@ -1072,4 +1074,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **Long Road 9.1: run the five-session human validation protocol against PR #41’s exact artifact**, not a new region or new combat system. Long Road 10.1 and 11.1 are complete. If implementation must continue before sessions are available, use **Long Road 12.1: tighten one existing contact's forecast → target → wind-up → impact → dependency → settle sequence**, preserving deterministic step resolution and manual-step/pause behavior.
+The next agent task should be **Long Road 9.1: run the five-session human validation protocol against PR #41’s exact artifact**, not a new region or new combat system. Long Road 10.1, 11.1, and 12.1 are complete. If implementation must continue before sessions are available, use **Long Road 13.1: deepen one existing settlement's identity and service priorities**, preserving current currencies and authoritative service commands.

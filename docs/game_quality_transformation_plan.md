@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.281`
+**Current baseline:** `0.3.0-alpha.282`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -676,7 +676,7 @@ Tasks:
 
 ### Phase 4 — Encounter game feel
 
-**Status:** The first target-lock, threat-signature, impact, and dependency-consequence replay is complete in `0.3.0-alpha.274`; audio cues and broader human timing validation remain open.
+**Status:** The first target-lock, threat-signature, impact, dependency-consequence, and explicit Forecast-to-Settle phase grammar is complete through `0.3.0-alpha.282`; audio cues and broader human timing validation remain open.
 
 **Objective:** Make automatic encounters feel like the fortress is acting and suffering.
 

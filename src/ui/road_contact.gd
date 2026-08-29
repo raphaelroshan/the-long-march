@@ -11,6 +11,7 @@ signal intervention_requested(intervention_id: String)
 var pause_button: Button
 var contact_canvas: ContactCanvas
 var phase_label: Label
+var battle_phase_label: Label
 var order_label: Label
 var value_labels: Dictionary = {}
 var timeline_labels: Array[Label] = []
@@ -29,6 +30,12 @@ var current_view: Dictionary = {}
 
 func _ready() -> void:
 	_build_ui()
+	process_priority = 10
+	set_process(true)
+
+func _process(_delta: float) -> void:
+	if visible and contact_canvas != null:
+		_refresh_battle_phase_label()
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 9) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -69,6 +76,13 @@ func _build_ui() -> void:
 	phase_label.add_theme_font_size_override("font_size", 13)
 	phase_label.add_theme_color_override("font_color", Color("#efb879"))
 	header.add_child(phase_label)
+	battle_phase_label = Label.new()
+	battle_phase_label.text = "FORECAST"
+	battle_phase_label.custom_minimum_size = Vector2(132, 30)
+	battle_phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	battle_phase_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	battle_phase_label.add_theme_font_size_override("font_size", 10)
+	header.add_child(battle_phase_label)
 	pause_button = Button.new()
 	pause_button.text = "PAUSE · ESC"
 	pause_button.custom_minimum_size = Vector2(170, 42)
@@ -263,7 +277,44 @@ func configure(view: Dictionary) -> void:
 	contact_canvas.high_contrast_enabled = high_contrast_enabled
 	contact_canvas.reduced_motion = reduced_motion
 	contact_canvas.configure(current_view)
+	_refresh_battle_phase_label(true)
 	_configure_focus()
+
+func _refresh_battle_phase_label(force: bool = false) -> void:
+	var battle_phase := battle_phase_for()
+	if not force and battle_phase_label.text == battle_phase:
+		return
+	battle_phase_label.text = battle_phase
+	var active_phase := battle_phase in ["TARGET", "WIND-UP", "IMPACT"]
+	battle_phase_label.add_theme_stylebox_override("normal", _flat_style(Color("#4b2422") if active_phase else Color("#17312f"), Color.WHITE if high_contrast_enabled else (Color("#ef8375") if active_phase else Color("#6e918f")), 2, 4, 4))
+	battle_phase_label.add_theme_color_override("font_color", Color("#fff0df") if active_phase else Color("#bce5d8"))
+
+func battle_phase_for(view: Dictionary = {}) -> String:
+	if view.is_empty():
+		view = current_view
+	var enemies: Array = view.get("enemies", [])
+	var has_live_enemy := false
+	var has_arrived_enemy := false
+	for raw_enemy in enemies:
+		var enemy: Dictionary = raw_enemy
+		if bool(enemy.get("defeated", false)):
+			continue
+		has_live_enemy = true
+		if bool(enemy.get("arrived", false)):
+			has_arrived_enemy = true
+	if not has_live_enemy:
+		return "SETTLE"
+	if not has_arrived_enemy:
+		return "FORECAST" if int(view.get("step", 0)) == 0 else "APPROACH"
+	if contact_canvas != null and contact_canvas.report_changed and contact_canvas.step_to > contact_canvas.step_from and contact_canvas.transition_progress < 1.0:
+		if contact_canvas.transition_progress < 0.24:
+			return "TARGET"
+		if contact_canvas.transition_progress < 0.52:
+			return "WIND-UP"
+		if contact_canvas.transition_progress < 0.80:
+			return "IMPACT"
+		return "CONSEQUENCE"
+	return "RESPONSE"
 
 func _configure_threat(view: Dictionary) -> void:
 	var enemies: Array = view.get("enemies", [])
@@ -335,6 +386,8 @@ func focus_default() -> void:
 
 func set_high_contrast(enabled: bool) -> void:
 	high_contrast_enabled = enabled
+	if battle_phase_label != null:
+		_refresh_battle_phase_label(true)
 	if contact_canvas != null:
 		contact_canvas.high_contrast_enabled = enabled
 		contact_canvas.queue_redraw()
@@ -425,7 +478,7 @@ class ContactCanvas extends Control:
 	func presentation_stage_text() -> String:
 		var enemy := _nearest_enemy()
 		if enemy.is_empty():
-			return "ROAD OPEN · NO ACTIVE CONTACT"
+			return "SETTLE · ROAD OPEN · ADVANCE TO ARRIVAL"
 		var enemy_id := String(enemy.get("id", "threat"))
 		var definitions: Dictionary = current_view.get("enemy_definitions", {})
 		var definition: Dictionary = definitions.get(enemy_id, {})
@@ -433,7 +486,8 @@ class ContactCanvas extends Control:
 		var arrived := bool(enemy.get("arrived", false))
 		if not arrived:
 			var distance := maxi(1, int(definition.get("arrival_step", 1)) - int(current_view.get("step", 0)))
-			return "APPROACH · %s · %d STEP%s OUT" % [enemy_name, distance, "" if distance == 1 else "S"]
+			var phase := "FORECAST" if int(current_view.get("step", 0)) == 0 else "APPROACH"
+			return "%s · %s · %d STEP%s OUT" % [phase, enemy_name, distance, "" if distance == 1 else "S"]
 		var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
 		if report_changed and step_to > step_from and transition_progress < 1.0:
 			if transition_progress < 0.24:

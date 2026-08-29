@@ -35,12 +35,20 @@ func _run() -> void:
 	contact.contact_canvas.step_from = 1.0
 	contact.contact_canvas.step_to = 2.0
 	contact.contact_canvas.transition_progress = 0.10
+	contact._refresh_battle_phase_label()
+	_expect(contact.battle_phase_for() == "TARGET" and contact.battle_phase_label.text == "TARGET", "the contact header should visibly identify the target-lock beat before impact")
 	_expect(contact.contact_canvas.presentation_stage_text() == "TARGET LOCK · ROAD RAIDER → COAL CELL", "an arriving threat should visibly lock its authoritative target before impact")
 	contact.contact_canvas.transition_progress = 0.30
+	contact._refresh_battle_phase_label()
+	_expect(contact.battle_phase_for() == "WIND-UP" and contact.battle_phase_label.text == "WIND-UP", "the contact header should visibly identify the wind-up beat")
 	_expect(contact.contact_canvas.presentation_stage_text() == "WIND-UP · HARPOON VOLLEY", "Road Raiders should have a stable attack signature during wind-up")
 	contact.contact_canvas.transition_progress = 0.65
+	contact._refresh_battle_phase_label()
+	_expect(contact.battle_phase_for() == "IMPACT" and contact.battle_phase_label.text == "IMPACT", "the contact header should visibly identify the impact beat")
 	_expect(contact.contact_canvas.presentation_stage_text().contains("IMPACT") and contact.contact_canvas.presentation_stage_text().contains("hits Coal Cell for 1"), "impact staging should repeat the authoritative damage report")
 	contact.contact_canvas.transition_progress = 0.90
+	contact._refresh_battle_phase_label()
+	_expect(contact.battle_phase_for() == "CONSEQUENCE" and contact.battle_phase_label.text == "CONSEQUENCE", "the contact header should visibly identify the dependency-consequence beat")
 	_expect(contact.contact_canvas.presentation_stage_text() == "CONSEQUENCE · Steam Lance Engine → offline", "consequence staging should condense the resulting dependency change into a readable stage cue")
 	contact.set_high_contrast(true)
 	contact.set_reduced_motion(true)
@@ -50,7 +58,13 @@ func _run() -> void:
 	approach_view["enemies"] = [{"id": "road_raiders", "arrived": false, "defeated": false, "target": "coal_cell"}]
 	approach_view["recent_report"] = []
 	contact.configure(approach_view)
-	_expect(contact.contact_canvas.presentation_stage_text() == "APPROACH · ROAD RAIDER · 2 STEPS OUT", "an approaching threat should retain a readable distance cue before target lock")
+	_expect(contact.battle_phase_label.text == "FORECAST" and contact.contact_canvas.presentation_stage_text() == "FORECAST · ROAD RAIDER · 2 STEPS OUT", "step zero should explicitly stage the forecast before target lock")
+	var settle_view: Dictionary = base_view.duplicate(true)
+	settle_view["step"] = 6
+	settle_view["enemies"] = [{"id": "road_raiders", "arrived": true, "defeated": true, "target": "coal_cell"}]
+	settle_view["recent_report"] = ["Road secured: the Road Raider contact is defeated."]
+	contact.configure(settle_view)
+	_expect(contact.battle_phase_label.text == "SETTLE" and contact.contact_canvas.presentation_stage_text() == "SETTLE · ROAD OPEN · ADVANCE TO ARRIVAL", "a cleared encounter should name the settling beat before the arrival handoff")
 	contact.queue_free()
 	if failures.is_empty():
 		print("PASS: The Long March road-contact presentation")

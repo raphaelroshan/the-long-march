@@ -1020,3 +1020,7 @@ The shared fortress silhouette now reduces offline, damage, strain, sealing, and
 ## 2026-08-30 — Departure carries the promise, receipt, and next decision
 
 The mandatory road handoff now states the accepted or declined regional promise, marks the fortress as departing with costs committed and arrival pending, and names the immediate contact-reading decision. The saved presentation snapshot retains the exact pre-commit day, fuel, and pressure values used by the receipt, while load still reconstructs the view from authoritative encounter state. This was chosen over adding another cinematic phase because the existing checkpoint boundary already represents the correct game state; the missing work was orientation and continuity, not simulation timing.
+
+## 2026-08-30 — Contact presentation names its causal phase
+
+The road-contact header now exposes a stable presentation grammar—Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle—derived from the existing enemy arrival, resolved report, and interpolation state. Step zero is explicitly Forecast, and a cleared road holds at Settle before arrival. No additional combat phase is serialized or simulated. This was chosen over adding a second battle state machine because the phase label should explain the authoritative step, not control it.
