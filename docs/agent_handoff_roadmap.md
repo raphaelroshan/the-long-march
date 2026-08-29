@@ -2,7 +2,7 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.276`
+**Current code baseline:** `0.3.0-alpha.277`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
@@ -530,7 +530,7 @@ Use route history, contracts, regional developments, specialist arcs, and bounde
 
 ### Long Road 8 — Private alpha hardening
 
-**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, last-secured-location travel semantics, automated First Watch tutorial, dedicated terminal Debrief, shared stateful fortress silhouette, staged attack replay, dedicated field recovery, and the first event-specific promise/callback tableau are complete through `0.3.0-alpha.276`.
+**Status:** In progress; the previous private-alpha hardening work plus the starting-settlement bazaar, full-frame route planner, focused workshop mode, mandatory road presentation, animated fortress-centered contact view, arrival/retreat receipt, Frontier-inspired roadside event tableau, reduced-motion behavior, last-secured-location travel semantics, automated First Watch tutorial, dedicated terminal Debrief, shared stateful fortress silhouette, staged attack replay, dedicated field recovery, and the first two event-specific commitment tableaux are complete through `0.3.0-alpha.277`.
 
 **Objective:** Prepare a human-playtestable private alpha.
 

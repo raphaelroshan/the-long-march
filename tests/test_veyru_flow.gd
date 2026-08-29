@@ -96,6 +96,7 @@ func _run() -> void:
 	_expect(game.state.phase == "battle" and game.combat_panel.visible and _combat_names_include("Flood Surge") and not _combat_names_include("Climber"), "Pump Gallery should show Flood Surge alone in the combat UI")
 	await _finish_battle()
 	_expect(game.state.campaign_event_pending == "drain_pumps" and game.campaign_event_title.text == "THE GALLERY STILL TURNS", "Pump Gallery should hand off to the authored drain decision")
+	_expect(game.roadside_event.story_label.text.contains("ONE DAY AGAINST TWO WATER") and game.roadside_event.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER", "the Pump Gallery should frame its delay as a visible choice against the flood clock")
 	var pump_briefing_state: Dictionary = game.state.serialize()
 	game._show_onboarding(true)
 	await process_frame
@@ -143,7 +144,7 @@ func _run() -> void:
 	_expect(game.state.phase == "final_battle" and _combat_names_include("Civic Guardian"), "the final Veyru route should enter the shared final-battle UI with the Civic Guardian")
 	await _finish_battle()
 	_expect(game.state.phase == "results" and game.state.final_result == "archive_kept", "the UI-driven Veyru route should reach Archive Kept")
-	_expect(game.debrief_panel.visible and game.debrief_panel.headline_label.text == "DECISIVE" and game.debrief_panel.outcome_label.text.contains("ARCHIVE KEPT") and game.debrief_panel.commitments_label.text.contains("Parts Crate") and game._result_record_text().contains("Rising water:") and game._result_record_text().contains("Dry Archive — sealed the signal"), "the Veyru debrief should name its result, water, carrier, and final commitment")
+	_expect(game.debrief_panel.visible and game.debrief_panel.headline_label.text == "DECISIVE" and game.debrief_panel.outcome_label.text.contains("ARCHIVE KEPT") and game.debrief_panel.commitments_label.text.contains("Parts Crate") and game.debrief_panel.commitments_label.text.contains("Pump Gallery — drained the lower roads") and game._result_record_text().contains("Rising water:") and game._result_record_text().contains("Dry Archive — sealed the signal"), "the Veyru debrief should name its result, water, carrier, pump decision, and final commitment")
 
 	if failures.is_empty():
 		print("PASS: The Long March Flooded Veyru UI flow")

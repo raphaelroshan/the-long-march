@@ -1000,3 +1000,7 @@ Morrowline and Evacuation Camp now leave the operational desk for a dedicated fi
 ## 2026-08-30 — Authored event motifs carry promises forward
 
 Mara's one recovered forge core now appears as a visible fork between machine and shelter, then returns after the fourth road as a held-or-failed promise check. The event panel receives presentation-only story metadata derived from the authoritative event choices, repaired module ID, and follow-up preview; all eligibility, costs, effects, timing, and persistence remain in `LongMarchState`. The terminal Debrief repeats the resolved forge-core promise. This was chosen over a generic event illustration because the player should remember what physical obligation they created and recognize its later consequence without learning a parallel narrative state model.
+
+## 2026-08-30 — Pump Gallery makes delay a physical flood decision
+
+The Gallery Still Turns now draws the old pumps between a hold-position marker and the advancing waterline, while a compact event card states the existing exchange: one day for two points of flood relief, or no delay with the water unchanged. The choice remains owned by `LongMarchState`, and the existing Veyru decision record carries it into the terminal Debrief. This was chosen over adding a bespoke pump minigame because the meaningful action is the campaign-level time tradeoff, not manual machinery operation.

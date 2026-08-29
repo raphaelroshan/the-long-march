@@ -3119,6 +3119,12 @@ func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
 			"target_name": target_name,
 			"held": bool(preview.get("held", false))
 		}
+	if event_id == "drain_pumps":
+		return {
+			"motif": "pump_gallery_choice",
+			"heading": "OLD DRAIN · ONE DAY AGAINST TWO WATER",
+			"detail": "Hold: spend 1 day to lower rising water by 2. Leave: spend no time and carry the current flood clock into every remaining road."
+		}
 	return {}
 
 func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dictionary:

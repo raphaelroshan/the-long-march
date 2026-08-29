@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.276`; Feeds A through AQ, the automated First Watch tutorial, and the first five game-quality transformation slices are complete. Continue with another bounded authored-event presentation or the first uncoached human-playtest pass from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.277`; Feeds A through AR, the automated First Watch tutorial, and the first six game-quality transformation slices are complete. Continue with one remaining bounded authored-event presentation or the first uncoached human-playtest pass from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 
 ### Current Feed A — fortress comprehension
 
@@ -263,6 +263,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.276` through the workbench choice, fourth-road callback, and terminal record.
 
 > Give Mara's one-core decision a distinct machine-versus-shelter tableau. Name the exact system that could be repaired, the immediate day and pressure cost, the persistent Refugee Bunk protection, and the fact that the unchosen need remains exposed. On the fourth road, reuse the motif to show whether the original physical promise held or failed, and preserve that result in the terminal Debrief. Do not change event eligibility, effects, timing, or deterministic replay.
+
+### Current Feed AR — Pump Gallery flood clock
+
+**Status:** Complete in `0.3.0-alpha.277` through the Old Drain commitment tableau and terminal route record.
+
+> Give The Gallery Still Turns a distinct pump-and-water motif. Frame its existing choice as one day held against two points of rising water, keep both paths and their exact costs visible before commitment, and preserve the selected Pump Gallery outcome in the terminal Debrief. Do not change route timing, water pressure, eligibility, event effects, or deterministic replay.
 
 ## Historical prototype feed sequence
 

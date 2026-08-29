@@ -67,6 +67,23 @@ func _run() -> void:
 	_expect(event_view.tableau.presentation_signature() == "PROMISE CHECK · HELD · FIELD WORKSHOP", "the callback motif should visibly resolve the earlier workbench choice")
 	await _settle_ui()
 	_expect(event_view.tableau.high_contrast_enabled and view_rect.encloses(event_view.choice_buttons[0].get_global_rect()), "the authored event callback should remain visible in high contrast at 1280×720 with 110% text")
+	var pump_view: Dictionary = common.duplicate(true)
+	pump_view["region_id"] = "flooded_veyru"
+	pump_view["location_name"] = "Pump Gallery"
+	pump_view.merge({
+		"event_id": "drain_pumps",
+		"title": "The Gallery Still Turns",
+		"body": "The old pumps can pull water out of the lower roads, but only if the fortress holds position long enough to wake them.",
+		"story": {"motif": "pump_gallery_choice", "heading": "OLD DRAIN · ONE DAY AGAINST TWO WATER", "detail": "Hold: spend 1 day to lower rising water by 2. Leave: spend no time and carry the current flood clock into every remaining road."},
+		"choices": [
+			{"id": "drain_gallery", "label": "Restart the gallery pumps", "effect": "Day +1 · Rising water -2", "enabled": true, "reason": ""},
+			{"id": "leave_gallery", "label": "Keep the column moving", "effect": "No delay · Water unchanged", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(pump_view)
+	await _settle_ui()
+	_expect(event_view.story_label.text.contains("ONE DAY AGAINST TWO WATER") and event_view.choice_buttons[0].text.contains("Rising water -2") and event_view.choice_buttons[1].text.contains("Water unchanged"), "the Pump Gallery should expose the exact time-versus-flood tradeoff before commitment")
+	_expect(event_view.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER" and view_rect.encloses(event_view.choice_buttons[1].get_global_rect()), "the Pump Gallery should retain a distinct pump-and-water motif within the large-text viewport")
 	event_view.queue_free()
 	scaler.queue_free()
 	await process_frame

@@ -305,7 +305,9 @@ class ScenarioCanvas extends Control:
 			_draw_forge_callback(center)
 		elif event_id == "mara_meeting":
 			_draw_forge(center)
-		elif event_id in ["drain_pumps", "registry_salvage"]:
+		elif event_id == "drain_pumps":
+			_draw_pump_choice(center)
+		elif event_id == "registry_salvage":
 			_draw_floodworks(center)
 		else:
 			_draw_road_machine(center)
@@ -379,6 +381,8 @@ class ScenarioCanvas extends Control:
 			return "ONE CORE · MACHINE OR SHELTER"
 		if motif == "mara_core_callback":
 			return "PROMISE CHECK · %s · %s" % ["HELD" if bool(story.get("held", false)) else "FAILED", String(story.get("target_name", "promise")).to_upper()]
+		if motif == "pump_gallery_choice":
+			return "OLD DRAIN · ONE DAY OR TWO WATER"
 		return "ROADSIDE OCCURRENCE"
 
 	func _draw_floodworks(center: Vector2) -> void:
@@ -387,6 +391,24 @@ class ScenarioCanvas extends Control:
 			draw_circle(center + Vector2(x, -42), 28.0, Color("#17282b"), false, 7.0)
 		for wave in range(3):
 			draw_arc(center + Vector2(-45 + wave * 48, 15), 35.0, PI, TAU, 18, Color("#4b8b94"), 5.0)
+
+	func _draw_pump_choice(center: Vector2) -> void:
+		_draw_floodworks(center + Vector2(0, 10))
+		var water_color := Color("#79c4cf")
+		var hold_color := Color("#e2cc98")
+		for wave in range(4):
+			var wave_y := center.y - 5.0 - float(wave) * 13.0
+			var wave_tint := water_color
+			wave_tint.a = 0.32 + float(wave) * 0.08
+			draw_line(center + Vector2(-116, wave_y), center + Vector2(116, wave_y), wave_tint, 4.0)
+		draw_line(center + Vector2(-80, -128), center + Vector2(-80, -72), hold_color, 5.0)
+		draw_line(center + Vector2(-91, -84), center + Vector2(-80, -72), hold_color, 5.0)
+		draw_line(center + Vector2(-69, -84), center + Vector2(-80, -72), hold_color, 5.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-133, -140), "HOLD · DAY +1", HORIZONTAL_ALIGNMENT_CENTER, 106.0, 10, hold_color)
+		draw_line(center + Vector2(58, -100), center + Vector2(112, -100), water_color, 5.0)
+		draw_line(center + Vector2(99, -111), center + Vector2(112, -100), water_color, 5.0)
+		draw_line(center + Vector2(99, -89), center + Vector2(112, -100), water_color, 5.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(46, -140), "LEAVE · NO DELAY", HORIZONTAL_ALIGNMENT_CENTER, 126.0, 10, water_color)
 
 	func _draw_road_machine(center: Vector2) -> void:
 		draw_circle(center + Vector2(0, -35), 55.0, Color("#4c504a"), false, 12.0)

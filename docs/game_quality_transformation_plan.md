@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.276`
+**Current baseline:** `0.3.0-alpha.277`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -690,7 +690,7 @@ Tasks:
 
 ### Phase 5 — Settlement and event presentation
 
-**Status:** Dedicated Morrowline/Evacuation Camp recovery and Mara's workbench promise/fourth-road callback are complete through `0.3.0-alpha.276`; the remaining authored events and human memory validation remain open.
+**Status:** Dedicated Morrowline/Evacuation Camp recovery, Mara's workbench promise/fourth-road callback, and Pump Gallery's old-drain commitment are complete through `0.3.0-alpha.277`; the remaining authored events and human memory validation remain open.
 
 **Objective:** Make breathing spaces and obligations memorable.
 
@@ -940,17 +940,17 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.276`, implement the next game-quality slice:
-give one remaining authored roadside event a distinct practical visual language.
+Starting from `0.3.0-alpha.277`, implement the next game-quality slice:
+give The Last Dry Room a distinct practical visual language.
 
-Use The Last Dry Room or The Gallery Still Turns. Keep the existing deterministic
-eligibility, choices, and effects authoritative. Make the contested physical
-resource visible in the tableau, make both opportunity costs legible before the
-choice, and preserve the decision in a later route or terminal record. Do not add
-a generic scheduler, currency, region, faction, or second event state machine.
+Keep its existing deterministic eligibility, choices, and effects authoritative.
+Make the single sealed compartment, families, and repair stock visible in the
+tableau; show which physical resource is damaged or restored by each choice; and
+preserve the result in the terminal Debrief. Do not add a generic scheduler,
+currency, region, faction, or second event state machine.
 
 Add focused UI/state tests, controller and 110% text checks, capture the decision
-and its later evidence, and run the complete verification suite. Report exact
+and its terminal evidence, and run the complete verification suite. Report exact
 files, tests, captures, risks, and one bounded next task.
 ```
 
