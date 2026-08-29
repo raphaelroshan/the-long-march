@@ -100,7 +100,7 @@ The internal journey slice has been verified locally with Godot 4.4.1. On a deve
 
 ## Agent workflow
 
-The current post-alpha agent handoff contract is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md). Read it together with `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md` before editing. Work in a narrow vertical slice, keep the simulation presentation-independent, update stable content IDs, add deterministic tests, and explain the player-facing result.
+The current post-alpha agent handoff contract is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md). The game-quality transformation plan is [`docs/game_quality_transformation_plan.md`](docs/game_quality_transformation_plan.md); read it before prioritizing visual, UX, battle-feel, travel, settlement, or human-playtest work. Read both together with `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md` before editing. Work in a narrow vertical slice, keep the simulation presentation-independent, update stable content IDs, add deterministic tests, and explain the player-facing result.
 
 The recommended sequence is:
 
@@ -126,7 +126,7 @@ The dungeon-and-shop inventory battler remains a separate follow-up concept. It 
 
 The current GPT-agent roadmap is [`docs/agent_handoff_roadmap.md`](docs/agent_handoff_roadmap.md); it records the implemented Ashgate and Flooded Veyru baseline and the next bounded regional-consequence, replay, UX, and alpha-hardening tasks.
 
-The broader fortress plan is documented separately so agents can implement it in controlled slices:
+The broader fortress plan is documented separately so agents can implement it in controlled slices. The game-quality plan should be used to decide how those systems become understandable and enjoyable in the player-facing journey:
 
 - [`design/fortress_facilities_and_mechanics.md`](design/fortress_facilities_and_mechanics.md) — buildings, dependencies, budgets, staffing, damage, and recovery.
 - [`design/map_regions_and_settlements.md`](design/map_regions_and_settlements.md) — FTL-like node map, visibility, closure pressure, regions, settlements, and route archetypes.
