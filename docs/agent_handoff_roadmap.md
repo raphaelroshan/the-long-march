@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.285`
+**Current code baseline:** `0.3.0-alpha.286`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.284`. The active follow-up is `0.3.0-alpha.285`, extending starting-settlement identity without changing service rules.
+**Current merged baseline:** `0.3.0-alpha.285`. The active follow-up is `0.3.0-alpha.286`, making private-alpha artifacts reproducible and checksummed without changing game rules.
 **Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -1076,4 +1076,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and the four-settlement Long Road 13.1 pass are complete. Do not begin controlled content breadth until human evidence exists.
+The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and the four-settlement Long Road 13.1 pass are complete. The `0.3.0-alpha.286` packaging follow-up gives every cohort a checksummed manifest, exact source provenance, observer brief, session sheet, and stated limitations. Do not begin controlled content breadth until human evidence exists.

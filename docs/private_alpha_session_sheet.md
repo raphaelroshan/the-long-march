@@ -4,11 +4,13 @@ Use this sheet for the first five uncoached sessions. The observer may explain t
 
 ## Before each session
 
-1. Use **Settings → Reset Playtest Data** unless the session explicitly tests Continue.
-2. Record the exact **Playtest Build** label, device, display scale, input method, and tester alias.
-3. Ask for consent before taking notes, screenshots, recordings, or collecting the local JSON export.
-4. Choose one primary path: First Watch, Ashgate Lowlands, or Flooded Veyru.
-5. Do not tell the tester what the interface is intended to mean. Ask what they expect before they act.
+1. Select one retained artifact cohort and read its `artifacts/release_manifest.json`.
+2. Confirm the executable's SHA-256 digest matches the manifest. Do not mix rebuilt or re-downloaded binaries with the cohort.
+3. Use **Settings → Reset Playtest Data** unless the session explicitly tests Continue.
+4. Record the exact **Playtest Build** label, manifest workflow commit, device, display scale, input method, and tester alias.
+5. Ask for consent before taking notes, screenshots, recordings, or collecting the local JSON export.
+6. Choose one primary path: First Watch, Ashgate Lowlands, or Flooded Veyru.
+7. Do not tell the tester what the interface is intended to mean. Ask what they expect before they act.
 
 ## Evidence to collect
 

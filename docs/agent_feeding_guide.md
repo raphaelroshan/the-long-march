@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.285`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, and the current settlement-identity passes are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.286`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, the current settlement-identity passes, and checksummed playtest-cohort packaging are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
 
 ### Active Feed 1 — five-session human validation
 

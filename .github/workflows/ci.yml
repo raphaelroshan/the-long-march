@@ -150,6 +150,28 @@ jobs:
           mkdir -p artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
+      - name: Create exact cohort manifest
+        env:
+          COHORT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/create_release_manifest.py \
+            --root . \
+            --output artifacts/release_manifest.json \
+            --commit "$GITHUB_SHA" \
+            --head-commit "$COHORT_HEAD_SHA" \
+            --ref "$GITHUB_REF" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --verification repository_policy \
+            --verification godot_tests_ubuntu \
+            --verification godot_tests_windows \
+            --verification ai_review \
+            --verification windows_export \
+            --file windows_executable=build/the-long-march-windows.exe \
+            --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            --file observer_brief=docs/playtest_guide.md \
+            --file session_sheet=docs/private_alpha_session_sheet.md \
+            --file scope_and_limitations=docs/internal_test_release.md
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:
@@ -157,5 +179,8 @@ jobs:
           path: |
             build/
             artifacts/
+            docs/internal_test_release.md
+            docs/playtest_guide.md
+            docs/private_alpha_session_sheet.md
           if-no-files-found: error
           retention-days: 30
