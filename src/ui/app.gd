@@ -1401,6 +1401,11 @@ func _apply_text_scale_to_tree(node: Node) -> void:
 				control.set_meta("long_march_base_font_size", control.get_theme_font_size("font_size"))
 			var base_font_size := int(control.get_meta("long_march_base_font_size"))
 			control.add_theme_font_size_override("font_size", roundi(float(base_font_size) * float(text_scale_percent) / 100.0))
+		if control.has_theme_font_size_override("normal_font_size"):
+			if not control.has_meta("long_march_base_normal_font_size"):
+				control.set_meta("long_march_base_normal_font_size", control.get_theme_font_size("normal_font_size"))
+			var base_normal_font_size := int(control.get_meta("long_march_base_normal_font_size"))
+			control.add_theme_font_size_override("normal_font_size", roundi(float(base_normal_font_size) * float(text_scale_percent) / 100.0))
 	for child in node.get_children():
 		_apply_text_scale_to_tree(child)
 
@@ -2445,11 +2450,11 @@ func _cancel_confirmation() -> void:
 			restart_button.grab_focus()
 		elif game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
-			game_view.play_again_button.grab_focus()
+			game_view.call_deferred("focus_replay_action")
 	elif previous_action in ["march_on_ashgate", "march_on_veyru"]:
 		if game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
-			game_view.march_on_button.grab_focus()
+			game_view.call_deferred("focus_march_on_action")
 	elif previous_action == "quit_save":
 		if game_view != null:
 			game_view.process_mode = close_request_process_mode

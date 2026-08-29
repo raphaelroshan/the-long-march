@@ -142,7 +142,7 @@ func _run() -> void:
 	_expect(game.state.phase == "final_battle" and _combat_names_include("Civic Guardian"), "the final Veyru route should enter the shared final-battle UI with the Civic Guardian")
 	await _finish_battle()
 	_expect(game.state.phase == "results" and game.state.final_result == "archive_kept", "the UI-driven Veyru route should reach Archive Kept")
-	_expect(game.results_summary_label.text.contains("ARCHIVE KEPT") and game.results_record_label.text.contains("Rising water:") and game.results_record_label.text.contains("Carrier: Parts Crate") and game.results_record_label.text.contains("Dry Archive — sealed the signal"), "the Veyru debrief should name its result, water, carrier, and final commitment")
+	_expect(game.debrief_panel.visible and game.debrief_panel.headline_label.text == "DECISIVE" and game.debrief_panel.outcome_label.text.contains("ARCHIVE KEPT") and game.debrief_panel.commitments_label.text.contains("Parts Crate") and game._result_record_text().contains("Rising water:") and game._result_record_text().contains("Dry Archive — sealed the signal"), "the Veyru debrief should name its result, water, carrier, and final commitment")
 
 	if failures.is_empty():
 		print("PASS: The Long March Flooded Veyru UI flow")

@@ -264,7 +264,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(app.game_view != null and app.game_view.state.campaign_region_id == "flooded_veyru" and app.game_view.state.current_location == "lantern_quay", "the Field Guide should open Flooded Veyru directly as a separate chapter at Lantern Quay")
-	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled and app.game_view.settlement_hub.high_contrast_enabled and app.game_view.journey_transition.high_contrast_enabled and app.game_view.road_contact.high_contrast_enabled and app.game_view.roadside_event.high_contrast_enabled and app.game_view.journey_arrival.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across settlement, travel, map, contact, roadside-event, and arrival presentation")
+	_expect(app.game_view.high_contrast_enabled and app.game_view.theme.get_stylebox("focus", "Button").border_width_left == 4 and app.game_view.campaign_map.high_contrast_enabled and app.game_view.combat_panel.high_contrast_enabled and app.game_view.settlement_hub.high_contrast_enabled and app.game_view.journey_transition.high_contrast_enabled and app.game_view.road_contact.high_contrast_enabled and app.game_view.roadside_event.high_contrast_enabled and app.game_view.journey_arrival.high_contrast_enabled and app.game_view.debrief_panel.high_contrast_enabled, "a newly opened playable stage should inherit the persisted contrast mode across settlement, travel, map, contact, roadside-event, arrival, and debrief presentation")
 	_expect(app.game_view.reduced_motion_enabled and app.game_view.journey_transition.reduced_motion and app.game_view.journey_transition.march_canvas.reduced_motion and app.game_view.road_contact.reduced_motion and app.game_view.road_contact.contact_canvas.reduced_motion, "a newly opened playable stage should apply the persisted reduced-motion preference to road and contact animation")
 	_expect(app.game_view.controller_layout_id == "east_confirm" and app.game_view.pause_button.text.contains("ESC / A") and app.game_view.focus_chassis_button.text.contains("ARROWS + B") and app.game_view.focus_chassis_button.tooltip_text.contains("B / Enter") and app.game_view.fortress_panel.controller_cancel_label == "A", "a newly opened playable stage should inherit the remapped face buttons in both its visible edit action and detailed instructions")
 	var controller_copy_phase: String = app.game_view.state.phase
@@ -320,21 +320,27 @@ func _run() -> void:
 	app.game_view.state.final_result = "archive_scarred"
 	app.game_view.state.campaign_decisions["archive_broadcast"] = "broadcast_archive"
 	app.game_view._refresh_ui()
-	_expect(app.game_view.results_record_label.text.contains("PUBLIC ARCHIVE SIGNAL") and app.game_view.results_record_label.text.contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief should state the regional development and its later route effect")
+	_expect(app.game_view._result_record_text().contains("PUBLIC ARCHIVE SIGNAL") and app.game_view._result_record_text().contains("future Veyru runs reveal Drowned Registry"), "the Veyru debrief record should preserve the regional development and its later route effect")
+	app.text_scale_percent = 110
+	app._apply_text_scale()
+	await process_frame
+	_expect(app.game_view.debrief_panel.commitments_label.get_theme_font_size("normal_font_size") == 13 and app.game_view.debrief_panel.title_button.get_global_rect().end.y <= app.game_view.debrief_panel.get_global_rect().end.y + 1.0, "the terminal debrief should scale its dense record copy and keep all primary actions visible at 110% text")
+	app.text_scale_percent = 100
+	app._apply_text_scale()
 	app._on_checkpoint_reached("encounter_advanced")
 	_expect(FileAccess.file_exists(ProjectSettings.globalize_path(PROGRESS_PATH)) and app.campaign_progress.has_development("veyru_public_archive_signal") and app.campaign_progress.result_for_region("flooded_veyru") == "archive_scarred", "surviving after the public broadcast should persist the regional development and Veyru result outside the replaceable Continue slot")
 	app._capture_title_return_notice()
 	_expect(app.title_return_notice_kind == "saved" and app.title_return_notice.contains("RESULT SAVED") and app.title_return_notice.contains("Flooded Veyru debrief remains available under Continue"), "a saved terminal state should produce a debrief-specific title receipt rather than a generic checkpoint message")
 	app._clear_title_return_notice()
-	_expect(app.game_view.march_on_button.text == "MARCH ON · ASHGATE LOWLANDS", "the Veyru debrief should offer the other unfinished chapter as its primary onward path")
-	app.game_view.march_on_button.pressed.emit()
+	_expect(app.game_view.debrief_panel.march_on_button.text == "MARCH ON · ASHGATE LOWLANDS", "the Veyru debrief should offer the other unfinished chapter as its primary onward path")
+	app.game_view.debrief_panel.march_on_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_view.visible and app.confirmation_title_label.text == "Continue to Ashgate Lowlands?" and app.confirmation_confirm_button.text == "MARCH ON" and app.confirmation_cancel_button.text == "STAY AT DEBRIEF", "March On should use a chapter-aware, result-preserving confirmation")
 	_expect(app.confirmation_body_label.text.contains("result is recorded in the March Charter") and app.confirmation_body_label.text.contains("Continue keeps its current checkpoint"), "March On confirmation should distinguish durable Charter history from the replaceable Continue slot")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
-	_expect(not app.confirmation_view.visible and app.game_view.march_on_button.has_focus() and app.game_view.state.phase == "results", "cancelling March On should restore the intact debrief and onward action")
-	app.game_view.play_again_button.pressed.emit()
+	_expect(not app.confirmation_view.visible and app.game_view.debrief_panel.march_on_button.has_focus() and app.game_view.state.phase == "results", "cancelling March On should restore the intact debrief and onward action")
+	app.game_view.debrief_panel.replay_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Replay Flooded Veyru?" and app.confirmation_body_label.text.contains("fresh Flooded Veyru"), "Veyru replay should not describe the replacement run as Ashgate")
 	app.confirmation_confirm_button.pressed.emit()
@@ -873,8 +879,8 @@ func _run() -> void:
 	app.pause_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.results_inspect_button.has_focus(), "Go to Chassis Review should return from debrief options at the first interpretation action")
-	app.game_view.results_inspect_button.pressed.emit()
+	_expect(not app.pause_view.visible and app.game_view.state.phase == "results" and app.game_view.debrief_panel.inspect_button.has_focus(), "Go to Chassis Review should return from debrief options at the first interpretation action")
+	app.game_view.debrief_panel.inspect_button.pressed.emit()
 	await process_frame
 	_expect(app.game_view.fortress_panel.has_focus() and app.game_view.results_chassis_reviewed, "entering final chassis review should advance the debrief's transient next-action guidance")
 	app._show_pause()
@@ -883,7 +889,7 @@ func _run() -> void:
 	app.pause_order_button.pressed.emit()
 	await process_frame
 	await process_frame
-	_expect(not app.pause_view.visible and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from reviewed debrief options at the required result action")
+	_expect(not app.pause_view.visible and app.game_view.feedback_button.has_focus(), "Go to Feedback should return from reviewed chassis inspection at the required result action")
 	_expect(app._saved_values_match(paused_result_state, app.game_view.state.serialize()), "chassis review and Go to Feedback should preserve the completed result without opening the form")
 	app.game_view.play_again_button.pressed.emit()
 	await process_frame
@@ -892,7 +898,7 @@ func _run() -> void:
 	_expect(app.game_view.state.phase == "results", "opening replay confirmation should preserve the completed run")
 	app.confirmation_cancel_button.pressed.emit()
 	await process_frame
-	_expect(not app.confirmation_view.visible and app.game_view.state.phase == "results" and app.game_view.play_again_button.has_focus(), "cancelling replay should return to the intact result action")
+	_expect(not app.confirmation_view.visible and app.game_view.state.phase == "results" and app.game_view.play_again_button.has_focus(), "cancelling replay from chassis review should return to its visible result action")
 	_expect(app.game_view.save_run(true), "the replay confirmation test should be able to persist the completed result")
 	app._show_pause()
 	await process_frame
@@ -923,8 +929,8 @@ func _run() -> void:
 	app._on_checkpoint_reached("encounter_advanced")
 	app.game_view._refresh_ui()
 	_expect(app.campaign_progress.survived_region_count() == 2 and app.campaign_progress.result_for_region("ashgate_lowlands") == "scarred_march", "surviving both chapters should complete the bounded March Charter")
-	_expect(app.game_view.march_on_button.text == "REVISIT · FLOODED VEYRU", "after both regions survive, the debrief should frame March On as a deliberate revisit")
-	app.game_view.march_on_button.pressed.emit()
+	_expect(app.game_view.debrief_panel.march_on_button.text == "REVISIT · FLOODED VEYRU", "after both regions survive, the debrief should frame March On as a deliberate revisit")
+	app.game_view.debrief_panel.march_on_button.pressed.emit()
 	await process_frame
 	app.confirmation_confirm_button.pressed.emit()
 	await process_frame

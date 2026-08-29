@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.267`
+**Current baseline:** `0.3.0-alpha.272`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -700,6 +700,8 @@ Tasks:
 
 ### Phase 6 — Debrief and replay
 
+**Status:** The first dedicated terminal Debrief slice is complete in `0.3.0-alpha.272`; human comprehension and replay-intent validation remain open.
+
 **Objective:** Make each completed or failed march teach the next march.
 
 Tasks:
@@ -932,27 +934,21 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from current remote main, implement the first game-quality slice:
-a dedicated terminal Debrief panel for The Long Road.
+Starting from `0.3.0-alpha.272`, implement the next game-quality slice:
+strengthen the shared fortress silhouette and module/dependency readability.
 
-Replace the reused operational/service presentation after a chapter’s final
-commitment with a clear journey conclusion. Preserve the fortress and route
-visuals, but show:
+Use one coherent code-native fortress visual across preparation, travel,
+contact, arrival, and Debrief. Give the engine, weapon, power, signal, crew,
+armor, cargo, and workshop families recognizable silhouettes or markings;
+show ready, strained, damaged, targeted, sealed, and offline states without
+relying on color alone. Preserve the current authoritative placement and
+dependency rules and do not add a new module family, battle rule, region,
+faction, currency, or campaign system.
 
-- Decisive, Scarred, Retreated, or Failed headline.
-- Five-encounter journey timeline.
-- Route and doctrine/contract summary.
-- Key facility, crew, cargo, trust, and pressure consequences.
-- One causal chain explaining the result.
-- Persistent damage or rescued/abandoned obligations.
-- One state-specific replay experiment.
-- Continue/replay/title actions with controller and keyboard focus.
-
-Keep all rules in the authoritative state. Do not add new combat math,
-regions, factions, currencies, or campaign systems. Add deterministic state
-and UI tests, save/load coverage at debrief, visual captures at the supported
-logical viewport and scaling, and run the complete verification suite.
-Report exact files, tests, captures, risks, and one next bounded task.
+Add focused UI tests, high-contrast and 110% text checks where relevant,
+capture the same fortress before commitment and after damage, and run the
+complete verification suite. Report exact files, tests, captures, risks,
+and one bounded next task.
 ```
 
 ---

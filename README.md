@@ -89,7 +89,7 @@ Open the project in Godot 4.x or use:
 bash scripts/verify.sh
 ```
 
-Running the project opens on the title menu. Choose **Start Ashgate · Guided First Run** for the Marchmaster briefing, **Start Ashgate · Skip Briefing** for an immediate Ashgate test, or **Start Flooded Veyru · Rising Water** for the second isolated chapter. Once a valid checkpoint exists, the title keeps one guided Ashgate action, Veyru, and a chapter-labelled Continue above the fold; Ashgate Quick Start remains available in the Field Guide. After the briefing is completed, Ashgate collapses to one direct **Start Game · Ashgate Depot** action. **Continue** restores a compatible local save, and **Field Guide** summarizes the five decisions in a complete run. Press Escape during the stage to pause, inspect run progress, reopen the briefing, save, restart the current chapter, or safely return to the title.
+Running the project opens on the title menu. Choose **Learn to Command** for the canonical First Watch tutorial, **Start Journey · Ashgate Lowlands** for the first full chapter, or **Flooded Veyru · Advanced Journey** for the second chapter. Tutorial progress uses its own checkpoint and cannot replace campaign **Continue**. Press Escape during a stage to pause, inspect the march record, save, restart, or safely return to the title.
 
 With Godot export templates installed, create desktop playtest builds with:
 
@@ -118,7 +118,7 @@ The recommended sequence is:
 The current build contains two isolated five-encounter test journeys. Ashgate begins at Ashgate Depot, recovers at Morrowline Camp, and ends at Meridian Pass. Flooded Veyru begins at Lantern Quay, recovers at Evacuation Camp, and ends at the Dry Archive. Their contracts are in [`design/ashgate_lowlands_alpha.md`](design/ashgate_lowlands_alpha.md) and [`design/flooded_veyru_alpha.md`](design/flooded_veyru_alpha.md); the release checklist is in [`docs/internal_test_release.md`](docs/internal_test_release.md). The generated asset roles and provenance notes are in [`assets/ASSETS.md`](assets/ASSETS.md).
 
 The authoritative implemented-loop contract is [`design/functional_prototype_run.md`](design/functional_prototype_run.md).
-The active presentation vertical slice—settlement hubs, dedicated journey planning, and committed travel now implemented, with contact staging, roadside events, and arrival tableaux still in progress—is specified in [`design/journey_presentation_vertical_slice.md`](design/journey_presentation_vertical_slice.md).
+The implemented presentation vertical slice—settlement hubs, dedicated journey planning, committed travel, contact staging, roadside events, and arrival tableaux—is specified in [`design/journey_presentation_vertical_slice.md`](design/journey_presentation_vertical_slice.md).
 Its shared fortress layout and at-rest, map, moving, and encounter modes are specified in [`design/fortress_visual_modes.md`](design/fortress_visual_modes.md).
 The tester workflow, privacy contract, and interview questions are in [`docs/playtest_guide.md`](docs/playtest_guide.md).
 

@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.271`; Feeds A through AL and the automated First Watch tutorial are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.272`; Feeds A through AM, the automated First Watch tutorial, and the first game-quality transformation slice are complete. Continue with a bounded fortress-identity or battle-feedback task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -233,6 +233,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.268` through authoritative next-action copy.
 
 > Keep each completed event's exact mechanical consequence above the fold, then append the next route or recovery instruction from the same guidance source as the Marchmaster's Desk. Chained events should continue to name the next decision instead of skipping ahead.
+
+### Current Feed AM — terminal journey debrief
+
+**Status:** Complete in `0.3.0-alpha.272` through the dedicated terminal Debrief.
+
+> Replace the reused operational result desk with a terminal journey tableau. Show the five-road timeline, outcome, route span, doctrine and contract, carried people or cargo, pressure and trust, persistent system condition, one explicit causal chain, and one state-specific replay experiment. Keep final chassis inspection, local notes, replay, March On, save, controller focus, 110% text, and high contrast available without adding new simulation rules.
 
 ## Historical prototype feed sequence
 

@@ -854,19 +854,16 @@ func _run() -> void:
 	_expect(last_checkpoint_reason == "run_ended", "resolving the final encounter should request a neutral run-ended checkpoint for the debrief")
 	_expect(game.state.phase == "results" and game.state.run_complete and game.state.campaign_encounters_completed == 5, "the five-encounter campaign should produce a completed run")
 	_expect(game.current_run_flow_step == 4 and game.run_flow_labels[4].text.contains("RESULT"), "the completed run should finish the stage tracker")
-	_expect(game.results_group.visible and game.results_inspect_button.visible and game.march_on_button.visible and game.play_again_button.visible and game.results_title_button.visible and not game.journey_banner.visible, "results should expose final chassis review and follow-up actions while retiring the completed journey's decorative banner")
-	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "the result frame should remain neutral enough to describe both successful crossings and terminal failures")
-	_expect(game.results_inspect_button.has_focus() and game.current_order_button.text == "GO TO CHASSIS REVIEW ↓" and game.current_order_button.get_node_or_null(game.current_order_button.focus_neighbor_bottom) == game.results_inspect_button, "a newly opened debrief should focus and name final chassis review before asking for feedback")
-	_expect(game.right_scroll.get_global_rect().encloses(game.results_heading.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.results_inspect_button.get_global_rect()), "debrief arrival should reset inherited battle scrolling and keep both the outcome heading and first action visible")
+	_expect(game.debrief_panel.visible and not game.main_columns.visible and not game.journey_banner.visible, "results should open the dedicated terminal debrief and retire the operational desk")
+	_expect(game.debrief_panel.headline_label.text == "SCARRED" and game.debrief_panel.outcome_label.text == "JOURNEY COMPLETE · SCARRED MARCH", "the debrief should state the run outcome without success-coding every terminal state")
+	_expect(game.debrief_panel.inspect_button.has_focus(), "a newly opened debrief should focus final fortress review before asking for another commitment")
+	_expect(game.debrief_panel.headline_label.get_global_rect().position.y >= game.debrief_panel.get_global_rect().position.y and game.debrief_panel.inspect_button.get_global_rect().end.y <= game.debrief_panel.get_global_rect().end.y + 1.0, "the terminal debrief should keep both its outcome and first interpretation action visible at 720p")
 	_expect(game.fortress_panel.interaction_heading().contains("Inspect Final Chassis reviews survivors") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive result chassis should describe debrief review instead of an unavailable refit action")
-	game.current_order_button.pressed.emit()
-	await process_frame
-	_expect(game.results_inspect_button.has_focus(), "Go to Chassis Review should focus the debrief's first interpretation action without opening it")
-	game.results_inspect_button.pressed.emit()
+	game.debrief_panel.inspect_button.pressed.emit()
 	await process_frame
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS REVIEW") and game.fortress_panel.inspection_detail_heading() == "FINAL SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("REVIEW") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0 and game.fortress_panel.tooltip_text.contains("returns to the debrief") and game.current_order_button.text == "GO TO FEEDBACK ↓" and game.guidance_label.text.contains("Final chassis reviewed"), "Inspect Final Chassis should enter a fitted result-specific review mode and advance the debrief handoff toward feedback")
-	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()) and game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "active final chassis review should keep both the fixed Pause action and complete inspector visible at 720p")
+	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()) and game.left_scroll.is_ancestor_of(game.fortress_panel) and game.fortress_panel.get_global_rect().intersects(game.left_scroll.get_global_rect()), "active final chassis review should keep Pause fixed and the detailed inspector available in its 720p scroll surface")
 	var result_chassis_select := InputEventAction.new()
 	result_chassis_select.action = "ui_accept"
 	result_chassis_select.pressed = true
@@ -878,14 +875,11 @@ func _run() -> void:
 	result_chassis_cancel.pressed = true
 	game.fortress_panel._gui_input(result_chassis_cancel)
 	await process_frame
-	_expect(game.results_inspect_button.has_focus(), "B or Escape should return final chassis review to its visible debrief action")
-	game.current_order_button.pressed.emit()
-	await process_frame
-	_expect(game.feedback_button.has_focus(), "Go to Feedback should focus the debrief's primary follow-up without opening it")
-	_expect(game.results_title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
-	_expect(game.results_summary_label.text.begins_with("SCARRED MARCH") and game.results_summary_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
+	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "B or Escape should return final chassis review to its visible debrief action")
+	_expect(game.debrief_panel.title_button.text == "SAVE RESULT & RETURN", "the result screen should make persistence explicit before leaving the completed run")
+	_expect(game.debrief_panel.consequence_label.text.begins_with("SCARRED MARCH") and game.debrief_panel.consequence_label.text.contains("7 required"), "the result should explain the missed decisive threshold")
 	_expect(game.results_record_label.text.contains("Rill Crossing") and game.results_record_label.text.contains("Meridian Pass") and game.results_record_label.text.contains("Blockade:") and game.results_record_label.text.contains("Contract:") and game.results_record_label.text.contains("Key decisions: Broken Relay — moved silently") and game.results_record_label.text.contains("Mara Flint — rebuilt Field Workshop") and game.results_record_label.text.contains("Road occurrence — The Lift Chain Sings: Brace Lift Chain") and game.results_record_label.text.contains("Morrowline recovery: 1 service action left unused") and game.results_record_label.text.contains("Final doctrine:") and game.results_record_label.text.contains("Systems:") and game.results_record_label.text.contains("Damage:"), "the debrief card should retain the path, Mara's causal outcome, occurrence record, authored decisions, unused recovery, doctrine, and named operating condition needed to interpret the run")
-	_expect(game.results_replay_label.text.begins_with("NEXT RUN") and game.results_replay_label.text.contains("1 Morrowline service action went unused") and game.results_replay_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
+	_expect(game.debrief_panel.experiment_label.text.contains("1 Morrowline service action went unused") and game.debrief_panel.experiment_label.text.contains("spend it on hull or armor"), "a hull-shortfall result should turn unused recovery into a concrete replay lesson")
 	var completed_path: Array[String] = game.state.campaign_path.duplicate()
 	var completed_encounters: int = game.state.campaign_encounters_completed
 	var completed_hull: int = game.state.hull_condition
@@ -903,8 +897,8 @@ func _run() -> void:
 		game.state.encounter_enemies[enemy_index]["defeated"] = true
 		game.state.encounter_enemies[enemy_index]["hp"] = 0
 	game._refresh_ui()
-	_expect(game.results_summary_label.text.contains("1 final contact remained") and not game.results_summary_label.text.contains("convoy contract failed"), "scarred results should name only thresholds that actually determine the outcome")
-	_expect(game.results_replay_label.text.contains("CONTACTS FIRST") and game.results_replay_label.text.contains("Siege Beast") and game.results_replay_label.text.contains("shell cannon and front armor"), "a contact-only scarred result should recommend the authored counter for the surviving threat")
+	_expect(game.debrief_panel.consequence_label.text.contains("1 final contact remained") and not game.debrief_panel.consequence_label.text.contains("convoy contract failed"), "scarred results should name only thresholds that actually determine the outcome")
+	_expect(game.debrief_panel.experiment_label.text.contains("CONTACTS FIRST") and game.debrief_panel.experiment_label.text.contains("Siege Beast") and game.debrief_panel.experiment_label.text.contains("shell cannon and front armor"), "a contact-only scarred result should recommend the authored counter for the surviving threat")
 	game.state.final_result = "decisive_march"
 	game.state.settlement_actions_remaining = 0
 	game.state.guard_contract_status = "declined"
@@ -912,7 +906,7 @@ func _run() -> void:
 		enemy["defeated"] = true
 		enemy["hp"] = 0
 	game._refresh_ui()
-	_expect(game.results_summary_label.text.contains("travelled without the guard contract") and not game.results_summary_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
+	_expect(game.debrief_panel.consequence_label.text.contains("travelled without the guard contract") and not game.debrief_panel.consequence_label.text.contains("contract survived"), "a decisive result should describe a declined contract accurately rather than treating it as a victory condition")
 	_expect(game.results_record_label.text.contains("RUN RECORD · ASH-1107") and game.results_record_label.text.contains("Morrowline recovery: all service actions spent"), "the debrief should retain the reproducible run identity and distinguish fully used recovery from services left behind")
 	game.state.guard_contract_status = "completed"
 	game.state.settlement_actions_remaining = completed_services
@@ -925,8 +919,8 @@ func _run() -> void:
 	game.state._recalculate()
 	game._refresh_ui()
 	_expect(game.results_heading.text == "MARCH DEBRIEF" and game.guidance_label.text.begins_with("DEBRIEF"), "a failed final road should still open a debrief rather than present a success-coded completion heading")
-	_expect(game.results_summary_label.text.contains("hull reached zero"), "a hull failure should name the exact terminal cause")
-	_expect(game.results_replay_label.text.contains("HULL FIRST") and game.results_replay_label.text.contains("Morrowline service"), "a hull failure should recommend a matching next-run adjustment")
+	_expect(game.debrief_panel.consequence_label.text.contains("hull reached zero"), "a hull failure should name the exact terminal cause")
+	_expect(game.debrief_panel.experiment_label.text.contains("HULL FIRST") and game.debrief_panel.experiment_label.text.contains("Morrowline service"), "a hull failure should recommend a matching next-run adjustment")
 	_expect(game.results_record_label.text.contains("Stopped at: Meridian Pass") and game.results_record_label.text.contains("4/5 encounters secured"), "a failed final road should remain visible beside the secured path")
 	_expect(game.run_flow_labels[3].text.begins_with("×") and game.run_flow_labels[4].text.contains("RESULT"), "a terminal Meridian failure should mark the final stage as failed instead of completed")
 	var failed_engine_index: int = game.state._module_index_by_id("steam_lance_engine")
@@ -935,8 +929,8 @@ func _run() -> void:
 	game.state.modules[failed_engine_index]["durability"] = 0
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(game.results_summary_label.text.contains("Steam Lance Engine reached 0/4 durability"), "a movement failure should identify the disabled engine and its condition")
-	_expect(game.results_replay_label.text.contains("MOVEMENT FIRST") and game.results_replay_label.text.contains("Repair Steam Lance Engine"), "an engine failure should recommend repairing the system that ended the run")
+	_expect(game.debrief_panel.consequence_label.text.contains("Steam Lance Engine reached 0/4 durability"), "a movement failure should identify the disabled engine and its condition")
+	_expect(game.debrief_panel.experiment_label.text.contains("MOVEMENT FIRST") and game.debrief_panel.experiment_label.text.contains("Repair Steam Lance Engine"), "an engine failure should recommend repairing the system that ended the run")
 	_expect(game.results_record_label.text.contains("Damage: Steam Lance Engine 0/4") and game.results_record_label.text.contains("Unavailable: Steam Lance Engine"), "the run record should name the damaged and unavailable system instead of reporting only aggregate counts")
 	game.state.campaign_path = completed_path
 	game.state.campaign_encounters_completed = completed_encounters
@@ -947,16 +941,16 @@ func _run() -> void:
 	game.state.encounter_enemies = completed_enemies
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(game.feedback_button.has_focus(), "the completed run should hand controller focus to playtest feedback")
-	_expect(game.feedback_button.get_node_or_null(game.feedback_button.focus_neighbor_bottom) == game.march_on_button and game.march_on_button.get_node_or_null(game.march_on_button.focus_neighbor_bottom) == game.play_again_button and game.play_again_button.get_node_or_null(game.play_again_button.focus_neighbor_right) == game.results_title_button, "the result actions should follow their visible controller layout")
-	_expect(game.results_title_button.get_node_or_null(game.results_title_button.focus_next) == game.current_order_button and game.current_order_button.get_node_or_null(game.current_order_button.focus_next) == game.results_inspect_button and game.results_inspect_button.get_node_or_null(game.results_inspect_button.focus_next) == game.feedback_button and game.feedback_button.get_node_or_null(game.feedback_button.focus_previous) == game.results_inspect_button, "the result actions should form a closed Tab cycle through the order jump and final chassis review")
-	game.march_on_button.grab_focus()
+	_expect(game.debrief_panel.visible, "restoring the completed state should return to the terminal debrief")
+	_expect(game.debrief_panel.inspect_button.get_node_or_null(game.debrief_panel.inspect_button.focus_neighbor_bottom) == game.debrief_panel.notes_button and game.debrief_panel.notes_button.get_node_or_null(game.debrief_panel.notes_button.focus_neighbor_bottom) == game.debrief_panel.march_on_button and game.debrief_panel.march_on_button.get_node_or_null(game.debrief_panel.march_on_button.focus_neighbor_bottom) == game.debrief_panel.replay_button, "the debrief actions should follow their visible controller order")
+	_expect(game.debrief_panel.title_button.get_node_or_null(game.debrief_panel.title_button.focus_next) == game.debrief_panel.inspect_button and game.debrief_panel.inspect_button.get_node_or_null(game.debrief_panel.inspect_button.focus_previous) == game.debrief_panel.title_button, "the debrief should form a closed keyboard focus cycle")
+	game.debrief_panel.march_on_button.grab_focus()
 	await process_frame
 	await process_frame
 	await process_frame
-	_expect(game.right_scroll.get_global_rect().encloses(game.march_on_button.get_global_rect()), "focusing March On should scroll its full destination label into the 720p desk viewport")
-	game.feedback_button.grab_focus()
-	game.feedback_button.pressed.emit()
+	_expect(game.debrief_panel.march_on_button.get_global_rect().end.y <= game.debrief_panel.get_global_rect().end.y + 1.0, "the March On action should remain visible in the 720p debrief")
+	game.debrief_panel.notes_button.grab_focus()
+	game.debrief_panel.notes_button.pressed.emit()
 	await process_frame
 	var feedback_panel := game.feedback_overlay.find_child("FeedbackPanel", true, false) as PanelContainer
 	var feedback_surface := feedback_panel.get_theme_stylebox("panel") as StyleBoxFlat if feedback_panel != null else null
@@ -985,7 +979,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.feedback_status_label.text.begins_with("REPORT PATH COPIED") and game.feedback_status_label.text.contains(game.last_feedback_path.get_file()) and game.feedback_path_button.has_focus(), "copying the report path should produce a visible receipt and preserve action focus")
 	game._hide_feedback()
-	game.feedback_button.pressed.emit()
+	game.debrief_panel.notes_button.pressed.emit()
 	await process_frame
 	_expect(game.feedback_status_label.text.begins_with("LAST SAVED LOCALLY") and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_path_button.visible, "reopening feedback should preserve the previous local-save receipt and path action")
 	DirAccess.remove_absolute(game.last_feedback_path)
@@ -997,9 +991,9 @@ func _run() -> void:
 	controller_cancel.pressed = true
 	game._unhandled_input(controller_cancel)
 	await process_frame
-	_expect(not game.feedback_overlay.visible and game.feedback_button.has_focus(), "controller cancel should close the feedback modal and restore result focus")
+	_expect(not game.feedback_overlay.visible and game.debrief_panel.notes_button.has_focus(), "controller cancel should close the feedback modal and restore debrief focus")
 	_expect(FileAccess.file_exists(journal_path), "the UI flow should leave a local-only playtest journal")
-	game.results_title_button.pressed.emit()
+	game.debrief_panel.title_button.pressed.emit()
 	await process_frame
 	_expect(return_to_title_requested, "the completed stage should be able to request the application title")
 	var result_save = JSON.parse_string(FileAccess.get_file_as_string(save_path))
@@ -1010,7 +1004,7 @@ func _run() -> void:
 	corrupt_primary.store_string("{invalid primary")
 	corrupt_primary.close()
 	_expect(game.save_run(true) and FileAccess.get_file_as_string(backup_path) == protected_backup_text, "saving over an invalid primary should preserve the last validated backup instead of promoting corrupt bytes")
-	game.play_again_button.pressed.emit()
+	game.debrief_panel.replay_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "refit" and game.current_run_flow_step == 0 and game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "Play Again should create a fresh Ashgate bazaar focused on its assignment")
 	_expect(last_checkpoint_reason == "new_run_started", "Play Again should request a fresh checkpoint instead of leaving Continue on the completed result")
