@@ -83,7 +83,7 @@ func _run() -> void:
 	_expect(journey.continue_button.has_focus() and journey.continue_button.text == "CONTINUE TO CONTACT", "the road view should require an explicit continuation into the contact")
 	journey.continue_button.pressed.emit()
 	await _settle_ui()
-	_expect(not journey.visible and game.main_columns.visible and game.combat_panel.visible and game.advance_encounter_button.has_focus(), "continuing from the road should reveal the encounter without resolving a combat step")
+	_expect(not journey.visible and game.main_columns.visible and game.combat_panel.visible and game.road_contact.visible and game.road_contact.advance_button.has_focus(), "continuing from the road should reveal the fortress contact without resolving a combat step")
 
 	game.queue_free()
 	await process_frame

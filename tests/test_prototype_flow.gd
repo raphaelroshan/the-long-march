@@ -6,6 +6,7 @@ var game: Control
 var failures: Array[String] = []
 var return_to_title_requested: bool = false
 var last_checkpoint_reason: String = ""
+var arrival_resume_tested: bool = false
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -65,15 +66,30 @@ func _advance_until_phase(expected_phase: String) -> void:
 		game.advance_encounter_button.pressed.emit()
 		await process_frame
 		if game.state.encounter_active and not game.state.encounter_intervention_used:
-			game.intervention_buttons[0].pressed.emit()
+			game.road_contact.intervention_buttons[0].pressed.emit()
 			await process_frame
 			_expect(game.event_label.text.contains("Weapon priority") and game.event_label.text.contains("heat +1"), "an emergency order should immediately report its exact benefit and cost")
 			_expect(game.combat_panel.causal_label.text.contains("Weapon priority") and game.combat_panel.causal_label.text.contains("heat +1"), "the persistent cause-and-effect report should retain the emergency order result")
 			_expect(game.intervention_title.text.contains("SPENT") and game.intervention_help_label.text.begins_with("Emergency order spent") and game.intervention_help_label.text.contains("one order returns next encounter"), "spent intervention guidance should direct the player back to damage review and advancement")
 			_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.how_to_play_button and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_top) == game.combat_inspect_button, "spending the emergency order should remove disabled interventions while retaining chassis inspection in controller navigation")
-			_expect(game.advance_encounter_button.has_focus(), "spending an emergency order should return focus to encounter advancement")
+			_expect(game.road_contact.advance_button.has_focus(), "spending an emergency order should return focus to the visible contact advance action")
 	for _step in range(8):
 		if game.state.phase == expected_phase:
+			if game.journey_arrival.visible:
+				_expect(game.journey_arrival.continue_button.has_focus() and game.journey_arrival.destination_label.text.length() > 0, "a resolved road should pause at a focused arrival receipt before exposing the next phase")
+				_expect(game.journey_arrival.route_label.text.contains("ROAD RESOLVED") and game.journey_arrival.receipt_labels["outcome"].text != "—" and game.journey_arrival.report_label.text.begins_with("• "), "the arrival tableau should name the resolved road and retain its applied consequence receipt")
+				if not arrival_resume_tested:
+					arrival_resume_tested = true
+					var arrival_destination: String = game.journey_arrival.destination_label.text
+					_expect(game.save_run(true), "the resolved arrival handoff should save successfully")
+					game.journey_arrival_active = false
+					game.journey_arrival_view = {}
+					game._refresh_ui()
+					_expect(game.load_saved_run(), "the resolved arrival handoff should load successfully")
+					await process_frame
+					_expect(game.journey_arrival.visible and game.journey_arrival.destination_label.text == arrival_destination, "Continue should restore a pending arrival receipt instead of skipping directly to the next phase")
+				game.journey_arrival.continue_button.pressed.emit()
+				await process_frame
 			return
 		game.advance_encounter_button.pressed.emit()
 		await process_frame
@@ -392,9 +408,11 @@ func _run() -> void:
 	_expect(game.state.phase == "battle", "the first map choice should begin a road encounter")
 	_expect(game.journey_label.text.contains("Ashgate Depot → Rill Crossing") and game.journey_label.text.contains("Encounter 1/5 underway") and not game.journey_label.text.contains("Encounter 0/5"), "the journey header should include the active road destination and count the first encounter rather than showing zero progress")
 	_expect(game.campaign_pressure_label.text.contains("secured 0/5") and not game.campaign_pressure_label.text.contains("encounters 0/5"), "the blockade summary should identify its zero as secured encounters while the first battle is underway")
-	_expect(game.advance_encounter_button.has_focus(), "committing a route should hand controller focus to the encounter timeline")
+	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "committing a route should hand controller focus to the fortress contact scene")
+	_expect(game.road_contact.contact_canvas.visible and game.road_contact.timeline_labels.size() == 6 and game.road_contact.threat_heading.text == "ROAD RAIDER", "the road contact should center the fortress, name the nearest threat, and retain the six-step timeline")
+	_expect(game.road_contact.threat_status.text.contains("2 STEPS OUT") and game.road_contact.threat_detail.text.contains("PREFERRED TARGETS · cargo / exterior") and game.road_contact.threat_detail.text.contains("COUNTER · shell cannon or repeater gun"), "the contact dossier should explain approach timing, target priorities, and the authored counter")
 	_expect(game.current_order_button.text == "GO TO BATTLE STEP ↓", "battle entry should retarget the persistent jump action to the next timeline step")
-	_expect(game.right_scroll.get_global_rect().encloses(game.advance_encounter_button.get_global_rect()), "battle focus should scroll encounter advancement into view")
+	_expect(game.get_global_rect().encloses(game.road_contact.advance_button.get_global_rect()), "battle entry should keep the visible contact advance action fully on screen")
 	var battle_viewport_rect: Rect2 = game.right_scroll.get_global_rect()
 	var battle_asset_rect: Rect2 = game.asset_row.get_global_rect()
 	_expect(not battle_asset_rect.intersects(battle_viewport_rect) or battle_viewport_rect.encloses(battle_asset_rect), "battle focus should settle after layout changes without clipping the icon row")
@@ -413,7 +431,7 @@ func _run() -> void:
 	game._finish_onboarding(true)
 	await process_frame
 	await process_frame
-	_expect(game.state.serialize() == battle_briefing_state and game.advance_encounter_button.has_focus(), "closing contextual battle guidance should return to the next authoritative step without advancing it")
+	_expect(game.state.serialize() == battle_briefing_state and game.road_contact.advance_button.has_focus(), "closing contextual battle guidance should return to the visible contact advance action without advancing it")
 	var initial_shift_preview: Dictionary = game.state.encounter_shift_power_preview()
 	_expect(game.intervention_help_label.text.contains("NO TARGET ASSIGNED") and game.intervention_help_label.text.contains("remains available after Advance") and game.intervention_help_label.text.contains("Review CONTACT NEXT") and game.intervention_buttons[0].text.contains("heat %d→%d" % [int(initial_shift_preview.get("heat_before", 0)), int(initial_shift_preview.get("heat_after", 0))]), "the pre-contact order panel should explain that waiting preserves the order while pointing back to the arrival forecast")
 	game.intervention_buttons[0].grab_focus()
@@ -434,7 +452,7 @@ func _run() -> void:
 	_expect(game.combat_inspect_button.visible and not game.combat_inspect_button.disabled and game.combat_inspect_button.text.contains("CHOOSE SEAL TARGET"), "battle controls should expose a controller path into chassis target selection")
 	_expect(game.fortress_panel.interaction_heading().contains("Inspect Chassis chooses a seal target") and not game.fortress_panel.interaction_heading().contains("Edit Chassis"), "the passive battle chassis should describe the action that is actually available in this phase")
 	_expect(game.fortress_panel.inspection_detail_heading() == "BATTLE SYSTEM" and game.fortress_panel.locked_mode_help_text().begins_with("TARGETING") and ThemeDB.fallback_font.get_string_size(game.fortress_panel.locked_mode_help_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x <= 320.0, "battle inspection detail copy should name its phase and fit the fixed status column")
-	game.combat_inspect_button.pressed.emit()
+	game.road_contact.inspect_button.pressed.emit()
 	await process_frame
 	_expect(game.fortress_panel.has_focus() and game.fortress_panel.interaction_heading().contains("CHASSIS INSPECTION") and not game.fortress_panel.interaction_heading().contains("EDIT MODE"), "the combat inspection action should enter a clearly named non-refit chassis mode")
 	_expect(game.get_global_rect().encloses(game.pause_button.get_global_rect()), "battle chassis inspection should keep the fixed pointer-accessible Pause action visible")
@@ -444,7 +462,7 @@ func _run() -> void:
 	battle_chassis_select.pressed = true
 	game.fortress_panel._gui_input(battle_chassis_select)
 	await process_frame
-	_expect(game.selected_module_id == "coal_cell" and game.intervention_buttons[1].has_focus() and game.intervention_buttons[1].text.contains("Coal Cell"), "selecting a combat system should return focus to the matching Seal order")
+	_expect(game.selected_module_id == "coal_cell" and game.road_contact.visible and game.road_contact.intervention_buttons[1].has_focus() and game.intervention_buttons[1].text.contains("Coal Cell"), "selecting a combat system should return to the fortress contact and focus the matching Seal order")
 	var original_raider: Dictionary = game.state.encounter_enemies[0].duplicate(true)
 	game.selected_module_id = "steam_lance_engine"
 	game._sync_selected_module_context()
@@ -458,6 +476,7 @@ func _run() -> void:
 	game.state.encounter_enemies[0]["damage_bonus"] = 1
 	game._refresh_ui()
 	_expect(game.combat_inspect_button.text.contains("INSPECT TARGET · COAL CELL") and game.selected_module_id == "coal_cell" and game.intervention_buttons[1].text.contains("Coal Cell"), "a newly active threat should become the default inspected and sealed system")
+	_expect(game.road_contact.threat_status.text.contains("TARGETING COAL CELL") and game.road_contact.threat_detail.text.contains("WHY ·") and game.road_contact.threat_detail.text.contains("NEXT ·") and game.road_contact.current_view.get("active_target_id", "") == "coal_cell", "the fortress contact should connect the active threat dossier and visual target marker to the authoritative module")
 	_expect(not game.fortress_panel.hull_under_threat and "coal_cell" in game.fortress_panel.combat_target_ids, "a module-directed contact should highlight only its chassis target")
 	game.intervention_buttons[1].grab_focus()
 	await process_frame
@@ -536,12 +555,12 @@ func _run() -> void:
 	battle_chassis_cancel.pressed = true
 	game.fortress_panel._gui_input(battle_chassis_cancel)
 	await process_frame
-	_expect(game.combat_inspect_button.has_focus(), "B or Escape should return battle inspection focus to its visible desk action")
+	_expect(game.road_contact.visible and game.road_contact.inspect_button.has_focus(), "B or Escape should return battle inspection focus to its visible contact action")
 	game.advance_encounter_button.grab_focus()
 	await process_frame
 	_expect(game.advance_encounter_button.get_node_or_null(game.advance_encounter_button.focus_neighbor_bottom) == game.combat_inspect_button and game.combat_inspect_button.get_node_or_null(game.combat_inspect_button.focus_neighbor_bottom) == game.intervention_buttons[0] and game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_neighbor_bottom) == game.current_order_button, "combat actions should form a visible vertical controller loop through chassis inspection and the persistent order jump")
 	_expect(game.how_to_play_button.get_node_or_null(game.how_to_play_button.focus_next) == game.current_order_button and game.current_order_button.get_node_or_null(game.current_order_button.focus_next) == game.advance_encounter_button, "combat Tab navigation should remain inside the active command set while including the order jump")
-	game.advance_encounter_button.pressed.emit()
+	game.road_contact.advance_button.pressed.emit()
 	await process_frame
 	_expect(game.combat_panel.enemy_states[0].text.contains("1 STEP OUT") and game.advance_encounter_button.text.contains("STEP 2 OF 6") and game.advance_encounter_button.text.contains("CONTACT NEXT · ROAD RAIDER") and game.combat_panel.order_label.text.contains("Next step 2/6") and game.combat_panel.step_labels[1].text == "CONTACT · 2", "the arrival countdown, timeline, combat status, and advance action should agree and warn before contact")
 	_expect(game.combat_panel.causal_label.text.contains("Repeater Gun") and not game.combat_panel.causal_label.text.contains("repeater_gun"), "the visible causal report should use authored system names rather than internal content IDs")

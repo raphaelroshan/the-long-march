@@ -51,11 +51,14 @@ func _combat_names_include(fragment: String) -> bool:
 
 func _finish_battle() -> void:
 	if game.state.encounter_active and not game.state.encounter_intervention_used:
-		game.intervention_buttons[2].pressed.emit()
+		game.road_contact.intervention_buttons[2].pressed.emit()
 		await process_frame
 	for _step in range(7):
 		if not game.state.encounter_active:
 			await _settle_ui()
+			_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "a resolved Veyru road should stop at its arrival receipt")
+			game.journey_arrival.continue_button.pressed.emit()
+			await process_frame
 			return
 		game.advance_encounter_button.pressed.emit()
 		await process_frame

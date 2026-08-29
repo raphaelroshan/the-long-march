@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-`0.3.0-alpha.268` implements the first three presentation checkpoints: Ashgate Depot and Lantern Quay open as six-station bazaars; route planning uses a dedicated full-frame readiness/map/dossier composition instead of the narrow command desk; route commitment shows a mandatory side-on moving-fortress road bridge; and `current_location` remains the last secured node until contact resolution. Purchasable information, marketplace inventory, threat-to-module approach animation, roadside event tableau, and arrival tableau remain follow-up slices.
+`0.3.0-alpha.269` implements the first contact-and-arrival presentation checkpoint on top of the settlement, planner, and road work in `0.3.0-alpha.268`. Every road encounter now opens as a full-frame side-on fortress contact: operational values stay in a left rail, the fortress and approaching threats occupy the center, the nearest threat's approach, target, reason, predicted damage, and dependency cascade occupy one right-hand dossier, and the existing deterministic Advance/Inspect/Emergency Order commands remain authoritative. Resolving the contact opens a mandatory arrival or retreat tableau with a consequence receipt before the map, local decision, bazaar, or debrief returns. Purchasable information, marketplace inventory, roadside event tableaux, and authored attack animation remain follow-up slices.
 
 ## Purpose
 
@@ -18,7 +18,7 @@ The current prototype already has the hard part: deterministic routes, forecasts
 2. committing resources and doctrine;
 3. entering an encounter whose enemies are represented by cards.
 
-`LongMarchState.begin_campaign_route()` currently pays the route cost, moves `current_location` to the destination, and configures the encounter in one command. Settlement contracts, services, recruitment, map planning, and departure also compete for space in the same scrolling command surface. This makes the loop functional without giving the settlement, departure, road, contact, and arrival distinct visual identities.
+`LongMarchState.begin_campaign_route()` pays the route cost and configures the encounter while preserving the last secured `current_location`; successful encounter resolution performs the arrival. Settlement, planning, departure, contact, and arrival now have distinct visual surfaces. The remaining gap is temporal presentation within the road itself: scenario choices still resolve outside a road tableau, and attacks use readable state changes rather than a sequenced approach/impact/recovery animation.
 
 ## Target player loop
 
@@ -627,6 +627,8 @@ This is the necessary simulation seam. Do not begin polished animation before it
 
 ### Slice 6 — Visualize one hostile contact
 
+**Status:** First code-native contact grammar complete in `0.3.0-alpha.269`; authored motion and impact timing remain.
+
 - Implement the Road Raider approach lane, target intent line, attack, fortress response, impact, defeat, and dependency highlight.
 - Keep Advance Step as the only battle progression command.
 - Prove that the visual event sequence matches the existing causal report exactly.
@@ -638,6 +640,8 @@ This is the necessary simulation seam. Do not begin polished animation before it
 - Compare a hostile route and a scenario route in a five-tester session.
 
 ### Slice 8 — Generalize only after evidence
+
+**Status:** Static visual grammar generalized to all current enemy families in `0.3.0-alpha.269`; bespoke animation remains gated on playtest evidence.
 
 - Add Climber, Burrower, Flood Surge, Siege Beast, and Civic Guardian visual grammars.
 - Add Veyru biome layers and waterline behavior.

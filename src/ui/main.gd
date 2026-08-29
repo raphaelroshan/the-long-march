@@ -16,6 +16,8 @@ const CombatPanel = preload("res://src/ui/combat_panel.gd")
 const SettlementHubScene = preload("res://scenes/settlement/SettlementHub.tscn")
 const JourneyTransitionScene = preload("res://scenes/journey/JourneyTransition.tscn")
 const JourneyPlannerScene = preload("res://scenes/journey/JourneyPlanner.tscn")
+const RoadContactScene = preload("res://scenes/journey/RoadContact.tscn")
+const JourneyArrivalScene = preload("res://scenes/journey/JourneyArrival.tscn")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -130,6 +132,12 @@ var journey_transition_active: bool = false
 var journey_transition_view: Dictionary = {}
 var journey_planner: JourneyPlannerView
 var journey_planner_active: bool = false
+var road_contact: RoadContactView
+var contact_inspection_active: bool = false
+var journey_arrival: JourneyArrivalView
+var journey_arrival_active: bool = false
+var journey_arrival_view: Dictionary = {}
+var journey_departure_snapshot: Dictionary = {}
 var metric_labels: Dictionary = {}
 var subtitle_label: Label
 var pause_button: Button
@@ -460,6 +468,8 @@ func _ready() -> void:
 	journey_transition.set_high_contrast(high_contrast_enabled)
 	journey_transition.set_reduced_motion(reduced_motion_enabled)
 	journey_planner.set_high_contrast(high_contrast_enabled)
+	road_contact.set_high_contrast(high_contrast_enabled)
+	journey_arrival.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
@@ -481,6 +491,10 @@ func set_high_contrast(enabled: bool) -> void:
 		journey_transition.set_high_contrast(high_contrast_enabled)
 	if journey_planner != null:
 		journey_planner.set_high_contrast(high_contrast_enabled)
+	if road_contact != null:
+		road_contact.set_high_contrast(high_contrast_enabled)
+	if journey_arrival != null:
+		journey_arrival.set_high_contrast(high_contrast_enabled)
 	for button_data in [
 		[contract_accept_button, Color("#285348"), Color("#73c99b")],
 		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
@@ -524,6 +538,10 @@ func _refresh_controller_copy() -> void:
 		journey_transition.set_controller_cancel_label(_controller_cancel_label())
 	if journey_planner != null:
 		journey_planner.set_controller_cancel_label(_controller_cancel_label())
+	if road_contact != null:
+		road_contact.set_controller_cancel_label(_controller_cancel_label())
+	if journey_arrival != null:
+		journey_arrival.set_controller_cancel_label(_controller_cancel_label())
 
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
@@ -566,6 +584,10 @@ func _reset_state() -> void:
 	journey_transition_active = false
 	journey_transition_view = {}
 	journey_planner_active = false
+	contact_inspection_active = false
+	journey_arrival_active = false
+	journey_arrival_view = {}
+	journey_departure_snapshot = {}
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -1136,6 +1158,16 @@ func _build_ui() -> void:
 	journey_planner.return_requested.connect(_on_journey_planner_returned)
 	margin.add_child(journey_planner)
 	journey_planner.attach_route_controls(campaign_map, campaign_comparison_panel, route_preview_label, doctrine_group, doctrine_detail_label, campaign_commit_intel_label, campaign_action_row)
+	road_contact = RoadContactScene.instantiate()
+	road_contact.pause_requested.connect(func() -> void: pause_requested.emit())
+	road_contact.advance_requested.connect(_on_advance_encounter_pressed)
+	road_contact.inspect_requested.connect(_focus_chassis_for_combat)
+	road_contact.intervention_requested.connect(_use_intervention)
+	margin.add_child(road_contact)
+	journey_arrival = JourneyArrivalScene.instantiate()
+	journey_arrival.pause_requested.connect(func() -> void: pause_requested.emit())
+	journey_arrival.continue_requested.connect(_on_journey_arrival_continued)
+	margin.add_child(journey_arrival)
 
 	_build_onboarding_overlay()
 	_build_feedback_overlay()
@@ -1736,6 +1768,12 @@ func focus_current_action() -> void:
 	if journey_transition != null and journey_transition.visible:
 		journey_transition.focus_default()
 		return
+	if journey_arrival != null and journey_arrival.visible:
+		journey_arrival.focus_default()
+		return
+	if road_contact != null and road_contact.visible:
+		road_contact.focus_default()
+		return
 	if journey_planner != null and journey_planner.visible:
 		if not selected_campaign_node_id.is_empty() and _focus_control(campaign_commit_button):
 			return
@@ -1921,8 +1959,11 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		settlement_hub_active = true
 		settlement_detail_mode = "hub"
 		journey_transition_active = true
+		journey_arrival_active = false
+		journey_arrival_view = {}
 		journey_planner_active = false
 		journey_transition_view = _build_journey_transition_view(origin_id, node_id, route_preview, day_before, fuel_before, pressure_before)
+		journey_departure_snapshot = {"origin_id": origin_id, "destination_id": node_id, "hull": state.hull_condition, "money": state.money, "pressure": pressure_before}
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
 		_checkpoint("route_started")
@@ -1967,7 +2008,16 @@ func _on_journey_transition_continued() -> void:
 	journey_transition_active = false
 	_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
 	_refresh_ui()
-	_focus_control.call_deferred(advance_encounter_button)
+	road_contact.focus_default.call_deferred()
+
+func _on_journey_arrival_continued() -> void:
+	if not journey_arrival_active:
+		return
+	journey_arrival_active = false
+	journey_arrival_view = {}
+	_set_event("Arrival acknowledged. The fortress is ready for its next local order.")
+	_refresh_ui()
+	focus_current_action.call_deferred()
 
 func _on_journey_planner_returned() -> void:
 	selected_campaign_node_id = ""
@@ -2051,6 +2101,9 @@ func _focus_chassis_for_refit() -> void:
 func _focus_chassis_for_combat() -> void:
 	if state.phase not in ["battle", "final_battle"]:
 		return
+	contact_inspection_active = true
+	if road_contact != null:
+		road_contact.visible = false
 	var active_target_id := _active_combat_target_id()
 	if not active_target_id.is_empty():
 		for instance in state.modules:
@@ -2104,8 +2157,13 @@ func _sync_new_active_combat_target() -> void:
 	_select_module_option(active_target_id)
 
 func _on_fortress_focus_exit_requested() -> void:
-	if state.phase in ["battle", "final_battle"] and _control_can_receive_focus(combat_inspect_button):
-		_focus_control(combat_inspect_button)
+	if state.phase in ["battle", "final_battle"]:
+		contact_inspection_active = false
+		_refresh_ui()
+		if road_contact != null and road_contact.visible:
+			road_contact.inspect_button.grab_focus()
+		elif _control_can_receive_focus(combat_inspect_button):
+			_focus_control(combat_inspect_button)
 	elif state.phase == "results" and _control_can_receive_focus(results_inspect_button):
 		_focus_control(results_inspect_button)
 	elif _control_can_receive_focus(focus_chassis_button):
@@ -2428,6 +2486,110 @@ func _refresh_journey_planner(snapshot: Dictionary) -> void:
 		}
 	})
 
+func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> void:
+	if road_contact == null:
+		return
+	var battle_active := state.phase in ["battle", "final_battle"] and state.encounter_active
+	var show_contact := battle_active and not journey_transition_active and not contact_inspection_active
+	road_contact.visible = show_contact
+	if not show_contact:
+		return
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	var active_target_id := ""
+	for enemy in combat_view.get("enemies", []):
+		if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)):
+			active_target_id = String(enemy.get("target", "hull"))
+			break
+	var action_views: Array[Dictionary] = []
+	for button in intervention_buttons:
+		var intervention_id := String(button.get_meta("intervention_id", ""))
+		action_views.append({
+			"id": intervention_id,
+			"label": button.text,
+			"tooltip": String(intervention_preview_texts.get(intervention_id, button.tooltip_text)),
+			"enabled": not button.disabled
+		})
+	road_contact.configure({
+		"region_id": state.campaign_region_id,
+		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)),
+		"active": state.encounter_active,
+		"step": state.encounter_step,
+		"order": _current_guidance(),
+		"warning": _critical_combat_warning(),
+		"advance_label": _advance_encounter_action_text(),
+		"inspect_label": combat_inspect_button.text,
+		"intervention_heading": intervention_title.text,
+		"intervention_help": intervention_help_label.text,
+		"interventions": action_views,
+		"enemies": combat_view.get("enemies", []),
+		"enemy_definitions": LongMarchState.ENCOUNTER_ENEMIES,
+		"target_names": combat_view.get("target_names", {}),
+		"active_target_id": active_target_id,
+		"values": {
+			"hull": "%d/10" % state.hull_condition,
+			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
+			"heat": "%d/%d" % [state.heat, LongMarchState.BASE_HEAT_LIMIT],
+			"fuel": str(state.fuel),
+			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure],
+			"step": "%d / 6" % state.encounter_step,
+			"doctrine": state.encounter_target_doctrine.replace("_", " ").to_upper()
+		}
+	})
+
+func _refresh_journey_arrival() -> void:
+	if journey_arrival == null:
+		return
+	journey_arrival.visible = journey_arrival_active
+	if not journey_arrival_active:
+		return
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	main_columns.visible = false
+	journey_arrival.configure(journey_arrival_view)
+
+func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dictionary:
+	var outcome := String(result.get("outcome", state.encounter_outcome))
+	var retreat := outcome == "forced_retreat"
+	var origin_id := String(before.get("origin_id", state.current_location))
+	var destination_id := String(result.get("recovered_to", state.current_location)) if retreat else String(before.get("destination_id", state.current_location))
+	if destination_id.is_empty():
+		destination_id = state.current_location
+	var origin_name := String(LongMarchState.JOURNEY_NODES.get(origin_id, {}).get("name", origin_id.replace("_", " ").capitalize()))
+	var destination_name := String(LongMarchState.JOURNEY_NODES.get(destination_id, {}).get("name", destination_id.replace("_", " ").capitalize()))
+	var snapshot := state.summary()
+	var dependencies: Dictionary = snapshot.get("dependencies", {})
+	var recent_report: Array[String] = []
+	var report: Array = result.get("report", [])
+	for index in range(maxi(0, report.size() - 4), report.size()):
+		recent_report.append(String(report[index]))
+	var outcome_copy := outcome.replace("_", " ").capitalize()
+	var summary := "The fortress has withdrawn to %s. Repairs preserve the run, but time, pressure, and Ashmarks have already changed." % destination_name if retreat else "%s is secured. The fortress is at rest; review the road receipt before issuing the next local order." % destination_name
+	var action_label := "CONTINUE TO MARCH DEBRIEF" if state.phase == "results" else ("ENTER %s" % ("BAZAAR" if state.phase in ["refit", "settlement"] else ("LOCAL DECISION" if not state.campaign_event_pending.is_empty() else "JOURNEY MAP")))
+	return {
+		"region_id": state.campaign_region_id,
+		"origin_name": origin_name,
+		"destination_name": destination_name,
+		"retreat": retreat,
+		"outcome_label": "FORCED RETREAT" if retreat else outcome_copy,
+		"summary": summary,
+		"report": recent_report,
+		"action_label": action_label,
+		"receipts": {
+			"outcome": outcome_copy,
+			"hull": "%d → %d" % [int(before.get("hull", state.hull_condition)), state.hull_condition],
+			"ashmarks": "%d → %d  ·  %s" % [int(before.get("money", state.money)), state.money, _signed_change(state.money - int(before.get("money", state.money)))],
+			"pressure": "%d → %d  ·  %s" % [int(before.get("pressure", state.campaign_pressure)), state.campaign_pressure, _signed_change(state.campaign_pressure - int(before.get("pressure", state.campaign_pressure)))],
+			"systems": "%d ready · %d strained\n%d offline" % [int(dependencies.get("ready", 0)), int(dependencies.get("strained", 0)), int(dependencies.get("offline", 0))]
+		}
+	}
+
+func _signed_change(value: int) -> String:
+	return "+%d" % value if value > 0 else str(value)
+
 func _apply_start_detail_visibility() -> void:
 	if not _settlement_hub_available() or settlement_hub_active:
 		return
@@ -2457,9 +2619,14 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		_select_module_option(selected_module_id)
 		var selection_context := " and refitting" if state.can_refit() else (" or an encounter order" if state.phase in ["battle", "final_battle"] else (" in the final chassis" if state.phase == "results" else ""))
 		_set_event("Selected %s for inspection%s." % [String(state.module_definition(selected_module_id).get("name", selected_module_id)), selection_context])
+		if state.phase in ["battle", "final_battle"]:
+			contact_inspection_active = false
 		_refresh_ui()
 		if state.phase in ["battle", "final_battle"]:
-			_focus_control(intervention_buttons[1] if not intervention_buttons[1].disabled else advance_encounter_button)
+			if road_contact != null and road_contact.visible:
+				_focus_control(road_contact.intervention_buttons[1] if not road_contact.intervention_buttons[1].disabled else road_contact.advance_button)
+			else:
+				_focus_control(intervention_buttons[1] if not intervention_buttons[1].disabled else advance_encounter_button)
 		elif state.phase == "results":
 			fortress_panel.grab_focus()
 		return
@@ -2540,10 +2707,12 @@ func _on_remove_pressed() -> void:
 
 func _on_travel_pressed() -> void:
 	var route_id := _selected_id(route_option)
+	var before := {"origin_id": state.current_location, "destination_id": state.journey_destination, "hull": state.hull_condition, "money": state.money, "pressure": state.campaign_pressure}
 	var result := state.begin_journey(route_id, _selected_id(doctrine_option))
 	if not bool(result.get("ok", false)):
 		_set_event("Departure blocked: %s." % String(result.get("reason", "unknown")))
 	else:
+		journey_departure_snapshot = before
 		_set_event("Journey begun. Forecast: %s. Advance one battle step at a time." % ", ".join(result.get("forecast", {}).get("threats", [])))
 		_journal_event("route_started", {"route": route_id, "doctrine": _selected_id(doctrine_option), "risk": state.current_route_risk, "pressure": state.encounter_pressure})
 	_refresh_ui()
@@ -2560,11 +2729,21 @@ func _encounter_checkpoint_reason(resolved: bool) -> String:
 	return "encounter_resolved"
 
 func _on_advance_encounter_pressed() -> void:
+	var before: Dictionary = journey_departure_snapshot.duplicate(true) if not journey_departure_snapshot.is_empty() else {
+		"origin_id": state.current_location,
+		"destination_id": state.campaign_target_node if state.campaign_active else state.journey_destination,
+		"hull": state.hull_condition,
+		"money": state.money,
+		"pressure": state.campaign_pressure
+	}
 	var result := state.advance_encounter(1.0)
 	var encounter_resolved := bool(result.get("resolved", false))
 	if not bool(result.get("ok", false)):
 		_set_event("Journey battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif encounter_resolved:
+		journey_arrival_active = true
+		journey_arrival_view = _build_journey_arrival_view(result, before)
+		journey_departure_snapshot = {}
 		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
 		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})
 		if state.phase == "results" and not result_recorded:
@@ -2674,6 +2853,11 @@ func save_run(silent: bool = false) -> bool:
 	var payload := state.serialize()
 	payload["build_version"] = String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	payload["saved_at_unix"] = int(Time.get_unix_time_from_system())
+	payload["presentation"] = {
+		"journey_departure_snapshot": journey_departure_snapshot.duplicate(true),
+		"journey_arrival_active": journey_arrival_active,
+		"journey_arrival_view": journey_arrival_view.duplicate(true)
+	}
 	file.store_string(JSON.stringify(payload))
 	file.close()
 	if not silent:
@@ -2734,11 +2918,16 @@ func load_saved_run() -> bool:
 		return false
 	state = restored
 	starting_region_id = state.campaign_region_id
+	var presentation: Dictionary = parsed.get("presentation", {})
 	settlement_hub_active = true
 	settlement_detail_mode = "hub"
-	journey_transition_active = state.phase in ["battle", "final_battle"] and state.encounter_active and state.encounter_step == 0
+	journey_arrival_active = bool(presentation.get("journey_arrival_active", false)) and not state.encounter_active
+	journey_arrival_view = Dictionary(presentation.get("journey_arrival_view", {})).duplicate(true) if journey_arrival_active else {}
+	journey_departure_snapshot = Dictionary(presentation.get("journey_departure_snapshot", {})).duplicate(true)
+	journey_transition_active = not journey_arrival_active and state.phase in ["battle", "final_battle"] and state.encounter_active and state.encounter_step == 0
 	journey_transition_view = _restore_journey_transition_view() if journey_transition_active else {}
 	journey_planner_active = false
+	contact_inspection_active = false
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
@@ -3365,6 +3554,8 @@ func _refresh_ui() -> void:
 	_refresh_settlement_hub(snapshot)
 	_refresh_journey_planner(snapshot)
 	_refresh_journey_transition()
+	_refresh_road_contact(snapshot, combat_view)
+	_refresh_journey_arrival()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
 	_ensure_current_focus()
