@@ -291,9 +291,9 @@ All mechanically meaningful route, assignment, encounter, damage, and arrival va
 
 The first code checkpoint should accomplish items 1-4 without altering route or battle mechanics. It should already feel less like a dashboard: values stay left, the fortress dominates the center, and the right dock explains only the selected station or system.
 
-## Implemented presentation checkpoint (`0.3.0-alpha.269`)
+## Implemented presentation checkpoint (`0.3.0-alpha.270`)
 
-The playable slice now uses the same three-part composition in settlement, planning, contact, and arrival. `RoadContactView` centers a code-native side-on fortress, stages every current enemy family in its authored approach lane, marks the authoritative target anchor, and repeats target rationale, predicted damage, and dependency cascades in the command dock. Inspect Chassis temporarily returns to the exact simulation-backed grid; cancel restores the contact scene and its visible focus target. `JourneyArrivalView` then holds the resolved consequence receipt before the next map, bazaar, local decision, retreat stop, or debrief becomes interactive.
+The playable slice now uses the same three-part composition in settlement, planning, contact, roadside decisions, and arrival. `RoadContactView` centers a code-native side-on fortress, stages every current enemy family in its authored approach lane, marks the authoritative target anchor, and repeats target rationale, predicted damage, and dependency cascades in the command dock. Inspect Chassis temporarily returns to the exact simulation-backed grid; cancel restores the contact scene and its visible focus target. `JourneyArrivalView` holds the resolved consequence receipt before the next phase becomes interactive. When an authored decision is pending, `RoadsideEventView` keeps the fortress in a wide frontier tableau beside the actual orchard, relay, toll, forge, machinery, floodworks, or archive subject while one right-hand dock exposes the authoritative choices.
 
 This is a legibility checkpoint rather than final animation. Threat movement, attack anticipation, impact frames, fortress response, and authored biome effects remain presentation-only follow-up work. The deterministic encounter engine, route resolution, module targets, damage, and save format are unchanged.
 

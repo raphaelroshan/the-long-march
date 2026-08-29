@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.269`; Feeds A through AL are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.270`; Feeds A through AL are complete, so choose the next private-alpha hardening slice from repeated human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 

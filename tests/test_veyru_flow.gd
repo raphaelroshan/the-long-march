@@ -34,11 +34,11 @@ func _press_route(node_id: String) -> void:
 
 
 func _press_event(choice_id: String) -> void:
-	for button in game.campaign_event_buttons:
-		if button.visible and String(button.get_meta("choice_id", "")) == choice_id:
-			button.pressed.emit()
-			await process_frame
-			return
+	var button: Button = game.roadside_event.button_for(choice_id)
+	if button != null and button.visible:
+		button.pressed.emit()
+		await process_frame
+		return
 	_expect(false, "Veyru event choice should be visible: " + choice_id)
 
 
@@ -133,7 +133,8 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(game.campaign_event_buttons[0].text.contains("Climbers join") and game.campaign_event_buttons[1].text.contains("Carrier damage -1"), "the archive commitment UI should state both mechanical consequences before selection")
 	var decision_focus := game.get_viewport().gui_get_focus_owner()
-	_expect(decision_focus in game.campaign_event_buttons and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "the final commitment should focus its event card with both choices visible")
+	_expect(decision_focus in game.roadside_event.choice_buttons, "the final commitment should focus its roadside choice set")
+	_expect(game.get_global_rect().encloses(game.roadside_event.choice_buttons[1].get_global_rect()), "the final commitment should keep both roadside choices visible")
 	await _press_event("seal_archive")
 	_expect(game.state.campaign_available_nodes() == ["dry_archive"] and game.campaign_map.status_for("dry_archive") == "available", "resolving the archive commitment should open the final node")
 

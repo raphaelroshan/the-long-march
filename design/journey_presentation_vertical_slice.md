@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-`0.3.0-alpha.269` implements the first contact-and-arrival presentation checkpoint on top of the settlement, planner, and road work in `0.3.0-alpha.268`. Every road encounter now opens as a full-frame side-on fortress contact: operational values stay in a left rail, the fortress and approaching threats occupy the center, the nearest threat's approach, target, reason, predicted damage, and dependency cascade occupy one right-hand dossier, and the existing deterministic Advance/Inspect/Emergency Order commands remain authoritative. Each resolved step briefly moves threats along their approach and braces the fortress against a predicted hit; Reduced Motion renders the same final state immediately. Resolving the contact opens a mandatory arrival or retreat tableau with a consequence receipt before the map, local decision, bazaar, or debrief returns. Purchasable information, marketplace inventory, roadside event tableaux, and authored per-enemy attack animation remain follow-up slices.
+`0.3.0-alpha.270` implements the first complete presentation chain from bazaar to planning, road, contact, arrival, and roadside decision. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. Each resolved step briefly moves threats and braces the fortress; Reduced Motion renders the same final state immediately. Resolution opens a mandatory arrival or retreat receipt, followed—when the core schedules one—by a Frontier-inspired roadside tableau that keeps the fortress and event subject in the same place while exposing the authored choices in one dock. Purchasable information, marketplace inventory, true pre-contact road events, and bespoke per-enemy attack animation remain follow-up slices.
 
 ## Purpose
 
@@ -634,6 +634,8 @@ This is the necessary simulation seam. Do not begin polished animation before it
 - Prove that the visual event sequence matches the existing causal report exactly.
 
 ### Slice 7 — Visualize one hazard and scenario
+
+**Status:** A generalized code-native roadside tableau is complete in `0.3.0-alpha.270`; bespoke Soot Orchard art and pre-contact event scheduling remain.
 
 - Implement Storm Front takeover, exposure highlights, and the Soot Orchard tableau.
 - Resolve the existing orchard choice in place and resume the march or arrive cleanly.

@@ -18,6 +18,7 @@ const JourneyTransitionScene = preload("res://scenes/journey/JourneyTransition.t
 const JourneyPlannerScene = preload("res://scenes/journey/JourneyPlanner.tscn")
 const RoadContactScene = preload("res://scenes/journey/RoadContact.tscn")
 const JourneyArrivalScene = preload("res://scenes/journey/JourneyArrival.tscn")
+const RoadsideEventScene = preload("res://scenes/journey/RoadsideEvent.tscn")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
 const CANNON_ICON = preload("res://assets/shell_cannon_icon.png")
@@ -138,6 +139,7 @@ var journey_arrival: JourneyArrivalView
 var journey_arrival_active: bool = false
 var journey_arrival_view: Dictionary = {}
 var journey_departure_snapshot: Dictionary = {}
+var roadside_event: RoadsideEventView
 var metric_labels: Dictionary = {}
 var subtitle_label: Label
 var pause_button: Button
@@ -471,6 +473,7 @@ func _ready() -> void:
 	road_contact.set_high_contrast(high_contrast_enabled)
 	road_contact.set_reduced_motion(reduced_motion_enabled)
 	journey_arrival.set_high_contrast(high_contrast_enabled)
+	roadside_event.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
 	_journal_event("run_started", {"version": String(ProjectSettings.get_setting("application/config/version", "unknown"))})
@@ -496,6 +499,8 @@ func set_high_contrast(enabled: bool) -> void:
 		road_contact.set_high_contrast(high_contrast_enabled)
 	if journey_arrival != null:
 		journey_arrival.set_high_contrast(high_contrast_enabled)
+	if roadside_event != null:
+		roadside_event.set_high_contrast(high_contrast_enabled)
 	for button_data in [
 		[contract_accept_button, Color("#285348"), Color("#73c99b")],
 		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
@@ -543,6 +548,8 @@ func _refresh_controller_copy() -> void:
 		road_contact.set_controller_cancel_label(_controller_cancel_label())
 	if journey_arrival != null:
 		journey_arrival.set_controller_cancel_label(_controller_cancel_label())
+	if roadside_event != null:
+		roadside_event.set_controller_cancel_label(_controller_cancel_label())
 
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
@@ -1167,6 +1174,10 @@ func _build_ui() -> void:
 	road_contact.inspect_requested.connect(_focus_chassis_for_combat)
 	road_contact.intervention_requested.connect(_use_intervention)
 	margin.add_child(road_contact)
+	roadside_event = RoadsideEventScene.instantiate()
+	roadside_event.pause_requested.connect(func() -> void: pause_requested.emit())
+	roadside_event.choice_requested.connect(_on_roadside_event_choice)
+	margin.add_child(roadside_event)
 	journey_arrival = JourneyArrivalScene.instantiate()
 	journey_arrival.pause_requested.connect(func() -> void: pause_requested.emit())
 	journey_arrival.continue_requested.connect(_on_journey_arrival_continued)
@@ -1774,6 +1785,9 @@ func focus_current_action() -> void:
 	if journey_arrival != null and journey_arrival.visible:
 		journey_arrival.focus_default()
 		return
+	if roadside_event != null and roadside_event.visible:
+		roadside_event.focus_default()
+		return
 	if road_contact != null and road_contact.visible:
 		road_contact.focus_default()
 		return
@@ -2055,12 +2069,21 @@ func _on_campaign_event_pressed(index: int) -> void:
 			encounter_label.text = "DECISION CONTINUES · %s\n%s" % [String(next_event.get("title", "Local event")).to_upper(), String(result.get("message", "Decision recorded."))]
 			_focus_first_campaign_event_choice()
 
+func _on_roadside_event_choice(choice_id: String) -> void:
+	for index in range(campaign_event_buttons.size()):
+		if String(campaign_event_buttons[index].get_meta("choice_id", "")) == choice_id:
+			_on_campaign_event_pressed(index)
+			return
+
 func _current_guidance_action() -> String:
 	var guidance := _current_guidance()
 	var separator := guidance.find(" · ")
 	return guidance.substr(separator + 3) if separator >= 0 else guidance
 
 func _focus_first_campaign_event_choice() -> void:
+	if roadside_event != null and roadside_event.visible:
+		roadside_event.focus_default()
+		return
 	for button in campaign_event_buttons:
 		if _focus_control(button):
 			_on_desk_control_focused(button)
@@ -2551,8 +2574,42 @@ func _refresh_journey_arrival() -> void:
 	journey_planner.visible = false
 	journey_transition.visible = false
 	road_contact.visible = false
+	roadside_event.visible = false
 	main_columns.visible = false
 	journey_arrival.configure(journey_arrival_view)
+
+func _refresh_roadside_event(snapshot: Dictionary) -> void:
+	if roadside_event == null:
+		return
+	var event := state.campaign_event_details()
+	var show_event := not event.is_empty() and not journey_arrival_active and state.phase not in ["battle", "final_battle", "results"]
+	roadside_event.visible = show_event
+	if not show_event:
+		return
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	var event_id := String(event.get("id", state.campaign_event_pending))
+	var occurrence := event_id in LongMarchState.OCCURRENCE_DEFS
+	roadside_event.configure({
+		"event_id": event_id,
+		"region_id": state.campaign_region_id,
+		"context": "ROADSIDE OCCURRENCE" if occurrence else "LOCATION DECISION",
+		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location)),
+		"title": String(event.get("title", "Roadside decision")),
+		"body": String(event.get("body", "The fortress waits for an order.")),
+		"choices": event.get("choices", []),
+		"guidance": "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete.",
+		"values": {
+			"day": str(snapshot.get("day", state.day)),
+			"fuel": str(snapshot.get("fuel", state.fuel)),
+			"hull": "%d/10" % state.hull_condition,
+			"ashmarks": str(state.money),
+			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure],
+			"trust": str(state.settlement_trust)
+		}
+	})
 
 func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dictionary:
 	var outcome := String(result.get("outcome", state.encounter_outcome))
@@ -3558,6 +3615,7 @@ func _refresh_ui() -> void:
 	_refresh_journey_planner(snapshot)
 	_refresh_journey_transition()
 	_refresh_road_contact(snapshot, combat_view)
+	_refresh_roadside_event(snapshot)
 	_refresh_journey_arrival()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)

@@ -51,11 +51,11 @@ func _press_campaign_node(node_id: String) -> void:
 	_expect(false, "campaign node button should be available: " + node_id)
 
 func _press_campaign_event(choice_id: String) -> void:
-	for button in game.campaign_event_buttons:
-		if button.visible and String(button.get_meta("choice_id", "")) == choice_id:
-			button.pressed.emit()
-			await process_frame
-			return
+	var button: Button = game.roadside_event.button_for(choice_id)
+	if button != null and button.visible:
+		button.pressed.emit()
+		await process_frame
+		return
 	_expect(false, "campaign event choice should be available: " + choice_id)
 
 func _advance_until_phase(expected_phase: String) -> void:
@@ -605,6 +605,7 @@ func _run() -> void:
 	_expect(last_checkpoint_reason == "route_secured", "securing a non-recovery road should request a road-secured checkpoint instead of leaving the final battle step as the visible save reason")
 	_expect(int(game.campaign_progress_bar.value) == 1, "the region progress bar should advance after a secured encounter")
 	_expect(game.state.campaign_event_pending == "lift_chain_sings" and game.encounter_label.text.begins_with("DECISION REQUIRED · THE LIFT CHAIN SINGS"), "the first eligible seeded occurrence should replace the generic after-action prompt with one primary road decision")
+	_expect(game.roadside_event.visible and game.roadside_event.context_label.text == "ROADSIDE OCCURRENCE" and game.roadside_event.title_label.text == "THE LIFT CHAIN SINGS" and game.roadside_event.location_label.text.contains("RILL CROSSING"), "the Frontier-style roadside tableau should keep the fortress, place, and occurrence together")
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
@@ -612,11 +613,11 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.campaign_event_title.text == "THE LIFT CHAIN SINGS" and game.campaign_event_buttons[0].text.contains("Ashmarks -6") and game.campaign_event_buttons[0].text.contains("Future route risk -2%") and game.campaign_event_buttons[1].text.contains("Ammunition Lift -1 durability"), "the seeded occurrence card should disclose both dependency tradeoffs before commitment")
-	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_event_title.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "the complete occurrence card should stay visible at the reference viewport")
+	_expect(game.get_global_rect().encloses(game.roadside_event.title_label.get_global_rect()) and game.get_global_rect().encloses(game.roadside_event.choice_buttons[1].get_global_rect()), "the complete roadside occurrence should stay visible at the reference viewport")
 	_expect(game.current_order_button.text == "GO TO DECISION ↓", "a blocking road occurrence should retarget the jump action to its choice card")
 	game.current_order_button.pressed.emit()
 	await process_frame
-	_expect(game.campaign_event_buttons[0].has_focus(), "Go to Decision should focus the first legal event response without choosing it")
+	_expect(game.roadside_event.choice_buttons[0].has_focus(), "Go to Decision should focus the first legal roadside response without choosing it")
 	await _press_campaign_event("brace_lift_chain")
 	_expect(game.state.occurrence_history.size() == 1 and game.event_label.text.contains("future route risk falls by 2%"), "resolving an occurrence should immediately expose its consequence and retain one audit record")
 	_expect(game.encounter_label.text.contains("NEXT · Select one cyan route") and game.encounter_label.text.contains("Commit begins travel"), "a completed road occurrence should keep its consequence and the authoritative next route action together")
@@ -708,7 +709,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.state.specialist_id == "mara_flint" and game.state.campaign_event_pending == "mara_workbench_choice", "recruiting Mara should visibly advance to her one-core decision")
 	_expect(game.encounter_label.text.begins_with("DECISION CONTINUES · ONE SOUND CORE") and game.campaign_event_buttons[0].text.contains("Rebuild Field Workshop") and game.campaign_event_buttons[0].text.contains("Day +1") and game.campaign_event_buttons[1].text.contains("damage -1 per hit"), "the workbench card should identify the deterministic repair target and complete tradeoffs")
-	_expect(game.right_scroll.get_global_rect().encloses(game.campaign_event_title.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.campaign_event_buttons[1].get_global_rect()), "a chained event should scroll its title and both choices into the visible command desk")
+	_expect(game.get_global_rect().encloses(game.roadside_event.title_label.get_global_rect()) and game.get_global_rect().encloses(game.roadside_event.choice_buttons[1].get_global_rect()), "a chained event should keep its title and both choices inside the roadside tableau")
 	await _press_campaign_event("rebuild_weakest")
 	_expect(game.state.campaign_event_pending.is_empty() and int(game.state.modules[mara_workshop_index].durability) == 3 and game.campaign_path_label.text.contains("Specialist: Mara Flint"), "choosing machine recovery should repair the workshop, clear the blocking event, and retain Mara in the campaign status")
 	_expect(game.encounter_label.text.contains("NEXT · 2 service actions remain") and game.encounter_label.text.contains("choose the next road"), "finishing Mara's chained decision should keep its consequence and the authoritative recovery action together")
