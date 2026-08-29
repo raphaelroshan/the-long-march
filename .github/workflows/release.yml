@@ -30,7 +30,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -73,7 +73,7 @@ jobs:
             --file scope_and_limitations=docs/internal_test_release.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Upload desktop release candidate
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_name }}
           path: |
