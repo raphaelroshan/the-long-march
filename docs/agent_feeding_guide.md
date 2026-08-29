@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.274`; Feeds A through AO, the automated First Watch tutorial, and the first three game-quality transformation slices are complete. Continue with a bounded settlement-receipt task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.275`; Feeds A through AP, the automated First Watch tutorial, and the first four game-quality transformation slices are complete. Continue with one bounded authored-event presentation task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -251,6 +251,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.274` through the first shared attack-replay grammar.
 
 > Replay a resolved contact as target lock, threat-specific wind-up, impact, and consequence cues using only the authoritative target, damage preview, encounter report, and pre-step fortress snapshot. Keep reduced motion equivalent by resolving directly to the final consequence. Do not change enemy timing, targeting, damage, doctrine, interventions, or outcomes.
+
+### Current Feed AP — field-recovery tableau
+
+**Status:** Complete in `0.3.0-alpha.275` through the dedicated Morrowline and Evacuation Camp recovery view.
+
+> Replace the hidden-desk recovery stack with a full-frame breathing space: stable values on the left, the same damaged fortress at rest in the center, and exact before/after service commitments on the right. Keep the authoritative service commands unchanged, persist the latest transaction receipt with the save, preserve route handoff and controller focus, and keep every required action visible at 1280×720 with 110% text.
 
 ## Historical prototype feed sequence
 

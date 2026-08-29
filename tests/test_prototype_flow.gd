@@ -718,14 +718,14 @@ func _run() -> void:
 	_expect(game.current_order_button.text == "GO TO RECOVERY ↓", "clearing the settlement event should retarget the jump action to available recovery services")
 	game.current_order_button.pressed.emit()
 	await process_frame
-	_expect(game.get_viewport().gui_get_focus_owner() in [game.settlement_repair_button, game.settlement_refuel_button, game.settlement_hull_button], "Go to Recovery should focus the first legal service without spending an action")
+	_expect(game.get_viewport().gui_get_focus_owner() in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button], "Go to Recovery should focus the first legal visible service without spending an action")
 	_expect(game.guidance_label.text.contains("2 service actions remain") and game.route_preview_label.text.contains("2 service actions remain"), "Morrowline guidance should state the plural service budget consistently")
-	_expect(game.settlement_group.visible and not game.journey_planner.visible, "Morrowline should keep recovery services in focus until the player explicitly opens the route planner")
-	_expect(game.settlement_refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.settlement_refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
+	_expect(game.recovery_panel.visible and not game.main_columns.visible and not game.journey_planner.visible, "Morrowline should present a dedicated recovery tableau until the player explicitly opens the route planner")
+	_expect(game.recovery_panel.refuel_button.text.contains("FUEL %d→%d" % [game.state.fuel, game.state.fuel + 2]) and game.recovery_panel.refuel_button.text.contains("ACTIONS 2→1"), "refueling should preview both the resource change and shared service budget before purchase")
 	if game.state.hull_condition < 10:
-		_expect(game.settlement_hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.settlement_hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
+		_expect(game.recovery_panel.hull_button.text.contains("HULL %d→%d" % [game.state.hull_condition, mini(10, game.state.hull_condition + 2)]) and game.recovery_panel.hull_button.text.contains("ACTIONS 2→1"), "hull repair should preview both restoration and shared service budget before purchase")
 	else:
-		_expect(game.settlement_hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
+		_expect(game.recovery_panel.hull_button.text.contains("HULL · FULL"), "full hull should remain a clear disabled service state")
 	var mara_crew_index: int = game.state._module_index_by_id("crew_quarters")
 	var mara_crew_before: int = int(game.state.modules[mara_crew_index].get("durability", 0))
 	game.state.modules[mara_crew_index]["durability"] = 1
@@ -733,7 +733,7 @@ func _run() -> void:
 	game._select_module_option("crew_quarters")
 	game._sync_selected_module_context()
 	game._refresh_ui()
-	_expect(game.settlement_repair_button.text.contains("REPAIR CREW QUARTERS +3") and game.settlement_repair_button.text.contains("8 ASHMARKS · MARA +1") and game.settlement_repair_button.text.contains("DURABILITY 1→4"), "Mara's settlement service preview should show the extra free durability and unchanged price before commitment")
+	_expect(game.recovery_panel.repair_button.text.contains("REPAIR CREW QUARTERS +3") and game.recovery_panel.repair_button.text.contains("8 ASHMARKS · MARA +1") and game.recovery_panel.repair_button.text.contains("DURABILITY 1→4"), "Mara's settlement service preview should show the extra free durability and unchanged price before commitment")
 	game.state.modules[mara_crew_index]["durability"] = mara_crew_before
 	game.selected_module_id = "steam_lance_engine"
 	game._select_module_option("steam_lance_engine")
@@ -741,7 +741,7 @@ func _run() -> void:
 	game._refresh_ui()
 	var handoff_money: int = game.state.money
 	var handoff_actions: int = game.state.settlement_actions_remaining
-	game.settlement_routes_button.pressed.emit()
+	game.recovery_panel.routes_button.pressed.emit()
 	await process_frame
 	await process_frame
 	_expect(game.get_viewport().gui_get_focus_owner() in game.campaign_node_buttons and game.selected_campaign_node_id.is_empty(), "Review Next Roads should move focus to route selection without choosing a road for the player")
@@ -756,12 +756,12 @@ func _run() -> void:
 	game._refresh_ui()
 	game.journey_planner.return_button.pressed.emit()
 	await process_frame
-	game.settlement_refuel_button.grab_focus()
-	_expect(game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
-	_expect(game.settlement_refuel_button.has_focus(), "settlement focus should skip unavailable services and land on the first viable action")
-	var recovery_previous := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_previous) as BaseButton
-	_expect(recovery_previous != null and recovery_previous != game.settlement_repair_button and not recovery_previous.disabled, "settlement Tab navigation should skip the unavailable repair action while retaining refit controls")
-	var recovery_next := game.settlement_refuel_button.get_node_or_null(game.settlement_refuel_button.focus_next) as BaseButton
+	game.recovery_panel.refuel_button.grab_focus()
+	_expect(game.recovery_panel.repair_button.disabled and game.recovery_panel.repair_button.text.contains("ALL SYSTEMS FULL"), "a settlement with no damage should explain why repair is unavailable")
+	_expect(game.recovery_panel.refuel_button.has_focus(), "recovery focus should skip unavailable services and land on the first viable action")
+	var recovery_previous := game.recovery_panel.refuel_button.get_node_or_null(game.recovery_panel.refuel_button.focus_previous) as BaseButton
+	_expect(recovery_previous != null and recovery_previous != game.recovery_panel.repair_button and not recovery_previous.disabled, "recovery Tab navigation should skip the unavailable repair action")
+	var recovery_next := game.recovery_panel.refuel_button.get_node_or_null(game.recovery_panel.refuel_button.focus_next) as BaseButton
 	_expect(recovery_next != null and not recovery_next.disabled, "settlement navigation should lead only to an enabled recovery or route action")
 	game.selected_module_id = "steam_lance_engine"
 	game._select_module_option("steam_lance_engine")
@@ -771,11 +771,12 @@ func _run() -> void:
 	game.state.modules[damaged_workshop_index]["durability"] = 1
 	game.state._recalculate()
 	game._refresh_ui()
-	_expect(not game.settlement_repair_button.disabled and game.settlement_repair_button.text.contains("REVIEW FIELD WORKSHOP") and game.settlement_repair_button.text.contains("1/3") and game.settlement_repair_button.text.contains("NO COST · PRESS AGAIN TO REPAIR"), "repair should offer a clearly reversible inspection handoff to the most damaged system when the current selection is already full")
+	_expect(not game.recovery_panel.repair_button.disabled and game.recovery_panel.repair_button.text.contains("REVIEW FIELD WORKSHOP") and game.recovery_panel.repair_button.text.contains("1/3") and game.recovery_panel.repair_button.text.contains("NO COST · PRESS AGAIN TO REPAIR"), "repair should offer a clearly reversible inspection handoff to the most damaged system when the current selection is already full")
 	var actions_before_repair_selection: int = game.state.settlement_actions_remaining
-	game.settlement_repair_button.pressed.emit()
+	game.recovery_panel.repair_button.pressed.emit()
 	await process_frame
-	_expect(game.selected_module_id == "field_workshop" and game.settlement_repair_button.has_focus() and game.settlement_repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.settlement_repair_button.text.contains("DURABILITY 1→3") and game.settlement_repair_button.text.contains("ACTIONS 2→1") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact durability and action-budget consequences without spending an action")
+	await process_frame
+	_expect(game.selected_module_id == "field_workshop" and game.recovery_panel.repair_button.has_focus() and game.recovery_panel.repair_button.text.contains("REPAIR FIELD WORKSHOP +2") and game.recovery_panel.repair_button.text.contains("DURABILITY 1→3") and game.recovery_panel.repair_button.text.contains("ACTIONS 2→1") and game.state.settlement_actions_remaining == actions_before_repair_selection, "selecting the recommended repair target should reveal its exact durability and action-budget consequences without spending an action")
 	_expect(game.refit_label.text.contains("Damaged · 1/3 durability · strained") and game.fortress_panel.selected_system_state_text().contains("Strained · damaged 1/3"), "a damaged operational module should disclose its condition alongside its dependency state instead of appearing fully healthy")
 	game.state.modules[damaged_workshop_index]["durability"] = workshop_before
 	game.state._recalculate()
@@ -786,12 +787,12 @@ func _run() -> void:
 	game.state.money = 3
 	game.state.hull_condition = 9
 	game._refresh_ui()
-	_expect(game.settlement_refuel_button.disabled and game.settlement_refuel_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable fuel service should name the player's current funds")
-	_expect(game.settlement_hull_button.disabled and game.settlement_hull_button.text.contains("REPAIR +1 HULL") and game.settlement_hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable near-full hull service should name both its exact benefit and the player's current funds")
+	_expect(game.recovery_panel.refuel_button.disabled and game.recovery_panel.refuel_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable fuel service should name the player's current funds")
+	_expect(game.recovery_panel.hull_button.disabled and game.recovery_panel.hull_button.text.contains("REPAIR +1 HULL") and game.recovery_panel.hull_button.text.contains("HAVE 3 ASHMARKS"), "an unaffordable near-full hull service should name both its exact benefit and the player's current funds")
 	game.state.money = recovery_money
 	game.state.settlement_actions_remaining = 0
 	game._refresh_ui()
-	_expect(game.settlement_repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.settlement_hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
+	_expect(game.recovery_panel.repair_button.text.contains("NO SERVICE ACTIONS LEFT") and game.recovery_panel.refuel_button.text.contains("NO SERVICE ACTIONS LEFT") and game.recovery_panel.hull_button.text.contains("NO SERVICE ACTIONS LEFT"), "exhausted recovery services should state the shared action-budget blocker")
 	_expect(game.guidance_label.text.contains("0 service actions remain") and not game.guidance_label.text.contains("actions remains"), "exhausted recovery guidance should retain correct plural grammar")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()
 	await process_frame
@@ -819,11 +820,19 @@ func _run() -> void:
 	game.load_button.pressed.emit()
 	await process_frame
 	_expect(game.state.phase == "settlement" and game.state.money == saved_money, "JSON save/load should restore settlement state")
-	game.settlement_refuel_button.pressed.emit()
+	game.recovery_panel.refuel_button.pressed.emit()
 	await process_frame
 	_expect(game.state.settlement_actions_remaining == 1, "settlement service should consume one action")
 	_expect(game.settlement_title.text.contains("1 ACTION LEFT"), "the service budget should update immediately after use")
 	_expect(game.encounter_label.text.begins_with("SERVICE COMPLETE") and game.encounter_label.text.contains("+2 fuel") and game.encounter_label.text.contains("1 service action remains"), "settlement services should report cost, effect, and remaining budget above the fold")
+	_expect(game.recovery_panel.receipt_label.text.contains("+2 fuel loaded") and game.recovery_panel.receipt_label.text.contains("1 service action remains"), "the visible recovery receipt should preserve the exact transaction and remaining opportunity")
+	var saved_recovery_receipt: String = game.last_recovery_receipt
+	game.save_button.pressed.emit()
+	await process_frame
+	game.last_recovery_receipt = ""
+	game.load_button.pressed.emit()
+	await process_frame
+	_expect(game.last_recovery_receipt == saved_recovery_receipt and game.recovery_panel.receipt_label.text.contains("+2 fuel loaded"), "save/load should restore the latest recovery receipt with the authoritative settlement state")
 	game._refresh_ui()
 	_expect(game.encounter_label.text.begins_with("MORROWLINE RECOVERY") and game.encounter_label.text.contains("1 service action remains") and not game.encounter_label.text.contains("up to two"), "ordinary recovery refreshes should retain the live remaining service budget")
 	game.campaign_map.button_for("lower_ash_road").pressed.emit()

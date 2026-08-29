@@ -109,17 +109,18 @@ func _run() -> void:
 	await _finish_battle()
 	_expect(game.state.phase == "settlement" and game.settlement_title.text.contains("EVACUATION CAMP SERVICES") and game.settlement_title.text.contains("2 ACTIONS LEFT"), "the protected medicine carrier should grant two visible Evacuation Camp actions")
 	var camp_focus := game.get_viewport().gui_get_focus_owner()
-	_expect(camp_focus in [game.settlement_repair_button, game.settlement_refuel_button, game.settlement_hull_button, game.settlement_routes_button] and game.right_scroll.get_global_rect().encloses(camp_focus.get_global_rect()), "arrival at Evacuation Camp should focus a visible recovery or road-review action")
+	_expect(game.recovery_panel.visible and camp_focus in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button, game.recovery_panel.routes_button] and camp_focus.is_visible_in_tree(), "arrival at Evacuation Camp should focus a visible recovery or road-review action")
 	game.state.fuel = 1
 	game._refresh_ui()
-	_expect(not game.settlement_refuel_button.disabled and game.settlement_refuel_button.text.contains("+1 EMERGENCY FUEL") and game.settlement_refuel_button.text.contains("FREE"), "Evacuation Camp should expose its free low-fuel safeguard")
-	game.settlement_refuel_button.pressed.emit()
+	_expect(not game.recovery_panel.refuel_button.disabled and game.recovery_panel.refuel_button.text.contains("+1 EMERGENCY FUEL") and game.recovery_panel.refuel_button.text.contains("FREE"), "Evacuation Camp should expose its free low-fuel safeguard")
+	game.recovery_panel.refuel_button.pressed.emit()
 	await process_frame
 	_expect(game.state.fuel == 2 and game.event_label.text.contains("+1 fuel loaded for 0 Ashmarks"), "using emergency fuel should report the exact no-cost transaction")
+	_expect(game.recovery_panel.receipt_label.text.contains("+1 fuel loaded for 0 Ashmarks"), "the Evacuation Camp receipt should keep the emergency safeguard legible")
 	game.state.fuel = 5
 	game._refresh_ui()
 
-	game.settlement_routes_button.pressed.emit()
+	game.recovery_panel.routes_button.pressed.emit()
 	await _settle_ui()
 	await _press_route("archive_causeway")
 	await _finish_battle()

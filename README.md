@@ -37,6 +37,7 @@ The repository contains an agent-first Godot project with:
 - Settings grouped into Display & Readability, Controls & Feedback, and Runs & Local Data, with a fixed section breadcrumb that follows keyboard/controller focus.
 - A playable opening stage at Ashgate Depot that begins with the fortress refit, convoy contract, and first route choice.
 - A fortress-centered settlement bazaar at Ashgate Depot and Lantern Quay with six stable stations, plus a dedicated full-frame route planner with readiness on the left, the regional node graph in the center, and the selected-road dossier on the right.
+- A dedicated field-recovery tableau at Morrowline and Evacuation Camp with the resting fortress centered, critical values held in a left ledger, exact before/after service commitments on the right, and a persistent post-service receipt.
 - A mandatory side-on road presentation after route commitment that shows exact day, fuel, pressure, and heat receipts before the player enters the deterministic contact.
 - A seven-step guided briefing that teaches command, engine/fuel, weapon/ammunition, workshop staffing/parts, signal visibility, routes, and contact response one relationship at a time.
 - A directly navigable Field Briefing that reopens at the live contract, route, battle, recovery, or finale topic and preserves the run while players browse.

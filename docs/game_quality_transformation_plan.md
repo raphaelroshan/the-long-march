@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.274`
+**Current baseline:** `0.3.0-alpha.275`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -690,6 +690,8 @@ Tasks:
 
 ### Phase 5 — Settlement and event presentation
 
+**Status:** The first dedicated Morrowline and Evacuation Camp recovery tableau is complete in `0.3.0-alpha.275`; authored event identity and human memory validation remain open.
+
 **Objective:** Make breathing spaces and obligations memorable.
 
 Tasks:
@@ -938,20 +940,20 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.274`, implement the next game-quality slice:
-improve one recovery settlement's service receipts and place-specific
-character.
+Starting from `0.3.0-alpha.275`, implement the next game-quality slice:
+give one existing authored roadside event a distinctive, stateful presentation
+and a later callback.
 
-Use Morrowline Camp or Veyru Evacuation Camp. Present each available service
-as a concrete local action with before/after hull, fuel, module condition,
-Ashmarks, remaining service actions, trust, and pressure consequences before
-confirmation. After commitment, show a compact receipt that says what changed
-and what opportunity was spent. Preserve the current authoritative service
-commands and do not add a currency, settlement, module, region, or faction.
+Use Workshop Can Wait, Wrong Wall, Mara's Second Door, or Old Drain. Keep the
+existing deterministic eligibility, choices, and effects authoritative. Add
+one event-specific visual motif, make each practical cost legible before the
+choice, and surface the consequence in a later route, settlement, encounter,
+or terminal Debrief. Do not add a generic scheduler, currency, region, faction,
+or second event state machine.
 
-Add focused UI/state tests, controller and 110% text checks, capture the
-settlement before and after one service, and run the complete verification
-suite. Report exact files, tests, captures, risks, and one bounded next task.
+Add focused UI/state tests, controller and 110% text checks, capture the event
+before commitment and its callback, and run the complete verification suite.
+Report exact files, tests, captures, risks, and one bounded next task.
 ```
 
 ---

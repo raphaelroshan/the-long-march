@@ -23,6 +23,7 @@ const RoadContactScene = preload("res://scenes/journey/RoadContact.tscn")
 const JourneyArrivalScene = preload("res://scenes/journey/JourneyArrival.tscn")
 const RoadsideEventScene = preload("res://scenes/journey/RoadsideEvent.tscn")
 const DebriefPanelScene = preload("res://scenes/debrief/DebriefPanel.tscn")
+const RecoveryPanelScene = preload("res://scenes/recovery/RecoveryPanel.tscn")
 const FortressSilhouetteRenderer = preload("res://src/ui/fortress_silhouette.gd")
 const JOURNEY_BACKGROUND = preload("res://assets/ashgate_journey_background.png")
 const ENGINE_ICON = preload("res://assets/steam_lance_engine_icon.png")
@@ -151,6 +152,8 @@ var roadside_event: RoadsideEventView
 var debrief_panel: DebriefPanelView
 var debrief_inspection_active: bool = false
 var contact_fortress_before: Dictionary = {}
+var recovery_panel: RecoveryPanelView
+var last_recovery_receipt: String = ""
 var metric_labels: Dictionary = {}
 var metric_panels: Dictionary = {}
 var subtitle_label: Label
@@ -501,6 +504,7 @@ func _ready() -> void:
 	journey_arrival.set_high_contrast(high_contrast_enabled)
 	roadside_event.set_high_contrast(high_contrast_enabled)
 	debrief_panel.set_high_contrast(high_contrast_enabled)
+	recovery_panel.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
 	if tutorial_mode:
@@ -532,6 +536,8 @@ func set_high_contrast(enabled: bool) -> void:
 		roadside_event.set_high_contrast(high_contrast_enabled)
 	if debrief_panel != null:
 		debrief_panel.set_high_contrast(high_contrast_enabled)
+	if recovery_panel != null:
+		recovery_panel.set_high_contrast(high_contrast_enabled)
 	for button_data in [
 		[contract_accept_button, Color("#285348"), Color("#73c99b")],
 		[advance_encounter_button, Color("#593e28"), Color("#e8c58e")],
@@ -583,6 +589,8 @@ func _refresh_controller_copy() -> void:
 		roadside_event.set_controller_cancel_label(_controller_cancel_label())
 	if debrief_panel != null:
 		debrief_panel.set_controller_cancel_label(_controller_cancel_label())
+	if recovery_panel != null:
+		recovery_panel.set_controller_cancel_label(_controller_cancel_label())
 
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
@@ -637,6 +645,7 @@ func _reset_state() -> void:
 	journey_departure_snapshot = {}
 	debrief_inspection_active = false
 	contact_fortress_before = {}
+	last_recovery_receipt = ""
 	if tutorial_mode:
 		tutorial_lesson_snapshot = state.serialize()
 		tutorial_lesson_snapshots = {"place_engine": tutorial_lesson_snapshot.duplicate(true)}
@@ -1202,6 +1211,13 @@ func _build_ui() -> void:
 	settlement_hub.pause_requested.connect(func() -> void: pause_requested.emit())
 	settlement_hub.action_requested.connect(_on_settlement_hub_action)
 	margin.add_child(settlement_hub)
+	recovery_panel = RecoveryPanelScene.instantiate()
+	recovery_panel.pause_requested.connect(func() -> void: pause_requested.emit())
+	recovery_panel.repair_requested.connect(_on_recovery_repair_requested)
+	recovery_panel.refuel_requested.connect(_on_recovery_refuel_requested)
+	recovery_panel.hull_requested.connect(_on_recovery_hull_requested)
+	recovery_panel.routes_requested.connect(_on_settlement_routes_pressed)
+	margin.add_child(recovery_panel)
 	journey_transition = JourneyTransitionScene.instantiate()
 	journey_transition.pause_requested.connect(func() -> void: pause_requested.emit())
 	journey_transition.continue_requested.connect(_on_journey_transition_continued)
@@ -2027,6 +2043,9 @@ func focus_current_action() -> void:
 	if debrief_panel != null and debrief_panel.visible:
 		debrief_panel.focus_default()
 		return
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.focus_default()
+		return
 	if journey_transition != null and journey_transition.visible:
 		journey_transition.focus_default()
 		return
@@ -2289,7 +2308,10 @@ func _on_journey_arrival_continued() -> void:
 	journey_arrival_view = {}
 	_set_event("Arrival acknowledged. The fortress is ready for its next local order.")
 	_refresh_ui()
-	focus_current_action.call_deferred()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.focus_default()
+	else:
+		focus_current_action.call_deferred()
 
 func _open_debrief_inspection() -> void:
 	if state.phase != "results":
@@ -2313,7 +2335,10 @@ func _on_journey_planner_returned() -> void:
 		return
 	_refresh_ui()
 	if state.phase == "settlement":
-		_focus_control.call_deferred(settlement_routes_button)
+		if recovery_panel != null and recovery_panel.visible:
+			recovery_panel.routes_button.call_deferred("grab_focus")
+		else:
+			_focus_control.call_deferred(settlement_routes_button)
 
 func _on_campaign_event_pressed(index: int) -> void:
 	if index < 0 or index >= campaign_event_buttons.size():
@@ -2877,6 +2902,65 @@ func _refresh_debrief() -> void:
 	journey_arrival.visible = false
 	debrief_panel.configure(_debrief_view())
 
+func _refresh_recovery_panel(snapshot: Dictionary) -> void:
+	if recovery_panel == null:
+		return
+	var show_recovery := state.phase == "settlement" and state.campaign_active and not tutorial_mode and not journey_arrival_active and state.campaign_event_pending.is_empty() and not journey_planner_active
+	recovery_panel.visible = show_recovery
+	if not show_recovery:
+		return
+	main_columns.visible = false
+	settlement_hub.visible = false
+	journey_planner.visible = false
+	journey_transition.visible = false
+	road_contact.visible = false
+	roadside_event.visible = false
+	journey_arrival.visible = false
+	debrief_panel.visible = false
+	var location_name := _recovery_location_name()
+	var pressure_name := state.campaign_pressure_name()
+	recovery_panel.configure({
+		"region_id": state.campaign_region_id,
+		"location_name": location_name,
+		"context": "%s offers %d finite service %s before the next road." % [location_name, state.settlement_actions_remaining, "opportunity" if state.settlement_actions_remaining == 1 else "opportunities"],
+		"values": {
+			"hull": "%d/10" % state.hull_condition,
+			"fuel": str(state.fuel),
+			"money": str(state.money),
+			"actions": str(state.settlement_actions_remaining),
+			"trust": str(state.settlement_trust),
+			"pressure": "%s %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]
+		},
+		"repair_text": settlement_repair_button.text,
+		"repair_tooltip": settlement_repair_button.tooltip_text,
+		"repair_disabled": settlement_repair_button.disabled,
+		"refuel_text": settlement_refuel_button.text,
+		"refuel_tooltip": settlement_refuel_button.tooltip_text,
+		"refuel_disabled": settlement_refuel_button.disabled,
+		"hull_text": settlement_hull_button.text,
+		"hull_tooltip": settlement_hull_button.tooltip_text,
+		"hull_disabled": settlement_hull_button.disabled,
+		"routes_text": settlement_routes_button.text,
+		"receipt": last_recovery_receipt if not last_recovery_receipt.is_empty() else "%s reached. No local service has been spent; %s remains at %s %d." % [location_name, pressure_name, state.campaign_pressure_band().replace("_", " ").capitalize(), state.campaign_pressure],
+		"caption": "%s · ONE ACTION IS ONE LOST OPPORTUNITY" % location_name.to_upper(),
+		"fortress": _fortress_presentation_snapshot()
+	})
+
+func _on_recovery_repair_requested() -> void:
+	_on_settlement_repair_pressed()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.repair_button.call_deferred("grab_focus")
+
+func _on_recovery_refuel_requested() -> void:
+	_on_settlement_refuel_pressed()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.refuel_button.call_deferred("grab_focus")
+
+func _on_recovery_hull_requested() -> void:
+	_on_settlement_hull_pressed()
+	if recovery_panel != null and recovery_panel.visible:
+		recovery_panel.hull_button.call_deferred("grab_focus")
+
 func _debrief_view() -> Dictionary:
 	var result_id := state.final_result
 	var result_name := result_id.replace("_", " ").capitalize()
@@ -3257,6 +3341,7 @@ func _on_settlement_repair_pressed() -> void:
 		return
 	var result := state.settlement_repair(String(selected.get("id", "")))
 	var service_message := "%s restored +%d durability for %d Ashmarks. %s." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
+	last_recovery_receipt = service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -3269,6 +3354,7 @@ func _on_settlement_repair_pressed() -> void:
 func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
 	var service_message := "+%d fuel loaded for %d Ashmarks. %s." % [int(result.get("fuel_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
+	last_recovery_receipt = service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -3279,6 +3365,7 @@ func _on_settlement_refuel_pressed() -> void:
 func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
 	var service_message := "+%d hull restored for %d Ashmarks. %s." % [int(result.get("hull_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown"))
+	last_recovery_receipt = service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -3353,7 +3440,8 @@ func _save_run_to_paths(save_path: String, backup_path: String, silent: bool) ->
 	payload["presentation"] = {
 		"journey_departure_snapshot": journey_departure_snapshot.duplicate(true),
 		"journey_arrival_active": journey_arrival_active,
-		"journey_arrival_view": journey_arrival_view.duplicate(true)
+		"journey_arrival_view": journey_arrival_view.duplicate(true),
+		"last_recovery_receipt": last_recovery_receipt
 	}
 	file.store_string(JSON.stringify(payload))
 	file.close()
@@ -3441,6 +3529,7 @@ func _load_saved_run_from_path(save_path: String) -> bool:
 	contact_inspection_active = false
 	debrief_inspection_active = false
 	contact_fortress_before = {}
+	last_recovery_receipt = String(presentation.get("last_recovery_receipt", ""))
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
@@ -4110,6 +4199,7 @@ func _refresh_ui() -> void:
 	_refresh_roadside_event(snapshot)
 	_refresh_journey_arrival()
 	_refresh_debrief()
+	_refresh_recovery_panel(snapshot)
 	_refresh_tutorial_ui()
 	if high_contrast_enabled:
 		VisualContrast.apply_to_tree(self, true)
