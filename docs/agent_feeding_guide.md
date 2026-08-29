@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.273`; Feeds A through AN, the automated First Watch tutorial, and the first two game-quality transformation slices are complete. Continue with a bounded battle-feedback task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.274`; Feeds A through AO, the automated First Watch tutorial, and the first three game-quality transformation slices are complete. Continue with a bounded settlement-receipt task from [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md), then validate it through human playtest evidence.
 
 ### Current Feed A — fortress comprehension
 
@@ -245,6 +245,12 @@ The original prompts below describe the build-up of the prototype and are retain
 **Status:** Complete in `0.3.0-alpha.273` through the shared stateful silhouette and detailed chassis marks.
 
 > Use one code-native layered fortress renderer across rest, travel, contact, roadside event, arrival, and Debrief. Aggregate installed modules into recognizable engine, weapon, power/crew, workshop, cargo, signal, armor, and sustain bays. Show ready, strained, offline, sealed, damaged, and targeted states with symbols, cracks, outlines, and text as well as color. Preserve authoritative placement and dependency rules.
+
+### Current Feed AO — staged contact consequence
+
+**Status:** Complete in `0.3.0-alpha.274` through the first shared attack-replay grammar.
+
+> Replay a resolved contact as target lock, threat-specific wind-up, impact, and consequence cues using only the authoritative target, damage preview, encounter report, and pre-step fortress snapshot. Keep reduced motion equivalent by resolving directly to the final consequence. Do not change enemy timing, targeting, damage, doctrine, interventions, or outcomes.
 
 ## Historical prototype feed sequence
 

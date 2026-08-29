@@ -357,6 +357,8 @@ class ContactCanvas extends Control:
 	var step_from: float = 0.0
 	var step_to: float = 0.0
 	var transition_progress: float = 1.0
+	var report_changed: bool = false
+	var fortress_anchors: Dictionary = {}
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -365,6 +367,9 @@ class ContactCanvas extends Control:
 	func configure(view: Dictionary) -> void:
 		var next_step := float(view.get("step", 0))
 		var previous_step := float(current_view.get("step", next_step))
+		var previous_report: Array = current_view.get("recent_report", [])
+		var next_report: Array = view.get("recent_report", [])
+		report_changed = previous_report != next_report
 		current_view = view.duplicate(true)
 		step_from = previous_step
 		step_to = next_step
@@ -378,7 +383,7 @@ class ContactCanvas extends Control:
 	func _process(delta: float) -> void:
 		if transition_progress >= 1.0:
 			return
-		transition_progress = minf(1.0, transition_progress + delta * 2.5)
+		transition_progress = minf(1.0, transition_progress + delta * 0.9)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -396,17 +401,100 @@ class ContactCanvas extends Control:
 			draw_line(Vector2(x, size.y * 0.85), Vector2(x + 42.0, size.y * 0.85), Color("#94784f"), 4.0)
 		var fortress_rect := _draw_fortress()
 		_draw_contacts(fortress_rect)
+		_draw_resolution_banner()
 		var caption := "FORTRESS AT CONTACT · DESTINATION PENDING"
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), caption, HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#d7c08b"))
 
 	func _draw_fortress() -> Rect2:
 		var impact_strength := sin(transition_progress * PI) if _active_contact_has_damage() else 0.0
 		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
+		if report_changed and transition_progress < 0.80 and not Dictionary(current_view.get("fortress_before", {})).is_empty():
+			view = Dictionary(current_view.get("fortress_before", {})).duplicate(true)
+			var active_target_id := String(current_view.get("active_target_id", ""))
+			for index in range(Array(view.get("modules", [])).size()):
+				var module: Dictionary = view["modules"][index]
+				module["targeted"] = String(module.get("id", "")) == active_target_id
+				view["modules"][index] = module
 		view["mode"] = "contact"
 		view["impact"] = impact_strength
 		view["high_contrast"] = high_contrast_enabled
 		var rendered := FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.19, size.y * 0.28), Vector2(size.x * 0.56, size.y * 0.46)), view)
+		fortress_anchors = Dictionary(rendered.get("anchors", {})).duplicate()
 		return rendered.get("body", Rect2())
+
+	func presentation_stage_text() -> String:
+		var enemy := _nearest_enemy()
+		if enemy.is_empty():
+			return "ROAD OPEN · NO ACTIVE CONTACT"
+		var enemy_id := String(enemy.get("id", "threat"))
+		var definitions: Dictionary = current_view.get("enemy_definitions", {})
+		var definition: Dictionary = definitions.get(enemy_id, {})
+		var enemy_name := String(definition.get("name", enemy_id.replace("_", " ").capitalize())).to_upper()
+		var arrived := bool(enemy.get("arrived", false))
+		if not arrived:
+			var distance := maxi(1, int(definition.get("arrival_step", 1)) - int(current_view.get("step", 0)))
+			return "APPROACH · %s · %d STEP%s OUT" % [enemy_name, distance, "" if distance == 1 else "S"]
+		var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
+		if report_changed and step_to > step_from and transition_progress < 1.0:
+			if transition_progress < 0.24:
+				return "TARGET LOCK · %s → %s" % [enemy_name, target_name]
+			if transition_progress < 0.52:
+				return "WIND-UP · %s" % _attack_signature(enemy_id)
+			if transition_progress < 0.80:
+				return "IMPACT · %s" % _latest_report_line([" hits ", " reaches the hull", " absorbs "])
+		return "CONSEQUENCE · %s" % _latest_consequence_text()
+
+	func _draw_resolution_banner() -> void:
+		var text := presentation_stage_text()
+		var banner := Rect2(Vector2(size.x * 0.17, 10), Vector2(size.x * 0.66, 34))
+		var urgent := text.begins_with("TARGET") or text.begins_with("WIND-UP") or text.begins_with("IMPACT")
+		draw_rect(banner, Color("#461f1c") if urgent else Color("#142328"), true)
+		draw_rect(banner, Color.WHITE if high_contrast_enabled else (Color("#ef8375") if urgent else Color("#6e918f")), false, 2.0)
+		draw_string(ThemeDB.fallback_font, banner.position + Vector2(8, 22), text, HORIZONTAL_ALIGNMENT_CENTER, banner.size.x - 16, 11, Color("#fff0df"))
+
+	func _nearest_enemy() -> Dictionary:
+		var chosen: Dictionary = {}
+		var chosen_distance := 999
+		var definitions: Dictionary = current_view.get("enemy_definitions", {})
+		for raw_enemy in current_view.get("enemies", []):
+			var enemy: Dictionary = raw_enemy
+			if bool(enemy.get("defeated", false)):
+				continue
+			var definition: Dictionary = definitions.get(String(enemy.get("id", "")), {})
+			var distance := 0 if bool(enemy.get("arrived", false)) else maxi(1, int(definition.get("arrival_step", 1)) - int(current_view.get("step", 0)))
+			if chosen.is_empty() or distance < chosen_distance:
+				chosen = enemy
+				chosen_distance = distance
+		return chosen
+
+	func _attack_signature(enemy_id: String) -> String:
+		return String({
+			"road_raiders": "HARPOON VOLLEY",
+			"climbers": "GRAPNEL RUSH",
+			"burrowers": "UNDERCARRIAGE BREACH",
+			"storm_front": "ARC DISCHARGE",
+			"siege_beast": "RAM CHARGE",
+			"flood_surge": "SURGE CREST",
+			"civic_guardian": "ARCHIVE BEAM"
+		}.get(enemy_id, "CONTACT STRIKE"))
+
+	func _latest_report_line(markers: Array[String]) -> String:
+		var report: Array = current_view.get("recent_report", [])
+		for index in range(report.size() - 1, -1, -1):
+			var line := String(report[index])
+			for marker in markers:
+				if marker in line:
+					return line.trim_prefix("Step %d: " % int(current_view.get("step", 0)))
+		return "The fortress record has not reported a matching effect."
+
+	func _latest_consequence_text() -> String:
+		var line := _latest_report_line(["Dependency change:", " restores ", "durability is", " reaches the hull"])
+		if line.begins_with("Dependency change: "):
+			line = line.trim_prefix("Dependency change: ")
+			if " — " in line:
+				line = line.get_slice(" — ", 0)
+			line = line.replace(" is now ", " → ")
+		return line
 
 	func _active_contact_has_damage() -> bool:
 		if transition_progress >= 1.0:
@@ -435,7 +523,8 @@ class ContactCanvas extends Control:
 		var enemies: Array = current_view.get("enemies", [])
 		var definitions: Dictionary = current_view.get("enemy_definitions", {})
 		var animated_step := lerpf(step_from, step_to, transition_progress * transition_progress * (3.0 - 2.0 * transition_progress))
-		var target_anchor := _target_anchor(fortress_rect, String(current_view.get("active_target_id", "")))
+		var target_id := String(current_view.get("active_target_id", ""))
+		var target_anchor: Vector2 = fortress_anchors.get(target_id, _target_anchor(fortress_rect, target_id))
 		var visible_index := 0
 		for enemy in enemies:
 			if bool(enemy.get("defeated", false)):

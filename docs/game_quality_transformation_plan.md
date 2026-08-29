@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.273`
+**Current baseline:** `0.3.0-alpha.274`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -674,6 +674,8 @@ Tasks:
 
 ### Phase 4 — Encounter game feel
 
+**Status:** The first target-lock, threat-signature, impact, and dependency-consequence replay is complete in `0.3.0-alpha.274`; audio cues and broader human timing validation remain open.
+
 **Objective:** Make automatic encounters feel like the fortress is acting and suffering.
 
 Tasks:
@@ -936,19 +938,20 @@ The Long Road is ready to move beyond technical pre-alpha when:
 ## 13. Immediate task for the next AI agent
 
 ```text
-Starting from `0.3.0-alpha.273`, implement the next game-quality slice:
-add a staged wind-up, impact, and consequence treatment for one existing
-threat in the shared road-contact view.
+Starting from `0.3.0-alpha.274`, implement the next game-quality slice:
+improve one recovery settlement's service receipts and place-specific
+character.
 
-Use the current deterministic encounter step, target, damage preview, and
-report as the only authority. Show approach, target lock, attack wind-up,
-impact, mitigation or damage, dependency change, and recovery as a readable
-sequence. Preserve reduced-motion parity and do not change enemy damage,
-arrival timing, targeting, interventions, doctrine, or encounter outcomes.
+Use Morrowline Camp or Veyru Evacuation Camp. Present each available service
+as a concrete local action with before/after hull, fuel, module condition,
+Ashmarks, remaining service actions, trust, and pressure consequences before
+confirmation. After commitment, show a compact receipt that says what changed
+and what opportunity was spent. Preserve the current authoritative service
+commands and do not add a currency, settlement, module, region, or faction.
 
-Add focused UI tests, high-contrast and reduced-motion checks, capture the
-contact before and after impact, and run the complete verification suite.
-Report exact files, tests, captures, risks, and one bounded next task.
+Add focused UI/state tests, controller and 110% text checks, capture the
+settlement before and after one service, and run the complete verification
+suite. Report exact files, tests, captures, risks, and one bounded next task.
 ```
 
 ---

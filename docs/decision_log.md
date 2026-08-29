@@ -988,3 +988,7 @@ Terminal results now leave the operational Marchmaster's Desk and open a dedicat
 ## 2026-08-29 — One fortress silhouette carries authoritative module state
 
 Rest, travel, contact, roadside event, arrival, and Debrief now consume the same presentation-only fortress snapshot derived from installed modules and dependency status. A shared code-native renderer gives module families stable pictograms and layers offline crosses, strained warnings, sealed borders, damage cracks, and target brackets without deciding any rule. The detailed chassis uses the same family marks while retaining its exact grid and placement controls. This was chosen over separate scene-specific fortress drawings because damage and identity must visibly persist across the road without introducing a second simulation model.
+
+## 2026-08-30 — Contact animation replays authoritative consequences
+
+The road-contact tableau now stages each changed encounter step as target lock, threat-specific wind-up, impact, and consequence. It uses the pre-step fortress presentation snapshot only to show the machine before the already-resolved hit, then reveals the current authoritative damage and dependency state at impact. Reduced Motion skips directly to the consequence, and the simulation continues to own timing, target choice, damage, intervention effects, repair, and outcomes. This was chosen over delaying or duplicating combat resolution because presentation should clarify deterministic results without becoming another state machine.

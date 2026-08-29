@@ -150,6 +150,7 @@ var journey_departure_snapshot: Dictionary = {}
 var roadside_event: RoadsideEventView
 var debrief_panel: DebriefPanelView
 var debrief_inspection_active: bool = false
+var contact_fortress_before: Dictionary = {}
 var metric_labels: Dictionary = {}
 var metric_panels: Dictionary = {}
 var subtitle_label: Label
@@ -635,6 +636,7 @@ func _reset_state() -> void:
 	journey_arrival_view = {}
 	journey_departure_snapshot = {}
 	debrief_inspection_active = false
+	contact_fortress_before = {}
 	if tutorial_mode:
 		tutorial_lesson_snapshot = state.serialize()
 		tutorial_lesson_snapshots = {"place_engine": tutorial_lesson_snapshot.duplicate(true)}
@@ -2812,6 +2814,9 @@ func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> voi
 			"tooltip": String(intervention_preview_texts.get(intervention_id, button.tooltip_text)),
 			"enabled": not button.disabled
 		})
+	var recent_report: Array[String] = []
+	for report_index in range(maxi(0, state.encounter_report.size() - 6), state.encounter_report.size()):
+		recent_report.append(String(state.encounter_report[report_index]))
 	road_contact.configure({
 		"region_id": state.campaign_region_id,
 		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)),
@@ -2827,8 +2832,10 @@ func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> voi
 		"enemies": combat_view.get("enemies", []),
 		"enemy_definitions": LongMarchState.ENCOUNTER_ENEMIES,
 		"target_names": combat_view.get("target_names", {}),
+		"recent_report": recent_report,
 		"active_target_id": active_target_id,
 		"fortress": _fortress_presentation_snapshot(active_target_id),
+		"fortress_before": contact_fortress_before.duplicate(true),
 		"values": {
 			"hull": "%d/10" % state.hull_condition,
 			"power": "%d/%d" % [int(snapshot.get("power_draw", 0)), int(snapshot.get("power_output", 0))],
@@ -3205,6 +3212,7 @@ func _on_advance_encounter_pressed() -> void:
 		"money": state.money,
 		"pressure": state.campaign_pressure
 	}
+	contact_fortress_before = _fortress_presentation_snapshot()
 	var result := state.advance_encounter(1.0)
 	var encounter_resolved := bool(result.get("resolved", false))
 	if not bool(result.get("ok", false)):
@@ -3432,6 +3440,7 @@ func _load_saved_run_from_path(save_path: String) -> bool:
 	journey_planner_active = false
 	contact_inspection_active = false
 	debrief_inspection_active = false
+	contact_fortress_before = {}
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():
