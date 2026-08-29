@@ -21,8 +21,11 @@ func _run() -> void:
 	await _settle_ui()
 	var view := {
 		"region_id": "ashgate_lowlands",
+		"location_id": "morrowline_camp",
 		"location_name": "Morrowline Camp",
 		"context": "Morrowline Camp offers 2 finite service opportunities before the next road.",
+		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells.",
+		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass.",
 		"values": {"hull": "7/10", "fuel": "3", "money": "24", "actions": "2", "trust": "1", "pressure": "STRAIN 4"},
 		"repair_text": "REPAIR FIELD WORKSHOP +2 · 8 ASHMARKS\nDURABILITY 1→3 · ACTIONS 2→1",
 		"repair_tooltip": "Restore the Field Workshop.",
@@ -42,6 +45,7 @@ func _run() -> void:
 	panel.focus_default()
 	await _settle_ui()
 	_expect(panel.location_label.text.contains("MORROWLINE CAMP") and panel.context_label.text.contains("2 finite service opportunities"), "the recovery tableau should identify its place and finite opportunity budget")
+	_expect(panel.place_label.text.contains("canvas repair bays") and panel.priority_label.text.contains("movement or repair chain") and panel.priority_label.text.contains("fuel and hull"), "Morrowline should present a place-specific identity and two practical service priorities")
 	_expect(panel.value_labels["hull"].text == "7/10" and panel.value_labels["actions"].text == "2" and panel.value_labels["pressure"].text == "STRAIN 4", "the recovery ledger should expose condition, service opportunities, and road pressure")
 	_expect(panel.repair_button.text.contains("DURABILITY 1→3") and panel.refuel_button.text.contains("FUEL 3→5") and panel.hull_button.text.contains("HULL 7→9"), "every service should show its exact before-and-after state before commitment")
 	_expect(panel.repair_button.has_focus(), "the first legal recovery service should receive default controller focus")

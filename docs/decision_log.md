@@ -1024,3 +1024,7 @@ The mandatory road handoff now states the accepted or declined regional promise,
 ## 2026-08-30 — Contact presentation names its causal phase
 
 The road-contact header now exposes a stable presentation grammar—Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle—derived from the existing enemy arrival, resolved report, and interpolation state. Step zero is explicitly Forecast, and a cleared road holds at Settle before arrival. No additional combat phase is serialized or simulated. This was chosen over adding a second battle state machine because the phase label should explain the authoritative step, not control it.
+
+## 2026-08-30 — Morrowline recovery is a convoy shelter
+
+Morrowline's existing recovery screen now identifies the place through canvas repair bays, parts wagons, and a departure lamp, then frames its two practical priorities: restore the movement/repair chain or reserve the stop for fuel and hull before Meridian Pass. The same service buttons, prices, action budget, and command handlers remain authoritative. This was chosen over adding settlement currency or decorative characters because the place should clarify an existing operational trade-off before it introduces another system.

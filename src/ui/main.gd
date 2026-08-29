@@ -2953,8 +2953,11 @@ func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 	var pressure_name := state.campaign_pressure_name()
 	recovery_panel.configure({
 		"region_id": state.campaign_region_id,
+		"location_id": state.current_location,
 		"location_name": location_name,
 		"context": "%s offers %d finite service %s before the next road." % [location_name, state.settlement_actions_remaining, "opportunity" if state.settlement_actions_remaining == 1 else "opportunities"],
+		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells." if state.current_location == "morrowline_camp" else "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores.",
+		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass." if state.current_location == "morrowline_camp" else "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road.",
 		"values": {
 			"hull": "%d/10" % state.hull_condition,
 			"fuel": str(state.fuel),

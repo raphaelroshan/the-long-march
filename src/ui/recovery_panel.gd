@@ -15,6 +15,8 @@ var context_label: Label
 var value_labels: Dictionary = {}
 var recovery_canvas: RecoveryCanvas
 var receipt_label: Label
+var place_label: Label
+var priority_label: Label
 var repair_button: Button
 var refuel_button: Button
 var hull_button: Button
@@ -134,8 +136,18 @@ func _build_ui() -> void:
 	heading.add_theme_font_size_override("font_size", 15)
 	heading.add_theme_color_override("font_color", Color("#e8c58e"))
 	services.add_child(heading)
+	place_label = Label.new()
+	place_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	place_label.add_theme_font_size_override("font_size", 11)
+	place_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	services.add_child(place_label)
+	priority_label = Label.new()
+	priority_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	priority_label.add_theme_font_size_override("font_size", 11)
+	priority_label.add_theme_color_override("font_color", Color("#e8c58e"))
+	services.add_child(priority_label)
 	var help := Label.new()
-	help.text = "Each service spends one recovery opportunity. Review its before → after preview; the receipt records what you committed."
+	help.text = "Each service spends one opportunity. Its button shows the exact before → after result."
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.add_theme_color_override("font_color", Color("#aab6ba"))
 	services.add_child(help)
@@ -162,6 +174,8 @@ func _service_button(parent: VBoxContainer, callback: Signal) -> Button:
 func configure(view: Dictionary) -> void:
 	location_label.text = "%s · FIELD RECOVERY" % String(view.get("location_name", "ROAD STOP")).to_upper()
 	context_label.text = String(view.get("context", "Choose what the fortress can restore before the next road."))
+	place_label.text = String(view.get("place_identity", "A temporary road stop keeps the fortress moving."))
+	priority_label.text = String(view.get("service_priority", "PRIORITY · Restore the most exposed system before departure."))
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))
@@ -217,6 +231,7 @@ class RecoveryCanvas extends Control:
 
 	func _draw() -> void:
 		var flooded := String(current_view.get("region_id", "ashgate_lowlands")) == "flooded_veyru"
+		var location_id := String(current_view.get("location_id", ""))
 		var sky := Color("#071013") if high_contrast_enabled else (Color("#17373e") if flooded else Color("#333a3b"))
 		var ground := Color("#10282c") if flooded else Color("#30271f")
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
@@ -225,8 +240,31 @@ class RecoveryCanvas extends Control:
 			var y := size.y * (0.30 + float(ridge) * 0.05)
 			draw_line(Vector2(0, y), Vector2(size.x, y - 22.0 + float(ridge) * 7.0), Color("#39565b") if flooded else Color("#665c4e"), 24.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.66), Vector2(size.x, size.y * 0.34)), ground, true)
+		if location_id == "morrowline_camp":
+			_draw_morrowline_shelter()
 		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
 		view["mode"] = "rest"
 		view["high_contrast"] = high_contrast_enabled
 		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.15, size.y * 0.25), Vector2(size.x * 0.70, size.y * 0.52)), view)
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), String(current_view.get("caption", "ONE STOP · FINITE TIME · THE ROAD CONTINUES")), HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#e2cc98"))
+
+	func _draw_morrowline_shelter() -> void:
+		var cloth := Color("#c5a56d") if high_contrast_enabled else Color("#70583c")
+		var timber := Color("#f0d59a") if high_contrast_enabled else Color("#8b6942")
+		for center_x in [size.x * 0.11, size.x * 0.87]:
+			var roof_y := size.y * 0.43
+			var half_width := size.x * 0.11
+			var canopy := PackedVector2Array([
+				Vector2(center_x - half_width, roof_y),
+				Vector2(center_x, roof_y - size.y * 0.09),
+				Vector2(center_x + half_width, roof_y)
+			])
+			draw_colored_polygon(canopy, cloth)
+			draw_polyline(PackedVector2Array([canopy[0], canopy[1], canopy[2]]), timber, 3.0)
+			draw_line(Vector2(center_x - half_width * 0.78, roof_y), Vector2(center_x - half_width * 0.78, size.y * 0.68), timber, 5.0)
+			draw_line(Vector2(center_x + half_width * 0.78, roof_y), Vector2(center_x + half_width * 0.78, size.y * 0.68), timber, 5.0)
+		for crate_index in range(3):
+			var crate := Rect2(Vector2(size.x * (0.04 + float(crate_index) * 0.055), size.y * (0.58 - float(crate_index % 2) * 0.045)), Vector2(size.x * 0.045, size.y * 0.07))
+			draw_rect(crate, Color("#4b3828"), true)
+			draw_rect(crate, timber.darkened(0.15), false, 2.0)
+		draw_circle(Vector2(size.x * 0.91, size.y * 0.51), 7.0, Color("#ffd47f"))
