@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.285`
+**Current baseline:** `0.3.0-alpha.286`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -724,7 +724,7 @@ Tasks:
 
 ### Phase 7 — Human private alpha
 
-**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, and capture matrix are complete in `0.3.0-alpha.279`; five consented uncoached sessions and evidence-led fixes require human testers.
+**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, and checksummed artifact-cohort manifest are complete through `0.3.0-alpha.286`; five consented uncoached sessions and evidence-led fixes require human testers.
 
 **Objective:** Replace assumptions with observed behavior.
 

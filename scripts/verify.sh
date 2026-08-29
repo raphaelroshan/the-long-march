@@ -34,6 +34,7 @@ run_checked() {
 python3 tools/validate_versions.py --repo .
 python3 tools/validate_flooded_veyru.py --data content/flooded_veyru.json
 python3 tests/test_playtest_summary.py
+python3 tests/test_release_manifest.py
 run_checked "" "$GODOT_BIN" --headless --path . --import
 run_checked "PASS: The Long March fortress-state tests" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_state.gd
 run_checked "PASS: The Long March local playtest journal" "$GODOT_BIN" --headless --path . --script res://tests/test_playtest_journal.gd

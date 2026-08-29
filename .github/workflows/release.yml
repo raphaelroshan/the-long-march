@@ -50,8 +50,26 @@ jobs:
         run: |
           mkdir -p artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
-          python -c "import json, os; m=json.load(open('tools/ci_manifest.json')); m.update({'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2)"
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
+          if [ "${{ matrix.target }}" = "windows" ]; then
+            package="build/the-long-march-windows.exe"
+          else
+            package="build/the-long-march-macos.zip"
+          fi
+          python tools/create_release_manifest.py \
+            --root . \
+            --output artifacts/release_manifest.json \
+            --commit "$GITHUB_SHA" \
+            --head-commit "$GITHUB_SHA" \
+            --ref "$GITHUB_REF" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --verification deterministic_tests \
+            --verification "${{ matrix.target }}_export" \
+            --file desktop_package="$package" \
+            --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            --file observer_brief=docs/playtest_guide.md \
+            --file session_sheet=docs/private_alpha_session_sheet.md \
+            --file scope_and_limitations=docs/internal_test_release.md
       - name: Upload desktop release candidate
         uses: actions/upload-artifact@v4
         with:
@@ -59,5 +77,8 @@ jobs:
           path: |
             build/
             artifacts/
+            docs/internal_test_release.md
+            docs/playtest_guide.md
+            docs/private_alpha_session_sheet.md
           if-no-files-found: error
           retention-days: 90

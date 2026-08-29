@@ -1036,3 +1036,7 @@ Evacuation Camp's existing recovery screen now uses a raised timber platform, wa
 ## 2026-08-30 — Starting bazaars inherit their region's work
 
 Ashgate Depot now reads as a rail yard through black rails, sleepers, a signal gantry, and depot-specific workshop, stores, and signal copy. Lantern Quay uses a raised flood dock, pilings, hanging lamps, and water/archive-specific service copy. Station IDs, actions, focus order, contracts, forecasts, and route access remain unchanged. This was chosen over adding more bazaar buttons because the existing decisions needed stronger place context, not more options.
+
+## 2026-08-30 — A playtest cohort is identified by its bytes
+
+CI and tagged-release artifacts now include a machine-readable manifest containing the visible build version, workflow merge commit, branch head commit, workflow run, completed verification stages, and SHA-256 digest for every packaged build and testing document. The observer brief, session sheet, scope boundaries, source snapshot, and executable travel together as one cohort. This was chosen over identifying sessions only by an alpha label because two exports from the same revision can differ by engine, template, or workflow context; human comparisons require the exact retained binary and instructions, not a plausible rebuild.

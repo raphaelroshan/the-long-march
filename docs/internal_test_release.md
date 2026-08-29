@@ -1,5 +1,13 @@
 # The Long March — Playable Journey Test Release
 
+## Exact cohort contract
+
+Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records the player-facing version, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, observer brief, session sheet, and scope/limitations document.
+
+Before the first session, record the manifest's version, `source.workflow_commit`, `source.head_commit`, and executable digest. Before every later session, hash the executable and compare it with the manifest. A different digest is a different cohort even when the visible version label is unchanged. Retain the downloaded artifact outside the repository because ordinary CI artifacts expire.
+
+Rollback means returning to the exact executable named in the retained manifest, not rebuilding the same Git revision with a different engine or export template. The source snapshot is diagnostic evidence; testers should receive only the appropriate packaged build and the observer should use the bundled brief and session sheet.
+
 ## Purpose
 
 This is a testable two-chapter alpha for The Long March. It proves separate five-encounter runs through **Ashgate Lowlands** and **Flooded Veyru**, with dependency-driven refitting, incomplete route information, regional contracts and pressure, deterministic encounters, recoverable failure, mid-run recovery, and explicit results. The chapters share one simulation and interface but remain isolated rather than pretending the full campaign layer exists.
