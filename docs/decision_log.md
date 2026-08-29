@@ -1028,3 +1028,7 @@ The road-contact header now exposes a stable presentation grammar—Forecast, Ap
 ## 2026-08-30 — Morrowline recovery is a convoy shelter
 
 Morrowline's existing recovery screen now identifies the place through canvas repair bays, parts wagons, and a departure lamp, then frames its two practical priorities: restore the movement/repair chain or reserve the stop for fuel and hull before Meridian Pass. The same service buttons, prices, action budget, and command handlers remain authoritative. This was chosen over adding settlement currency or decorative characters because the place should clarify an existing operational trade-off before it introduces another system.
+
+## 2026-08-30 — Evacuation Camp is raised above the flood
+
+Evacuation Camp's existing recovery screen now uses a raised timber platform, water pump, sealed medicine cases, and high lamp to distinguish it from Morrowline. Its service guidance frames the current lower-hull or medicine-carrier risk against the fuel margin needed for the archive road. The simulation, service prices, finite action budget, and medicine contract remain unchanged. This was chosen over another generic blue backdrop because the settlement should communicate why its existing recovery choices matter.

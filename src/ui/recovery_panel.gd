@@ -242,6 +242,8 @@ class RecoveryCanvas extends Control:
 		draw_rect(Rect2(Vector2(0, size.y * 0.66), Vector2(size.x, size.y * 0.34)), ground, true)
 		if location_id == "morrowline_camp":
 			_draw_morrowline_shelter()
+		elif location_id == "veyru_evacuation_camp":
+			_draw_veyru_evacuation_platform()
 		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
 		view["mode"] = "rest"
 		view["high_contrast"] = high_contrast_enabled
@@ -268,3 +270,30 @@ class RecoveryCanvas extends Control:
 			draw_rect(crate, Color("#4b3828"), true)
 			draw_rect(crate, timber.darkened(0.15), false, 2.0)
 		draw_circle(Vector2(size.x * 0.91, size.y * 0.51), 7.0, Color("#ffd47f"))
+
+	func _draw_veyru_evacuation_platform() -> void:
+		var timber := Color("#bfe5df") if high_contrast_enabled else Color("#537d78")
+		var lamp := Color("#ffe09b")
+		var platform_y := size.y * 0.57
+		draw_line(Vector2(size.x * 0.02, platform_y), Vector2(size.x * 0.98, platform_y), timber, 8.0)
+		for support_x in [size.x * 0.08, size.x * 0.20, size.x * 0.80, size.x * 0.92]:
+			draw_line(Vector2(support_x, platform_y), Vector2(support_x - size.x * 0.025, size.y * 0.76), timber.darkened(0.22), 6.0)
+		var pump_center := Vector2(size.x * 0.10, size.y * 0.46)
+		draw_circle(pump_center, size.y * 0.055, timber, false, 4.0)
+		for angle in [0.0, PI * 0.5, PI, PI * 1.5]:
+			draw_line(pump_center, pump_center + Vector2(cos(angle), sin(angle)) * size.y * 0.05, timber, 3.0)
+		draw_line(pump_center + Vector2(size.y * 0.055, 0), Vector2(size.x * 0.24, platform_y), timber, 4.0)
+		for case_index in range(2):
+			var case_rect := Rect2(Vector2(size.x * (0.84 + float(case_index) * 0.055), size.y * 0.48), Vector2(size.x * 0.045, size.y * 0.07))
+			draw_rect(case_rect, Color("#284b4e"), true)
+			draw_rect(case_rect, timber, false, 2.0)
+			draw_line(case_rect.position + Vector2(case_rect.size.x * 0.5, 5.0), Vector2(case_rect.position.x + case_rect.size.x * 0.5, case_rect.end.y - 5.0), lamp, 2.0)
+		draw_circle(Vector2(size.x * 0.91, size.y * 0.40), 7.0, lamp)
+
+	func presentation_signature() -> String:
+		match String(current_view.get("location_id", "")):
+			"morrowline_camp":
+				return "MORROWLINE · CANVAS REPAIR BAYS · PARTS WAGONS · DEPARTURE LAMP"
+			"veyru_evacuation_camp":
+				return "EVACUATION CAMP · RAISED PLATFORM · WATER PUMP · SEALED CASES"
+		return "FIELD RECOVERY · TEMPORARY ROAD STOP"
