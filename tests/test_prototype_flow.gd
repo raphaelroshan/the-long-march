@@ -563,6 +563,11 @@ func _run() -> void:
 	game.road_contact.advance_button.pressed.emit()
 	await process_frame
 	_expect(game.combat_panel.enemy_states[0].text.contains("1 STEP OUT") and game.advance_encounter_button.text.contains("STEP 2 OF 6") and game.advance_encounter_button.text.contains("CONTACT NEXT · ROAD RAIDER") and game.combat_panel.order_label.text.contains("Next step 2/6") and game.combat_panel.step_labels[1].text == "CONTACT · 2", "the arrival countdown, timeline, combat status, and advance action should agree and warn before contact")
+	_expect(game.road_contact.contact_canvas.transition_progress < 1.0, "advancing contact should begin a short presentation-only approach beat")
+	var motion_state: Dictionary = game.state.serialize()
+	game.set_reduced_motion(true)
+	_expect(game.road_contact.contact_canvas.transition_progress == 1.0 and game.state.serialize() == motion_state, "Reduced Motion should finish the contact beat immediately without changing simulation state")
+	game.set_reduced_motion(false)
 	_expect(game.combat_panel.causal_label.text.contains("Repeater Gun") and not game.combat_panel.causal_label.text.contains("repeater_gun"), "the visible causal report should use authored system names rather than internal content IDs")
 	var target_card_preview: Dictionary = game.state.encounter_summary()
 	var target_enemy: Dictionary = target_card_preview.enemies[0]

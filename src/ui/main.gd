@@ -469,6 +469,7 @@ func _ready() -> void:
 	journey_transition.set_reduced_motion(reduced_motion_enabled)
 	journey_planner.set_high_contrast(high_contrast_enabled)
 	road_contact.set_high_contrast(high_contrast_enabled)
+	road_contact.set_reduced_motion(reduced_motion_enabled)
 	journey_arrival.set_high_contrast(high_contrast_enabled)
 	_refresh_controller_copy()
 	_refresh_ui()
@@ -547,6 +548,8 @@ func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
 	if journey_transition != null:
 		journey_transition.set_reduced_motion(enabled)
+	if road_contact != null:
+		road_contact.set_reduced_motion(enabled)
 
 func _reset_state() -> void:
 	state = LongMarchState.new(2204 if starting_region_id == "flooded_veyru" else 1107)

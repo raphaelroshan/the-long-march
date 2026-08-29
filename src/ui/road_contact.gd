@@ -22,6 +22,7 @@ var intervention_heading: Label
 var intervention_help: Label
 var intervention_buttons: Array[Button] = []
 var high_contrast_enabled: bool = false
+var reduced_motion: bool = false
 var current_view: Dictionary = {}
 
 func _ready() -> void:
@@ -257,9 +258,9 @@ func configure(view: Dictionary) -> void:
 		button.disabled = not bool(action.get("enabled", false))
 	intervention_heading.text = String(view.get("intervention_heading", "EMERGENCY ORDER"))
 	_restore_action_help()
-	contact_canvas.current_view = current_view
 	contact_canvas.high_contrast_enabled = high_contrast_enabled
-	contact_canvas.queue_redraw()
+	contact_canvas.reduced_motion = reduced_motion
+	contact_canvas.configure(current_view)
 	_configure_focus()
 
 func _configure_threat(view: Dictionary) -> void:
@@ -336,6 +337,13 @@ func set_high_contrast(enabled: bool) -> void:
 		contact_canvas.high_contrast_enabled = enabled
 		contact_canvas.queue_redraw()
 
+func set_reduced_motion(enabled: bool) -> void:
+	reduced_motion = enabled
+	if contact_canvas != null:
+		contact_canvas.reduced_motion = enabled
+		if enabled:
+			contact_canvas.finish_transition()
+
 func set_controller_cancel_label(cancel_label: String) -> void:
 	if pause_button != null:
 		pause_button.text = "PAUSE · ESC / %s" % cancel_label
@@ -343,9 +351,33 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 class ContactCanvas extends Control:
 	var current_view: Dictionary = {}
 	var high_contrast_enabled: bool = false
+	var reduced_motion: bool = false
+	var step_from: float = 0.0
+	var step_to: float = 0.0
+	var transition_progress: float = 1.0
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		set_process(true)
+
+	func configure(view: Dictionary) -> void:
+		var next_step := float(view.get("step", 0))
+		var previous_step := float(current_view.get("step", next_step))
+		current_view = view.duplicate(true)
+		step_from = previous_step
+		step_to = next_step
+		transition_progress = 1.0 if reduced_motion or next_step <= previous_step else 0.0
+		queue_redraw()
+
+	func finish_transition() -> void:
+		transition_progress = 1.0
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		if transition_progress >= 1.0:
+			return
+		transition_progress = minf(1.0, transition_progress + delta * 2.5)
+		queue_redraw()
 
 	func _draw() -> void:
 		var flooded := String(current_view.get("region_id", "ashgate_lowlands")) == "flooded_veyru"
@@ -366,7 +398,8 @@ class ContactCanvas extends Control:
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), caption, HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#d7c08b"))
 
 	func _draw_fortress() -> Rect2:
-		var center := Vector2(size.x * 0.47, size.y * 0.57)
+		var impact_strength := sin(transition_progress * PI) if _active_contact_has_damage() else 0.0
+		var center := Vector2(size.x * 0.47 - impact_strength * 5.0, size.y * 0.57 + impact_strength * 2.0)
 		var body := Rect2(center - Vector2(158, 74), Vector2(316, 124))
 		var metal := Color("#303837") if high_contrast_enabled else Color("#4b4a41")
 		var edge := Color("#ead69e") if high_contrast_enabled else Color("#9a825a")
@@ -384,9 +417,18 @@ class ContactCanvas extends Control:
 			draw_rect(Rect2(Vector2(window_x, body.position.y + 36), Vector2(24, 26)), Color("#d79b52"), true)
 		var target_anchor := _target_anchor(body, String(current_view.get("active_target_id", "")))
 		if not String(current_view.get("active_target_id", "")).is_empty():
-			draw_circle(target_anchor, 13.0, Color(0.95, 0.30, 0.24, 0.28))
+			var pulse_alpha := 0.28 + impact_strength * 0.32
+			draw_circle(target_anchor, 13.0 + impact_strength * 5.0, Color(0.95, 0.30, 0.24, pulse_alpha))
 			draw_circle(target_anchor, 8.0, Color("#ff8275"), false, 3.0)
 		return body
+
+	func _active_contact_has_damage() -> bool:
+		if transition_progress >= 1.0:
+			return false
+		for enemy in current_view.get("enemies", []):
+			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and int(enemy.get("impact", {}).get("damage", 0)) > 0:
+				return true
+		return false
 
 	func _target_anchor(body: Rect2, target_id: String) -> Vector2:
 		if target_id == "hull":
@@ -406,7 +448,7 @@ class ContactCanvas extends Control:
 	func _draw_contacts(fortress_rect: Rect2) -> void:
 		var enemies: Array = current_view.get("enemies", [])
 		var definitions: Dictionary = current_view.get("enemy_definitions", {})
-		var step := int(current_view.get("step", 0))
+		var animated_step := lerpf(step_from, step_to, transition_progress * transition_progress * (3.0 - 2.0 * transition_progress))
 		var target_anchor := _target_anchor(fortress_rect, String(current_view.get("active_target_id", "")))
 		var visible_index := 0
 		for enemy in enemies:
@@ -415,8 +457,8 @@ class ContactCanvas extends Control:
 			var enemy_id := String(enemy.get("id", ""))
 			var definition: Dictionary = definitions.get(enemy_id, {})
 			var arrived := bool(enemy.get("arrived", false))
-			var steps_out := maxi(0, int(definition.get("arrival_step", 1)) - step)
-			var x := fortress_rect.end.x + 46.0 + float(steps_out) * 55.0
+			var steps_out := maxf(0.0, float(definition.get("arrival_step", 1)) - animated_step)
+			var x := fortress_rect.end.x + 46.0 + steps_out * 55.0
 			var y := fortress_rect.end.y + 38.0 - float(visible_index % 2) * 62.0
 			if enemy_id in ["climbers", "storm_front"]:
 				y = fortress_rect.position.y - 48.0 - float(visible_index) * 18.0
@@ -425,7 +467,9 @@ class ContactCanvas extends Control:
 			x = minf(size.x - 38.0, x)
 			_draw_enemy_symbol(enemy_id, Vector2(x, y), arrived)
 			if arrived and not String(enemy.get("target", "")).is_empty():
-				draw_dashed_line(Vector2(x - 16.0, y), target_anchor, Color("#ff8275"), 2.0, 7.0)
+				var line_color := Color("#ff8275")
+				line_color.a = 0.4 + transition_progress * 0.6
+				draw_dashed_line(Vector2(x - 16.0, y), target_anchor, line_color, 2.0, 7.0)
 			var name := String(definition.get("name", enemy_id.replace("_", " ").capitalize())).to_upper()
 			draw_string(ThemeDB.fallback_font, Vector2(x - 72.0, y - 30.0), name, HORIZONTAL_ALIGNMENT_CENTER, 144, 10, Color("#f1d1b2"))
 			visible_index += 1
