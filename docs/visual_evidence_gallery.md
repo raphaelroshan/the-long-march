@@ -1,8 +1,12 @@
 # The Long March — Visual Evidence Gallery
 
-This gallery preserves the available PR41 journey-shell screenshots for `v0.3.0-alpha.279`. They document the First Watch onboarding and the moving-fortress premise at the point where the project moved from isolated prototype screens toward a continuous journey. They are internal development evidence, not final marketing art.
+This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
-## Capture record
+## `v0.3.0-alpha.279` — First Watch journey shell
+
+These PR41 captures document the First Watch onboarding and the moving-fortress premise at the point where the project moved from isolated prototype screens toward a continuous journey.
+
+### Capture record
 
 | Field | Value |
 |---|---|
@@ -13,25 +17,56 @@ This gallery preserves the available PR41 journey-shell screenshots for `v0.3.0-
 | Capture scope | Title, First Watch introduction, dependency lesson |
 | CI artifact note | PR #41’s CI artifact contained the executable and source archive but no screenshot files; these images are local recaptures from that exact source revision |
 
-## Screenshots
+### Screenshots
 
-### Title and First Watch entry
+#### Title and First Watch entry
 
 ![The Long March title](visual_evidence/v0.3.0-alpha.279/01_title.png)
 
 The title establishes the moving-fortress premise and presents First Watch, Ashgate Lowlands, Flooded Veyru, Field Guide, and Settings as connected entry points.
 
-### First Watch introduction
+#### First Watch introduction
 
 ![The Long March First Watch introduction](visual_evidence/v0.3.0-alpha.279/02_first_watch_intro.png)
 
 The first lesson introduces the fortress as a moving settlement rather than a conventional inventory or detached battle screen.
 
-### First Watch dependency lesson
+#### First Watch dependency lesson
 
 ![The Long March dependency lesson](visual_evidence/v0.3.0-alpha.279/03_first_watch_dependencies.png)
 
 The second lesson makes the dependency chain visible: engines need fuel, weapons need power and ammunition support, and workshops need crew. This is the core comprehension target for the first journey.
+
+## `v0.3.0-alpha.285` — Starting-settlement identity
+
+These captures document the same fortress-at-rest composition in the two starting settlements after the regional-identity pass. The layout and interaction contract are intentionally stable; the surrounding work, material palette, weather, and local obligation change.
+
+### Capture record
+
+| Field | Value |
+|---|---|
+| Build | `v0.3.0-alpha.285` |
+| Source | Branch head `7e0946c4e5b8eb698bb63f5a7ad6102606d66bf2`, merged by PR #48 |
+| Engine | Godot 4.4.1 |
+| Capture presentation | 1280×720 virtual display, 100% text, Standard contrast |
+| Capture scope | Ashgate Depot and Lantern Quay opening assignment state |
+| Evidence class | Deterministic presentation inspection; no human comprehension claim |
+
+### Ashgate Depot rail bazaar
+
+![Ashgate Depot rail bazaar](visual_evidence/v0.3.0-alpha.285/01_ashgate_depot.png)
+
+Black rails, sleepers, an industrial gantry, dust, and warm metal frame the opening Morrowline obligation. The workshop, quartermaster, signal broker, assignment board, hiring post, and departure gate retain their shared positions.
+
+SHA-256: `944b6ff04d01a733a4e29a9e55a7a6b775bacdae96e269612fd8976da4521069`
+
+### Lantern Quay flood market
+
+![Lantern Quay flood market](visual_evidence/v0.3.0-alpha.285/02_lantern_quay.png)
+
+A raised dock, pilings, hanging lamps, cool wet surfaces, and the visible waterline frame the sealed-medicine obligation. The stable station layout makes the environmental and contractual difference readable without teaching a second navigation scheme.
+
+SHA-256: `774ef548a62688f786f32e2e340372acd203ac71cbc419b947086ef6570bae20`
 
 ## Kickstarter bonus-content framing
 
