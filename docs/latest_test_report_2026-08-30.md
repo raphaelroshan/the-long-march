@@ -4,53 +4,29 @@
 
 | Field | Result |
 |---|---|
-| Branch tested | `origin/main` |
-| Build | `0.3.0-alpha.287` |
-| Engine | Godot 4.4.1 |
-| Visual test display | 1280×720 Xvfb display |
-| Automated verification | PASS: version consistency, content, release manifest, fortress state, campaign, playtest journal, interface audio, visual contrast, silhouette, road contact, events, recovery, controller, settlement, shell, tutorial, complete flow, and Flooded Veyru UI suites |
-| Runtime smoke | PASS: project launched and advanced into First Watch introduction |
+| Build | `0.3.0-alpha.297` |
+| Engine | Godot 4.4.1 stable |
+| Automated source verification | PASS: versions, content, framework, offline boundary, save/migration, backup recovery, simulation, presentation, audio, controller, accessibility, performance, both chapter flows, and candidate contract |
+| Performance sample | PASS: 1,800 read-only planning inspections and 60 same-seed encounter replays within conservative 12-second budgets |
+| Local packaged export | BLOCKED AS DESIGNED: this workstation does not have matching 4.4.1 export templates; the export script removed the stale target and returned prerequisite exit code 3 |
+| CI packaged candidate | Required: clean Windows export, packaged headless launch, checksummed manifest verification, and retained artifact |
 
-## Captured evidence
+## Current evidence
 
-The screenshots were captured from the actual latest main build and are stored under [`docs/visual_evidence/v0.3.0-alpha.287-latest-test-2026-08-30/`](visual_evidence/v0.3.0-alpha.287-latest-test-2026-08-30/).
+The latest gameplay evidence is split by the implemented quality layers:
 
-![Latest The Long March title](visual_evidence/v0.3.0-alpha.287-latest-test-2026-08-30/long_01_title.png)
+- [`v0.3.0-alpha.295-l8-morrowline-shortage/`](visual_evidence/v0.3.0-alpha.295-l8-morrowline-shortage/) — disclosed convoy choice, retained receipt, and later one-action shortage.
+- [`v0.3.0-alpha.296-l9-replayable-mastery/`](visual_evidence/v0.3.0-alpha.296-l9-replayable-mastery/) — optional field orders, route reminder, Cinder Quarry proof, and Debrief evaluation.
+- Earlier L1–L7 directories retain complete handoff, responsive, rhythm, contact-causality, settlement-identity, and controlled-route evidence.
 
-![Latest The Long March First Watch introduction](visual_evidence/v0.3.0-alpha.287-latest-test-2026-08-30/long_02_first_action.png)
+L10 changes build verification rather than player-facing layout, so it adds no redundant screenshot set.
 
-![Latest The Long March follow-up](visual_evidence/v0.3.0-alpha.287-latest-test-2026-08-30/long_03_followup.png)
+## Hardening result
 
-## Findings
+The automated L1–L10 roadmap is complete. A candidate cannot be uploaded unless its source tests pass, its exported executable launches without startup errors, its runtime source remains offline-only, and its manifest verifies exact files, source revision, platform, Godot toolchain, and completed gates.
 
-The latest build is the strongest of the three at the tested 1280×720 size. The title has a coherent visual identity, exposes the exact version, and makes First Watch and the two journey chapters easy to distinguish. The First Watch introduction is readable and has a convincing moving-fortress silhouette. The smoke test successfully reaches tutorial content, but it does not yet prove the full contract from tutorial to live refit, route planning, road contact, recovery, and Debrief in one player-facing run.
+This is still a private-alpha candidate. The repository does not claim final art, final audio, signing/notarization, storefront integration, broad hardware performance, or human-validated pacing and enjoyment.
 
-## Alpha.288 follow-up
+## Next work
 
-The smoke-test gap above is closed by [`l1_complete_journey_handoff_report.md`](l1_complete_journey_handoff_report.md). Alpha.288 adds one clean-save, app-shell integration run through First Watch and the full five-contact Ashgate journey, including save/resume checks at committed departure and completed arrival. Its 1600×900 evidence sequence is the baseline for the next responsive-layout pass.
-
-## Alpha.289 follow-up
-
-[`l2_responsive_fortress_presentation_report.md`](l2_responsive_fortress_presentation_report.md) closes the responsive-layout gate. The same complete journey now runs at 1280×720 and 1600×900 with 110% text, high contrast, reduced motion, and alternate controller guidance while asserting the left-status, center-subject, right-action hierarchy and focused primary controls.
-
-## Next roadmap steps
-
-### March Quality 1 — Full journey capture and handoff validation
-
-Run a complete First Watch-to-Ashgate journey using a clean save. Verify that tutorial completion hands off to the live contract without losing context, that the fortress persists across settlement and travel modes, and that the player can reach contact, recovery, and Debrief without hidden debug actions. Store a complete 1600×900 evidence sequence.
-
-### March Quality 2 — Road-contact cause-and-effect pass
-
-Validate that every major contact communicates forecast, approach, target lock, wind-up, impact, dependency damage, and the next available response. Use reduced-motion and controller paths as separate checks. The report must make a player’s failure or survival understandable without requiring the March Record.
-
-### March Quality 3 — Settlement and route identity
-
-Give Ashgate, Morrowline, Lantern Quay, and Evacuation Camp distinct visual and service identities. Each settlement should change a meaningful preparation decision without becoming a menu-only reskin. Confirm that route choices communicate obligation, pressure, recovery point, and closure risk before commitment.
-
-### March Quality 4 — Human validation before content breadth
-
-Run the existing five-session private-alpha protocol. Measure whether new players understand module dependencies, route risk, emergency orders, recovery, and the meaning of a non-final defeat. Only after repeated comprehension should the project add more modules, regions, or story branches.
-
-## Evidence interpretation
-
-This report records an internal alpha test. The screenshots are suitable for a development archive and Kickstarter field-journal concept, but they are not final store art or evidence of release readiness.
+Run the consented sessions in [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) with one retained CI cohort. Rank observed comprehension, comfort, pacing, and balance failures, then fix the highest-severity repeated issues before adding another region.

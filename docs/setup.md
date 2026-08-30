@@ -22,6 +22,8 @@ bash scripts/verify.sh
 
 The verification script imports assets and runs the simulation, local playtest-journal, and complete UI-flow tests. If Godot is not installed, it exits with status `2` rather than pretending that tests passed.
 
+It also enforces the offline runtime boundary, checks the private-alpha workflow contract, and runs deterministic performance budgets for planning inspection and encounter replay.
+
 ## Validate content
 
 ```bash
@@ -46,3 +48,12 @@ Title Settings treats local data categories separately: **Clear Local Save** rem
 The repository contains reviewed Windows and unsigned macOS playtest export presets. Run `bash scripts/export_playtest.sh windows` or `bash scripts/export_playtest.sh macos` after installing matching Godot export templates. Tags matching `v*` produce both artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.
 
 The export script prints the detected Godot version, removes any stale target before building, and verifies that a non-empty artifact was created. A missing or mismatched export-template installation exits with status `3` and names the prerequisite instead of leaving an old build that appears current.
+
+After export, smoke the packaged build itself:
+
+```bash
+python tools/smoke_playtest.py --platform windows --package build/the-long-march-windows.exe
+python tools/smoke_playtest.py --platform macos --package build/the-long-march-macos.zip
+```
+
+CI performs this launch check before creating and verifying the checksummed cohort manifest.

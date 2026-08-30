@@ -37,6 +37,10 @@ jobs:
         run: python tools/validate_flooded_veyru.py --data content/flooded_veyru.json
       - name: Validate build versions
         run: python tools/validate_versions.py --repo .
+      - name: Verify offline runtime boundary
+        run: python tools/verify_offline_boundary.py --repo .
+      - name: Verify private-alpha gate contract
+        run: python tests/test_private_alpha_contract.py
 
   tests:
     name: Godot headless tests (${{ matrix.os }})
@@ -145,6 +149,8 @@ jobs:
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi
+      - name: Smoke packaged Windows build
+        run: python tools/smoke_playtest.py --platform windows --package build/the-long-march-windows.exe
       - name: Package source snapshot
         run: |
           mkdir -p artifacts
@@ -163,17 +169,23 @@ jobs:
             --ref "$GITHUB_REF" \
             --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             --platform windows \
+            --engine-version "$(godot --version | head -n 1)" \
             --verification repository_policy \
             --verification godot_tests_ubuntu \
             --verification godot_tests_windows \
             --verification ai_review \
             --verification windows_export \
+            --verification windows_packaged_smoke \
+            --verification offline_boundary \
+            --verification performance_budget \
             --file windows_executable=build/the-long-march-windows.exe \
             --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             --file observer_brief=docs/playtest_guide.md \
             --file session_sheet=docs/private_alpha_session_sheet.md \
             --file scope_and_limitations=docs/internal_test_release.md \
             --file manifest_verifier=tools/verify_release_manifest.py
+      - name: Verify exact cohort manifest
+        run: python tools/verify_release_manifest.py artifacts/release_manifest.json
       - name: Upload release candidate
         uses: actions/upload-artifact@v7
         with:

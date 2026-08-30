@@ -33,8 +33,11 @@ run_checked() {
 
 python3 tools/validate_versions.py --repo .
 python3 tools/validate_flooded_veyru.py --data content/flooded_veyru.json
+python3 tools/verify_offline_boundary.py --repo .
 python3 tests/test_playtest_summary.py
 python3 tests/test_release_manifest.py
+python3 tests/test_smoke_playtest.py
+python3 tests/test_private_alpha_contract.py
 run_checked "" "$GODOT_BIN" --headless --path . --import
 run_checked "PASS: The Long March fortress-state tests" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_state.gd
 run_checked "PASS: The Long March local playtest journal" "$GODOT_BIN" --headless --path . --script res://tests/test_playtest_journal.gd
@@ -43,6 +46,7 @@ run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --pat
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
 run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd
 run_checked "PASS: The Long March presentation builders" "$GODOT_BIN" --headless --path . --script res://tests/test_presentation_builders.gd
+run_checked "PASS: The Long March performance budget" "$GODOT_BIN" --headless --path . --script res://tests/test_performance_budget.gd
 run_checked "PASS: The Long March road-contact presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_road_contact_presentation.gd
 run_checked "PASS: The Long March roadside-event presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_roadside_event_presentation.gd
 run_checked "PASS: The Long March recovery panel" "$GODOT_BIN" --headless --path . --script res://tests/test_recovery_panel.gd

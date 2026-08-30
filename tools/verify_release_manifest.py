@@ -29,6 +29,18 @@ def verify_manifest(manifest: dict[str, Any], root: Path) -> list[str]:
 	if not isinstance(files, list) or not files:
 		errors.append("manifest files must be a non-empty array")
 		return errors
+	cohort = manifest.get("cohort")
+	if not isinstance(cohort, dict) or cohort.get("platform") not in ("windows", "macos") or not str(cohort.get("id", "")).strip():
+		errors.append("manifest is missing a valid cohort ID or platform")
+	source = manifest.get("source")
+	if not isinstance(source, dict) or not all(str(source.get(key, "")).strip() for key in ("repository", "workflow_commit", "head_commit", "ref", "workflow_run_url")):
+		errors.append("manifest source provenance is incomplete")
+	toolchain = manifest.get("toolchain")
+	if not isinstance(toolchain, dict) or not str(toolchain.get("godot", "")).strip():
+		errors.append("manifest is missing the Godot toolchain version")
+	verification = manifest.get("verification")
+	if not isinstance(verification, list) or not verification or any(not str(item).strip() for item in verification):
+		errors.append("manifest verification record must be a non-empty list")
 	seen_paths: set[str] = set()
 	for index, entry in enumerate(files):
 		if not isinstance(entry, dict):

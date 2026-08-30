@@ -1,8 +1,10 @@
 # The Long March — Playable Journey Test Release
 
+This is a **private-alpha candidate**, not a public release or storefront-ready build.
+
 ## Exact cohort contract
 
-Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records a stable cohort ID, target platform, player-facing version, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, verifier, observer brief, session sheet, and scope/limitations document.
+Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records a stable cohort ID, target platform, player-facing version, exact Godot toolchain, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, verifier, observer brief, session sheet, and scope/limitations document.
 
 Before the first session, run:
 
@@ -13,6 +15,8 @@ python tools/verify_release_manifest.py artifacts/release_manifest.json
 Record `cohort.id`, `cohort.platform`, `source.workflow_commit`, and the executable digest. Run the verifier again before every later session. Windows and macOS packages may share one cohort ID while retaining different platform-specific file hashes. A digest mismatch means the artifact is incomplete, altered, or mixed even when the visible version label is unchanged. Retain the downloaded artifact outside the repository because ordinary CI artifacts expire.
 
 Rollback means returning to the exact executable named in the retained manifest, not rebuilding the same Git revision with a different engine or export template. The source snapshot is diagnostic evidence; testers should receive only the appropriate packaged build and the observer should use the bundled brief and session sheet.
+
+The CI candidate is uploaded only after deterministic tests, offline-boundary checks, performance budgets, desktop export, packaged headless launch, and manifest verification pass. These gates prove reproducibility and startup integrity; they do not substitute for the human sessions below.
 
 ## Purpose
 
@@ -103,4 +107,4 @@ The integrated kit includes a Long March visual reference, Ashgate journey backg
 
 ## Scope boundaries
 
-This release includes two authored FTL-like regional graphs, two mutually exclusive recruitable Ashgate specialists, one Veyru medicine obligation, one information-only regional development, a bounded scheduler for four authored Ashgate occurrences, a small two-chapter Charter/replay shell, and generated interface feedback cues. It does not implement the planned five-region campaign, carry numerical resources between chapters, add procedural prose or maps, implement a complete cargo economy, or include final music, ambience, combat sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. Both chapters remain deterministic and inspectable so agents and testers can tune their distinct preparation and route decisions before adding campaign breadth.
+This release includes two authored FTL-like regional graphs, two mutually exclusive recruitable Ashgate specialists, one Veyru medicine obligation, one information-only regional development, a bounded scheduler for four authored Ashgate occurrences, a small two-chapter Charter/replay shell, and generated interface feedback cues. It does not implement the planned five-region campaign, carry numerical resources between chapters, add procedural prose or maps, implement a complete cargo economy, or include final music, ambience, combat sound, sprite animation, Steam/Epic adapters, or commercial storefront packaging. Final music remains excluded. Both chapters remain deterministic and inspectable so agents and testers can tune their distinct preparation and route decisions before adding campaign breadth.
