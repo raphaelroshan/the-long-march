@@ -1074,3 +1074,7 @@ Ashgate Depot, Lantern Quay, Morrowline Camp, and Evacuation Camp now pair their
 ## 2026-08-30 — Presentation builders are read-only boundaries
 
 Settlement, route, contact, recovery, and debrief view dictionaries now come from focused presenter scripts. `main.gd` still owns orchestration and command dispatch, while `LongMarchState` remains the sole authority for simulation, save data, targeting, costs, damage, and outcomes. Presenter tests compare stable IDs and required fields and assert that every build leaves serialized state unchanged. This was chosen over moving rules into UI panels because presentation needs a smaller editing surface without creating a second simulation model.
+
+## 2026-08-30 — Cinder Quarry trades a mixed contact for repair
+
+Cinder Quarry is a fourth post-Morrowline road and a one-node branch to Meridian Pass. It spends one day, two fuel, and one blockade pressure to face Road Raiders above the road and Burrowers below it. Victory restores up to two durability to the weakest damaged installed system; if nothing is damaged, the recovered plate sells for eight Ashmarks. The result uses no new persistent field and is written into the normal encounter report. This was chosen over a new threat or facility because the slice tests whether existing cargo, lower-hull, doctrine, armor, and recovery systems create a meaningful new plan when recombined.

@@ -19,6 +19,7 @@ const NODE_ORDER := [
 	"lower_ash_road",
 	"dry_cistern_cut",
 	"signal_causeway",
+	"cinder_quarry",
 	"meridian_pass"
 ]
 const NODE_POSITIONS := {
@@ -30,7 +31,8 @@ const NODE_POSITIONS := {
 	"morrowline_camp": Vector2(94, 152),
 	"lower_ash_road": Vector2(4, 200),
 	"signal_causeway": Vector2(184, 200),
-	"dry_cistern_cut": Vector2(94, 248),
+	"dry_cistern_cut": Vector2(4, 248),
+	"cinder_quarry": Vector2(184, 248),
 	"meridian_pass": Vector2(94, 296)
 }
 const SHORT_NAMES := {
@@ -43,6 +45,7 @@ const SHORT_NAMES := {
 	"lower_ash_road": "Lower Ash Road",
 	"dry_cistern_cut": "Dry Cistern Cut",
 	"signal_causeway": "Signal Causeway",
+	"cinder_quarry": "Cinder Quarry",
 	"meridian_pass": "Meridian Pass"
 }
 const REGION_LAYOUTS := {
@@ -269,6 +272,8 @@ func _preview_tooltip(preview: Dictionary, include_intel_upgrade: bool = true) -
 	var risk_band := _risk_band(risk)
 	var intel_upgrade := "\nIntel upgrade: ready forecasting gear or Iven Pell reveals exact contacts, lowers route risk by up to 8 points, and reduces encounter pressure by 1." if include_intel_upgrade else ""
 	var sustain_effect := "\nSustain: Ready Water Condenser saves 1 fuel on this road." if int(preview.get("fuel_discount", 0)) > 0 else ""
+	var route_effect := String(preview.get("route_effect", ""))
+	var route_effect_detail := "\nRecovery: %s." % route_effect if not route_effect.is_empty() else ""
 	var risk_factors: Array = preview.get("risk_factors", [])
 	var risk_detail := ""
 	if include_intel_upgrade:
@@ -279,10 +284,10 @@ func _preview_tooltip(preview: Dictionary, include_intel_upgrade: bool = true) -
 		var counter_detail := "\nPrepare: %s." % " or ".join(counters) if not counters.is_empty() else ""
 		var ready_counters: Array = preview.get("ready_counter_names", [])
 		var readiness_detail := "\nReady now: %s." % ", ".join(ready_counters) if not ready_counters.is_empty() else "\nReady now: no listed module counter."
-		return "Known route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s%s%s%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", [])), counter_detail, readiness_detail, sustain_effect, risk_detail, development_detail]
+		return "Known route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d · reward %d\nThreats: %s%s%s%s%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), int(preview.get("reward", 0)), ", ".join(preview.get("threats", [])), counter_detail, readiness_detail, sustain_effect, route_effect_detail, risk_detail, development_detail]
 	if visibility == "forecast":
-		return "Forecast route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain.%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure")), sustain_effect, risk_detail, intel_upgrade]
-	return "Unscouted route · %s · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown.%s%s%s" % [day_text, int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure")), sustain_effect, risk_detail, intel_upgrade]
+		return "Forecast route · %s · %d fuel · %s risk (%.0f%%) · pressure +%d\nExpected: %s. Exact contacts remain uncertain.%s%s%s%s" % [day_text, int(preview.get("fuel", 0)), risk_band, risk * 100.0, int(preview.get("pressure_gain", 0)), String(preview.get("threat_hint", "uncertain pressure")), sustain_effect, route_effect_detail, risk_detail, intel_upgrade]
+	return "Unscouted route · %s · %d fuel\nBroad warning: %s. Risk, reward, and exact contacts are unknown.%s%s%s%s" % [day_text, int(preview.get("fuel", 0)), String(preview.get("threat_hint", "uncertain pressure")), sustain_effect, route_effect_detail, risk_detail, intel_upgrade]
 
 func _risk_band(risk: float) -> String:
 	if risk <= 0.18:

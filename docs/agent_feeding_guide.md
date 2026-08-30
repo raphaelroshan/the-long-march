@@ -4,14 +4,14 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.293`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, full seven-family road-contact causality, four-stop settlement and route identity, focused presentation builders, the first eight game-quality transformation slices, shared-fortress continuity, and verifiable playtest-cohort packaging are complete. The next implementation gate is one controlled route-content slice. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.294`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, full seven-family road-contact causality, four-stop settlement and route identity, focused presentation builders, and the bounded Cinder Quarry branch are complete. The next implementation gate adds one failure-forward consequence. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
 
-### Active Feed 0 — controlled route content
+### Active Feed 0 — failure-forward consequence
 
-**Status:** Next. L6 presentation boundaries are proven in `0.3.0-alpha.293`.
+**Status:** Next. L7 controlled route content is proven in `0.3.0-alpha.294`.
 
 ```text
-Add one small authored route branch in an existing region using existing threats and facilities. Specify its player question, stable node data, trade-off, forecast, encounter composition, recovery consequence, route-map presentation, save/replay coverage, and visual evidence. It must create at least two viable plans and must not add a region, threat family, facility family, currency, or second simulation path.
+Choose one existing declined or failed promise and make it produce a small, deterministic later route, settlement, shortage, refuge, or service consequence. The consequence must be visible before commitment, survive save/load, affect more than flavor text, and preserve a viable path to every current ending. Add focused state/UI tests and evidence without adding a faction meter or broad narrative system.
 ```
 
 ### Active Feed 1 — optional five-session human validation

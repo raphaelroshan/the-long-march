@@ -286,6 +286,19 @@
       ]
     },
     {
+      "id": "cinder_quarry",
+      "name": "Cinder Quarry",
+      "role": "high-risk salvage switchback",
+      "story_function": "Offers a mixed cargo-and-lower-hull contact in exchange for guaranteed field repair before Meridian Pass.",
+      "visual_motif": "Terraced black cuts, abandoned plate stacks, and quarry warning lamps above a buried haul road.",
+      "problems": [
+        "road raiders on the rim",
+        "burrowers beneath the haul road",
+        "high fuel and blockade pressure"
+      ],
+      "available_events": []
+    },
+    {
       "id": "lantern_quay",
       "name": "Lantern Quay",
       "role": "flood-edge settlement",

@@ -68,6 +68,7 @@ const JOURNEY_NODES := {
 	"lower_ash_road": {"name": "Lower Ash Road", "kind": "hazard", "description": "A buried service road where Burrowers test the lower hull."},
 	"dry_cistern_cut": {"name": "Dry Cistern Cut", "kind": "hazard", "description": "A short cistern road where a maintained condenser can recover enough water to spare fuel."},
 	"signal_causeway": {"name": "Signal Causeway", "kind": "hazard", "description": "An exposed relay causeway caught inside a moving storm front."},
+	"cinder_quarry": {"name": "Cinder Quarry", "kind": "salvage", "description": "A collapsed switchback where raiders hold the rim and Burrowers move beneath abandoned plate stock."},
 	"lantern_quay": {"name": "Lantern Quay", "kind": "city", "description": "A flood-edge market where the fortress chooses what it will carry into Veyru."},
 	"pump_gallery": {"name": "Pump Gallery", "kind": "hazard", "description": "Old civic pumps offer a slow road above the first flood line."},
 	"sunken_tramworks": {"name": "Sunken Tramworks", "kind": "hazard", "description": "A fast submerged rail cut that punishes heavy lower hulls."},
@@ -102,6 +103,7 @@ const CAMPAIGN_NODES := {
 	"lower_ash_road": {"name": "Lower Ash Road", "type": "hazard", "visibility": "forecast", "days": 2, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 24, "mass_sensitive": true, "threat_hint": "movement below the road", "encounter": ["burrowers"]},
 	"dry_cistern_cut": {"name": "Dry Cistern Cut", "type": "hazard", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.28, "pressure": 1, "reward": 18, "threat_hint": "dry weather line", "encounter": ["storm_front"]},
 	"signal_causeway": {"name": "Signal Causeway", "type": "hazard", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.43, "pressure": 2, "reward": 20, "threat_hint": "weather and exposed approaches", "encounter": ["storm_front", "climbers"]},
+	"cinder_quarry": {"name": "Cinder Quarry", "type": "salvage", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.48, "pressure": 1, "reward": 18, "threat_hint": "raiders above and movement below", "encounter": ["road_raiders", "burrowers"], "route_effect": "Victory restores 2 durability to the weakest damaged system; if none is damaged, spare plate sells for 8 Ashmarks"},
 	"meridian_pass": {"name": "Meridian Pass", "type": "boss", "visibility": "known", "days": 2, "fuel": 2, "risk": 0.58, "pressure": 2, "reward": 40, "threat_hint": "Siege Beast", "encounter": ["siege_beast"]},
 	"lantern_quay": {"name": "Lantern Quay", "type": "settlement", "visibility": "known", "description": "Choose the medicine contract and prepare for rising water."},
 	"pump_gallery": {"name": "Pump Gallery", "type": "hazard", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.22, "pressure": 2, "reward": 12, "threat_hint": "rising water", "encounter": ["flood_surge"]},
@@ -119,10 +121,11 @@ const CAMPAIGN_EDGES := {
 	"soot_orchard": ["broken_relay", "red_wheel_toll_bridge"],
 	"broken_relay": ["morrowline_camp"],
 	"red_wheel_toll_bridge": ["morrowline_camp"],
-	"morrowline_camp": ["lower_ash_road", "dry_cistern_cut", "signal_causeway"],
+	"morrowline_camp": ["lower_ash_road", "dry_cistern_cut", "signal_causeway", "cinder_quarry"],
 	"lower_ash_road": ["meridian_pass"],
 	"dry_cistern_cut": ["meridian_pass"],
-	"signal_causeway": ["meridian_pass"]
+	"signal_causeway": ["meridian_pass"],
+	"cinder_quarry": ["meridian_pass"]
 }
 const VEYRU_EDGES := {
 	"lantern_quay": ["pump_gallery", "sunken_tramworks"],
@@ -698,6 +701,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"encounter_pressure": encounter_difficulty,
 		"predicted_heat": predicted_heat,
 		"reward": int(node.get("reward", 0)),
+		"route_effect": String(node.get("route_effect", "")),
 		"threat_hint": String(node.get("threat_hint", "uncertain road pressure")),
 		"threats": threat_names,
 		"counter_hints": counter_hints,
@@ -731,6 +735,7 @@ func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dict
 			"pressure_gain": int(preview.get("pressure_gain", 0)),
 			"threat_hint": String(preview.get("threat_hint", "uncertain pressure")),
 			"threats": preview.get("threats", []).duplicate(),
+			"route_effect": String(preview.get("route_effect", "")),
 			"regional_development": String(preview.get("regional_development", "")),
 			"next_stops": next_names,
 			"settlement_follows": settlement_follows
@@ -3017,6 +3022,18 @@ func _campaign_restore_limping_engine() -> Array[String]:
 			repairs.append("%s %d→%d" % [String(definition.get("name", module_id)), durability_before, durability_after])
 	return repairs
 
+func _apply_cinder_quarry_recovery() -> Dictionary:
+	var weakest_id := _weakest_damaged_module_id()
+	if weakest_id.is_empty():
+		money += 8
+		_encounter_log("Cinder Quarry recovery: no damaged system needs platework; spare plate sells for 8 Ashmarks.")
+		return {"kind": "ashmarks", "amount": 8}
+	var result := _change_module_durability(weakest_id, 2)
+	var module_name := String(module_definition(weakest_id).get("name", weakest_id))
+	var restored := int(result.get("after", 0)) - int(result.get("before", 0))
+	_encounter_log("Cinder Quarry recovery: plate crews restore %s by %d durability (%d→%d)." % [module_name, restored, int(result.get("before", 0)), int(result.get("after", 0))])
+	return {"kind": "repair", "module_id": weakest_id, "amount": restored, "before": int(result.get("before", 0)), "after": int(result.get("after", 0))}
+
 func _campaign_recover_from_failure() -> Dictionary:
 	var day_before := day
 	var money_before := money
@@ -3099,6 +3116,8 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 	heat_surge = 0
 	heat_relief = 0
 	_recalculate()
+	if arrived_node == "cinder_quarry":
+		_apply_cinder_quarry_recovery()
 	if arrived_node == "morrowline_camp":
 		phase = "settlement"
 		settlement_actions_remaining = 2

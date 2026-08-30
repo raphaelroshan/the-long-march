@@ -40,7 +40,7 @@ func _run() -> void:
 		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells.",
 		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass.",
 		"local_stake": "STAKE · The guarded convoy reached shelter; its people and parts now depend on the fortress reaching Meridian Pass.",
-		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a working condenser; Signal Causeway exposes signal systems.",
+		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a condenser; Signal Causeway risks signal; Cinder Quarry trades a mixed contact for field repair.",
 		"values": {"hull": "7/10", "fuel": "3", "money": "24", "actions": "2", "trust": "1", "pressure": "STRAIN 4"},
 		"repair_text": "REPAIR FIELD WORKSHOP +2 · 8 ASHMARKS\nDURABILITY 1→3 · ACTIONS 2→1",
 		"repair_tooltip": "Restore the Field Workshop.",
@@ -62,8 +62,8 @@ func _run() -> void:
 	_expect(panel.location_label.text.contains("MORROWLINE CAMP") and panel.context_label.text.contains("2 finite service opportunities"), "the recovery tableau should identify its place and finite opportunity budget")
 	_expect(panel.place_label.text.contains("canvas repair bays") and panel.priority_label.text.contains("movement or repair chain") and panel.priority_label.text.contains("fuel and hull"), "Morrowline should present a place-specific identity and two practical service priorities")
 	_expect(panel.recovery_canvas.presentation_signature().contains("CANVAS REPAIR BAYS") and panel.recovery_canvas.presentation_signature().contains("PARTS WAGONS"), "Morrowline's recovery canvas should expose its authored convoy-shelter motif")
-	_expect(panel.local_stake_label.text.contains("guarded convoy") and panel.route_outlook_label.text.contains("Lower Ash") and panel.route_outlook_label.text.contains("Dry Cistern") and panel.route_outlook_label.text.contains("Signal Causeway"), "Morrowline should connect its human stake to three materially different outbound roads")
-	_expect(panel.recovery_canvas.route_signature() == "LOWER ASH · CISTERN · SIGNAL ROAD", "Morrowline should place its three-road sign in the recovery tableau")
+	_expect(panel.local_stake_label.text.contains("guarded convoy") and panel.route_outlook_label.text.contains("Lower Ash") and panel.route_outlook_label.text.contains("Dry Cistern") and panel.route_outlook_label.text.contains("Signal Causeway") and panel.route_outlook_label.text.contains("Cinder Quarry"), "Morrowline should connect its human stake to four materially different outbound roads")
+	_expect(panel.recovery_canvas.route_signature() == "LOWER ASH · CISTERN · SIGNAL · QUARRY", "Morrowline should place its four-road sign in the recovery tableau")
 	_expect(panel.value_labels["hull"].text == "7/10" and panel.value_labels["actions"].text == "2" and panel.value_labels["pressure"].text == "STRAIN 4", "the recovery ledger should expose condition, service opportunities, and road pressure")
 	_expect(panel.repair_button.text.contains("DURABILITY 1→3") and panel.refuel_button.text.contains("FUEL 3→5") and panel.hull_button.text.contains("HULL 7→9"), "every service should show its exact before-and-after state before commitment")
 	_expect(panel.repair_button.has_focus(), "the first legal recovery service should receive default controller focus")

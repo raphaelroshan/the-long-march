@@ -298,7 +298,7 @@ func _run() -> void:
 	await process_frame
 	_expect(game.focus_chassis_button.has_focus(), "B or Escape should return chassis focus to the visible desk action")
 	_expect(game.pause_button.text.contains("ESC / B"), "leaving chassis controls should restore the ordinary pause shortcut hint")
-	_expect(not game.campaign_map.visible and game.campaign_node_buttons.size() == 10, "the workshop should keep the authored route graph prepared but out of the focused refit workspace")
+	_expect(not game.campaign_map.visible and game.campaign_node_buttons.size() == 11, "the workshop should keep the authored route graph prepared but out of the focused refit workspace")
 	var condenser_picker_index := _module_picker_index("water_condenser")
 	_expect(condenser_picker_index >= 0 and game.module_option.get_item_text(condenser_picker_index).contains("STORED"), "the Water Condenser should appear as a finite stored module in the refit picker")
 	var campaign_action_row: Control = game.campaign_commit_button.get_parent()
