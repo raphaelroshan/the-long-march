@@ -17,6 +17,8 @@ var recovery_canvas: RecoveryCanvas
 var receipt_label: Label
 var place_label: Label
 var priority_label: Label
+var local_stake_label: Label
+var route_outlook_label: Label
 var repair_button: Button
 var refuel_button: Button
 var hull_button: Button
@@ -129,7 +131,7 @@ func _build_ui() -> void:
 	services_panel.add_theme_stylebox_override("panel", _style(Color("#111b20"), Color("#536a70"), 1, 6, 11))
 	body.add_child(services_panel)
 	var services := VBoxContainer.new()
-	services.add_theme_constant_override("separation", 9)
+	services.add_theme_constant_override("separation", 6)
 	services_panel.add_child(services)
 	var heading := Label.new()
 	heading.text = "LOCAL SERVICES"
@@ -146,9 +148,20 @@ func _build_ui() -> void:
 	priority_label.add_theme_font_size_override("font_size", 11)
 	priority_label.add_theme_color_override("font_color", Color("#e8c58e"))
 	services.add_child(priority_label)
+	local_stake_label = Label.new()
+	local_stake_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	local_stake_label.add_theme_font_size_override("font_size", 10)
+	local_stake_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	services.add_child(local_stake_label)
+	route_outlook_label = Label.new()
+	route_outlook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	route_outlook_label.add_theme_font_size_override("font_size", 10)
+	route_outlook_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	services.add_child(route_outlook_label)
 	var help := Label.new()
 	help.text = "Each service spends one opportunity. Its button shows the exact before → after result."
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	help.add_theme_font_size_override("font_size", 10)
 	help.add_theme_color_override("font_color", Color("#aab6ba"))
 	services.add_child(help)
 	repair_button = _service_button(services, repair_requested)
@@ -158,15 +171,17 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	services.add_child(spacer)
 	routes_button = Button.new()
-	routes_button.custom_minimum_size = Vector2(0, 62)
+	routes_button.custom_minimum_size = Vector2(0, 52)
+	routes_button.add_theme_font_size_override("font_size", 12)
 	routes_button.pressed.connect(func() -> void: routes_requested.emit())
 	services.add_child(routes_button)
 	_configure_focus()
 
 func _service_button(parent: VBoxContainer, callback: Signal) -> Button:
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(0, 82)
+	button.custom_minimum_size = Vector2(0, 64)
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.add_theme_font_size_override("font_size", 12)
 	button.pressed.connect(func() -> void: callback.emit())
 	parent.add_child(button)
 	return button
@@ -176,6 +191,8 @@ func configure(view: Dictionary) -> void:
 	context_label.text = String(view.get("context", "Choose what the fortress can restore before the next road."))
 	place_label.text = String(view.get("place_identity", "A temporary road stop keeps the fortress moving."))
 	priority_label.text = String(view.get("service_priority", "PRIORITY · Restore the most exposed system before departure."))
+	local_stake_label.text = String(view.get("local_stake", "STAKE · The fortress must leave this stop able to carry its promise."))
+	route_outlook_label.text = String(view.get("route_outlook", "OUTBOUND ROADS · Review the next commitments before spending the final service opportunity."))
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))
@@ -244,6 +261,7 @@ class RecoveryCanvas extends Control:
 			_draw_morrowline_shelter()
 		elif location_id == "veyru_evacuation_camp":
 			_draw_veyru_evacuation_platform()
+		_draw_route_sign(location_id)
 		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
 		view["mode"] = "rest"
 		view["high_contrast"] = high_contrast_enabled
@@ -290,6 +308,17 @@ class RecoveryCanvas extends Control:
 			draw_line(case_rect.position + Vector2(case_rect.size.x * 0.5, 5.0), Vector2(case_rect.position.x + case_rect.size.x * 0.5, case_rect.end.y - 5.0), lamp, 2.0)
 		draw_circle(Vector2(size.x * 0.91, size.y * 0.40), 7.0, lamp)
 
+	func _draw_route_sign(location_id: String) -> void:
+		var flooded := location_id == "veyru_evacuation_camp"
+		var color := Color("#bfe5df") if flooded else Color("#d9b87c")
+		var center := Vector2(size.x * 0.50, size.y * 0.10)
+		draw_line(center, center + Vector2(0, 56), color.darkened(0.25), 4.0)
+		var sign_rect := Rect2(center + Vector2(-150, 5), Vector2(300, 27))
+		draw_rect(sign_rect, Color("#14262a") if flooded else Color("#33281f"), true)
+		draw_rect(sign_rect, color, false, 2.0)
+		var sign_text := "CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL ROAD"
+		draw_string(ThemeDB.fallback_font, sign_rect.position + Vector2(6, 18), sign_text, HORIZONTAL_ALIGNMENT_CENTER, sign_rect.size.x - 12, 9, color)
+
 	func presentation_signature() -> String:
 		match String(current_view.get("location_id", "")):
 			"morrowline_camp":
@@ -297,3 +326,6 @@ class RecoveryCanvas extends Control:
 			"veyru_evacuation_camp":
 				return "EVACUATION CAMP · RAISED PLATFORM · WATER PUMP · SEALED CASES"
 		return "FIELD RECOVERY · TEMPORARY ROAD STOP"
+
+	func route_signature() -> String:
+		return "CAUSEWAY · REGISTRY · GANTRY" if String(current_view.get("location_id", "")) == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL ROAD"

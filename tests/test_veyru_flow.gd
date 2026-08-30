@@ -2,6 +2,7 @@ extends SceneTree
 
 var game: Control
 var failures: Array[String] = []
+var capture_dir := ""
 
 
 func _expect(condition: bool, message: String) -> void:
@@ -12,6 +13,17 @@ func _expect(condition: bool, message: String) -> void:
 func _settle_ui() -> void:
 	for _frame in range(4):
 		await process_frame
+
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "Veyru capture requires a rendering display: " + name)
+		return
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "Veyru capture should be written: " + name)
 
 
 func _init() -> void:
@@ -67,6 +79,7 @@ func _finish_battle() -> void:
 
 
 func _run() -> void:
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	for relative_path in ["user://the_long_march_prototype.save", "user://the_long_march_prototype.backup.save", "user://the_long_march_onboarding_v1.complete", "user://the_long_march_playtest_journal.json"]:
 		var path := ProjectSettings.globalize_path(relative_path)
 		if FileAccess.file_exists(path):
@@ -80,6 +93,9 @@ func _run() -> void:
 
 	_expect(game.state.campaign_region_id == "flooded_veyru" and game.state.current_location == "lantern_quay", "the Veyru UI flow should begin at Lantern Quay")
 	_expect(game.settlement_hub.context_label.text.contains("LANTERN QUAY FLOOD MARKET") and game.settlement_hub.bazaar_canvas.presentation_signature().contains("FLOOD DOCK"), "Lantern Quay's starting bazaar should identify its raised flood-market setting")
+	_expect(game.settlement_hub.place_identity_label.text.contains("FLOODLINE MARKET") and game.settlement_hub.pressure_label.text.contains("RISING WATER") and game.settlement_hub.route_meaning_label.text.contains("Pump Gallery") and game.settlement_hub.route_meaning_label.text.contains("Sunken Tramworks"), "Lantern Quay should state its place, active water pressure, and the meaning of both opening roads")
+	_expect(game.settlement_hub.bazaar_canvas.route_signature() == "PUMP GALLERY · SUNKEN TRAMWORKS", "Lantern Quay's center stage should carry a visible two-road departure sign")
+	await _capture("02_lantern_quay")
 	game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
 	await process_frame
 	_expect(game.settlement_hub.detail_body.text.contains("water levels") and game.settlement_hub.detail_body.text.contains("archive signals"), "Lantern Quay's signal service should reflect its local route problem")
@@ -92,6 +108,7 @@ func _run() -> void:
 	_expect(game.settlement_hub.station_buttons["departure_gate"].has_focus(), "answering the Veyru contract should focus the departure gate")
 	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
 	await process_frame
+	_expect(game.settlement_hub.detail_body.text.contains("Pump Gallery") and game.settlement_hub.detail_body.text.contains("Sunken Tramworks"), "Lantern Quay's departure gate should explain the managed-water road and submerged cut before route planning")
 	game.settlement_hub.primary_action_button.pressed.emit()
 	await _settle_ui()
 	var opening_focus := game.get_viewport().gui_get_focus_owner()
@@ -116,6 +133,7 @@ func _run() -> void:
 	_expect(game.state.phase == "settlement" and game.settlement_title.text.contains("EVACUATION CAMP SERVICES") and game.settlement_title.text.contains("2 ACTIONS LEFT"), "the protected medicine carrier should grant two visible Evacuation Camp actions")
 	var camp_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(game.recovery_panel.visible and camp_focus in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button, game.recovery_panel.routes_button] and camp_focus.is_visible_in_tree(), "arrival at Evacuation Camp should focus a visible recovery or road-review action")
+	_expect(game.recovery_panel.local_stake_label.text.contains("medicine carrier") and game.recovery_panel.route_outlook_label.text.contains("Archive Causeway") and game.recovery_panel.route_outlook_label.text.contains("Drowned Registry") and game.recovery_panel.route_outlook_label.text.contains("Pilgrim Gantry"), "Evacuation Camp recovery should carry the medicine stake into three distinct outbound road meanings")
 	game.state.fuel = 1
 	game._refresh_ui()
 	_expect(not game.recovery_panel.refuel_button.disabled and game.recovery_panel.refuel_button.text.contains("+1 EMERGENCY FUEL") and game.recovery_panel.refuel_button.text.contains("FREE"), "Evacuation Camp should expose its free low-fuel safeguard")

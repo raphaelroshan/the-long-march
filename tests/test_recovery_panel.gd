@@ -1,6 +1,7 @@
 extends SceneTree
 
 var failures: Array[String] = []
+var capture_dir := ""
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -10,10 +11,22 @@ func _settle_ui(frames: int = 3) -> void:
 	for _frame in range(frames):
 		await process_frame
 
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "recovery capture requires a rendering display: " + name)
+		return
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "recovery capture should be written: " + name)
+
 func _init() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	root.size = Vector2i(1280, 720)
 	var panel = load("res://scenes/recovery/RecoveryPanel.tscn").instantiate()
 	root.add_child(panel)
@@ -26,6 +39,8 @@ func _run() -> void:
 		"context": "Morrowline Camp offers 2 finite service opportunities before the next road.",
 		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells.",
 		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass.",
+		"local_stake": "STAKE · The guarded convoy reached shelter; its people and parts now depend on the fortress reaching Meridian Pass.",
+		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a working condenser; Signal Causeway exposes signal systems.",
 		"values": {"hull": "7/10", "fuel": "3", "money": "24", "actions": "2", "trust": "1", "pressure": "STRAIN 4"},
 		"repair_text": "REPAIR FIELD WORKSHOP +2 · 8 ASHMARKS\nDURABILITY 1→3 · ACTIONS 2→1",
 		"repair_tooltip": "Restore the Field Workshop.",
@@ -47,9 +62,12 @@ func _run() -> void:
 	_expect(panel.location_label.text.contains("MORROWLINE CAMP") and panel.context_label.text.contains("2 finite service opportunities"), "the recovery tableau should identify its place and finite opportunity budget")
 	_expect(panel.place_label.text.contains("canvas repair bays") and panel.priority_label.text.contains("movement or repair chain") and panel.priority_label.text.contains("fuel and hull"), "Morrowline should present a place-specific identity and two practical service priorities")
 	_expect(panel.recovery_canvas.presentation_signature().contains("CANVAS REPAIR BAYS") and panel.recovery_canvas.presentation_signature().contains("PARTS WAGONS"), "Morrowline's recovery canvas should expose its authored convoy-shelter motif")
+	_expect(panel.local_stake_label.text.contains("guarded convoy") and panel.route_outlook_label.text.contains("Lower Ash") and panel.route_outlook_label.text.contains("Dry Cistern") and panel.route_outlook_label.text.contains("Signal Causeway"), "Morrowline should connect its human stake to three materially different outbound roads")
+	_expect(panel.recovery_canvas.route_signature() == "LOWER ASH · CISTERN · SIGNAL ROAD", "Morrowline should place its three-road sign in the recovery tableau")
 	_expect(panel.value_labels["hull"].text == "7/10" and panel.value_labels["actions"].text == "2" and panel.value_labels["pressure"].text == "STRAIN 4", "the recovery ledger should expose condition, service opportunities, and road pressure")
 	_expect(panel.repair_button.text.contains("DURABILITY 1→3") and panel.refuel_button.text.contains("FUEL 3→5") and panel.hull_button.text.contains("HULL 7→9"), "every service should show its exact before-and-after state before commitment")
 	_expect(panel.repair_button.has_focus(), "the first legal recovery service should receive default controller focus")
+	await _capture("03_morrowline_camp")
 	var focus_after_repair: Node = panel.repair_button.get_node_or_null(panel.repair_button.focus_neighbor_bottom)
 	_expect(focus_after_repair == panel.refuel_button and panel.routes_button.get_node_or_null(panel.routes_button.focus_neighbor_bottom) == panel.repair_button, "recovery controls should form an explicit controller loop")
 	var signal_counts := {"repair": 0, "routes": 0}
@@ -79,12 +97,20 @@ func _run() -> void:
 	veyru_view["region_id"] = "flooded_veyru"
 	veyru_view["location_id"] = "veyru_evacuation_camp"
 	veyru_view["location_name"] = "Evacuation Camp"
+	veyru_view["context"] = "Evacuation Camp offers 1 finite service opportunity before the archive road."
 	veyru_view["place_identity"] = "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores."
 	veyru_view["service_priority"] = "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road."
+	veyru_view["local_stake"] = "STAKE · The sealed medicine carrier is intact and grants a second service opportunity."
+	veyru_view["route_outlook"] = "OUTBOUND ROADS · Archive Causeway is controlled; Drowned Registry trades safety for salvage; Pilgrim Gantry is the slow recovery line."
+	veyru_view["caption"] = "EVACUATION CAMP · DRY GROUND IS A FINITE RESOURCE"
+	veyru_view["values"]["pressure"] = "FLOODING 4"
 	panel.configure(veyru_view)
 	await _settle_ui()
 	_expect(panel.place_label.text.contains("raised flood platform") and panel.priority_label.text.contains("medicine carrier") and panel.priority_label.text.contains("fuel margin"), "Evacuation Camp should present its flood-specific identity and practical service priorities")
 	_expect(panel.recovery_canvas.presentation_signature().contains("RAISED PLATFORM") and panel.recovery_canvas.presentation_signature().contains("WATER PUMP") and panel.recovery_canvas.presentation_signature().contains("SEALED CASES"), "Evacuation Camp's recovery canvas should expose its authored flood-platform motif")
+	_expect(panel.local_stake_label.text.contains("medicine carrier") and panel.route_outlook_label.text.contains("Archive Causeway") and panel.route_outlook_label.text.contains("Drowned Registry") and panel.route_outlook_label.text.contains("Pilgrim Gantry"), "Evacuation Camp should connect the medicine stake to three materially different archive roads")
+	_expect(panel.recovery_canvas.route_signature() == "CAUSEWAY · REGISTRY · GANTRY", "Evacuation Camp should place its three-road sign in the recovery tableau")
+	await _capture("04_evacuation_camp")
 	panel.queue_free()
 	scaler.queue_free()
 	await process_frame

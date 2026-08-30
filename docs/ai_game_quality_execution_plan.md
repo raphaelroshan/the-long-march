@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.291` and later
+**Applies to:** `0.3.0-alpha.292` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -18,7 +18,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **L2 — complete in alpha.289** | Finish responsive fortress presentation | At 1280×720, 1600×900, large text, high contrast, reduced motion, keyboard, and controller paths, the left status rail, center fortress/map, right selected-subject dock, and required actions remain readable and reachable. |
 | **L3 — complete in alpha.290** | Improve journey rhythm | Make settlement receipt, route commitment, departure, short march beat, contact/event, consequence receipt, and arrival visually distinct, concise, skippable, and deterministic. |
 | **L4 — complete in alpha.291** | Complete road-contact cause and effect | Stage forecast, approach, target lock, wind-up, response, impact, dependency consequence, and settle. Every major threat must have a visible intent, counter, and consequence. |
-| **L5** | Strengthen settlement and route identity | Ashgate, Morrowline, Lantern Quay, and Evacuation Camp must differ in visual motif, service priority, operational pressure, and route meaning. Avoid menu-only reskins. |
+| **L5 — complete in alpha.292** | Strengthen settlement and route identity | Ashgate, Morrowline, Lantern Quay, and Evacuation Camp must differ in visual motif, service priority, operational pressure, and route meaning. Avoid menu-only reskins. |
 | **L6** | Extract presentation boundaries | Refactor the monolithic presentation code into focused settlement, route, contact, recovery, and debrief presenters or panels. Preserve state ownership and command contracts. |
 | **L7** | Add one controlled content slice | Add one specialist, threat, facility, or route branch only after L1–L6. Specify the player question, counter, weakness, data schema, deterministic encounter, recovery consequence, and evidence captures. |
 | **L8** | Add failure-forward campaign texture | Turn one completed, declined, or failed promise into a visible later route, settlement, faction, shortage, refuge, or service consequence. Keep it small, deterministic, inspectable, and capable of supporting multiple endings. |
@@ -33,7 +33,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l4_road_contact_causality_report.md`. Implement **L5 Settlement and Route Identity** only. Strengthen Ashgate Depot, Morrowline Camp, Lantern Quay, and Evacuation Camp so each location differs in visual motif, service priority, operational pressure, and route meaning. Preserve station IDs, route graph, costs, outcomes, saves, focus, controller navigation, scaling, and accessibility. Add deterministic UI assertions and focused visual evidence; do not add a new settlement or service.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l5_settlement_route_identity_report.md`. Implement **L6 Presentation Boundaries** only. Extract focused settlement, route, contact, recovery, and debrief view-model builders from the monolithic main presentation script while preserving `FortressState` ownership, stable command IDs, save format, focus behavior, and pixel-visible output. Add parity assertions around the extracted contracts; do not redesign screens or move simulation logic.
 
 ## Definition of game-quality readiness
 

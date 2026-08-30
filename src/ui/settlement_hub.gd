@@ -18,6 +18,9 @@ const STATION_NAMES := {
 
 var location_label: Label
 var context_label: Label
+var place_identity_label: Label
+var pressure_label: Label
+var route_meaning_label: Label
 var pause_button: Button
 var value_labels: Dictionary = {}
 var bazaar_canvas: BazaarCanvas
@@ -96,6 +99,14 @@ func _build_ui() -> void:
 	context_label.add_theme_color_override("font_color", Color("#b8c4c5"))
 	page.add_child(context_label)
 
+	var identity_strip := HBoxContainer.new()
+	identity_strip.custom_minimum_size = Vector2(0, 44)
+	identity_strip.add_theme_constant_override("separation", 8)
+	page.add_child(identity_strip)
+	place_identity_label = _identity_card(identity_strip, "PLACE")
+	pressure_label = _identity_card(identity_strip, "PRESSURE")
+	route_meaning_label = _identity_card(identity_strip, "OUTBOUND ROADS")
+
 	var body := HBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -118,7 +129,7 @@ func _build_ui() -> void:
 		_add_value_card(value_stack, value_id)
 
 	bazaar_canvas = BazaarCanvas.new()
-	bazaar_canvas.custom_minimum_size = Vector2(650, 520)
+	bazaar_canvas.custom_minimum_size = Vector2(650, 500)
 	bazaar_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bazaar_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(bazaar_canvas)
@@ -180,6 +191,20 @@ func _build_ui() -> void:
 
 	_configure_focus_cycle()
 	_refresh_station_detail()
+
+func _identity_card(parent: HBoxContainer, heading: String) -> Label:
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", _flat_style(Color("#111a1e"), Color("#32464d"), 1, 4, 6))
+	parent.add_child(panel)
+	var label := Label.new()
+	label.text = "%s · —" % heading
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	panel.add_child(label)
+	return label
 
 func _add_value_card(parent: VBoxContainer, value_id: String) -> void:
 	var panel := PanelContainer.new()
@@ -310,6 +335,9 @@ func configure(view: Dictionary) -> void:
 	current_view = view.duplicate(true)
 	location_label.text = "%s · FORTRESS AT REST" % String(view.get("location_name", "SETTLEMENT")).to_upper()
 	context_label.text = String(view.get("context", "FORTRESS AT REST · Choose one place in the bazaar."))
+	place_identity_label.text = "PLACE · %s" % String(view.get("place_identity", "A working stop on the long road."))
+	pressure_label.text = "PRESSURE · %s" % String(view.get("operational_pressure", "No local pressure reported."))
+	route_meaning_label.text = "OUTBOUND ROADS · %s" % String(view.get("route_meaning", "Review the route table before departure."))
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels.keys():
 		var label := value_labels[value_id] as Label
@@ -413,9 +441,26 @@ class BazaarCanvas extends Control:
 				draw_line(Vector2(x, size.y * 0.66), Vector2(x + 22.0, size.y * 0.86), rail.darkened(0.30), 4.0)
 			draw_line(Vector2(size.x * 0.50, size.y * 0.16), Vector2(size.x * 0.50, size.y * 0.30), rail, 5.0)
 			draw_line(Vector2(size.x * 0.50, size.y * 0.16), Vector2(size.x * 0.61, size.y * 0.12), rail, 4.0)
+		_draw_route_sign(flooded)
+
+	func _draw_route_sign(flooded: bool) -> void:
+		var post_color := Color("#bfe5df") if flooded else Color("#d0ad6d")
+		var sign_center := Vector2(size.x * 0.50, size.y * 0.13)
+		draw_line(sign_center, sign_center + Vector2(0, 64), post_color.darkened(0.25), 4.0)
+		var left_sign := Rect2(sign_center + Vector2(-132, 4), Vector2(126, 25))
+		var right_sign := Rect2(sign_center + Vector2(6, 33), Vector2(126, 25))
+		for sign_rect in [left_sign, right_sign]:
+			draw_rect(sign_rect, Color("#162328") if flooded else Color("#34291f"), true)
+			draw_rect(sign_rect, post_color, false, 2.0)
+		var labels := ["PUMP GALLERY", "TRAMWORKS"] if flooded else ["RILL CROSSING", "SOOT ORCHARD"]
+		draw_string(ThemeDB.fallback_font, left_sign.position + Vector2(5, 17), "← %s" % labels[0], HORIZONTAL_ALIGNMENT_CENTER, left_sign.size.x - 10, 9, post_color)
+		draw_string(ThemeDB.fallback_font, right_sign.position + Vector2(5, 17), "%s →" % labels[1], HORIZONTAL_ALIGNMENT_CENTER, right_sign.size.x - 10, 9, post_color)
 
 	func presentation_signature() -> String:
 		return "LANTERN QUAY · FLOOD DOCK · HANGING LAMPS" if location_id == "lantern_quay" else "ASHGATE DEPOT · BLACK RAILS · SIGNAL GANTRY"
+
+	func route_signature() -> String:
+		return "PUMP GALLERY · SUNKEN TRAMWORKS" if location_id == "lantern_quay" else "RILL CROSSING · SOOT ORCHARD"
 
 	func _draw_stall(rect: Rect2, station_id: String) -> void:
 		var selected := station_id == selected_station_id
