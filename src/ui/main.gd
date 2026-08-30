@@ -2269,6 +2269,10 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 	var threats: Array = preview.get("threats", [])
 	var contact_text := ", ".join(threats) if not threats.is_empty() else String(preview.get("threat_hint", "uncertain movement ahead"))
 	var detail := "%s intelligence: %s. The fortress is moving through this road now; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, destination_name]
+	if tutorial_mode:
+		origin_name = "Ashgate Muster Yard"
+		destination_name = "Muster Road"
+		detail = "Training intelligence: %s. Read its approach, preferred targets, and counter before advancing the drill." % contact_text
 	return {
 		"region_id": state.campaign_region_id,
 		"origin_id": origin_id,
@@ -2302,6 +2306,8 @@ func _restore_journey_transition_view() -> Dictionary:
 	return _build_journey_transition_view(origin_id, destination_id, preview, day_before, fuel_before, pressure_before)
 
 func _journey_promise_summary() -> String:
+	if tutorial_mode:
+		return "TRAINING ORDER · Prove movement, contact reading, one emergency response, and repair."
 	if state.campaign_region_id == "flooded_veyru":
 		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "the assigned carrier")) if not state.veyru_medicine_carrier_id.is_empty() else "no assigned carrier"
 		match state.veyru_contract_status:
@@ -3180,15 +3186,24 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 		destination_id = state.current_location
 	var origin_name := String(LongMarchState.JOURNEY_NODES.get(origin_id, {}).get("name", origin_id.replace("_", " ").capitalize()))
 	var destination_name := String(LongMarchState.JOURNEY_NODES.get(destination_id, {}).get("name", destination_id.replace("_", " ").capitalize()))
+	if tutorial_mode:
+		origin_name = "Ashgate Muster Yard"
+		destination_name = "Muster Road Recovery Siding"
 	var snapshot := state.summary()
 	var dependencies: Dictionary = snapshot.get("dependencies", {})
 	var recent_report: Array[String] = []
 	var report: Array = result.get("report", [])
 	for index in range(maxi(0, report.size() - 4), report.size()):
-		recent_report.append(String(report[index]))
+		var report_line := String(report[index])
+		if tutorial_mode and report_line.begins_with("Outcome:"):
+			report_line = "Outcome: training road secured. The Muster Yard records the drill and opens the recovery siding."
+		recent_report.append(report_line)
 	var outcome_copy := outcome.replace("_", " ").capitalize()
 	var summary := "The fortress has withdrawn to %s. Repairs preserve the run, but time, pressure, and Ashmarks have already changed." % destination_name if retreat else "%s is secured. The fortress is at rest; review the road receipt before issuing the next local order." % destination_name
 	var action_label := "CONTINUE TO MARCH DEBRIEF" if state.phase == "results" else ("ENTER %s" % ("BAZAAR" if state.phase in ["refit", "settlement"] else ("LOCAL DECISION" if not state.campaign_event_pending.is_empty() else "JOURNEY MAP")))
+	if tutorial_mode:
+		summary = "The training road is secured. Review the damage receipt, then enter the recovery siding and restore the affected system."
+		action_label = "ENTER RECOVERY SIDING"
 	return {
 		"region_id": state.campaign_region_id,
 		"origin_name": origin_name,
@@ -3229,6 +3244,8 @@ func _active_contract_status() -> String:
 	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
 
 func _recovery_location_name() -> String:
+	if tutorial_mode:
+		return "Muster Yard"
 	return "Evacuation Camp" if state.campaign_region_id == "flooded_veyru" else "Morrowline"
 
 func _on_grid_cell_pressed(cell: Vector2i) -> void:

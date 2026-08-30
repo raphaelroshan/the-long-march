@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.287`
+**Current code baseline:** `0.3.0-alpha.288`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.287`, bundling one-command artifact verification and cross-platform cohort identity without changing game rules. PR #41 established the First Watch, fortress-centered journey presentation, staged road contact, recovery tableaux, terminal Debrief, and private-alpha evidence workflow.
-**Next build target:** Execute the post-PR41 game-quality pass: validate the first thirty minutes with humans, improve visual identity and journey rhythm, and only then broaden the campaign or content roster, following [`game_quality_transformation_plan.md`](game_quality_transformation_plan.md).
+**Current merged baseline:** `0.3.0-alpha.287`, bundling one-command artifact verification and cross-platform cohort identity without changing game rules. The active `0.3.0-alpha.288` follow-up proves the complete clean-save First Watch-to-Ashgate journey, including save/resume at departure and arrival.
+**Next build target:** Execute L2 from [`ai_game_quality_execution_plan.md`](ai_game_quality_execution_plan.md): verify and repair responsive fortress presentation at supported sizes, accessibility preferences, and input paths before broadening campaign content.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -1080,4 +1080,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **Long Road 9.1: run the five-session human validation protocol against one exact merged artifact**, not a new region or new combat system. Long Road 10.1, 11.1, 12.1, and the four-settlement Long Road 13.1 pass are complete. The `0.3.0-alpha.287` packaging follow-up gives every cohort a shared source identity, platform-specific checksums, exact provenance, a bundled verifier, observer brief, session sheet, and stated limitations. Do not begin controlled content breadth until human evidence exists. If implementation must proceed before sessions are available, use a narrowly scoped visual-state or transition task with no simulation changes and before/after captures at normal and scaled resolution.
+The next agent task should be **L2 Responsive Fortress Presentation**, not a new region or combat system. L1 now proves one clean-save path from First Watch through the live Ashgate contract, route planning, travel, contacts, events, Morrowline recovery, final arrival, and Debrief, with save/resume at both departure and arrival. Use the alpha.288 evidence as the baseline, repair only observable layout or focus defects across supported sizes and preferences, and preserve simulation behavior. Five consented human sessions remain useful calibration after the automated and visual gates, not a blocker for L2.

@@ -1,5 +1,11 @@
 # Decision Log — The Long March
 
+## 2026-08-30 — One app-shell journey is the L1 release gate
+
+The quality roadmap now requires one clean-save run from the title through First Watch, live Ashgate preparation, route commitment, travel, contacts, authored events, Morrowline recovery, final arrival, and Debrief using the same visible controls as a player. The run relaunches at committed departure and completed arrival to prove that the saved surface and focused action survive process boundaries. Smaller scenario tests remain useful, but they do not replace this complete handoff contract.
+
+First Watch also owns its place, promise, and receipt vocabulary. Its shared travel, arrival, and recovery presentations say Muster Yard, Muster Road, training order, training-road receipt, and recovery siding instead of leaking Ashgate campaign contracts, payouts, or Morrowline services into the teaching fiction. This is a presentation rule only; `FortressState`, encounter outcomes, route costs, and replay behavior remain authoritative and unchanged.
+
 ## 2026-08-27 — Fourth project direction
 
 We selected the walking-fortress inventory auto-battler as the fourth game target and kept the dungeon-and-shop inventory battler as a separate follow-up concept. The fortress has a clearer visual identity and a stronger reason for spatial inventory rules to exist.
