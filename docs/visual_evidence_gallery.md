@@ -68,6 +68,17 @@ A raised dock, pilings, hanging lamps, cool wet surfaces, and the visible waterl
 
 SHA-256: `774ef548a62688f786f32e2e340372acd203ac71cbc419b947086ef6570bae20`
 
+## `v0.3.0-alpha.292` — Four-stop route identity
+
+These 1280×720 captures add operational context to the established settlement motifs. Each stop names its current pressure, local stake, service priority, and outbound road trade-offs while keeping the fortress and required actions visible.
+
+| Settlement | Evidence | SHA-256 |
+|---|---|---|
+| Ashgate Depot | [Railhead and opening-road brief](visual_evidence/v0.3.0-alpha.292-l5-settlement-route-identity/01_ashgate_depot.png) | `fcddeec946461708600f4fbedc6a83ec5d52c5a75f24b53c1d0e84705b99a8cb` |
+| Lantern Quay | [Floodline market and opening-road brief](visual_evidence/v0.3.0-alpha.292-l5-settlement-route-identity/02_lantern_quay.png) | `65fc5a2fff324195f2167acd25b10071d263216a18947ddf29f275d20199247b` |
+| Morrowline Camp | [Convoy stake and three-road recovery choice](visual_evidence/v0.3.0-alpha.292-l5-settlement-route-identity/03_morrowline_camp.png) | `0886327d39f95a0f17ae0b73fc0521e8387255c66afbdae34cf87af7b98e3739` |
+| Evacuation Camp | [Medicine stake and archive-road recovery choice](visual_evidence/v0.3.0-alpha.292-l5-settlement-route-identity/04_evacuation_camp.png) | `f24613a8421a1a0733e3feeb14577b892c144e4ba73440e61e60510b46d55fe1` |
+
 ## Kickstarter bonus-content framing
 
 A Kickstarter campaign could present this set as **“The Long March Field Journal: First Watch”**. The value is the visible design progression from title premise to onboarding, physical fortress logic, and the first readable dependency lesson.

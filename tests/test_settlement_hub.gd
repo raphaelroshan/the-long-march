@@ -1,6 +1,7 @@
 extends SceneTree
 
 var failures: Array[String] = []
+var capture_dir := ""
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -10,10 +11,22 @@ func _settle_ui(frames: int = 4) -> void:
 	for _frame in range(frames):
 		await process_frame
 
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "settlement capture requires a rendering display: " + name)
+		return
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "settlement capture should be written: " + name)
+
 func _init() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	root.size = Vector2i(1280, 720)
 	var game = load("res://scenes/Main.tscn").instantiate()
 	game.show_onboarding_on_ready = false
@@ -25,10 +38,13 @@ func _run() -> void:
 	_expect(hub.station_buttons.size() == 6 and hub.station_buttons.has("workshop") and hub.station_buttons.has("departure_gate"), "the bazaar should expose six stable station landmarks")
 	_expect(hub.value_labels["hull"].text == "10/10" and hub.value_labels["fuel"].text == "6" and hub.value_labels["money"].text == "80", "the left rail should expose the critical fortress values")
 	_expect(hub.context_label.text.contains("ASHGATE RAIL DEPOT") and hub.bazaar_canvas.presentation_signature().contains("BLACK RAILS"), "Ashgate's starting bazaar should identify its rail-depot setting without relying only on the location title")
+	_expect(hub.place_identity_label.text.contains("LOWLAND RAILHEAD") and hub.pressure_label.text.contains("BLOCKADE") and hub.route_meaning_label.text.contains("Rill Crossing") and hub.route_meaning_label.text.contains("Soot Orchard"), "Ashgate should state its place, active blockade pressure, and the meaning of both opening roads")
+	_expect(hub.bazaar_canvas.route_signature() == "RILL CROSSING · SOOT ORCHARD", "Ashgate's center stage should carry a visible two-road departure sign")
 	_expect(hub.station_buttons["assignment_board"].has_focus(), "the unresolved opening assignment should receive default focus")
 	var canvas_rect: Rect2 = hub.bazaar_canvas.get_global_rect()
 	_expect(hub.value_labels["hull"].global_position.x < canvas_rect.position.x and hub.detail_title.global_position.x > canvas_rect.end.x, "the 1280x720 hub should keep values left, the fortress stage centered, and details right")
 	_expect(game.get_global_rect().encloses(hub.pause_button.get_global_rect()) and game.get_global_rect().encloses(hub.primary_action_button.get_global_rect()), "the persistent pause and station action should remain on screen at 1280x720")
+	await _capture("01_ashgate_depot")
 
 	var state_before_browse: Dictionary = game.state.serialize()
 	hub.station_buttons["workshop"].pressed.emit()
@@ -54,7 +70,7 @@ func _run() -> void:
 
 	hub.station_buttons["departure_gate"].pressed.emit()
 	await process_frame
-	_expect(hub.primary_action_button.text == "PLAN JOURNEY" and not hub.primary_action_button.disabled, "the departure station should require an explicit plan action")
+	_expect(hub.primary_action_button.text == "PLAN JOURNEY" and not hub.primary_action_button.disabled and hub.detail_body.text.contains("Rill Crossing") and hub.detail_body.text.contains("Soot Orchard"), "the departure station should require an explicit plan action and explain the two opening road identities")
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui()
 	_expect(not hub.visible and not game.main_columns.visible and game.journey_planner.visible and game.campaign_map.visible, "planning a journey should open the dedicated regional map without moving the fortress")

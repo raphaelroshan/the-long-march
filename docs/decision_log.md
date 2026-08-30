@@ -1066,3 +1066,7 @@ Windows and macOS exports from the same source now share a cohort ID derived fro
 ## 2026-08-30 — Every major contact uses one causal presentation grammar
 
 Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, and the Civic Guardian now share the same presentation-only sequence: Forecast, Approach, Target, Wind-up, Response, Impact, Consequence, and Settle. Each family retains a stable attack signature and concise response cue, while the active dossier keeps its authoritative target reason, authored counter, predicted durability loss, and dependency cascade visible together. Reduced Motion resolves directly to the already-determined consequence. This was chosen over threat-specific presentation state machines because one readable grammar makes distinct threats comparable without changing target order, random streams, damage, saves, or combat commands.
+
+## 2026-08-30 — Settlements explain the next road from where the fortress stands
+
+Ashgate Depot, Lantern Quay, Morrowline Camp, and Evacuation Camp now pair their existing visual motifs with a concise operational brief: current regional pressure, the local human stake, service priority, and the strategic meaning of each outbound road. Physical route signs reinforce those choices in the fortress tableau. This was chosen over adding more shops or settlement currencies because the four stops needed sharper decisions and memory, not more menu breadth; all route costs, closures, services, contracts, and command IDs remain authoritative in `FortressState`.

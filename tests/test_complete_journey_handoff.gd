@@ -298,6 +298,7 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
 	await _choose_event("decline_mara")
 	_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
+	_expect(game.recovery_panel.local_stake_label.text.contains("convoy promise") and game.recovery_panel.route_outlook_label.text.contains("Lower Ash") and game.recovery_panel.route_outlook_label.text.contains("Dry Cistern") and game.recovery_panel.route_outlook_label.text.contains("Signal Causeway"), "Morrowline recovery should carry the convoy stake into three distinct outbound road meanings")
 	_expect_three_column_contract(game.recovery_panel, game.recovery_panel.value_labels["hull"], game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, "Morrowline recovery")
 	await _capture("11_morrowline_recovery")
 	if not game.recovery_panel.refuel_button.disabled:

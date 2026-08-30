@@ -2743,6 +2743,9 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 		"location_id": state.current_location,
 		"location_name": location_name,
 		"context": settlement_context,
+		"place_identity": "FLOODLINE MARKET · Dry gantries, water gauges, and archive lanterns." if is_veyru else "LOWLAND RAILHEAD · Repair yards, black rails, and blockade signals.",
+		"operational_pressure": "%s %d · %s" % [state.campaign_pressure_name().to_upper(), state.campaign_pressure, "Rising water can close the exposed registry road." if is_veyru else "Rising pursuit can close the exposed signal road."],
+		"route_meaning": "Pump Gallery buys control with time; Sunken Tramworks saves time by exposing the lower hull." if is_veyru else "Rill Crossing is the direct convoy road; Soot Orchard spends time for salvage and weather exposure.",
 		"preferred_station": "assignment_board" if contract_status == "offered" else "departure_gate",
 		"values": {
 			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
@@ -2790,7 +2793,7 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 				"title": "Departure Gate",
 				"status": "ROUTES READY" if departure_ready else "ASSIGNMENT BLOCKS DEPARTURE",
 				"button_status": "PLAN JOURNEY" if departure_ready else "LOCKED",
-				"body": "Open the regional route table. Selecting a destination only previews its cost and intelligence; a separate commit starts travel." if departure_ready else "The settlement requires an answer at the assignment board before it will clear the fortress to leave.",
+				"body": (("Pump Gallery is the slower managed-water road; Sunken Tramworks is the shorter submerged cut. Open the route table to compare exact costs and intelligence before Commit." if is_veyru else "Rill Crossing is the direct convoy road; Soot Orchard is the longer salvage road. Open the route table to compare exact costs and intelligence before Commit.") if departure_ready else "The settlement requires an answer at the assignment board before it will clear the fortress to leave."),
 				"tone": "safe" if departure_ready else "warning",
 				"primary": {"id": "plan_journey", "label": "PLAN JOURNEY", "enabled": departure_ready, "tooltip": "Open the regional map without committing a route."}
 			}
@@ -2975,6 +2978,12 @@ func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 	debrief_panel.visible = false
 	var location_name := _recovery_location_name()
 	var pressure_name := state.campaign_pressure_name()
+	var is_morrowline := state.current_location == "morrowline_camp"
+	var local_stake := "STAKE · "
+	if is_morrowline:
+		local_stake += "The convoy promise is kept; its people and parts now depend on the fortress reaching Meridian Pass." if state.guard_contract_status == "completed" else "The fortress arrived without a completed convoy promise; recovery must cover what the road still lacks."
+	else:
+		local_stake += "The sealed medicine carrier is intact and grants a second service opportunity." if state.veyru_contract_carrier_operational() else "The medicine carrier is absent or breached; only one service opportunity remains."
 	recovery_panel.configure({
 		"region_id": state.campaign_region_id,
 		"location_id": state.current_location,
@@ -2982,6 +2991,8 @@ func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 		"context": "%s offers %d finite service %s before the next road." % [location_name, state.settlement_actions_remaining, "opportunity" if state.settlement_actions_remaining == 1 else "opportunities"],
 		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells." if state.current_location == "morrowline_camp" else "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores.",
 		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass." if state.current_location == "morrowline_camp" else "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road.",
+		"local_stake": local_stake,
+		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a working condenser; Signal Causeway exposes signal systems." if is_morrowline else "OUTBOUND ROADS · Archive Causeway is the controlled high road; Drowned Registry trades safety for salvage; Pilgrim Gantry is the slow recovery line.",
 		"values": {
 			"hull": "%d/10" % state.hull_condition,
 			"fuel": str(state.fuel),
