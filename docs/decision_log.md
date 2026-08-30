@@ -1070,3 +1070,7 @@ Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, 
 ## 2026-08-30 — Settlements explain the next road from where the fortress stands
 
 Ashgate Depot, Lantern Quay, Morrowline Camp, and Evacuation Camp now pair their existing visual motifs with a concise operational brief: current regional pressure, the local human stake, service priority, and the strategic meaning of each outbound road. Physical route signs reinforce those choices in the fortress tableau. This was chosen over adding more shops or settlement currencies because the four stops needed sharper decisions and memory, not more menu breadth; all route costs, closures, services, contracts, and command IDs remain authoritative in `FortressState`.
+
+## 2026-08-30 — Presentation builders are read-only boundaries
+
+Settlement, route, contact, recovery, and debrief view dictionaries now come from focused presenter scripts. `main.gd` still owns orchestration and command dispatch, while `LongMarchState` remains the sole authority for simulation, save data, targeting, costs, damage, and outcomes. Presenter tests compare stable IDs and required fields and assert that every build leaves serialized state unchanged. This was chosen over moving rules into UI panels because presentation needs a smaller editing surface without creating a second simulation model.
