@@ -154,6 +154,7 @@ var debrief_inspection_active: bool = false
 var contact_fortress_before: Dictionary = {}
 var recovery_panel: RecoveryPanelView
 var last_recovery_receipt: String = ""
+var last_journey_receipt: String = ""
 var metric_labels: Dictionary = {}
 var metric_panels: Dictionary = {}
 var subtitle_label: Label
@@ -646,6 +647,7 @@ func _reset_state() -> void:
 	debrief_inspection_active = false
 	contact_fortress_before = {}
 	last_recovery_receipt = ""
+	last_journey_receipt = ""
 	if tutorial_mode:
 		tutorial_lesson_snapshot = state.serialize()
 		tutorial_lesson_snapshots = {"place_engine": tutorial_lesson_snapshot.duplicate(true)}
@@ -2119,7 +2121,9 @@ func _on_departure_option_changed(_index: int) -> void:
 func _on_guard_contract_pressed(accept: bool) -> void:
 	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else state.choose_guard_contract(accept)
 	if bool(result.get("ok", false)):
-		_set_event("CONTRACT DECISION\n%s" % String(result.get("message", "Contract decision recorded.")))
+		var contract_message := String(result.get("message", "Contract decision recorded."))
+		last_journey_receipt = "CONTRACT · %s" % contract_message
+		_set_event("CONTRACT DECISION\n%s" % contract_message)
 		_journal_event("medicine_contract_answered" if state.campaign_region_id == "flooded_veyru" else "guard_contract_answered", {"accepted": accept})
 		_checkpoint("contract_answered")
 	else:
@@ -2254,6 +2258,7 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		journey_arrival_view = {}
 		journey_planner_active = false
 		journey_transition_view = _build_journey_transition_view(origin_id, node_id, route_preview, day_before, fuel_before, pressure_before)
+		last_journey_receipt = "ROUTE COMMITTED · %s · Day +%d · Fuel −%d · Pressure +%d" % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), state.day - day_before, fuel_before - state.fuel, state.campaign_pressure - pressure_before]
 		journey_departure_snapshot = {"origin_id": origin_id, "destination_id": node_id, "day": day_before, "fuel": fuel_before, "hull": state.hull_condition, "money": state.money, "pressure": pressure_before, "doctrine": doctrine}
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
 		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
@@ -2268,11 +2273,11 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 	var visibility := String(preview.get("visibility", "unscouted"))
 	var threats: Array = preview.get("threats", [])
 	var contact_text := ", ".join(threats) if not threats.is_empty() else String(preview.get("threat_hint", "uncertain movement ahead"))
-	var detail := "%s intelligence: %s. The fortress is moving through this road now; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, destination_name]
+	var detail := "%s intel · %s; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, destination_name]
 	if tutorial_mode:
 		origin_name = "Ashgate Muster Yard"
 		destination_name = "Muster Road"
-		detail = "Training intelligence: %s. Read its approach, preferred targets, and counter before advancing the drill." % contact_text
+		detail = "Training intel · %s. Read its approach, preferred targets, and counter before advancing the drill." % contact_text
 	return {
 		"region_id": state.campaign_region_id,
 		"origin_id": origin_id,
@@ -2281,15 +2286,15 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 		"destination_name": destination_name,
 		"status": "%s CONTACT AHEAD" % visibility.to_upper(),
 		"promise": _journey_promise_summary(),
-		"phase": "PHASE · DEPARTING · COSTS COMMITTED · ARRIVAL PENDING",
+		"phase": "COMMITMENT · COSTS APPLIED · ARRIVAL PENDING",
 		"detail": detail,
-		"next_decision": "NEXT · Read %s intent and counter, then enter contact." % contact_text,
+		"next_decision": "NEXT · Enter contact and respond to %s." % contact_text,
 		"day_receipt": "DAY %d → %d  ·  +%d" % [day_before, state.day, state.day - day_before],
 		"fuel_receipt": "%d → %d  ·  −%d" % [fuel_before, state.fuel, fuel_before - state.fuel],
 		"pressure_receipt": "%d → %d  ·  +%d" % [pressure_before, state.campaign_pressure, state.campaign_pressure - pressure_before],
 		"heat_receipt": "%d/%d" % [state.heat, LongMarchState.BASE_HEAT_LIMIT],
 		"fortress": _fortress_presentation_snapshot(),
-		"action_label": "CONTINUE TO CONTACT"
+		"action_label": "ENTER CONTACT"
 	}
 
 func _restore_journey_transition_view() -> Dictionary:
@@ -2387,6 +2392,7 @@ func _on_campaign_event_pressed(index: int) -> void:
 	var result := state.resolve_campaign_event(choice_id)
 	if bool(result.get("ok", false)):
 		var result_message := String(result.get("message", "Decision recorded: %s." % choice_id.replace("_", " ").capitalize()))
+		last_journey_receipt = "DECISION · %s" % result_message
 		_set_event(result_message)
 		_journal_event("campaign_event_resolved", {"event": String(result.get("event", "")), "choice": choice_id})
 		_checkpoint("event_resolved")
@@ -2728,10 +2734,15 @@ func _settlement_hub_view(snapshot: Dictionary) -> Dictionary:
 			"tooltip": "Decline without spending fuel or time."
 		}
 	var departure_ready := contract_status != "offered"
+	var settlement_context := "%s · Choose an assignment or inspect a bazaar station." % ("LANTERN QUAY FLOOD MARKET" if is_veyru else "ASHGATE RAIL DEPOT")
+	if contract_status == "accepted":
+		settlement_context = "ASSIGNMENT RECEIPT · %s accepted. Prepare the fortress, then plan the first road." % ("Sealed medicine delivery" if is_veyru else "Morrowline convoy guard")
+	elif contract_status == "declined":
+		settlement_context = "ASSIGNMENT RECEIPT · Traveling without the local obligation. Prepare the fortress, then plan the first road."
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,
-		"context": "%s · %s" % ["LANTERN QUAY FLOOD MARKET" if is_veyru else "ASHGATE RAIL DEPOT", "Choose an assignment or inspect a bazaar station." if contract_status == "offered" else "Prepare the fortress, then plan the first road."],
+		"context": settlement_context,
 		"preferred_station": "assignment_board" if contract_status == "offered" else "departure_gate",
 		"values": {
 			"hull": "%d/10" % int(snapshot.get("hull_condition", state.hull_condition)),
@@ -2838,6 +2849,7 @@ func _refresh_journey_planner(snapshot: Dictionary) -> void:
 		"region_name": state.campaign_region_name(),
 		"location_name": location_name,
 		"order": _current_guidance(),
+		"receipt": _journey_planner_receipt(),
 		"route_selected": not selected_campaign_node_id.is_empty(),
 		"can_return": _settlement_hub_available() or state.phase == "settlement",
 		"return_label": "RETURN TO %s BAZAAR" % location_name.to_upper() if _settlement_hub_available() else "RETURN TO RECOVERY",
@@ -2851,6 +2863,12 @@ func _refresh_journey_planner(snapshot: Dictionary) -> void:
 			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]
 		}
 	})
+
+
+func _journey_planner_receipt() -> String:
+	if last_journey_receipt.is_empty():
+		return ""
+	return "LAST RECEIPT · %s" % last_journey_receipt
 
 func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> void:
 	if road_contact == null:
@@ -3201,9 +3219,11 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 	var outcome_copy := outcome.replace("_", " ").capitalize()
 	var summary := "The fortress has withdrawn to %s. Repairs preserve the run, but time, pressure, and Ashmarks have already changed." % destination_name if retreat else "%s is secured. The fortress is at rest; review the road receipt before issuing the next local order." % destination_name
 	var action_label := "CONTINUE TO MARCH DEBRIEF" if state.phase == "results" else ("ENTER %s" % ("BAZAAR" if state.phase in ["refit", "settlement"] else ("LOCAL DECISION" if not state.campaign_event_pending.is_empty() else "JOURNEY MAP")))
+	var next_decision := "NEXT · Open the Debrief and review what the fortress carried." if state.phase == "results" else ("NEXT · Enter recovery and choose whether to repair, refuel, or preserve both actions." if state.phase in ["refit", "settlement"] else ("NEXT · Resolve the local occurrence before choosing another road." if not state.campaign_event_pending.is_empty() else "NEXT · Return to the route map and choose the next commitment."))
 	if tutorial_mode:
 		summary = "The training road is secured. Review the damage receipt, then enter the recovery siding and restore the affected system."
 		action_label = "ENTER RECOVERY SIDING"
+		next_decision = "NEXT · Enter recovery and restore the affected system."
 	return {
 		"region_id": state.campaign_region_id,
 		"origin_name": origin_name,
@@ -3212,6 +3232,7 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 		"outcome_label": "FORCED RETREAT" if retreat else outcome_copy,
 		"summary": summary,
 		"report": recent_report,
+		"next_decision": next_decision,
 		"action_label": action_label,
 		"fortress": _fortress_presentation_snapshot(),
 		"receipts": {
@@ -3398,6 +3419,8 @@ func _on_advance_encounter_pressed() -> void:
 		journey_arrival_active = true
 		journey_arrival_view = _build_journey_arrival_view(result, before)
 		journey_departure_snapshot = {}
+		var secured_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+		last_journey_receipt = "ROAD · %s · %s" % [secured_name, String(result.get("outcome", "resolved")).replace("_", " ").capitalize()]
 		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
 		if tutorial_mode:
 			_tutorial_advance("repair", "ROAD SECURED · The fortress survived the contact and reached its recovery siding.")
@@ -3435,6 +3458,7 @@ func _on_settlement_repair_pressed() -> void:
 	var result := state.settlement_repair(String(selected.get("id", "")))
 	var service_message := "%s restored +%d durability for %d Ashmarks. %s." % [String(state.module_definition(String(selected.get("id", ""))).get("name", "Module")), int(result.get("restored", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Repair blocked: %s." % String(result.get("reason", "unknown"))
 	last_recovery_receipt = service_message
+	last_journey_receipt = "SERVICE · %s" % service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "module_repair", "module": String(selected.get("id", "")), "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -3448,6 +3472,7 @@ func _on_settlement_refuel_pressed() -> void:
 	var result := state.settlement_refuel()
 	var service_message := "+%d fuel loaded for %d Ashmarks. %s." % [int(result.get("fuel_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Refuel blocked: %s." % String(result.get("reason", "unknown"))
 	last_recovery_receipt = service_message
+	last_journey_receipt = "SERVICE · %s" % service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "refuel", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -3459,6 +3484,7 @@ func _on_settlement_hull_pressed() -> void:
 	var result := state.settlement_repair_hull()
 	var service_message := "+%d hull restored for %d Ashmarks. %s." % [int(result.get("hull_added", 0)), int(result.get("cost", 0)), _service_action_status_text()] if bool(result.get("ok", false)) else "Hull repair blocked: %s." % String(result.get("reason", "unknown"))
 	last_recovery_receipt = service_message
+	last_journey_receipt = "SERVICE · %s" % service_message
 	_set_event(service_message)
 	_journal_event("settlement_service", {"service": "hull_repair", "ok": bool(result.get("ok", false))})
 	if bool(result.get("ok", false)):
@@ -3534,7 +3560,8 @@ func _save_run_to_paths(save_path: String, backup_path: String, silent: bool) ->
 		"journey_departure_snapshot": journey_departure_snapshot.duplicate(true),
 		"journey_arrival_active": journey_arrival_active,
 		"journey_arrival_view": journey_arrival_view.duplicate(true),
-		"last_recovery_receipt": last_recovery_receipt
+		"last_recovery_receipt": last_recovery_receipt,
+		"last_journey_receipt": last_journey_receipt
 	}
 	file.store_string(JSON.stringify(payload))
 	file.close()
@@ -3623,6 +3650,7 @@ func _load_saved_run_from_path(save_path: String) -> bool:
 	debrief_inspection_active = false
 	contact_fortress_before = {}
 	last_recovery_receipt = String(presentation.get("last_recovery_receipt", ""))
+	last_journey_receipt = String(presentation.get("last_journey_receipt", ""))
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	if not state.modules.is_empty():

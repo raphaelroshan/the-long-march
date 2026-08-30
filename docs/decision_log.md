@@ -1,5 +1,11 @@
 # Decision Log — The Long March
 
+## 2026-08-30 — Journey rhythm separates commitment from consequence
+
+A committed road now enters a brief presentation-only sequence: Departed, Road in Motion, then Contact Ahead. The player can enter contact immediately, and reduced motion skips directly to Contact Ahead. The sequence never advances simulation time, changes route cost, consumes randomness, or delays the action becoming available.
+
+Committed contracts, roads, occurrences, and services leave a compact journey receipt that survives save/load and appears on the next route table. Arrival separately labels consequences as already applied and states the next order. Navigation and preview messages are not treated as receipts.
+
 ## 2026-08-30 — Responsive quality is a full-journey invariant
 
 Responsive verification runs the complete deterministic journey at 1280×720 and 1600×900 with 110% text, high contrast, reduced motion, and alternate controller guidance. Every major surface must preserve the left status rail, center fortress or map, right selected-subject/action dock, a visible primary action, and the expected focus handoff. Isolated component checks remain useful, but they cannot replace the cross-surface contract.

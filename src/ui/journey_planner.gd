@@ -8,6 +8,7 @@ var pause_button: Button
 var return_button: Button
 var region_label: Label
 var order_label: Label
+var receipt_label: Label
 var value_labels: Dictionary = {}
 var map_host: CenterContainer
 var comparison_host: ScrollContainer
@@ -151,6 +152,14 @@ func _build_ui() -> void:
 	detail_stack.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	detail_stack.add_theme_constant_override("separation", 8)
 	detail_scroll.add_child(detail_stack)
+	var receipt_panel := PanelContainer.new()
+	receipt_panel.add_theme_stylebox_override("panel", _flat_style(Color("#17231f"), Color("#587a68"), 1, 4, 5))
+	detail_stack.add_child(receipt_panel)
+	receipt_label = Label.new()
+	receipt_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	receipt_label.add_theme_font_size_override("font_size", 10)
+	receipt_label.add_theme_color_override("font_color", Color("#a8d8bf"))
+	receipt_panel.add_child(receipt_label)
 	action_host = VBoxContainer.new()
 	action_host.add_theme_constant_override("separation", 6)
 	detail_column.add_child(action_host)
@@ -197,6 +206,8 @@ func attach_route_controls(map_control: Control, comparison: Control, route_prev
 func configure(view: Dictionary) -> void:
 	region_label.text = "%s · FORTRESS AT %s" % [String(view.get("region_name", "REGION")).to_upper(), String(view.get("location_name", "CURRENT STOP")).to_upper()]
 	order_label.text = String(view.get("order", "Inspect a reachable road. Selection is reversible; Commit begins travel."))
+	receipt_label.text = String(view.get("receipt", ""))
+	receipt_label.get_parent().visible = not receipt_label.text.is_empty()
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))

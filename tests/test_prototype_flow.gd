@@ -41,7 +41,7 @@ func _press_campaign_node(node_id: String) -> void:
 			_expect(game.guidance_label.text.begins_with("ROUTE READY"), "selecting a route should update the current objective before commitment")
 			_expect(not game.campaign_map.commit_button.disabled, "selected route should enable the commit control: " + node_id)
 			_expect(game.campaign_map.commit_button.has_focus(), "route selection should move keyboard or controller focus to confirmation")
-			_expect(game.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action fully on screen")
+			_expect(game.get_global_rect().encloses(game.campaign_commit_intel_label.get_global_rect()) and game.get_global_rect().encloses(game.campaign_commit_button.get_global_rect()), "route confirmation should keep its compact intel and Commit action fully on screen · stage %s · intel %s · commit %s" % [game.get_global_rect(), game.campaign_commit_intel_label.get_global_rect(), game.campaign_commit_button.get_global_rect()])
 			game.campaign_map.commit_button.pressed.emit()
 			await process_frame
 			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "committing a route should present the road before exposing combat controls")

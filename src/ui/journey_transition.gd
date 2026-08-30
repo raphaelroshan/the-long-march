@@ -24,9 +24,22 @@ var continue_button: Button
 var high_contrast_enabled: bool = false
 var reduced_motion: bool = false
 var current_view: Dictionary = {}
+var presentation_beat_index: int = 0
+var presentation_elapsed: float = 0.0
 
 func _ready() -> void:
 	_build_ui()
+	set_process(true)
+
+
+func _process(delta: float) -> void:
+	if not visible or current_view.is_empty() or reduced_motion or presentation_beat_index >= 2:
+		return
+	presentation_elapsed += delta
+	if presentation_elapsed >= 1.0:
+		_set_presentation_beat(2)
+	elif presentation_elapsed >= 0.35:
+		_set_presentation_beat(1)
 
 func _flat_style(background: Color, border: Color, width: int = 1, radius: int = 6, padding: int = 9) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -196,34 +209,54 @@ func _add_receipt(parent: VBoxContainer, heading: String) -> Label:
 
 func configure(view: Dictionary) -> void:
 	current_view = view.duplicate(true)
+	presentation_elapsed = 0.0
 	var origin := String(view.get("origin_name", "ORIGIN"))
 	var destination := String(view.get("destination_name", "DESTINATION"))
 	route_label.text = "%s → %s · ON THE ROAD" % [origin.to_upper(), destination.to_upper()]
 	destination_label.text = destination.to_upper()
-	status_label.text = String(view.get("status", "CONTACT AHEAD")).to_upper()
 	promise_label.text = String(view.get("promise", "PROMISE · Keep the fortress moving."))
 	phase_label.text = String(view.get("phase", "PHASE · DEPARTING · COSTS COMMITTED"))
 	detail_label.text = String(view.get("detail", "The fortress has committed to the road. Resolve the contact before arrival."))
-	next_label.text = String(view.get("next_decision", "NEXT · Read the contact, then continue."))
 	day_label.text = String(view.get("day_receipt", "—"))
 	fuel_label.text = String(view.get("fuel_receipt", "—"))
 	pressure_label.text = String(view.get("pressure_receipt", "—"))
 	heat_label.text = String(view.get("heat_receipt", "—"))
-	continue_button.text = String(view.get("action_label", "CONTINUE TO CONTACT"))
 	march_canvas.region_id = String(view.get("region_id", "ashgate_lowlands"))
 	march_canvas.destination_name = destination
 	march_canvas.fortress_view = view.get("fortress", {}).duplicate(true)
 	march_canvas.high_contrast_enabled = high_contrast_enabled
 	march_canvas.reduced_motion = reduced_motion
 	march_canvas.queue_redraw()
-	for index in range(sequence_labels.size()):
+	_set_presentation_beat(2 if reduced_motion else 0)
+
+
+func _set_presentation_beat(index: int) -> void:
+	presentation_beat_index = clampi(index, 0, 2)
+	for sequence_index in range(sequence_labels.size()):
 		var color := Color("#69777c")
-		if index == 0:
+		if sequence_index < presentation_beat_index:
 			color = Color("#9fddbd")
-		elif index == 1:
+		elif sequence_index == presentation_beat_index:
 			color = Color("#f0cf96")
-		sequence_labels[index].add_theme_color_override("font_color", color)
+		sequence_labels[sequence_index].add_theme_color_override("font_color", color)
+	match presentation_beat_index:
+		0:
+			status_label.text = "DEPARTURE LOCKED"
+			next_label.text = "NEXT · Skip the march beat or watch the fortress take the road."
+			continue_button.text = "SKIP MARCH · ENTER CONTACT"
+		1:
+			status_label.text = "ROAD IN MOTION"
+			next_label.text = "NEXT · Contact is closing. Enter when ready."
+			continue_button.text = "SKIP MARCH · ENTER CONTACT"
+		_:
+			status_label.text = String(current_view.get("status", "CONTACT AHEAD")).to_upper()
+			next_label.text = String(current_view.get("next_decision", "NEXT · Read the contact, then continue."))
+			continue_button.text = String(current_view.get("action_label", "ENTER CONTACT"))
 	continue_button.tooltip_text = "%s Arrival remains pending until the authoritative contact resolves." % next_label.text
+
+
+func presentation_beat() -> String:
+	return ["departed", "road_in_motion", "contact_ahead"][presentation_beat_index]
 
 func focus_default() -> void:
 	continue_button.grab_focus()
@@ -238,6 +271,9 @@ func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion = enabled
 	if march_canvas != null:
 		march_canvas.reduced_motion = enabled
+	if not current_view.is_empty():
+		presentation_elapsed = 1.0 if enabled else 0.0
+		_set_presentation_beat(2 if enabled else 0)
 
 func set_controller_cancel_label(cancel_label: String) -> void:
 	if pause_button != null:

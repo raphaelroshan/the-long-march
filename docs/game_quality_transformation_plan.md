@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.289`
+**Current baseline:** `0.3.0-alpha.290`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -662,7 +662,7 @@ Tasks:
 
 ### Phase 3 — Map and travel game feel
 
-**Status:** The first save-safe settlement-to-route-to-departure handoff is complete in `0.3.0-alpha.281`; contact-to-arrival pacing and broader route-specific transitions remain open.
+**Status:** The save-safe settlement-to-route-to-departure handoff and complete L3 rhythm pass are complete through `0.3.0-alpha.290`. Commitment now leads through an immediately skippable Departed → Road in Motion → Contact Ahead beat; reduced motion resolves directly to Contact Ahead. Arrival separates applied consequences from the next order, and route planning retains the last committed contract, road, event, or service receipt. Broader route-specific authored motion remains open.
 
 **Objective:** Make routes feel like roads with stakes.
 
@@ -726,7 +726,7 @@ Tasks:
 
 ### Phase 7 — Human private alpha
 
-**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, checksummed artifact-cohort manifest, and one-command verifier are complete through `0.3.0-alpha.289`; five consented uncoached sessions and evidence-led fixes require human testers.
+**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, checksummed artifact-cohort manifest, and one-command verifier are complete through `0.3.0-alpha.290`; five consented uncoached sessions and evidence-led fixes require human testers.
 
 **Objective:** Replace assumptions with observed behavior.
 

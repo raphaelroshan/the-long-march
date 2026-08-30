@@ -103,8 +103,10 @@ func _relaunch_and_continue(expected_surface: String) -> void:
 	match expected_surface:
 		"departure":
 			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "Continue should restore the pending departure and its action focus")
+			_expect(game.last_journey_receipt.begins_with("ROUTE COMMITTED"), "departure resume should preserve the last committed journey receipt")
 		"arrival":
 			_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "Continue should restore the pending arrival and its action focus")
+			_expect(game.last_journey_receipt.begins_with("ROAD"), "arrival resume should preserve the resolved-road receipt")
 		_:
 			_expect(false, "unknown relaunch surface: " + expected_surface)
 
@@ -188,6 +190,7 @@ func _complete_first_watch() -> void:
 	await _settle()
 	_expect(game.journey_transition.visible and game.tutorial_director.lesson_id == "travel", "the tutorial road should enter the shared departure presentation")
 	_expect(game.journey_transition.route_label.text.begins_with("ASHGATE MUSTER YARD → MUSTER ROAD") and game.journey_transition.destination_label.text == "MUSTER ROAD" and game.journey_transition.promise_label.text.begins_with("TRAINING ORDER"), "the tutorial departure should preserve its own place and purpose")
+	_expect(game.journey_transition.presentation_beat() == ("contact_ahead" if responsive_profile else "departed"), "the tutorial march should skip directly under reduced motion and otherwise begin at departure")
 	_expect_three_column_contract(game.journey_transition, game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button, "First Watch departure")
 	await _capture("02_first_watch_departure")
 	game.journey_transition.continue_button.pressed.emit()
@@ -215,6 +218,7 @@ func _complete_first_watch() -> void:
 	_expect(game.journey_arrival.visible and game.tutorial_director.lesson_id == "repair", "First Watch should reach its recovery siding through normal contact steps")
 	_expect(game.journey_arrival.destination_label.text == "MUSTER ROAD RECOVERY SIDING" and game.journey_arrival.continue_button.text == "ENTER RECOVERY SIDING", "First Watch arrival should name the training recovery handoff")
 	_expect(game.journey_arrival.report_label.text.contains("Muster Yard records the drill") and not game.journey_arrival.report_label.text.contains("Morrowline"), "First Watch arrival should use a training receipt instead of a live campaign payout")
+	_expect(game.journey_arrival.beat_label.text.contains("CONSEQUENCES APPLIED") and game.journey_arrival.next_label.text.contains("restore the affected system"), "First Watch arrival should separate the consequence receipt from its next order")
 	_expect_three_column_contract(game.journey_arrival, game.journey_arrival.receipt_labels["hull"], game.journey_arrival.arrival_canvas, game.journey_arrival.continue_button, "First Watch arrival")
 	await _capture("03_first_watch_arrival")
 	game.journey_arrival.continue_button.pressed.emit()
@@ -258,8 +262,13 @@ func _run_ashgate_journey() -> void:
 	await _settle()
 	_expect_three_column_contract(game.journey_transition, game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button, "Ashgate departure")
 	if responsive_profile:
-		_expect(game.journey_transition.high_contrast_enabled and game.journey_transition.reduced_motion and game.journey_transition.pause_button.text.contains("A"), "the live departure should preserve contrast, reduced motion, and alternate controller guidance")
+		_expect(game.journey_transition.high_contrast_enabled and game.journey_transition.reduced_motion and game.journey_transition.presentation_beat() == "contact_ahead" and game.journey_transition.continue_button.text == "ENTER CONTACT" and game.journey_transition.pause_button.text.contains("A"), "the live departure should preserve contrast, skip motion, expose contact, and retain alternate controller guidance")
 	await _capture("07_departure")
+	if not responsive_profile and not capture_dir.is_empty():
+		game.journey_transition._process(0.4)
+		await _capture("07b_road_in_motion")
+		game.journey_transition._process(0.7)
+		await _capture("07c_contact_ahead")
 	await _relaunch_and_continue("departure")
 	_expect(game.state.campaign_target_node == "rill_crossing" and game.state.encounter_step == 0, "departure resume should preserve the committed road before contact")
 	await _enter_contact()
@@ -273,6 +282,8 @@ func _run_ashgate_journey() -> void:
 	_expect_three_column_contract(game.roadside_event, game.roadside_event.value_labels["day"], game.roadside_event.tableau, game.roadside_event.choice_buttons[0], "roadside event")
 	await _capture("10_roadside_event")
 	await _choose_event("brace_lift_chain")
+	_expect(game.journey_planner.visible and game.journey_planner.receipt_label.text.contains("LAST RECEIPT"), "a resolved roadside event should leave its consequence receipt on the reopened route table")
+	await _capture("10b_consequence_receipt")
 
 	await _commit_route("broken_relay")
 	await _enter_contact()

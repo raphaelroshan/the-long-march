@@ -11,9 +11,11 @@ var route_label: Label
 var receipt_labels: Dictionary = {}
 var arrival_canvas: ArrivalCanvas
 var outcome_label: Label
+var beat_label: Label
 var destination_label: Label
 var summary_label: Label
 var report_label: Label
+var next_label: Label
 var continue_button: Button
 var high_contrast_enabled: bool = false
 var current_view: Dictionary = {}
@@ -131,6 +133,12 @@ func _build_ui() -> void:
 	outcome_label.add_theme_font_size_override("font_size", 19)
 	outcome_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	detail_stack.add_child(outcome_label)
+	beat_label = Label.new()
+	beat_label.text = "ARRIVAL · CONSEQUENCES APPLIED"
+	beat_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	beat_label.add_theme_font_size_override("font_size", 10)
+	beat_label.add_theme_color_override("font_color", Color("#f0cf96"))
+	detail_stack.add_child(beat_label)
 	destination_label = Label.new()
 	destination_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	destination_label.add_theme_font_size_override("font_size", 22)
@@ -152,6 +160,12 @@ func _build_ui() -> void:
 	report_label.add_theme_font_size_override("font_size", 11)
 	report_label.add_theme_color_override("font_color", Color("#aebbbc"))
 	detail_stack.add_child(report_label)
+	next_label = Label.new()
+	next_label.text = "NEXT · Acknowledge the receipt."
+	next_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	next_label.add_theme_font_size_override("font_size", 10)
+	next_label.add_theme_color_override("font_color", Color("#e7d6b4"))
+	detail_stack.add_child(next_label)
 	continue_button = Button.new()
 	continue_button.text = "ENTER LOCATION"
 	continue_button.custom_minimum_size = Vector2(0, 62)
@@ -166,10 +180,12 @@ func configure(view: Dictionary) -> void:
 	route_label.text = "%s → %s · %s" % [origin.to_upper(), destination.to_upper(), "RETREAT COMPLETE" if retreat else "ROAD RESOLVED"]
 	outcome_label.text = String(view.get("outcome_label", "ARRIVAL")).to_upper()
 	outcome_label.add_theme_color_override("font_color", Color("#ef9a84") if retreat else Color("#9fd2c2"))
+	beat_label.text = "RECOVERY · RETREAT COMPLETE · CONSEQUENCES APPLIED" if retreat else "ARRIVAL · ROAD SECURED · CONSEQUENCES APPLIED"
 	destination_label.text = destination.to_upper()
 	summary_label.text = String(view.get("summary", "The fortress has reached the next stop."))
 	var report: Array = view.get("report", [])
 	report_label.text = "• " + "\n• ".join(report) if not report.is_empty() else "• The road is quiet behind the fortress."
+	next_label.text = String(view.get("next_decision", "NEXT · Acknowledge the receipt."))
 	var receipts: Dictionary = view.get("receipts", {})
 	for receipt_id in receipt_labels:
 		receipt_labels[receipt_id].text = String(receipts.get(receipt_id, "—"))
