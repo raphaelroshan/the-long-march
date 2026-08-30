@@ -149,6 +149,7 @@ func _build_ui() -> void:
 	detail_kicker.add_theme_color_override("font_color", Color("#89999e"))
 	detail_stack.add_child(detail_kicker)
 	detail_title = Label.new()
+	detail_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_title.add_theme_font_size_override("font_size", 20)
 	detail_title.add_theme_color_override("font_color", Color("#e8c58e"))
 	detail_stack.add_child(detail_title)

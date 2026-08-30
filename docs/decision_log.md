@@ -1,5 +1,11 @@
 # Decision Log — The Long March
 
+## 2026-08-30 — Responsive quality is a full-journey invariant
+
+Responsive verification runs the complete deterministic journey at 1280×720 and 1600×900 with 110% text, high contrast, reduced motion, and alternate controller guidance. Every major surface must preserve the left status rail, center fortress or map, right selected-subject/action dock, a visible primary action, and the expected focus handoff. Isolated component checks remain useful, but they cannot replace the cross-surface contract.
+
+Long bazaar station names wrap inside the selected-station dock instead of widening the whole stage. Transient save notices use a shallow top lane so they do not cover the current location or route heading. These adaptations preserve information and hierarchy rather than shrinking text below the selected accessibility size.
+
 ## 2026-08-30 — One app-shell journey is the L1 release gate
 
 The quality roadmap now requires one clean-save run from the title through First Watch, live Ashgate preparation, route commitment, travel, contacts, authored events, Morrowline recovery, final arrival, and Debrief using the same visible controls as a player. The run relaunches at committed departure and completed arrival to prove that the saved surface and focused action survive process boundaries. Smaller scenario tests remain useful, but they do not replace this complete handoff contract.

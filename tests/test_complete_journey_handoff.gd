@@ -16,6 +16,8 @@ var failures: Array[String] = []
 var app: Control
 var game: Control
 var capture_dir := ""
+var responsive_profile := false
+var viewport_size := Vector2i(1600, 900)
 
 
 func _expect(condition: bool, message: String) -> void:
@@ -28,6 +30,24 @@ func _remove_local_state() -> void:
 		var absolute := ProjectSettings.globalize_path(path)
 		if FileAccess.file_exists(absolute):
 			DirAccess.remove_absolute(absolute)
+
+
+func _configure_environment_profile() -> void:
+	var width_text := OS.get_environment("LONG_MARCH_VIEWPORT_WIDTH")
+	var height_text := OS.get_environment("LONG_MARCH_VIEWPORT_HEIGHT")
+	if width_text.is_valid_int() and height_text.is_valid_int():
+		viewport_size = Vector2i(int(width_text), int(height_text))
+	responsive_profile = OS.get_environment("LONG_MARCH_RESPONSIVE_PROFILE") == "1"
+	if not responsive_profile:
+		return
+	var config := ConfigFile.new()
+	config.set_value("accessibility", "text_scale_percent", 110)
+	config.set_value("accessibility", "high_contrast", true)
+	config.set_value("accessibility", "reduced_motion", true)
+	config.set_value("input", "controller_layout", "east_confirm")
+	config.set_value("audio", "interface_percent", 0)
+	var save_result := config.save(ProjectSettings.globalize_path("user://the_long_march_settings.cfg"))
+	_expect(save_result == OK, "the responsive profile should create deterministic local preferences")
 
 
 func _settle(frames: int = 3) -> void:
@@ -46,6 +66,22 @@ func _capture(name: String) -> void:
 		return
 	var result := image.save_png(capture_dir.path_join(name + ".png"))
 	_expect(result == OK, "capture should be written: " + name)
+
+
+func _rect_encloses(outer: Rect2, inner: Rect2) -> bool:
+	return inner.position.x >= outer.position.x - 1.0 and inner.position.y >= outer.position.y - 1.0 and inner.end.x <= outer.end.x + 1.0 and inner.end.y <= outer.end.y + 1.0
+
+
+func _expect_three_column_contract(surface: Control, left: Control, center: Control, right: Control, label: String) -> void:
+	if not responsive_profile:
+		return
+	var surface_rect := surface.get_global_rect()
+	var left_rect := left.get_global_rect()
+	var center_rect := center.get_global_rect()
+	var right_rect := right.get_global_rect()
+	_expect(left.is_visible_in_tree() and center.is_visible_in_tree() and right.is_visible_in_tree(), label + " should keep all three presentation regions visible")
+	_expect(_rect_encloses(surface_rect, left_rect) and _rect_encloses(surface_rect, center_rect) and _rect_encloses(surface_rect, right_rect), "%s should keep status, fortress/map, and required action inside the viewport · surface %s · left %s · center %s · right %s" % [label, surface_rect, left_rect, center_rect, right_rect])
+	_expect(left_rect.get_center().x < center_rect.get_center().x and center_rect.get_center().x < right_rect.get_center().x, label + " should preserve left status, center subject, and right action hierarchy")
 
 
 func _launch_app() -> void:
@@ -129,6 +165,9 @@ func _complete_first_watch() -> void:
 	app.tutorial_button.pressed.emit()
 	await _settle()
 	_expect(app.tutorial_intro.visible and app.tutorial_intro.next_button.has_focus(), "Learn to Command should open the focused prologue")
+	if responsive_profile:
+		var intro_rect: Rect2 = app.tutorial_intro.get_global_rect()
+		_expect(_rect_encloses(intro_rect, app.tutorial_intro.next_button.get_global_rect()) and _rect_encloses(intro_rect, app.tutorial_intro.skip_button.get_global_rect()), "the large-text tutorial prologue should keep both actions inside the compact viewport")
 	await _capture("01_first_watch_prologue")
 	app.tutorial_intro.next_button.pressed.emit()
 	app.tutorial_intro.next_button.pressed.emit()
@@ -149,6 +188,7 @@ func _complete_first_watch() -> void:
 	await _settle()
 	_expect(game.journey_transition.visible and game.tutorial_director.lesson_id == "travel", "the tutorial road should enter the shared departure presentation")
 	_expect(game.journey_transition.route_label.text.begins_with("ASHGATE MUSTER YARD → MUSTER ROAD") and game.journey_transition.destination_label.text == "MUSTER ROAD" and game.journey_transition.promise_label.text.begins_with("TRAINING ORDER"), "the tutorial departure should preserve its own place and purpose")
+	_expect_three_column_contract(game.journey_transition, game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button, "First Watch departure")
 	await _capture("02_first_watch_departure")
 	game.journey_transition.continue_button.pressed.emit()
 	await _settle()
@@ -175,6 +215,7 @@ func _complete_first_watch() -> void:
 	_expect(game.journey_arrival.visible and game.tutorial_director.lesson_id == "repair", "First Watch should reach its recovery siding through normal contact steps")
 	_expect(game.journey_arrival.destination_label.text == "MUSTER ROAD RECOVERY SIDING" and game.journey_arrival.continue_button.text == "ENTER RECOVERY SIDING", "First Watch arrival should name the training recovery handoff")
 	_expect(game.journey_arrival.report_label.text.contains("Muster Yard records the drill") and not game.journey_arrival.report_label.text.contains("Morrowline"), "First Watch arrival should use a training receipt instead of a live campaign payout")
+	_expect_three_column_contract(game.journey_arrival, game.journey_arrival.receipt_labels["hull"], game.journey_arrival.arrival_canvas, game.journey_arrival.continue_button, "First Watch arrival")
 	await _capture("03_first_watch_arrival")
 	game.journey_arrival.continue_button.pressed.emit()
 	await _settle()
@@ -196,6 +237,8 @@ func _complete_first_watch() -> void:
 func _run_ashgate_journey() -> void:
 	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "Ashgate handoff should begin at the required assignment")
 	_expect(game.get_global_rect().encloses(game.settlement_hub.primary_action_button.get_global_rect()), "the first Ashgate action should be visible at 1600x900")
+	_expect(not app.checkpoint_toast.get_global_rect().intersects(game.settlement_hub.location_label.get_global_rect()), "the compact save notice should not obscure the current location heading")
+	_expect_three_column_contract(game.settlement_hub, game.settlement_hub.value_labels["hull"], game.settlement_hub.bazaar_canvas, game.settlement_hub.primary_action_button, "Ashgate bazaar")
 	await _capture("05_ashgate_handoff")
 	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
 	await _settle()
@@ -209,19 +252,25 @@ func _run_ashgate_journey() -> void:
 	_expect(game.journey_planner.visible and game.campaign_map.button_for("rill_crossing").has_focus(), "departure should open route planning at the first available road")
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await _settle()
+	_expect_three_column_contract(game.journey_planner, game.journey_planner.value_labels["day"], game.journey_planner.map_host, game.campaign_commit_button, "route commitment")
 	await _capture("06_route_commitment")
 	game.campaign_commit_button.pressed.emit()
 	await _settle()
+	_expect_three_column_contract(game.journey_transition, game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button, "Ashgate departure")
+	if responsive_profile:
+		_expect(game.journey_transition.high_contrast_enabled and game.journey_transition.reduced_motion and game.journey_transition.pause_button.text.contains("A"), "the live departure should preserve contrast, reduced motion, and alternate controller guidance")
 	await _capture("07_departure")
 	await _relaunch_and_continue("departure")
 	_expect(game.state.campaign_target_node == "rill_crossing" and game.state.encounter_step == 0, "departure resume should preserve the committed road before contact")
 	await _enter_contact()
+	_expect_three_column_contract(game.road_contact, game.road_contact.value_labels["hull"], game.road_contact.contact_canvas, game.road_contact.advance_button, "road contact")
 	await _capture("08_road_contact")
 	await _resolve_contact("map")
 	await _capture("09_arrival_receipt")
 	await _relaunch_and_continue("arrival")
 	_expect(game.state.current_location == "rill_crossing" and game.state.campaign_event_pending == "lift_chain_sings", "arrival resume should preserve the secured road and pending occurrence")
 	await _acknowledge_arrival()
+	_expect_three_column_contract(game.roadside_event, game.roadside_event.value_labels["day"], game.roadside_event.tableau, game.roadside_event.choice_buttons[0], "roadside event")
 	await _capture("10_roadside_event")
 	await _choose_event("brace_lift_chain")
 
@@ -238,6 +287,7 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
 	await _choose_event("decline_mara")
 	_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
+	_expect_three_column_contract(game.recovery_panel, game.recovery_panel.value_labels["hull"], game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, "Morrowline recovery")
 	await _capture("11_morrowline_recovery")
 	if not game.recovery_panel.refuel_button.disabled:
 		game.recovery_panel.refuel_button.pressed.emit()
@@ -259,6 +309,7 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.run_complete and game.state.campaign_encounters_completed == 5, "the player-facing journey should complete all five encounters")
 	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "the final arrival should hand focus to the terminal Debrief")
 	_expect(game.get_global_rect().encloses(game.debrief_panel.inspect_button.get_global_rect()), "the first Debrief action should remain visible at 1600x900")
+	_expect_three_column_contract(game.debrief_panel, game.debrief_panel.timeline_labels[0], game.debrief_panel.fortress_canvas, game.debrief_panel.inspect_button, "terminal Debrief")
 	await _capture("13_debrief")
 
 
@@ -268,10 +319,14 @@ func _init() -> void:
 
 func _run() -> void:
 	_remove_local_state()
+	_configure_environment_profile()
 	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
-	root.size = Vector2i(1600, 900)
+	root.size = viewport_size
 	await _launch_app()
 	_expect(app.tutorial_button.has_focus(), "a clean save should focus Learn to Command")
+	if responsive_profile:
+		_expect(app.text_scale_percent == 110 and app.high_contrast_enabled and app.reduced_motion and app.controller_layout_id == "east_confirm", "the compact journey should load the complete accessibility and alternate-controller profile")
+		_expect(_rect_encloses(app.get_global_rect(), app.tutorial_button.get_global_rect()) and _rect_encloses(app.get_global_rect(), app.settings_button.get_global_rect()), "the compact large-text title should keep primary and utility actions visible")
 	await _capture("00_title")
 	await _complete_first_watch()
 	await _run_ashgate_journey()
@@ -279,6 +334,8 @@ func _run() -> void:
 	await _settle()
 	_remove_local_state()
 	if failures.is_empty():
+		if responsive_profile:
+			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")
 		quit(0)
 	else:

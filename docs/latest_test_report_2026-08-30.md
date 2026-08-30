@@ -29,6 +29,10 @@ The latest build is the strongest of the three at the tested 1280×720 size. The
 
 The smoke-test gap above is closed by [`l1_complete_journey_handoff_report.md`](l1_complete_journey_handoff_report.md). Alpha.288 adds one clean-save, app-shell integration run through First Watch and the full five-contact Ashgate journey, including save/resume checks at committed departure and completed arrival. Its 1600×900 evidence sequence is the baseline for the next responsive-layout pass.
 
+## Alpha.289 follow-up
+
+[`l2_responsive_fortress_presentation_report.md`](l2_responsive_fortress_presentation_report.md) closes the responsive-layout gate. The same complete journey now runs at 1280×720 and 1600×900 with 110% text, high contrast, reduced motion, and alternate controller guidance while asserting the left-status, center-subject, right-action hierarchy and focused primary controls.
+
 ## Next roadmap steps
 
 ### March Quality 1 — Full journey capture and handoff validation
