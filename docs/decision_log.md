@@ -1,5 +1,11 @@
 # Decision Log — The Long March
 
+## 2026-08-30 — A declined convoy becomes scarce recovery
+
+The Ashgate convoy decision now names its later service consequence before commitment. Completing the promise preserves two Morrowline service actions; declining it leaves the approach easier but produces a parts shortage and only one service action. The shortage is derived from the existing contract status when Morrowline is reached, then persisted in the existing settlement-action field, so no new currency, faction meter, or migration surface is required.
+
+The consequence appears in the contract receipt, arrival report, recovery tableau, and Debrief. The declined path remains ending-capable: the alternate five-contact route can spend its single action on the signal counter and still reach Meridian Pass, while Cinder Quarry remains an optional field-repair response rather than a mandatory correction.
+
 ## 2026-08-30 — Journey rhythm separates commitment from consequence
 
 A committed road now enters a brief presentation-only sequence: Departed, Road in Motion, then Contact Ahead. The player can enter contact immediately, and reduced motion skips directly to Contact Ahead. The sequence never advances simulation time, changes route cost, consumes randomness, or delays the action becoming available.

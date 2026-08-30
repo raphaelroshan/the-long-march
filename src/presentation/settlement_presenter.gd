@@ -12,23 +12,23 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		assignment_body += "\n\nReserved carrier: %s." % String(medicine_status.get("carrier_name", "No carrier"))
 		assignment_accept_enabled = bool(medicine_status.get("available", false))
 	else:
-		assignment_body = "Guard Morrowline's exposed parts wagon. Each enemy on the approach gains 1 HP; arrival pays 30 Ashmarks and 2 trust."
+		assignment_body = "Guard Morrowline's exposed parts wagon. Each enemy on the approach gains 1 HP; arrival pays 30 Ashmarks and 2 trust, and preserves 2 service actions. Decline and Morrowline will have only 1 service action."
 	var assignment_station := {
 		"title": contract_name,
 		"status": "DECISION REQUIRED" if contract_status == "offered" else contract_status.replace("_", " ").to_upper(),
 		"button_status": "CHOOSE" if contract_status == "offered" else contract_status.replace("_", " ").to_upper(),
-		"body": assignment_body if contract_status == "offered" else ("The fortress accepted this assignment. Its consequences now travel with the march." if contract_status == "accepted" else "The fortress declined this assignment. The first roads are open without its obligation."),
+		"body": assignment_body if contract_status == "offered" else ("The fortress accepted this assignment. Its consequences now travel with the march." if contract_status == "accepted" else ("The fortress declined this assignment. Morrowline will have only 1 service action because its parts convoy is absent." if not is_veyru else "The fortress declined this assignment. The first roads are open without its obligation.")),
 		"tone": "warning" if contract_status == "offered" else ("safe" if contract_status == "accepted" else "neutral")
 	}
 	if contract_status == "offered":
 		assignment_station["primary"] = {"id": "accept_assignment", "label": "ACCEPT ASSIGNMENT", "enabled": assignment_accept_enabled, "tooltip": "Accept the obligation and its stated consequences."}
-		assignment_station["secondary"] = {"id": "decline_assignment", "label": "DECLINE · TRAVEL UNBOUND", "enabled": true, "tooltip": "Decline without spending fuel or time."}
+		assignment_station["secondary"] = {"id": "decline_assignment", "label": "DECLINE · TRAVEL UNBOUND", "enabled": true, "tooltip": "Decline without spending fuel or time. Morrowline will have only 1 service action." if not is_veyru else "Decline without spending fuel or time."}
 	var departure_ready := contract_status != "offered"
 	var settlement_context := "%s · Choose an assignment or inspect a bazaar station." % ("LANTERN QUAY FLOOD MARKET" if is_veyru else "ASHGATE RAIL DEPOT")
 	if contract_status == "accepted":
 		settlement_context = "ASSIGNMENT RECEIPT · %s accepted. Prepare the fortress, then plan the first road." % ("Sealed medicine delivery" if is_veyru else "Morrowline convoy guard")
 	elif contract_status == "declined":
-		settlement_context = "ASSIGNMENT RECEIPT · Traveling without the local obligation. Prepare the fortress, then plan the first road."
+		settlement_context = "ASSIGNMENT RECEIPT · Traveling without the convoy. Morrowline will have 1 service action; prepare the fortress, then plan the first road." if not is_veyru else "ASSIGNMENT RECEIPT · Traveling without the local obligation. Prepare the fortress, then plan the first road."
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,

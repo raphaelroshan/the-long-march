@@ -951,7 +951,7 @@ func _build_ui() -> void:
 	contract_accept_button.text = "GUARD THE CONVOY\nMORROWLINE · EACH ENEMY +1 HP\nON ARRIVAL · +30 ASHMARKS · +2 TRUST"
 	contract_accept_button.custom_minimum_size = Vector2(0, 74)
 	contract_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	contract_accept_button.tooltip_text = "Accept a harder Morrowline approach in exchange for payment and settlement trust if the convoy arrives."
+	contract_accept_button.tooltip_text = "Accept a harder Morrowline approach in exchange for payment, trust, and 2 Morrowline service actions if the convoy arrives."
 	contract_accept_button.pressed.connect(_on_guard_contract_pressed.bind(true))
 	_accent_button(contract_accept_button, Color("#285348"), Color("#73c99b"))
 	contract_actions.add_child(contract_accept_button)
@@ -3547,7 +3547,7 @@ func _refresh_campaign_controls() -> void:
 		contract_title.text = "ASHGATE CONTRACT"
 		contract_label.text = "Morrowline's parts wagon is exposed. Decide whether its payment and trust are worth a harder camp approach."
 		contract_accept_button.text = "GUARD THE CONVOY\nMORROWLINE · EACH ENEMY +1 HP\nON ARRIVAL · +30 ASHMARKS · +2 TRUST"
-		contract_accept_button.tooltip_text = "Accept a harder Morrowline approach in exchange for payment and settlement trust if the convoy arrives."
+		contract_accept_button.tooltip_text = "Accept a harder Morrowline approach in exchange for payment, trust, and 2 Morrowline service actions if the convoy arrives."
 		contract_decline_button.text = "TRAVEL UNBOUND\nNO EXTRA ENEMY HP\nNO CONTRACT PAYOUT OR TRUST"
 		contract_decline_button.tooltip_text = "Decline the escort, avoid its extra enemy endurance, and forgo the contract reward."
 

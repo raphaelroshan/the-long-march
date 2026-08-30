@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.294`
+**Current code baseline:** `0.3.0-alpha.295`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.293`, extracting settlement, route, contact, recovery, and debrief view-model construction from `main.gd` into read-only presenters. The active `0.3.0-alpha.294` follow-up adds Cinder Quarry as one bounded Ashgate branch with an existing mixed-threat composition and a deterministic field-repair payoff.
-**Next build target:** Execute L8 from [`ai_game_quality_execution_plan.md`](ai_game_quality_execution_plan.md): make one existing declined or failed promise produce a visible, mechanical later consequence while keeping every current ending viable.
+**Current merged baseline:** `0.3.0-alpha.294`, adding Cinder Quarry as one bounded Ashgate branch with an existing mixed-threat composition and a deterministic field-repair payoff. The active `0.3.0-alpha.295` follow-up turns a declined Morrowline convoy into a disclosed, save-safe parts shortage with one service action instead of two.
+**Next build target:** Execute L9 from [`ai_game_quality_execution_plan.md`](ai_game_quality_execution_plan.md): strengthen bounded route, doctrine, specialist, and recovery mastery while proving multiple viable solutions and avoiding grind or forced build orders.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.

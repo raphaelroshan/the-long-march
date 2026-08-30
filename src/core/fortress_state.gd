@@ -750,12 +750,15 @@ func choose_guard_contract(accept: bool) -> Dictionary:
 	guard_contract_status = "accepted" if accept else "declined"
 	var message := ""
 	if accept:
-		message = "Contract accepted: each enemy on the Morrowline approach gains 1 HP; safe arrival pays 30 Ashmarks and 2 trust."
+		message = "Contract accepted: each enemy on the Morrowline approach gains 1 HP; safe arrival pays 30 Ashmarks, 2 trust, and preserves 2 Morrowline service actions."
 	else:
 		mobility_tendency += 1
-		message = "Contract declined: Morrowline enemies keep normal endurance; the fortress gives up the 30-Ashmark and 2-trust payout."
+		message = "Contract declined: Morrowline enemies keep normal endurance, but the parts convoy does not arrive; Morrowline will have 1 service action instead of 2, with no payout or trust."
 	log.append(message)
 	return {"ok": true, "status": guard_contract_status, "message": message, "summary": summary()}
+
+func morrowline_service_capacity() -> int:
+	return 2 if guard_contract_status in ["accepted", "completed"] else 1
 
 func veyru_medicine_contract_status() -> Dictionary:
 	if not campaign_active or campaign_region_id != "flooded_veyru" or current_location != "lantern_quay" or phase != "refit":
@@ -3120,13 +3123,15 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		_apply_cinder_quarry_recovery()
 	if arrived_node == "morrowline_camp":
 		phase = "settlement"
-		settlement_actions_remaining = 2
 		settlement_report.clear()
 		if guard_contract_status == "accepted":
 			guard_contract_status = "completed"
 			money += 30
 			settlement_trust += 2
 			_encounter_log("Contract complete: the Morrowline parts convoy arrives under guard. Payment is 30 Ashmarks and settlement trust rises by 2.")
+		settlement_actions_remaining = morrowline_service_capacity()
+		if settlement_actions_remaining == 1:
+			_encounter_log("Parts shortage: without the guarded convoy, Morrowline can support only 1 service action before departure.")
 		if workers_rescued:
 			settlement_trust += 1
 			_encounter_log("The rescued orchard workers reach Morrowline and add one settlement trust.")
@@ -3137,7 +3142,8 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 			var phase_id := "settlement_arrival_%d_morrowline_camp" % campaign_encounters_completed
 			try_schedule_occurrence("settlement_arrival", arrived_node, phase_id)
 		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
-		_encounter_log("Outcome: %s at Morrowline Camp. Two service actions and a full refit window are available%s." % [encounter_outcome.replace("_", " "), " after the current decision is resolved" if not campaign_event_pending.is_empty() else ""])
+		var service_text := "Two service actions" if settlement_actions_remaining == 2 else "One service action"
+		_encounter_log("Outcome: %s at Morrowline Camp. %s and a full refit window are available%s." % [encounter_outcome.replace("_", " "), service_text, " after the current decision is resolved" if not campaign_event_pending.is_empty() else ""])
 	elif arrived_node == "meridian_pass":
 		journey_complete = true
 		run_complete = true

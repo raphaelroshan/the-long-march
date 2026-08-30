@@ -27,6 +27,7 @@ func _init() -> void:
 	_expect(settlement.get("location_id") == "ashgate_depot" and settlement.get("preferred_station") == "assignment_board", "settlement presenter should preserve the opening location and required station")
 	_expect(settlement.get("stations", {}).keys().size() == 6, "settlement presenter should preserve all six stable station contracts")
 	_expect(settlement.get("stations", {}).get("assignment_board", {}).get("primary", {}).get("id") == "accept_assignment" and settlement.get("stations", {}).get("departure_gate", {}).get("primary", {}).get("id") == "plan_journey", "settlement presenter should preserve stable assignment and route command IDs")
+	_expect(String(settlement.get("stations", {}).get("assignment_board", {}).get("body", "")).contains("only 1 service action") and String(settlement.get("stations", {}).get("assignment_board", {}).get("secondary", {}).get("tooltip", "")).contains("only 1 service action"), "the assignment board should disclose the exact later shortage before decline")
 	_expect_pure(state, before, "settlement presenter")
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "route_selected": false, "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
@@ -63,8 +64,16 @@ func _init() -> void:
 	_expect(recovery.get("location_id") == "morrowline_camp" and String(recovery.get("local_stake", "")).contains("promise is kept"), "recovery presenter should preserve the live location and completed human stake")
 	_expect(recovery.get("repair_text") == "REPAIR" and recovery.get("routes_text") == "ROUTES", "recovery presenter should preserve existing service command labels")
 	_expect_pure(state, recovery_before, "recovery presenter")
+	state.guard_contract_status = "declined"
+	state.settlement_actions_remaining = 1
+	var shortage_before := state.serialize()
+	var shortage := RecoveryPresenter.build(state, fortress, {}, "", "Morrowline Camp")
+	_expect(String(shortage.get("local_stake", "")).contains("PARTS SHORTAGE") and String(shortage.get("local_stake", "")).contains("only 1 service action"), "Morrowline recovery should name the declined convoy's mechanical consequence")
+	_expect(String(shortage.get("context", "")).contains("1 finite service opportunity"), "the shortage recovery context should agree with the authoritative action budget")
+	_expect_pure(state, shortage_before, "shortage recovery presenter")
 
 	state.phase = "results"
+	state.guard_contract_status = "completed"
 	state.final_result = "decisive_march"
 	state.current_location = "meridian_pass"
 	state.campaign_path = ["ashgate_depot", "rill_crossing", "morrowline_camp", "meridian_pass"]
@@ -73,6 +82,7 @@ func _init() -> void:
 	var debrief := DebriefPresenter.build(state, fortress, {"run_code": "TEST-RUN", "contract_status": state.guard_contract_status, "decision_record": "no route events on this path", "result_summary": "The road opened.", "causal_chain": "The fortress held.", "system_condition": "Damaged systems · none", "replay_text": "NEXT RUN · Try another road.", "starting_region_results": {}})
 	_expect(debrief.get("headline") == "DECISIVE" and debrief.get("run_code") == "TEST-RUN" and debrief.get("timeline", []).size() == 3, "debrief presenter should preserve outcome identity, run identity, and route timeline")
 	_expect(String(debrief.get("consequence", "")).contains("CAUSE → The fortress held") and debrief.get("march_on_label") == "MARCH ON · FLOODED VEYRU", "debrief presenter should preserve the supplied causal chain and regional handoff")
+	_expect(String(debrief.get("commitments", "")).contains("Convoy delivered · 2 recovery actions"), "the debrief should retain the convoy's resolved service consequence")
 	_expect_pure(state, debrief_before, "debrief presenter")
 
 	if failures.is_empty():

@@ -33,6 +33,8 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 			damaged_count += 1
 	var promises: Array[String] = []
 	promises.append("Contract · %s  |  Doctrine · %s" % [String(context.get("contract_status", "unoffered")).replace("_", " ").capitalize(), state.encounter_target_doctrine.replace("_", " ").capitalize()])
+	if state.campaign_region_id == "ashgate_lowlands" and state.guard_contract_status in ["completed", "declined", "failed"]:
+		promises.append("Morrowline service · %s" % ("Convoy delivered · 2 recovery actions" if state.guard_contract_status == "completed" else "Parts shortage · 1 recovery action"))
 	var carried: Array[String] = []
 	if not state.specialist_id.is_empty():
 		carried.append(state.specialist_name())
