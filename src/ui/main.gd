@@ -2239,7 +2239,9 @@ func _show_selected_route_preview(node_id: String) -> void:
 	if journey_planner != null and journey_planner.visible:
 		var preview := state.campaign_node_preview(node_id, _selected_id(doctrine_option))
 		var concise_detail := "%d day%s · %d fuel · %s risk" % [int(preview.get("days", 0)), "" if int(preview.get("days", 0)) == 1 else "s", int(preview.get("fuel", 0)), String(preview.get("risk_band", "unknown")).to_upper()]
-		_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, concise_detail, "\nBLOCKED · %s" % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
+		var route_effect := String(preview.get("route_effect", ""))
+		var effect_line := "\nRECOVERY · %s." % route_effect if not route_effect.is_empty() else ""
+		_set_route_preview("ROUTE READY · %s\n%s%s%s%s" % [node_name, concise_detail, effect_line, "\nBLOCKED · %s" % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
 		return
 	_set_route_preview("ROUTE READY · %s\n%s%s%s" % [node_name, selected_detail, " Departure blocked: %s." % block_reason if not block_reason.is_empty() else "", final_warning], "danger" if not block_reason.is_empty() or node_id == state.campaign_final_node_id() else campaign_map.intel_tone_for(node_id))
 

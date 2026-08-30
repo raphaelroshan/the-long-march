@@ -16,7 +16,7 @@ static func build(state: LongMarchState, fortress: Dictionary, controls: Diction
 		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells." if is_morrowline else "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores.",
 		"service_priority": "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass." if is_morrowline else "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road.",
 		"local_stake": local_stake,
-		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a working condenser; Signal Causeway exposes signal systems." if is_morrowline else "OUTBOUND ROADS · Archive Causeway is the controlled high road; Drowned Registry trades safety for salvage; Pilgrim Gantry is the slow recovery line.",
+		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a condenser; Signal Causeway risks signal; Cinder Quarry trades a mixed contact for field repair." if is_morrowline else "OUTBOUND ROADS · Archive Causeway is the controlled high road; Drowned Registry trades safety for salvage; Pilgrim Gantry is the slow recovery line.",
 		"values": {"hull": "%d/10" % state.hull_condition, "fuel": str(state.fuel), "money": str(state.money), "actions": str(state.settlement_actions_remaining), "trust": str(state.settlement_trust), "pressure": "%s %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]},
 		"repair_text": String(controls.get("repair_text", "REPAIR MODULE")),
 		"repair_tooltip": String(controls.get("repair_tooltip", "Review module repair.")),

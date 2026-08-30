@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.293` and later
+**Applies to:** `0.3.0-alpha.294` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -20,7 +20,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **L4 — complete in alpha.291** | Complete road-contact cause and effect | Stage forecast, approach, target lock, wind-up, response, impact, dependency consequence, and settle. Every major threat must have a visible intent, counter, and consequence. |
 | **L5 — complete in alpha.292** | Strengthen settlement and route identity | Ashgate, Morrowline, Lantern Quay, and Evacuation Camp must differ in visual motif, service priority, operational pressure, and route meaning. Avoid menu-only reskins. |
 | **L6 — complete in alpha.293** | Extract presentation boundaries | Refactor the monolithic presentation code into focused settlement, route, contact, recovery, and debrief presenters or panels. Preserve state ownership and command contracts. |
-| **L7** | Add one controlled content slice | Add one specialist, threat, facility, or route branch only after L1–L6. Specify the player question, counter, weakness, data schema, deterministic encounter, recovery consequence, and evidence captures. |
+| **L7 — complete in alpha.294** | Add one controlled content slice | Add one specialist, threat, facility, or route branch only after L1–L6. Specify the player question, counter, weakness, data schema, deterministic encounter, recovery consequence, and evidence captures. |
 | **L8** | Add failure-forward campaign texture | Turn one completed, declined, or failed promise into a visible later route, settlement, faction, shortage, refuge, or service consequence. Keep it small, deterministic, inspectable, and capable of supporting multiple endings. |
 | **L9** | Build replayable mastery | Offer bounded route, doctrine, specialist, and recovery variations. Avoid grind and forced build orders; each expanded teaching scenario needs at least two viable solutions. |
 | **L10** | Harden the private alpha | Verify saves, migration, clean install, controller, scaling, audio, performance, package provenance, offline behavior, and complete-flow evidence. Human sessions may be run afterward for calibration but do not block the artifact. |
@@ -33,7 +33,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l6_presentation_boundaries_report.md`. Implement **L7 Controlled Content Slice** only. Add one small authored route branch in an existing region using existing threats and facilities. Specify its player question, stable node data, trade-off, forecast, encounter composition, recovery consequence, route-map presentation, save/replay coverage, and visual evidence. It must create at least two viable plans and must not add a region, threat family, facility family, currency, or second simulation path.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l7_cinder_quarry_report.md`. Implement **L8 Failure-Forward Campaign Texture** only. Choose one existing declined or failed promise and make it produce a small, deterministic later route, settlement, shortage, refuge, or service consequence. The consequence must be visible before commitment, survive save/load, affect more than flavor text, and preserve a viable path to every current ending. Add focused state/UI tests and evidence; do not add a faction meter or broad narrative system.
 
 ## Definition of game-quality readiness
 

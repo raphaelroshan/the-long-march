@@ -17,6 +17,8 @@ var app: Control
 var game: Control
 var capture_dir := ""
 var responsive_profile := false
+var cinder_quarry_profile := false
+var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
 
 
@@ -57,6 +59,8 @@ func _settle(frames: int = 3) -> void:
 
 func _capture(name: String) -> void:
 	if capture_dir.is_empty():
+		return
+	if not capture_filter.is_empty() and name not in capture_filter:
 		return
 	DirAccess.make_dir_recursive_absolute(capture_dir)
 	await RenderingServer.frame_post_draw
@@ -298,7 +302,7 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
 	await _choose_event("decline_mara")
 	_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
-	_expect(game.recovery_panel.local_stake_label.text.contains("convoy promise") and game.recovery_panel.route_outlook_label.text.contains("Lower Ash") and game.recovery_panel.route_outlook_label.text.contains("Dry Cistern") and game.recovery_panel.route_outlook_label.text.contains("Signal Causeway"), "Morrowline recovery should carry the convoy stake into three distinct outbound road meanings")
+	_expect(game.recovery_panel.local_stake_label.text.contains("convoy promise") and game.recovery_panel.route_outlook_label.text.contains("Lower Ash") and game.recovery_panel.route_outlook_label.text.contains("Dry Cistern") and game.recovery_panel.route_outlook_label.text.contains("Signal Causeway") and game.recovery_panel.route_outlook_label.text.contains("Cinder Quarry"), "Morrowline recovery should carry the convoy stake into four distinct outbound road meanings")
 	_expect_three_column_contract(game.recovery_panel, game.recovery_panel.value_labels["hull"], game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, "Morrowline recovery")
 	await _capture("11_morrowline_recovery")
 	if not game.recovery_panel.refuel_button.disabled:
@@ -306,11 +310,30 @@ func _run_ashgate_journey() -> void:
 		await _settle()
 	game.recovery_panel.routes_button.pressed.emit()
 	await _settle()
+	if cinder_quarry_profile:
+		game.doctrine_option.select(2)
+		game.doctrine_option.item_selected.emit(2)
+		await _settle()
+	var quarry_button := game.campaign_map.button_for("cinder_quarry") as Button
+	_expect(quarry_button != null and not quarry_button.disabled and game.campaign_map.status_for("cinder_quarry") == "available", "Morrowline should expose Cinder Quarry as a fourth viable road")
+	quarry_button.pressed.emit()
+	await _settle()
+	_expect(game.route_preview_label.text.contains("CINDER QUARRY") and game.route_preview_label.text.contains("2 fuel") and game.route_preview_label.text.contains("weakest damaged system") and game.campaign_map.detail_for("cinder_quarry").contains("weakest damaged system"), "the Cinder Quarry preview should visibly disclose its exact cost and guaranteed field-recovery consequence")
+	await _capture("11b_cinder_quarry_route")
 
-	await _commit_route("lower_ash_road")
-	await _enter_contact()
-	await _resolve_contact("map")
-	await _acknowledge_arrival()
+	if cinder_quarry_profile:
+		await _commit_route("cinder_quarry")
+		await _enter_contact()
+		await _capture("11c_cinder_quarry_contact")
+		await _resolve_contact("map")
+		_expect(game.journey_arrival.report_label.text.contains("Cinder Quarry recovery:"), "Cinder Quarry arrival should expose its guaranteed field-recovery consequence")
+		await _capture("11d_cinder_quarry_recovery")
+		await _acknowledge_arrival()
+	else:
+		await _commit_route("lower_ash_road")
+		await _enter_contact()
+		await _resolve_contact("map")
+		await _acknowledge_arrival()
 	_expect(game.state.campaign_encounters_completed == 4 and game.campaign_map.button_for("meridian_pass").visible, "the fourth road should expose the final commitment")
 
 	await _commit_route("meridian_pass")
@@ -333,6 +356,11 @@ func _run() -> void:
 	_remove_local_state()
 	_configure_environment_profile()
 	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
+	cinder_quarry_profile = OS.get_environment("LONG_MARCH_CINDER_QUARRY_PROFILE") == "1"
+	var capture_filter_text := OS.get_environment("LONG_MARCH_CAPTURE_FILTER")
+	if not capture_filter_text.is_empty():
+		for capture_name in capture_filter_text.split(",", false):
+			capture_filter.append(String(capture_name).strip_edges())
 	root.size = viewport_size
 	await _launch_app()
 	_expect(app.tutorial_button.has_focus(), "a clean save should focus Learn to Command")
@@ -346,6 +374,8 @@ func _run() -> void:
 	await _settle()
 	_remove_local_state()
 	if failures.is_empty():
+		if cinder_quarry_profile:
+			print("PASS: The Long March Cinder Quarry route profile")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")

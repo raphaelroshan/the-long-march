@@ -27,6 +27,7 @@ func _init() -> void:
 	_test_campaign_events_and_closure()
 	_test_water_condenser_route_unlock()
 	_test_water_condenser_threat_and_recovery()
+	_test_cinder_quarry_route_branch()
 	_test_mara_flint_event_chain()
 	_test_bounded_occurrence_scheduler()
 	_test_flooded_veyru_region_state()
@@ -665,10 +666,10 @@ func _test_campaign_events_and_closure() -> void:
 	state.phase = "settlement"
 	state.campaign_pressure = 5
 	_expect(state.campaign_node_closed("signal_causeway"), "Signal Causeway should close at Break pressure without reliable forecasting")
-	_expect(state.campaign_available_nodes() == ["lower_ash_road"], "closure pressure must leave the Lower Ash Road recovery route available")
+	_expect(state.campaign_available_nodes() == ["lower_ash_road", "cinder_quarry"], "closure pressure must leave both the Lower Ash and Cinder Quarry recovery routes available")
 	state.specialist_id = "iven_pell"
 	_expect(not state.campaign_node_closed("signal_causeway"), "Iven should keep the Signal Causeway readable at Break pressure")
-	_expect(state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "reliable forecasting should restore both Morrowline departures")
+	_expect(state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway", "cinder_quarry"], "reliable forecasting should restore Signal Causeway while preserving both recovery routes")
 
 func _install_mara_loadout(state: LongMarchState, include_refuge: bool = true) -> void:
 	state.place_module("steam_lance_engine", Vector2i(0, 0))
@@ -1130,7 +1131,7 @@ func _test_water_condenser_route_unlock() -> void:
 	locked_state.choose_guard_contract(false)
 	locked_state.current_location = "morrowline_camp"
 	locked_state.phase = "settlement"
-	_expect(locked_state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway"], "Dry Cistern Cut should stay unavailable without a Ready Water Condenser")
+	_expect(locked_state.campaign_available_nodes() == ["lower_ash_road", "signal_causeway", "cinder_quarry"], "Dry Cistern Cut should stay unavailable without a Ready Water Condenser while Cinder Quarry remains open")
 	_expect(String(locked_state.campaign_node_lock_reason("dry_cistern_cut")).contains("Ready Water Condenser"), "the locked dry road should name its system requirement")
 	var blocked_departure := locked_state.begin_campaign_route("dry_cistern_cut")
 	_expect(not bool(blocked_departure.get("ok", false)) and String(blocked_departure.get("reason", "")).contains("Field Workshop"), "attempting the locked dry road should return its actionable maintenance requirement")
@@ -1147,11 +1148,11 @@ func _test_water_condenser_route_unlock() -> void:
 	ready_state.current_location = "morrowline_camp"
 	ready_state.phase = "settlement"
 	_expect(ready_state.total_mass() == 13 and ready_state.total_heat() == LongMarchState.BASE_HEAT_LIMIT, "the cool condenser fixture should remain within both chassis mass and heat limits by giving up weapon coverage")
-	_expect(ready_state.campaign_available_nodes() == ["lower_ash_road", "dry_cistern_cut", "signal_causeway"], "a Ready Water Condenser should add Dry Cistern Cut as a third Morrowline road")
+	_expect(ready_state.campaign_available_nodes() == ["lower_ash_road", "dry_cistern_cut", "signal_causeway", "cinder_quarry"], "a Ready Water Condenser should add Dry Cistern Cut alongside the three baseline Morrowline roads")
 	var preview := ready_state.campaign_node_preview("dry_cistern_cut")
 	_expect(int(preview.get("fuel", 0)) == 1 and int(preview.get("fuel_discount", 0)) == 1, "the Ready Water Condenser should reduce Dry Cistern Cut from two fuel to one")
 	var comparison := ready_state.campaign_route_comparison()
-	_expect(comparison.size() == 3 and String(comparison[1].get("id", "")) == "dry_cistern_cut" and int(comparison[1].get("fuel", 0)) == 1 and int(comparison[1].get("fuel_discount", 0)) == 1, "route comparison should include the unlocked dry road and its explicit condenser fuel discount")
+	_expect(comparison.size() == 4 and String(comparison[1].get("id", "")) == "dry_cistern_cut" and int(comparison[1].get("fuel", 0)) == 1 and int(comparison[1].get("fuel_discount", 0)) == 1, "route comparison should include the unlocked dry road and its explicit condenser fuel discount")
 	var fuel_before := ready_state.fuel
 	var departure := ready_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
 	_expect(bool(departure.get("ok", false)) and ready_state.fuel == fuel_before - 1, "committing to Dry Cistern Cut should charge the discounted fuel cost")
@@ -1220,6 +1221,70 @@ func _test_water_condenser_threat_and_recovery() -> void:
 		replay_state.begin_campaign_route("dry_cistern_cut", "protect_crew")
 		replay_state.advance_encounter(6.0)
 	_expect(first.encounter_report == second.encounter_report and first.modules == second.modules and first.hull_condition == second.hull_condition, "the Water Condenser teaching encounter should replay deterministically from the same seed, layout, and doctrine")
+
+func _prepare_cinder_quarry_state() -> LongMarchState:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	state.current_location = "morrowline_camp"
+	state.journey_node = "morrowline_camp"
+	state.campaign_last_safe_node = "morrowline_camp"
+	state.campaign_path = ["ashgate_depot", "rill_crossing", "broken_relay", "morrowline_camp"]
+	state.campaign_encounters_completed = 3
+	state.campaign_event_pending = ""
+	state.phase = "settlement"
+	return state
+
+func _test_cinder_quarry_route_branch() -> void:
+	var repair_state := _prepare_cinder_quarry_state()
+	repair_state._change_module_durability("crew_quarters", -1)
+	var repair_result := repair_state._apply_cinder_quarry_recovery()
+	_expect(String(repair_result.get("kind", "")) == "repair" and String(repair_result.get("module_id", "")) == "crew_quarters" and int(repair_result.get("amount", 0)) == 1 and repair_state.operational("crew_quarters"), "Cinder Quarry plate crews should restore up to 2 durability to the deterministic weakest damaged system")
+	var sale_state := _prepare_cinder_quarry_state()
+	var money_before := sale_state.money
+	var sale_result := sale_state._apply_cinder_quarry_recovery()
+	_expect(String(sale_result.get("kind", "")) == "ashmarks" and sale_state.money == money_before + 8, "Cinder Quarry should sell unused plate for 8 Ashmarks when no system needs repair")
+
+	var first := _prepare_cinder_quarry_state()
+	first._change_module_durability("crew_quarters", -1)
+	var preview := first.campaign_node_preview("cinder_quarry", "run_hot")
+	_expect(bool(preview.get("ok", false)) and int(preview.get("days", 0)) == 1 and int(preview.get("fuel", 0)) == 2 and int(preview.get("pressure_gain", 0)) == 1 and String(preview.get("risk_band", "")) == "high", "Cinder Quarry should disclose its fast, fuel-heavy, high-risk route cost")
+	_expect(String(preview.get("route_effect", "")).contains("weakest damaged system") and String(preview.get("threat_hint", "")).contains("raiders above"), "Cinder Quarry should disclose its field-repair payoff and two-direction threat forecast")
+	var departure := first.begin_campaign_route("cinder_quarry", "run_hot")
+	_expect(bool(departure.get("ok", false)) and first.encounter_enemies.size() == 2 and String(first.encounter_enemies[0].get("id", "")) == "road_raiders" and String(first.encounter_enemies[1].get("id", "")) == "burrowers", "Cinder Quarry should combine the existing cargo and lower-hull threat families in stable order")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(first.serialize()).get("ok", false)) and restored.campaign_target_node == "cinder_quarry" and restored.encounter_enemies == first.encounter_enemies, "an active Cinder Quarry route should preserve its node and encounter composition across save/load")
+	for replay_state in [first, restored]:
+		replay_state.advance_encounter(1.0)
+		replay_state.use_encounter_intervention("shift_power")
+		replay_state.advance_encounter(6.0)
+	_expect(first.encounter_report == restored.encounter_report and first.modules == restored.modules and first.hull_condition == restored.hull_condition, "Cinder Quarry should replay deterministically from the same saved contact")
+	_expect(first.phase == "map" and first.current_location == "cinder_quarry" and first.campaign_available_nodes() == ["meridian_pass"], "securing Cinder Quarry should preserve the five-encounter path and expose Meridian Pass")
+	_expect(first.encounter_report.filter(func(line: String) -> bool: return line.contains("Cinder Quarry recovery:")).size() == 1, "Cinder Quarry victory should record exactly one field-recovery consequence")
+
+	var armored := LongMarchState.new(1107)
+	armored.place_module("steam_lance_engine", Vector2i(0, 0))
+	armored.place_module("coal_cell", Vector2i(0, 1))
+	armored.place_module("side_armor_skirt", Vector2i(1, 1))
+	armored.place_module("generator_core", Vector2i(2, 0))
+	armored.place_module("ammunition_lift", Vector2i(2, 1))
+	armored.place_module("repeater_gun", Vector2i(3, 2), true)
+	armored.place_module("crew_quarters", Vector2i(4, 0))
+	armored.seed_starter_inventory()
+	armored.start_campaign()
+	armored.choose_guard_contract(false)
+	armored.current_location = "morrowline_camp"
+	armored.journey_node = "morrowline_camp"
+	armored.campaign_last_safe_node = "morrowline_camp"
+	armored.campaign_path = ["ashgate_depot", "rill_crossing", "broken_relay", "morrowline_camp"]
+	armored.campaign_encounters_completed = 3
+	armored.phase = "settlement"
+	_expect(bool(armored.begin_campaign_route("cinder_quarry", "protect_cargo").get("ok", false)), "an armored cargo-protection plan should be able to commit to Cinder Quarry")
+	armored.advance_encounter(1.0)
+	armored.use_encounter_intervention("shift_power")
+	armored.advance_encounter(6.0)
+	_expect(armored.phase == "map" and armored.current_location == "cinder_quarry" and armored.encounter_report.filter(func(line: String) -> bool: return line.contains("Side Armor Skirt absorbs")).size() > 0, "lower-hull armor should provide a second viable Cinder Quarry plan without Run Hot")
 
 func _test_complete_five_encounter_campaign() -> void:
 	var state := LongMarchState.new(1107)

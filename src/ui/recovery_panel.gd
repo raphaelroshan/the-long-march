@@ -316,7 +316,7 @@ class RecoveryCanvas extends Control:
 		var sign_rect := Rect2(center + Vector2(-150, 5), Vector2(300, 27))
 		draw_rect(sign_rect, Color("#14262a") if flooded else Color("#33281f"), true)
 		draw_rect(sign_rect, color, false, 2.0)
-		var sign_text := "CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL ROAD"
+		var sign_text := "CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL · QUARRY"
 		draw_string(ThemeDB.fallback_font, sign_rect.position + Vector2(6, 18), sign_text, HORIZONTAL_ALIGNMENT_CENTER, sign_rect.size.x - 12, 9, color)
 
 	func presentation_signature() -> String:
@@ -328,4 +328,4 @@ class RecoveryCanvas extends Control:
 		return "FIELD RECOVERY · TEMPORARY ROAD STOP"
 
 	func route_signature() -> String:
-		return "CAUSEWAY · REGISTRY · GANTRY" if String(current_view.get("location_id", "")) == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL ROAD"
+		return "CAUSEWAY · REGISTRY · GANTRY" if String(current_view.get("location_id", "")) == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL · QUARRY"
