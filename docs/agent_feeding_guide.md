@@ -4,14 +4,14 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.290`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, the first eight game-quality transformation slices, shared-fortress continuity, battle rhythm, settlement-identity passes, and verifiable playtest-cohort packaging are complete. The next implementation gate is complete road-contact cause and effect. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.291`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, full seven-family road-contact causality, the first eight game-quality transformation slices, shared-fortress continuity, settlement-identity passes, and verifiable playtest-cohort packaging are complete. The next implementation gate strengthens settlement and route identity. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
 
-### Active Feed 0 — road-contact cause and effect
+### Active Feed 0 — settlement and route identity
 
-**Status:** Next. L3 journey rhythm is proven in `0.3.0-alpha.290`.
+**Status:** Next. L4 road-contact cause and effect is proven in `0.3.0-alpha.291`.
 
 ```text
-For every existing major threat family, prove forecast, approach, target lock, wind-up, response window, impact, dependency consequence, and settle with readable intent, counter, and consequence. Preserve deterministic target order, damage, saves, pause, speed, manual-step, and reduced motion. Add phase assertions and focused visual evidence without adding a new threat.
+Strengthen Ashgate Depot, Morrowline Camp, Lantern Quay, and Evacuation Camp so each differs in visual motif, service priority, operational pressure, and route meaning. Preserve station IDs, route graph, costs, outcomes, saves, focus, controller navigation, scaling, and accessibility. Add deterministic UI assertions and focused visual evidence without adding a new settlement or service.
 ```
 
 ### Active Feed 1 — optional five-session human validation
