@@ -50,11 +50,17 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		promises.append("Key choices · %s" % decision_record)
 	if state.campaign_decisions.has("mara_workbench_choice"):
 		promises.append("Forge-core promise · %s" % state.mara_debrief_line().trim_prefix("Mara Flint — "))
+	var mastery := state.mastery_experiment_details()
+	if bool(mastery.get("active", false)):
+		promises.append("Field order · %s · %s" % [String(mastery.get("title", "Experiment")), String(mastery.get("status", "ACTIVE"))])
 	for occurrence_line in state.occurrence_debrief_lines():
 		promises.append(String(occurrence_line).replace("Road occurrence — ", "Occurrence · "))
 	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
 	var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
 	var next_region_result := String(Dictionary(context.get("starting_region_results", {})).get(next_region_id, ""))
+	var experiment_text := String(context.get("replay_text", "")).trim_prefix("NEXT RUN · ")
+	if bool(mastery.get("active", false)):
+		experiment_text = "%s · %s\n%s\n\nNEXT · %s" % [String(mastery.get("status", "ACTIVE")), String(mastery.get("title", "Field order")).to_upper(), String(mastery.get("proof", "Complete the stated objective.")), experiment_text]
 	return {
 		"region_id": state.campaign_region_id,
 		"region_name": state.campaign_region_name(),
@@ -68,7 +74,7 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		"commitments": "\n".join(promises),
 		"consequence": "%s\n\nCAUSE → %s" % [String(context.get("result_summary", "")), String(context.get("causal_chain", ""))],
 		"condition": "HULL %d/10 · FUEL %d · HEAT %d/%d\n%d ready · %d strained · %d offline\n%s" % [state.hull_condition, state.fuel, state.heat, LongMarchState.BASE_HEAT_LIMIT, int(dependencies.get("ready", 0)), int(dependencies.get("strained", 0)), int(dependencies.get("offline", 0)), String(context.get("system_condition", ""))],
-		"experiment": String(context.get("replay_text", "")).trim_prefix("NEXT RUN · "),
+		"experiment": experiment_text,
 		"march_on_label": "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name],
 		"fortress": fortress.duplicate(true),
 		"damaged_count": damaged_count,

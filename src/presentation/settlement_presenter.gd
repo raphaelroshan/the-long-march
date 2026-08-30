@@ -29,6 +29,21 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		settlement_context = "ASSIGNMENT RECEIPT · %s accepted. Prepare the fortress, then plan the first road." % ("Sealed medicine delivery" if is_veyru else "Morrowline convoy guard")
 	elif contract_status == "declined":
 		settlement_context = "ASSIGNMENT RECEIPT · Traveling without the convoy. Morrowline will have 1 service action; prepare the fortress, then plan the first road." if not is_veyru else "ASSIGNMENT RECEIPT · Traveling without the local obligation. Prepare the fortress, then plan the first road."
+	var signal_station := {"title": "Signal Broker", "status": "NO LOCAL REPORTS", "button_status": "QUIET", "body": "Lantern keepers compare water levels and archive signals. Exact forecasts still depend on working signal equipment." if is_veyru else "Depot signalers compare blockade sightings and ash fronts. Exact forecasts still depend on working signal equipment.", "tone": "muted"}
+	if not is_veyru:
+		var experiment := state.mastery_experiment_details()
+		var selected_title := String(experiment.get("title", "No field order"))
+		signal_station = {
+			"title": "Marchmaster's Desk",
+			"status": String(experiment.get("status", "UNASSIGNED")),
+			"button_status": selected_title.to_upper() if bool(experiment.get("active", false)) else "OPTIONAL",
+			"body": ("Selected: %s\n%s\n\nNo rewards or unlocks; this is a visible replay goal." % [selected_title, String(experiment.get("brief", ""))]) if bool(experiment.get("active", false)) else "Choose one optional field experiment. Quarry Adaptation tests route and doctrine; Signal Discipline tests specialist or equipment planning. Each accepts two distinct solutions and grants no permanent reward.",
+			"tone": "safe" if bool(experiment.get("active", false)) else "neutral",
+			"primary": {"id": "select_experiment_quarry", "label": "FIELD ORDER · QUARRY", "enabled": true, "tooltip": "Secure Cinder Quarry with Run Hot speed or Protect Cargo plus lower-hull armor."},
+			"secondary": {"id": "select_experiment_signal", "label": "FIELD ORDER · SIGNAL", "enabled": true, "tooltip": "Secure Signal Causeway with Iven Pell or an operational Wall Lamp."}
+		}
+		if bool(experiment.get("active", false)):
+			settlement_context += " · FIELD ORDER: %s" % selected_title.to_upper()
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,
@@ -50,7 +65,7 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		"stations": {
 			"workshop": {"title": "Chassis Workshop", "status": "REFIT AVAILABLE", "button_status": "REFIT", "body": ("Use the quay's dry gantry to inspect the walking fortress and protect its lower hull before the archive road." if is_veyru else "Use the depot's rail-side repair bay to inspect the walking fortress, trace dependencies, and prepare its movement chain."), "tone": "safe", "primary": {"id": "open_workshop", "label": "ENTER WORKSHOP", "enabled": true, "tooltip": "Open the detailed chassis workbench."}},
 			"quartermaster": {"title": "Quartermaster Stores", "status": "%d ASHMARKS · %d FUEL" % [state.money, state.fuel], "button_status": "STORES", "body": ("Review medicine space, fuel, and carried modules before the flood roads. Trading inventory is not yet available here." if is_veyru else "Review fuel, parts, and carried modules before leaving the rail depot. Trading inventory is not yet available here."), "tone": "neutral", "primary": {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}},
-			"signal_broker": {"title": "Signal Broker", "status": "NO LOCAL REPORTS", "button_status": "QUIET", "body": ("Lantern keepers compare water levels and archive signals. Exact forecasts still depend on working signal equipment." if is_veyru else "Depot signalers compare blockade sightings and ash fronts. Exact forecasts still depend on working signal equipment."), "tone": "muted"},
+			"signal_broker": signal_station,
 			"hiring_post": {"title": "Hiring Post", "status": "NO CREW AVAILABLE", "button_status": "EMPTY", "body": "Specialists are encountered through authored locations and events. The hiring board is empty at this stop.", "tone": "muted"},
 			"assignment_board": assignment_station,
 			"departure_gate": {"title": "Departure Gate", "status": "ROUTES READY" if departure_ready else "ASSIGNMENT BLOCKS DEPARTURE", "button_status": "PLAN JOURNEY" if departure_ready else "LOCKED", "body": (("Pump Gallery is the slower managed-water road; Sunken Tramworks is the shorter submerged cut. Open the route table to compare exact costs and intelligence before Commit." if is_veyru else "Rill Crossing is the direct convoy road; Soot Orchard is the longer salvage road. Open the route table to compare exact costs and intelligence before Commit.") if departure_ready else "The settlement requires an answer at the assignment board before it will clear the fortress to leave."), "tone": "safe" if departure_ready else "warning", "primary": {"id": "plan_journey", "label": "PLAN JOURNEY", "enabled": departure_ready, "tooltip": "Open the regional map without committing a route."}}

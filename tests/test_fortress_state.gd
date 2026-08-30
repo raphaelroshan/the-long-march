@@ -24,6 +24,7 @@ func _init() -> void:
 	_test_encounter_save_round_trip()
 	_test_campaign_graph_and_visibility()
 	_test_campaign_contract_and_specialist()
+	_test_mastery_experiments()
 	_test_morrowline_parts_shortage()
 	_test_campaign_events_and_closure()
 	_test_water_condenser_route_unlock()
@@ -708,6 +709,26 @@ func _test_morrowline_parts_shortage() -> void:
 	_expect(bool(declined.settlement_refuel().get("ok", false)) and declined.settlement_actions_remaining == 0, "the shortage path should still allow one chosen recovery service")
 	_expect(not bool(declined.settlement_repair_hull().get("ok", false)), "a second Morrowline service should be blocked after the shortage action is spent")
 
+func _test_mastery_experiments() -> void:
+	var state := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(state)
+	state.start_campaign()
+	var resources_before := {"day": state.day, "fuel": state.fuel, "money": state.money, "trust": state.settlement_trust}
+	var selected := state.choose_mastery_experiment("ashgate_quarry_adaptation")
+	_expect(bool(selected.get("ok", false)) and state.mastery_experiment_id == "ashgate_quarry_adaptation", "Ashgate should accept the bounded Quarry Adaptation field order")
+	_expect(String(state.mastery_experiment_details().get("status", "")) == "ACTIVE" and not bool(state.mastery_experiment_details().get("proven", true)), "a newly selected field order should be active without claiming completion")
+	_expect(resources_before == {"day": state.day, "fuel": state.fuel, "money": state.money, "trust": state.settlement_trust}, "selecting a field order should grant no currency, stat, or progression reward")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.mastery_experiment_id == state.mastery_experiment_id and restored.mastery_experiment_details() == state.mastery_experiment_details(), "the optional mastery order should survive save/load without changing its evaluation")
+	var invalid_payload := state.serialize()
+	invalid_payload["mastery_experiment_id"] = "unknown_experiment"
+	_expect(not bool(LongMarchState.new(0).load_serialized(invalid_payload).get("ok", false)), "unknown mastery IDs should be rejected during save validation")
+	_expect(not bool(state.choose_mastery_experiment("unknown_experiment").get("ok", false)), "unknown field orders should be rejected")
+	state.current_location = "rill_crossing"
+	state.phase = "map"
+	state.campaign_encounters_completed = 1
+	_expect(not bool(state.choose_mastery_experiment("ashgate_signal_discipline").get("ok", false)), "a field order should not be changed after the first road begins")
+
 func _arrive_at_morrowline_for_mara(state: LongMarchState) -> void:
 	state.start_campaign()
 	state.choose_guard_contract(false)
@@ -1253,6 +1274,7 @@ func _prepare_cinder_quarry_state() -> LongMarchState:
 	_install_campaign_signal_loadout(state)
 	state.start_campaign()
 	state.choose_guard_contract(false)
+	state.choose_mastery_experiment("ashgate_quarry_adaptation")
 	state.current_location = "morrowline_camp"
 	state.journey_node = "morrowline_camp"
 	state.campaign_last_safe_node = "morrowline_camp"
@@ -1287,6 +1309,7 @@ func _test_cinder_quarry_route_branch() -> void:
 		replay_state.advance_encounter(6.0)
 	_expect(first.encounter_report == restored.encounter_report and first.modules == restored.modules and first.hull_condition == restored.hull_condition, "Cinder Quarry should replay deterministically from the same saved contact")
 	_expect(first.phase == "map" and first.current_location == "cinder_quarry" and first.campaign_available_nodes() == ["meridian_pass"], "securing Cinder Quarry should preserve the five-encounter path and expose Meridian Pass")
+	_expect(bool(first.mastery_experiment_details().get("proven", false)) and String(first.mastery_experiment_details().get("status", "")) == "PROVEN", "Run Hot should prove Quarry Adaptation when Cinder Quarry is secured")
 	_expect(first.encounter_report.filter(func(line: String) -> bool: return line.contains("Cinder Quarry recovery:")).size() == 1, "Cinder Quarry victory should record exactly one field-recovery consequence")
 
 	var armored := LongMarchState.new(1107)
@@ -1300,6 +1323,7 @@ func _test_cinder_quarry_route_branch() -> void:
 	armored.seed_starter_inventory()
 	armored.start_campaign()
 	armored.choose_guard_contract(false)
+	armored.choose_mastery_experiment("ashgate_quarry_adaptation")
 	armored.current_location = "morrowline_camp"
 	armored.journey_node = "morrowline_camp"
 	armored.campaign_last_safe_node = "morrowline_camp"
@@ -1311,11 +1335,13 @@ func _test_cinder_quarry_route_branch() -> void:
 	armored.use_encounter_intervention("shift_power")
 	armored.advance_encounter(6.0)
 	_expect(armored.phase == "map" and armored.current_location == "cinder_quarry" and armored.encounter_report.filter(func(line: String) -> bool: return line.contains("Side Armor Skirt absorbs")).size() > 0, "lower-hull armor should provide a second viable Cinder Quarry plan without Run Hot")
+	_expect(bool(armored.mastery_experiment_details().get("proven", false)), "Protect Cargo and lower-hull armor should prove the same Quarry Adaptation order through a second solution")
 
 func _test_complete_five_encounter_campaign() -> void:
 	var state := LongMarchState.new(1107)
 	_install_campaign_signal_loadout(state)
 	state.start_campaign()
+	state.choose_mastery_experiment("ashgate_signal_discipline")
 	state.choose_guard_contract(true)
 	_campaign_battle(state, "rill_crossing", "protect_cargo")
 	_campaign_battle(state, "broken_relay")
@@ -1329,6 +1355,7 @@ func _test_complete_five_encounter_campaign() -> void:
 	_expect(bool(state.deploy_stored_module("shell_cannon", Vector2i(3, 2), false).get("ok", false)), "Morrowline refit should replace the repeater and signal coil with a shell cannon")
 	var fourth := _campaign_battle(state, "signal_causeway")
 	_expect(bool(fourth.get("resolved", false)) and state.phase == "map", "Iven and the refitted fortress should secure the Signal Causeway")
+	_expect(bool(state.mastery_experiment_details().get("proven", false)), "Iven's forecast should prove Signal Discipline through the specialist solution")
 	var fifth := _campaign_battle(state, "meridian_pass")
 	_expect(bool(fifth.get("resolved", false)) and state.phase == "results", "the fifth campaign encounter should resolve at Meridian Pass")
 	_expect(state.campaign_encounters_completed == 5 and state.run_complete, "the alpha chapter should complete exactly five encounters")
@@ -1339,6 +1366,7 @@ func _test_alternate_five_encounter_campaign() -> void:
 	_install_campaign_signal_loadout(state)
 	_expect(bool(state.deploy_stored_module("wall_lamp", Vector2i(5, 2)).get("ok", false)), "the alternate complete route should prepare an exterior signal counter")
 	state.start_campaign()
+	state.choose_mastery_experiment("ashgate_signal_discipline")
 	state.choose_guard_contract(false)
 	var first := _campaign_battle(state, "soot_orchard", "protect_crew")
 	_expect(bool(first.get("resolved", false)) and state.phase == "map", "the Soot Orchard opening should survive as part of a complete route")
@@ -1355,6 +1383,7 @@ func _test_alternate_five_encounter_campaign() -> void:
 	_expect(not bool(state.settlement_refuel().get("ok", false)), "the convoy shortage should force the alternate route to choose repair instead of also refueling")
 	var fourth := _campaign_battle(state, "signal_causeway", "protect_crew")
 	_expect(bool(fourth.get("resolved", false)) and state.phase == "map", "ready signal equipment should keep the alternate route viable through Signal Causeway")
+	_expect(bool(state.mastery_experiment_details().get("proven", false)), "an operational Wall Lamp should prove Signal Discipline without recruiting Iven")
 	var fifth := _campaign_battle(state, "meridian_pass", "protect_crew")
 	_expect(bool(fifth.get("resolved", false)) and state.phase == "results" and state.run_complete, "the alternate five-encounter route should reach a terminal debrief")
 	_expect(state.campaign_encounters_completed == 5 and state.final_result in ["decisive_march", "scarred_march"], "the alternate route should complete all five encounters without relying on the relay branch or Iven")

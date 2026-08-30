@@ -15,6 +15,20 @@ const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "arch
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
+const MASTERY_EXPERIMENTS := {
+	"ashgate_quarry_adaptation": {
+		"title": "Quarry Adaptation",
+		"brief": "Secure Cinder Quarry with either speed and Run Hot or lower-hull protection and a cargo doctrine.",
+		"proof": "Cinder Quarry secured",
+		"solutions": ["Run Hot with enough movement and firepower", "Protect Cargo with lower-hull armor"]
+	},
+	"ashgate_signal_discipline": {
+		"title": "Signal Discipline",
+		"brief": "Secure Signal Causeway with either Iven Pell's forecast or an operational Wall Lamp.",
+		"proof": "Signal Causeway secured",
+		"solutions": ["Recruit Iven Pell after restoring Broken Relay", "Carry and preserve an operational Wall Lamp"]
+	}
+}
 const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint"}
 const CAMPAIGN_DECISION_OPTIONS := {
 	"salvage_choice": ["take_fuel", "rescue_workers"],
@@ -222,6 +236,7 @@ var mara_repaired_module_id: String = ""
 var relay_repaired: bool = false
 var workers_rescued: bool = false
 var regional_developments: Array[String] = []
+var mastery_experiment_id: String = ""
 
 func _init(world_seed: int = 1107) -> void:
 	seed = world_seed
@@ -231,6 +246,33 @@ func module_definition(module_id: String) -> Dictionary:
 
 func specialist_name() -> String:
 	return String(SPECIALIST_NAMES.get(specialist_id, "None" if specialist_id.is_empty() else specialist_id.replace("_", " ").capitalize()))
+
+func choose_mastery_experiment(experiment_id: String) -> Dictionary:
+	if not campaign_active or campaign_region_id != "ashgate_lowlands" or current_location != "ashgate_depot" or phase != "refit" or campaign_encounters_completed != 0:
+		return {"ok": false, "reason": "field experiments can only be chosen at Ashgate before the first road"}
+	if experiment_id not in MASTERY_EXPERIMENTS:
+		return {"ok": false, "reason": "unknown field experiment"}
+	mastery_experiment_id = experiment_id
+	var details := mastery_experiment_details()
+	var message := "Field experiment selected: %s. %s No reward or unlock is attached; the order is a replay goal." % [String(details.get("title", "Experiment")), String(details.get("brief", ""))]
+	log.append(message)
+	return {"ok": true, "id": mastery_experiment_id, "message": message, "experiment": details}
+
+func mastery_experiment_details() -> Dictionary:
+	if mastery_experiment_id.is_empty() or mastery_experiment_id not in MASTERY_EXPERIMENTS:
+		return {"id": "", "active": false, "status": "UNASSIGNED", "proven": false}
+	var details: Dictionary = Dictionary(MASTERY_EXPERIMENTS[mastery_experiment_id]).duplicate(true)
+	var proven := false
+	match mastery_experiment_id:
+		"ashgate_quarry_adaptation":
+			proven = "cinder_quarry" in campaign_path
+		"ashgate_signal_discipline":
+			proven = "signal_causeway" in campaign_path
+	details["id"] = mastery_experiment_id
+	details["active"] = true
+	details["proven"] = proven
+	details["status"] = "PROVEN" if proven else ("INCOMPLETE" if run_complete else "ACTIVE")
+	return details
 
 func module_shape(module_id: String, rotated: bool = false) -> Vector2i:
 	var definition := module_definition(module_id)
@@ -433,6 +475,7 @@ func start_campaign() -> Dictionary:
 	mara_repaired_module_id = ""
 	relay_repaired = false
 	workers_rescued = false
+	mastery_experiment_id = ""
 	journey_node = "ashgate_depot"
 	journey_destination = ""
 	journey_route = ""
@@ -462,6 +505,7 @@ func start_tutorial() -> Dictionary:
 	veyru_contract_status = "unoffered"
 	settlement_trust = 0
 	specialist_id = ""
+	mastery_experiment_id = ""
 	journey_node = "ashgate_depot"
 	journey_destination = ""
 	journey_route = ""
@@ -542,6 +586,7 @@ func start_flooded_veyru() -> Dictionary:
 	mara_repaired_module_id = ""
 	relay_repaired = false
 	workers_rescued = false
+	mastery_experiment_id = ""
 	journey_node = "lantern_quay"
 	journey_destination = ""
 	journey_route = ""
@@ -1820,7 +1865,8 @@ func summary() -> Dictionary:
 		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued,
-		"regional_developments": regional_developments.duplicate()
+		"regional_developments": regional_developments.duplicate(),
+		"mastery_experiment_id": mastery_experiment_id
 	}
 
 func serialize() -> Dictionary:
@@ -1888,6 +1934,7 @@ func serialize() -> Dictionary:
 		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued,
+		"mastery_experiment_id": mastery_experiment_id,
 		"regional_developments": regional_developments.duplicate(),
 		"modules": _serialized_modules(),
 		"stored_modules": _serialized_stored_modules(),
@@ -2092,10 +2139,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_mara_repaired_module_id := String(data.get("mara_repaired_module_id", ""))
 	var restored_veyru_contract_status := String(data.get("veyru_contract_status", "unoffered"))
 	var restored_veyru_medicine_carrier_id := String(data.get("veyru_medicine_carrier_id", ""))
+	var restored_mastery_experiment_id := String(data.get("mastery_experiment_id", ""))
 	var raw_regional_developments: Variant = data.get("regional_developments", [])
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
 	if restored_campaign_region_id not in VALID_CAMPAIGN_REGIONS:
 		return {"ok": false, "reason": "checkpoint contains an unknown campaign region"}
+	if not restored_mastery_experiment_id.is_empty() and restored_mastery_experiment_id not in MASTERY_EXPERIMENTS:
+		return {"ok": false, "reason": "checkpoint contains an unknown mastery experiment"}
+	if not restored_mastery_experiment_id.is_empty() and restored_campaign_region_id != "ashgate_lowlands":
+		return {"ok": false, "reason": "mastery experiment conflicts with the campaign region"}
 	if not raw_regional_developments is Array or raw_regional_developments.size() > VALID_REGIONAL_DEVELOPMENTS.size():
 		return {"ok": false, "reason": "checkpoint regional development list is malformed"}
 	var restored_regional_developments: Array[String] = []
@@ -2255,6 +2307,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	mara_repaired_module_id = restored_mara_repaired_module_id
 	relay_repaired = bool(data.get("relay_repaired", relay_repaired))
 	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
+	mastery_experiment_id = restored_mastery_experiment_id
 	regional_developments = restored_regional_developments
 	modules = restored_modules_result.get("modules", []).duplicate(true)
 	stored_modules = restored_stored_modules_result.get("modules", []).duplicate(true)

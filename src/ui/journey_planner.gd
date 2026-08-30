@@ -77,6 +77,8 @@ func _build_ui() -> void:
 	header.add_child(pause_button)
 	order_label = Label.new()
 	order_label.text = "Inspect a reachable road. Selection is reversible; Commit begins travel."
+	order_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	order_label.custom_minimum_size = Vector2(0, 36)
 	order_label.add_theme_color_override("font_color", Color("#b8c4c5"))
 	page.add_child(order_label)
 	var body := HBoxContainer.new()

@@ -1,5 +1,11 @@
 # Decision Log — The Long March
 
+## 2026-08-30 — Mastery is an optional field order, not progression
+
+Ashgate's Marchmaster's Desk offers two replay experiments with stable IDs. Quarry Adaptation is proven by securing Cinder Quarry and explicitly accepts either Run Hot speed or Protect Cargo with lower-hull armor. Signal Discipline is proven by securing Signal Causeway and explicitly accepts either Iven Pell's forecast or an operational Wall Lamp.
+
+Field orders spend and grant nothing. They can be switched only before the first road, survive save/load, remain visible during route planning and recovery, and resolve as Proven or Incomplete in the Debrief. This creates replay intent without permanent upgrades, grind, hidden scoring, or a prescribed build.
+
 ## 2026-08-30 — A declined convoy becomes scarce recovery
 
 The Ashgate convoy decision now names its later service consequence before commitment. Completing the promise preserves two Morrowline service actions; declining it leaves the approach easier but produces a parts shortage and only one service action. The shortage is derived from the existing contract status when Morrowline is reached, then persisted in the existing settlement-action field, so no new currency, faction meter, or migration surface is required.

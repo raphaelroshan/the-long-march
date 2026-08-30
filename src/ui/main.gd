@@ -2156,6 +2156,10 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_set_event("The quartermaster opens the fortress stores. Review carried modules, fuel, and current capacity.")
 			_refresh_ui()
 			_focus_control.call_deferred(module_option)
+		"select_experiment_quarry":
+			_on_mastery_experiment_selected("ashgate_quarry_adaptation")
+		"select_experiment_signal":
+			_on_mastery_experiment_selected("ashgate_signal_discipline")
 		"plan_journey":
 			if _active_contract_status() == "offered":
 				_set_event("Answer the settlement assignment before planning the first road.")
@@ -2167,6 +2171,19 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_set_event("The departure gate opens the route table. Inspect a highlighted destination, then confirm the journey separately.")
 			_refresh_ui()
 			focus_current_action.call_deferred()
+
+func _on_mastery_experiment_selected(experiment_id: String) -> void:
+	var result := state.choose_mastery_experiment(experiment_id)
+	if not bool(result.get("ok", false)):
+		_set_event("Field experiment blocked: %s." % String(result.get("reason", "unknown")))
+		_refresh_ui()
+		return
+	var experiment: Dictionary = result.get("experiment", {})
+	last_journey_receipt = "FIELD ORDER · %s · %s" % [String(experiment.get("title", "Experiment")).to_upper(), String(experiment.get("proof", "Complete the stated objective."))]
+	_set_event(String(result.get("message", "Field experiment selected.")))
+	_journal_event("mastery_experiment_selected", {"id": experiment_id})
+	_checkpoint("mastery_experiment_selected")
+	_refresh_ui()
 
 func _on_return_to_settlement_hub() -> void:
 	if not _settlement_hub_available():

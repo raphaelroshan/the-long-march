@@ -40,6 +40,7 @@ const CHECKPOINT_LABELS := {
 	"settlement_service": "Recovery action",
 	"intervention_used": "Emergency order",
 	"new_run_started": "New march",
+	"mastery_experiment_selected": "Field order selected",
 	"tutorial_lesson_completed": "Lesson complete",
 	"manual save": "Manual save",
 	"loaded save": "Loaded save"
