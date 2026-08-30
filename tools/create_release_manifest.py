@@ -33,6 +33,7 @@ def build_manifest(
 	ref: str,
 	run_url: str,
 	platform: str,
+	engine_version: str,
 	verification: list[str],
 ) -> dict[str, Any]:
 	root = root.resolve()
@@ -81,6 +82,7 @@ def build_manifest(
 			"ref": ref,
 			"workflow_run_url": run_url,
 		},
+		"toolchain": {"godot": engine_version},
 		"verification": sorted(set(verification)),
 		"files": entries,
 	}
@@ -96,6 +98,7 @@ def main() -> int:
 	parser.add_argument("--ref", required=True)
 	parser.add_argument("--run-url", required=True)
 	parser.add_argument("--platform", required=True, choices=("windows", "macos"))
+	parser.add_argument("--engine-version", required=True)
 	parser.add_argument("--file", action="append", type=parse_file, default=[])
 	parser.add_argument("--verification", action="append", default=[])
 	args = parser.parse_args()
@@ -118,6 +121,7 @@ def main() -> int:
 			args.ref,
 			args.run_url,
 			args.platform,
+			args.engine_version,
 			args.verification,
 		)
 	except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:

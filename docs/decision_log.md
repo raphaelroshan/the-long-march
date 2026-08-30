@@ -1,5 +1,11 @@
 # Decision Log — The Long March
 
+## 2026-08-30 — Private-alpha readiness is a reproducible gate
+
+An exported file is not considered a candidate merely because export succeeded. CI now launches each packaged desktop build headlessly, rejects startup script errors, records the exact Godot version in the checksummed cohort manifest, and verifies that manifest before upload. Runtime source is also scanned for network-capable APIs and remote URLs so the documented offline boundary is enforced rather than assumed.
+
+Performance coverage uses deterministic headless budgets: 1,800 representative planning inspections approximate one decision check per second across thirty minutes, and 60 same-seed encounter replays protect simulation throughput and determinism. This is a regression gate, not a claim about rendered frame rate on every player's hardware. Public release, storefront readiness, final audio, signing, notarization, and human enjoyment remain explicitly outside this milestone.
+
 ## 2026-08-30 — Mastery is an optional field order, not progression
 
 Ashgate's Marchmaster's Desk offers two replay experiments with stable IDs. Quarry Adaptation is proven by securing Cinder Quarry and explicitly accepts either Run Hot speed or Protect Cargo with lower-hull armor. Signal Discipline is proven by securing Signal Causeway and explicitly accepts either Iven Pell's forecast or an operational Wall Lamp.

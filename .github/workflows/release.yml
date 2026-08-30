@@ -46,6 +46,14 @@ jobs:
         run: test -f export_presets.cfg
       - name: Export desktop playtest
         run: bash scripts/export_playtest.sh "${{ matrix.target }}"
+      - name: Smoke packaged desktop build
+        run: |
+          if [ "${{ matrix.target }}" = "windows" ]; then
+            package="build/the-long-march-windows.exe"
+          else
+            package="build/the-long-march-macos.zip"
+          fi
+          python tools/smoke_playtest.py --platform "${{ matrix.target }}" --package "$package"
       - name: Create release manifest
         run: |
           mkdir -p artifacts
@@ -64,14 +72,20 @@ jobs:
             --ref "$GITHUB_REF" \
             --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             --platform "${{ matrix.target }}" \
+            --engine-version "$(godot --version | head -n 1)" \
             --verification deterministic_tests \
             --verification "${{ matrix.target }}_export" \
+            --verification "${{ matrix.target }}_packaged_smoke" \
+            --verification offline_boundary \
+            --verification performance_budget \
             --file desktop_package="$package" \
             --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             --file observer_brief=docs/playtest_guide.md \
             --file session_sheet=docs/private_alpha_session_sheet.md \
             --file scope_and_limitations=docs/internal_test_release.md \
             --file manifest_verifier=tools/verify_release_manifest.py
+      - name: Verify exact cohort manifest
+        run: python tools/verify_release_manifest.py artifacts/release_manifest.json
       - name: Upload desktop release candidate
         uses: actions/upload-artifact@v7
         with:

@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.296` and later
+**Applies to:** `0.3.0-alpha.297` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -23,7 +23,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **L7 — complete in alpha.294** | Add one controlled content slice | Add one specialist, threat, facility, or route branch only after L1–L6. Specify the player question, counter, weakness, data schema, deterministic encounter, recovery consequence, and evidence captures. |
 | **L8 — complete in alpha.295** | Add failure-forward campaign texture | Turn one completed, declined, or failed promise into a visible later route, settlement, faction, shortage, refuge, or service consequence. Keep it small, deterministic, inspectable, and capable of supporting multiple endings. |
 | **L9 — complete in alpha.296** | Build replayable mastery | Offer bounded route, doctrine, specialist, and recovery variations. Avoid grind and forced build orders; each expanded teaching scenario needs at least two viable solutions. |
-| **L10** | Harden the private alpha | Verify saves, migration, clean install, controller, scaling, audio, performance, package provenance, offline behavior, and complete-flow evidence. Human sessions may be run afterward for calibration but do not block the artifact. |
+| **L10 — complete in alpha.297** | Harden the private alpha | Verify saves, migration, clean install, controller, scaling, audio, performance, package provenance, offline behavior, and complete-flow evidence. Human sessions may be run afterward for calibration but do not block the artifact. |
 
 ## Acceptance tests for every AI task
 
@@ -33,7 +33,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l9_replayable_mastery_report.md`. Implement **L10 Private-Alpha Hardening** only. Verify clean install, current and older saves, backup recovery, controller, scaling, audio, performance, package provenance, offline behavior, safe close, and the complete journey. Produce one honest candidate manifest and evidence report; do not claim storefront readiness or public release.
+> The automated L1–L10 implementation roadmap is complete in `0.3.0-alpha.297`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 

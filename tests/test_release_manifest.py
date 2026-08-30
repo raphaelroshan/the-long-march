@@ -43,6 +43,7 @@ def main() -> int:
 			"refs/pull/12/merge",
 			"https://example.invalid/runs/12",
 			"windows",
+			"4.4.1.stable.official",
 			["windows_export", "deterministic_tests", "deterministic_tests"],
 		)
 		assert manifest["schema_version"] == 1
@@ -50,12 +51,16 @@ def main() -> int:
 		assert manifest["source"]["workflow_commit"] == "merge-sha"
 		assert manifest["source"]["head_commit"] == "head-sha"
 		assert manifest["cohort"] == {"id": "0.3.0-alpha.test@head-sha", "platform": "windows"}
+		assert manifest["toolchain"] == {"godot": "4.4.1.stable.official"}
 		assert manifest["verification"] == ["deterministic_tests", "windows_export"]
 		assert [entry["role"] for entry in manifest["files"]] == ["observer_brief", "windows_executable"]
 		game_entry = manifest["files"][1]
 		assert game_entry["bytes"] == len(b"deterministic build")
 		assert game_entry["sha256"] == hashlib.sha256(b"deterministic build").hexdigest()
 		assert verify_manifest(manifest, root) == []
+		missing_toolchain = json.loads(json.dumps(manifest))
+		missing_toolchain.pop("toolchain")
+		assert any("Godot toolchain" in error for error in verify_manifest(missing_toolchain, root))
 		(root / "build/game.exe").write_bytes(b"changed build")
 		verification_errors = verify_manifest(manifest, root)
 		assert any("size mismatch" in error for error in verification_errors)
@@ -72,6 +77,7 @@ def main() -> int:
 				"ref",
 				"url",
 				"windows",
+				"4.4.1",
 				[],
 			)
 		except ValueError as exc:
@@ -89,6 +95,7 @@ def main() -> int:
 				"ref",
 				"url",
 				"windows",
+				"4.4.1",
 				[],
 			)
 		except ValueError as exc:

@@ -4,11 +4,11 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.296`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, full seven-family road-contact causality, four-stop settlement and route identity, focused presentation builders, the bounded Cinder Quarry branch, the declined-convoy Morrowline shortage, and two optional multi-solution Ashgate field experiments are complete. The next implementation gate hardens the private-alpha artifact. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.297`; Feeds A through AT and automated quality layers L1 through L10 are complete, including tutorial, full journey handoff, responsive presentation, road-contact causality, settlement identity, presentation boundaries, controlled content, failure-forward texture, replayable mastery, and private-alpha hardening. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) are now the next evidence-gathering step rather than a claim that the game is commercially finished.
 
 ### Active Feed 0 — failure-forward consequence
 
-**Status:** Next. L9 replayable mastery is proven in `0.3.0-alpha.296`.
+**Status:** Automated implementation complete in `0.3.0-alpha.297`; next work is evidence-led human calibration.
 
 ```text
 Choose one existing declined or failed promise and make it produce a small, deterministic later route, settlement, shortage, refuge, or service consequence. The consequence must be visible before commitment, survive save/load, affect more than flavor text, and preserve a viable path to every current ending. Add focused state/UI tests and evidence without adding a faction meter or broad narrative system.
@@ -71,6 +71,8 @@ Connect one completed, declined, or failed promise to one visible later regional
 ```
 
 ### Active Feed 8 — private alpha hardening
+
+**Status:** Complete in `0.3.0-alpha.297` through packaged launch smoke, offline-boundary enforcement, deterministic performance budgets, exact Godot provenance, and a machine-checked candidate contract.
 
 ```text
 Complete the existing packaging, offline, save migration, backup recovery, controller, scaling, contrast, reduced-motion, safe-close, route-transition, active-event, recovery, and terminal-Debrief checks. Produce one honest private-alpha artifact with manifest, observer brief, known limitations, rollback path, and exact source revision. Do not make a public-release or storefront-ready claim.
