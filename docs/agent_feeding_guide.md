@@ -4,12 +4,12 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.287`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, the current settlement-identity passes, and verifiable playtest-cohort packaging are complete. The next gate is five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md); prioritize the top three repeated comprehension failures before adding content.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.287`; Feeds A through AT, the automated First Watch tutorial, the first eight game-quality transformation slices, shared-fortress continuity, journey handoff, battle rhythm, settlement-identity passes, and verifiable playtest-cohort packaging are complete. The next implementation gate is the deterministic and visual quality sequence below. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
 
 ### Active Feed 1 — five-session human validation
 
 ```text
-Run docs/private_alpha_session_sheet.md against one exact PR #41 artifact cohort using First Watch and the quick path. Record only observed player behavior across the documented input/display combinations. Do not infer comprehension from completion or fabricate human evidence. Triage repeated failures under what to do, why it matters, and what happened; implement only repeated high-severity fixes and update the evidence package.
+Do not block implementation on human sessions. First complete the automated and visual quality feeds: finish journey handoff, responsive layout, authored visual continuity, battle cause-and-effect staging, settlement identity, controlled content, failure-forward consequences, and alpha hardening. After those gates, optionally run docs/private_alpha_session_sheet.md against one exact artifact cohort and use observed repeated failures only for calibration.
 ```
 
 ### Active Feed 2 — shared fortress visual continuity
