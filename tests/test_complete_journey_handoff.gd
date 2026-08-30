@@ -18,6 +18,7 @@ var game: Control
 var capture_dir := ""
 var responsive_profile := false
 var cinder_quarry_profile := false
+var declined_convoy_profile := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
 
@@ -250,9 +251,16 @@ func _run_ashgate_journey() -> void:
 	await _capture("05_ashgate_handoff")
 	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
 	await _settle()
-	game.settlement_hub.primary_action_button.pressed.emit()
+	if declined_convoy_profile:
+		_expect(game.settlement_hub.detail_body.text.contains("only 1 service action") and game.settlement_hub.secondary_action_button.tooltip_text.contains("only 1 service action"), "the assignment board should disclose the exact Morrowline shortage before decline")
+		game.settlement_hub.secondary_action_button.pressed.emit()
+	else:
+		game.settlement_hub.primary_action_button.pressed.emit()
 	await _settle()
-	_expect(game.state.guard_contract_status == "accepted" and game.settlement_hub.station_buttons["departure_gate"].has_focus(), "accepting the assignment should hand focus to departure")
+	_expect(game.state.guard_contract_status == ("declined" if declined_convoy_profile else "accepted") and game.settlement_hub.station_buttons["departure_gate"].has_focus(), "answering the assignment should hand focus to departure")
+	if declined_convoy_profile:
+		_expect(game.settlement_hub.context_label.text.contains("Morrowline will have 1 service action"), "the declined assignment receipt should retain its later service consequence")
+		await _capture("05b_declined_convoy_receipt")
 	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
 	await _settle()
 	game.settlement_hub.primary_action_button.pressed.emit()
@@ -302,7 +310,11 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
 	await _choose_event("decline_mara")
 	_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
-	_expect(game.recovery_panel.local_stake_label.text.contains("convoy promise") and game.recovery_panel.route_outlook_label.text.contains("Lower Ash") and game.recovery_panel.route_outlook_label.text.contains("Dry Cistern") and game.recovery_panel.route_outlook_label.text.contains("Signal Causeway") and game.recovery_panel.route_outlook_label.text.contains("Cinder Quarry"), "Morrowline recovery should carry the convoy stake into four distinct outbound road meanings")
+	if declined_convoy_profile:
+		_expect(game.state.settlement_actions_remaining == 1 and game.recovery_panel.local_stake_label.text.contains("PARTS SHORTAGE") and game.recovery_panel.local_stake_label.text.contains("only 1 service action"), "Morrowline recovery should expose the declined convoy as a one-action parts shortage")
+	else:
+		_expect(game.state.settlement_actions_remaining == 2 and game.recovery_panel.local_stake_label.text.contains("promise is kept"), "Morrowline recovery should expose the completed convoy's two-action benefit")
+	_expect(game.recovery_panel.route_outlook_label.text.contains("Lower Ash") and game.recovery_panel.route_outlook_label.text.contains("Dry Cistern") and game.recovery_panel.route_outlook_label.text.contains("Signal Causeway") and game.recovery_panel.route_outlook_label.text.contains("Cinder Quarry"), "Morrowline recovery should carry the convoy stake into four distinct outbound road meanings")
 	_expect_three_column_contract(game.recovery_panel, game.recovery_panel.value_labels["hull"], game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, "Morrowline recovery")
 	await _capture("11_morrowline_recovery")
 	if not game.recovery_panel.refuel_button.disabled:
@@ -357,6 +369,7 @@ func _run() -> void:
 	_configure_environment_profile()
 	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	cinder_quarry_profile = OS.get_environment("LONG_MARCH_CINDER_QUARRY_PROFILE") == "1"
+	declined_convoy_profile = OS.get_environment("LONG_MARCH_DECLINED_CONVOY_PROFILE") == "1"
 	var capture_filter_text := OS.get_environment("LONG_MARCH_CAPTURE_FILTER")
 	if not capture_filter_text.is_empty():
 		for capture_name in capture_filter_text.split(",", false):
@@ -376,6 +389,8 @@ func _run() -> void:
 	if failures.is_empty():
 		if cinder_quarry_profile:
 			print("PASS: The Long March Cinder Quarry route profile")
+		if declined_convoy_profile:
+			print("PASS: The Long March declined convoy consequence profile")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")

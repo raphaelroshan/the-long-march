@@ -24,6 +24,7 @@ func _init() -> void:
 	_test_encounter_save_round_trip()
 	_test_campaign_graph_and_visibility()
 	_test_campaign_contract_and_specialist()
+	_test_morrowline_parts_shortage()
 	_test_campaign_events_and_closure()
 	_test_water_condenser_route_unlock()
 	_test_water_condenser_threat_and_recovery()
@@ -641,6 +642,7 @@ func _test_campaign_events_and_closure() -> void:
 	_expect(state.money == money_before + 8 and state.campaign_pressure == pressure_before + 1, "breaking the toll should recover coin and increase closure pressure")
 	var morrowline_result := _campaign_battle(state, "morrowline_camp")
 	_expect(bool(morrowline_result.get("resolved", false)) and state.phase == "settlement", "the Soot Orchard and Red Wheel path should reach Morrowline after three encounters")
+	_expect(state.settlement_actions_remaining == 1 and state.encounter_report.filter(func(line: String) -> bool: return line.contains("Parts shortage") and line.contains("1 service action")).size() == 1, "declining the convoy should create one explicit Morrowline parts shortage and reduce recovery to one action")
 	_expect(state.campaign_event_pending == "mara_meeting" and bool(state.resolve_campaign_event("decline_mara").get("ok", false)), "a free specialist berth should surface Mara's offer at Morrowline and allow a clean decline")
 
 	var refuge_state := LongMarchState.new(1107)
@@ -681,6 +683,30 @@ func _install_mara_loadout(state: LongMarchState, include_refuge: bool = true) -
 	if include_refuge:
 		state.place_module("refugee_bunk", Vector2i(4, 2))
 	state.seed_starter_inventory()
+
+func _test_morrowline_parts_shortage() -> void:
+	var declined := LongMarchState.new(1107)
+	_install_campaign_signal_loadout(declined)
+	declined.start_campaign()
+	var decision := declined.choose_guard_contract(false)
+	_expect(bool(decision.get("ok", false)) and String(decision.get("message", "")).contains("1 service action instead of 2"), "declining the convoy should disclose the later Morrowline shortage before the fortress departs")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(declined.serialize()).get("ok", false)) and restored.guard_contract_status == "declined", "the declined convoy promise should survive save/load before its consequence resolves")
+	for arrival_state in [declined, restored]:
+		arrival_state.campaign_path.clear()
+		arrival_state.campaign_path.append_array(["ashgate_depot", "rill_crossing", "broken_relay"])
+		arrival_state.campaign_last_safe_node = "broken_relay"
+		arrival_state.current_location = "broken_relay"
+		arrival_state.journey_node = "broken_relay"
+		arrival_state.campaign_encounters_completed = 2
+		arrival_state.campaign_target_node = "morrowline_camp"
+		arrival_state.current_location = "morrowline_camp"
+		arrival_state.journey_node = "morrowline_camp"
+		arrival_state._finish_campaign_encounter(true)
+	_expect(declined.settlement_actions_remaining == 1 and restored.settlement_actions_remaining == 1, "the absent parts convoy should deterministically reduce Morrowline to one service action")
+	_expect(declined.encounter_report == restored.encounter_report and declined.serialize() == restored.serialize(), "the shortage consequence should resolve identically before and after save/load")
+	_expect(bool(declined.settlement_refuel().get("ok", false)) and declined.settlement_actions_remaining == 0, "the shortage path should still allow one chosen recovery service")
+	_expect(not bool(declined.settlement_repair_hull().get("ok", false)), "a second Morrowline service should be blocked after the shortage action is spent")
 
 func _arrive_at_morrowline_for_mara(state: LongMarchState) -> void:
 	state.start_campaign()
@@ -1323,9 +1349,10 @@ func _test_alternate_five_encounter_campaign() -> void:
 	_expect(String(state.campaign_decisions.get("salvage_choice", "")) == "take_fuel" and String(state.campaign_decisions.get("toll_decision", "")) == "pay_toll", "the alternate route should retain both authored decisions for its eventual debrief")
 	var third := _campaign_battle(state, "morrowline_camp", "protect_cargo")
 	_expect(bool(third.get("resolved", false)) and state.phase == "settlement", "the alternate first half should reach Morrowline recovery")
+	_expect(state.settlement_actions_remaining == 1, "the alternate declined-contract route should reach Morrowline with one scarce recovery action")
 	_expect(bool(state.resolve_campaign_event("decline_mara").get("ok", false)), "the alternate route should be able to decline Mara and preserve its existing recovery plan")
 	_expect(bool(state.settlement_repair("wall_lamp").get("ok", false)), "the alternate route should restore its storm counter at Morrowline")
-	state.settlement_refuel()
+	_expect(not bool(state.settlement_refuel().get("ok", false)), "the convoy shortage should force the alternate route to choose repair instead of also refueling")
 	var fourth := _campaign_battle(state, "signal_causeway", "protect_crew")
 	_expect(bool(fourth.get("resolved", false)) and state.phase == "map", "ready signal equipment should keep the alternate route viable through Signal Causeway")
 	var fifth := _campaign_battle(state, "meridian_pass", "protect_crew")

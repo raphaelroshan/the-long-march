@@ -5,7 +5,7 @@ static func build(state: LongMarchState, fortress: Dictionary, controls: Diction
 	var is_morrowline := state.current_location == "morrowline_camp"
 	var local_stake := "STAKE · "
 	if is_morrowline:
-		local_stake += "The convoy promise is kept; its people and parts now depend on the fortress reaching Meridian Pass." if state.guard_contract_status == "completed" else "The fortress arrived without a completed convoy promise; recovery must cover what the road still lacks."
+		local_stake += "The convoy promise is kept; its people and parts preserve 2 service actions before Meridian Pass." if state.guard_contract_status == "completed" else "PARTS SHORTAGE · The convoy is absent; Morrowline can support only 1 service action before Meridian Pass."
 	else:
 		local_stake += "The sealed medicine carrier is intact and grants a second service opportunity." if state.veyru_contract_carrier_operational() else "The medicine carrier is absent or breached; only one service opportunity remains."
 	return {
