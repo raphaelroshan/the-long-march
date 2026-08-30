@@ -3,6 +3,16 @@ extends Control
 
 const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
 
+const THREAT_PRESENTATION_PROFILES := {
+	"road_raiders": {"wind_up": "HARPOON VOLLEY", "response": "SHELL OR REPEATER FIRE"},
+	"climbers": {"wind_up": "GRAPNEL RUSH", "response": "WALL LIGHT OR REPEATER FIRE"},
+	"burrowers": {"wind_up": "UNDERCARRIAGE BREACH", "response": "LOWER-HULL ARMOR · SHIFTED GUNS · SPARE ENGINE"},
+	"storm_front": {"wind_up": "ARC DISCHARGE", "response": "SIGNAL · ADJACENT ARMOR · SEAL · VENT"},
+	"siege_beast": {"wind_up": "RAM CHARGE", "response": "SHELL FIRE · FRONT ARMOR"},
+	"flood_surge": {"wind_up": "SURGE CREST", "response": "CONDENSER · ARMOR · WORKSHOP · SEAL"},
+	"civic_guardian": {"wind_up": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY"}
+}
+
 signal pause_requested
 signal advance_requested
 signal inspect_requested
@@ -285,7 +295,7 @@ func _refresh_battle_phase_label(force: bool = false) -> void:
 	if not force and battle_phase_label.text == battle_phase:
 		return
 	battle_phase_label.text = battle_phase
-	var active_phase := battle_phase in ["TARGET", "WIND-UP", "IMPACT"]
+	var active_phase := battle_phase in ["TARGET", "WIND-UP", "RESPONSE", "IMPACT"]
 	battle_phase_label.add_theme_stylebox_override("normal", _flat_style(Color("#4b2422") if active_phase else Color("#17312f"), Color.WHITE if high_contrast_enabled else (Color("#ef8375") if active_phase else Color("#6e918f")), 2, 4, 4))
 	battle_phase_label.add_theme_color_override("font_color", Color("#fff0df") if active_phase else Color("#bce5d8"))
 
@@ -306,12 +316,16 @@ func battle_phase_for(view: Dictionary = {}) -> String:
 		return "SETTLE"
 	if not has_arrived_enemy:
 		return "FORECAST" if int(view.get("step", 0)) == 0 else "APPROACH"
-	if contact_canvas != null and contact_canvas.report_changed and contact_canvas.step_to > contact_canvas.step_from and contact_canvas.transition_progress < 1.0:
-		if contact_canvas.transition_progress < 0.24:
+	if contact_canvas != null and contact_canvas.report_changed and contact_canvas.step_to > contact_canvas.step_from:
+		if contact_canvas.transition_progress < 0.14:
+			return "APPROACH"
+		if contact_canvas.transition_progress < 0.28:
 			return "TARGET"
-		if contact_canvas.transition_progress < 0.52:
+		if contact_canvas.transition_progress < 0.43:
 			return "WIND-UP"
-		if contact_canvas.transition_progress < 0.80:
+		if contact_canvas.transition_progress < 0.58:
+			return "RESPONSE"
+		if contact_canvas.transition_progress < 0.78:
 			return "IMPACT"
 		return "CONSEQUENCE"
 	return "RESPONSE"
@@ -341,12 +355,13 @@ func _configure_threat(view: Dictionary) -> void:
 		var impact: Dictionary = chosen.get("impact", {})
 		var target_name := _target_name(String(chosen.get("target", "hull")), view)
 		threat_status.text = "ACTIVE CONTACT · TARGETING %s" % target_name.to_upper()
+		var profile: Dictionary = THREAT_PRESENTATION_PROFILES.get(String(chosen.get("id", "")), {})
 		var damage := int(impact.get("damage", 0))
 		var durability_line := "%d→%d durability" % [int(impact.get("current_durability", 0)), int(impact.get("remaining_durability", 0))]
 		var cascade_lines: Array[String] = []
 		for change in impact.get("dependency_changes", []):
 			cascade_lines.append("%s → %s" % [String(change.get("name", "System")), String(change.get("to", "offline")).to_upper()])
-		threat_detail.text = "WHY · %s\nNEXT · %d damage · %s%s" % [String(impact.get("target_reason", "target route matched")).capitalize(), damage, durability_line, "\nCASCADE · %s" % ", ".join(cascade_lines) if not cascade_lines.is_empty() else ""]
+		threat_detail.text = "INTENT · %s → %s\nWHY · %s\nRESPONSE WINDOW · %s\nNEXT · %d damage · %s%s" % [String(profile.get("wind_up", "CONTACT STRIKE")), target_name.to_upper(), String(impact.get("target_reason", "target route matched")).capitalize(), String(definition.get("counter", "No listed system counter")), damage, durability_line, "\nCASCADE · %s" % ", ".join(cascade_lines) if not cascade_lines.is_empty() else ""]
 	else:
 		threat_status.text = "%d STEP%s OUT · %s" % [chosen_distance, "" if chosen_distance == 1 else "S", String(definition.get("flank", "road approach")).to_upper()]
 		threat_detail.text = "APPROACH · %s\nPREFERRED TARGETS · %s\nCOUNTER · %s" % [String(definition.get("route", "road approach")).capitalize(), " / ".join(definition.get("target_tags", [])), String(definition.get("counter", "No listed system counter"))]
@@ -436,7 +451,7 @@ class ContactCanvas extends Control:
 	func _process(delta: float) -> void:
 		if transition_progress >= 1.0:
 			return
-		transition_progress = minf(1.0, transition_progress + delta * 0.9)
+		transition_progress = minf(1.0, transition_progress + delta * 0.42)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -489,14 +504,19 @@ class ContactCanvas extends Control:
 			var phase := "FORECAST" if int(current_view.get("step", 0)) == 0 else "APPROACH"
 			return "%s · %s · %d STEP%s OUT" % [phase, enemy_name, distance, "" if distance == 1 else "S"]
 		var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
-		if report_changed and step_to > step_from and transition_progress < 1.0:
-			if transition_progress < 0.24:
+		if report_changed and step_to > step_from:
+			if transition_progress < 0.14:
+				return "APPROACH · %s VIA %s" % [enemy_name, String(definition.get("route", "ROAD APPROACH")).to_upper()]
+			if transition_progress < 0.28:
 				return "TARGET LOCK · %s → %s" % [enemy_name, target_name]
-			if transition_progress < 0.52:
+			if transition_progress < 0.43:
 				return "WIND-UP · %s" % _attack_signature(enemy_id)
-			if transition_progress < 0.80:
+			if transition_progress < 0.58:
+				return "RESPONSE WINDOW · %s" % _response_cue(enemy_id)
+			if transition_progress < 0.78:
 				return "IMPACT · %s" % _latest_report_line([" hits ", " reaches the hull", " absorbs "])
-		return "CONSEQUENCE · %s" % _latest_consequence_text()
+			return "CONSEQUENCE · %s" % _latest_consequence_text()
+		return "RESPONSE READY · %s" % _response_cue(enemy_id)
 
 	func _draw_resolution_banner() -> void:
 		var text := presentation_stage_text()
@@ -522,15 +542,10 @@ class ContactCanvas extends Control:
 		return chosen
 
 	func _attack_signature(enemy_id: String) -> String:
-		return String({
-			"road_raiders": "HARPOON VOLLEY",
-			"climbers": "GRAPNEL RUSH",
-			"burrowers": "UNDERCARRIAGE BREACH",
-			"storm_front": "ARC DISCHARGE",
-			"siege_beast": "RAM CHARGE",
-			"flood_surge": "SURGE CREST",
-			"civic_guardian": "ARCHIVE BEAM"
-		}.get(enemy_id, "CONTACT STRIKE"))
+		return String(RoadContactView.THREAT_PRESENTATION_PROFILES.get(enemy_id, {}).get("wind_up", "CONTACT STRIKE"))
+
+	func _response_cue(enemy_id: String) -> String:
+		return String(RoadContactView.THREAT_PRESENTATION_PROFILES.get(enemy_id, {}).get("response", "PROTECT THE TARGET OR BREAK CONTACT"))
 
 	func _latest_report_line(markers: Array[String]) -> String:
 		var report: Array = current_view.get("recent_report", [])

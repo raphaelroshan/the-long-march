@@ -1062,3 +1062,7 @@ CI and tagged-release artifacts now include a machine-readable manifest containi
 ## 2026-08-30 — Cross-platform cohorts share identity, not bytes
 
 Windows and macOS exports from the same source now share a cohort ID derived from the visible version and head commit, while every platform keeps its own file sizes and SHA-256 digests. A bundled offline verifier checks all listed files before a session and rejects missing, altered, duplicated, or path-escaping entries. This was chosen over expecting observers to compare hashes by hand because line endings, packaging formats, and executables legitimately differ by platform even when the tested game and instructions belong to one source cohort.
+
+## 2026-08-30 — Every major contact uses one causal presentation grammar
+
+Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, and the Civic Guardian now share the same presentation-only sequence: Forecast, Approach, Target, Wind-up, Response, Impact, Consequence, and Settle. Each family retains a stable attack signature and concise response cue, while the active dossier keeps its authoritative target reason, authored counter, predicted durability loss, and dependency cascade visible together. Reduced Motion resolves directly to the already-determined consequence. This was chosen over threat-specific presentation state machines because one readable grammar makes distinct threats comparable without changing target order, random streams, damage, saves, or combat commands.
