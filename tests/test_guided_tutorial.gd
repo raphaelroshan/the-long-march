@@ -92,6 +92,7 @@ func _run() -> void:
 	game.travel_button.pressed.emit()
 	await process_frame
 	_expect(game.tutorial_director.lesson_id == "travel" and game.journey_transition.visible, "committing the training road should show the in-between travel scene")
+	_expect(game.journey_transition.route_label.text.begins_with("ASHGATE MUSTER YARD → MUSTER ROAD") and game.journey_transition.destination_label.text == "MUSTER ROAD" and game.journey_transition.promise_label.text.begins_with("TRAINING ORDER"), "the tutorial departure should stay inside the muster-yard fiction instead of referring to a campaign contract")
 	_expect(game.state.fuel == fuel_before - int(route_preview.get("fuel", 0)) and game.state.day == day_before + int(route_preview.get("days", 0)), "the training road should spend its displayed fuel and time exactly once")
 	game.journey_transition.continue_button.pressed.emit()
 	await process_frame
@@ -120,8 +121,11 @@ func _run() -> void:
 		game.road_contact.advance_button.pressed.emit()
 		await process_frame
 	_expect(game.tutorial_director.lesson_id == "repair" and game.journey_arrival.visible, "resolving contact should show an arrival receipt before recovery")
+	_expect(game.journey_arrival.destination_label.text == "MUSTER ROAD RECOVERY SIDING" and game.journey_arrival.continue_button.text == "ENTER RECOVERY SIDING", "the tutorial arrival should lead into its own recovery siding rather than a campaign settlement")
+	_expect(game.journey_arrival.report_label.text.contains("Muster Yard records the drill") and not game.journey_arrival.report_label.text.contains("Morrowline"), "the tutorial arrival receipt should not leak a live campaign payout")
 	game.journey_arrival.continue_button.pressed.emit()
 	await process_frame
+	_expect(game.settlement_title.text.begins_with("MUSTER YARD SERVICES"), "the tutorial repair step should remain in the Muster Yard")
 	damaged = game._most_damaged_installed_module()
 	if not damaged.is_empty():
 		game._on_grid_cell_pressed(Vector2i(damaged.get("position", Vector2i.ZERO)))

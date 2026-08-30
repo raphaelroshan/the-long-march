@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.287`
+**Current baseline:** `0.3.0-alpha.288`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -629,6 +629,8 @@ Tasks:
 
 ### Phase 1 — Journey hierarchy
 
+**Status:** Automated L1 gate complete in `0.3.0-alpha.288`: one clean-save app-shell run reaches First Watch, campaign handoff, route commitment, travel, contact, events, Morrowline recovery, final arrival, and Debrief through player-facing controls. Departure and arrival save/resume restore the same surface and focused action. Human comprehension remains optional calibration evidence.
+
 **Objective:** Make the first chapter feel like one journey.
 
 Tasks:
@@ -724,7 +726,7 @@ Tasks:
 
 ### Phase 7 — Human private alpha
 
-**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, checksummed artifact-cohort manifest, and one-command verifier are complete through `0.3.0-alpha.287`; five consented uncoached sessions and evidence-led fixes require human testers.
+**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, checksummed artifact-cohort manifest, and one-command verifier are complete through `0.3.0-alpha.288`; five consented uncoached sessions and evidence-led fixes require human testers.
 
 **Objective:** Replace assumptions with observed behavior.
 

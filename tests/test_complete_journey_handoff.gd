@@ -1,0 +1,287 @@
+extends SceneTree
+
+const LOCAL_PATHS := [
+	"user://the_long_march_prototype.save",
+	"user://the_long_march_prototype.backup.save",
+	"user://the_long_march_tutorial.save",
+	"user://the_long_march_tutorial.backup.save",
+	"user://the_long_march_tutorial.complete",
+	"user://the_long_march_onboarding_v1.complete",
+	"user://the_long_march_settings.cfg",
+	"user://the_long_march_progress.json",
+	"user://the_long_march_playtest_journal.json",
+]
+
+var failures: Array[String] = []
+var app: Control
+var game: Control
+var capture_dir := ""
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)
+
+
+func _remove_local_state() -> void:
+	for path in LOCAL_PATHS:
+		var absolute := ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(absolute):
+			DirAccess.remove_absolute(absolute)
+
+
+func _settle(frames: int = 3) -> void:
+	for _frame in range(frames):
+		await process_frame
+
+
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "capture requires a rendering display: " + name)
+		return
+	var result := image.save_png(capture_dir.path_join(name + ".png"))
+	_expect(result == OK, "capture should be written: " + name)
+
+
+func _launch_app() -> void:
+	app = load("res://scenes/App.tscn").instantiate()
+	root.add_child(app)
+	await _settle()
+	game = app.game_view
+
+
+func _relaunch_and_continue(expected_surface: String) -> void:
+	app.queue_free()
+	await _settle()
+	await _launch_app()
+	_expect(app.continue_button.visible and not app.continue_button.disabled, "a saved handoff should expose Continue on relaunch")
+	app.continue_button.pressed.emit()
+	await _settle(5)
+	game = app.game_view
+	_expect(game != null and not game.tutorial_mode, "Continue should reopen the live Ashgate march")
+	match expected_surface:
+		"departure":
+			_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "Continue should restore the pending departure and its action focus")
+		"arrival":
+			_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "Continue should restore the pending arrival and its action focus")
+		_:
+			_expect(false, "unknown relaunch surface: " + expected_surface)
+
+
+func _choose_event(choice_id: String) -> void:
+	var button := game.roadside_event.button_for(choice_id) as Button
+	_expect(button != null and button.visible and not button.disabled, "event choice should be available through the visible tableau: " + choice_id)
+	if button != null and button.visible and not button.disabled:
+		button.pressed.emit()
+		await _settle()
+
+
+func _commit_route(node_id: String) -> void:
+	var button := game.campaign_map.button_for(node_id) as Button
+	_expect(button != null and button.visible and not button.disabled, "route should be available through the visible map: " + node_id)
+	if button == null or button.disabled:
+		return
+	button.pressed.emit()
+	await _settle()
+	_expect(game.selected_campaign_node_id == node_id and game.campaign_commit_button.has_focus(), "route inspection should move focus to explicit commitment: " + node_id)
+	game.campaign_commit_button.pressed.emit()
+	await _settle()
+	_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "route commitment should open a focused departure handoff: " + node_id)
+
+
+func _enter_contact() -> void:
+	_expect(game.journey_transition.visible, "contact entry should begin at the travel handoff")
+	game.journey_transition.continue_button.pressed.emit()
+	await _settle()
+	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "travel should hand focus to the visible road contact")
+
+
+func _resolve_contact(expected_phase: String) -> void:
+	if game.state.encounter_active:
+		game.road_contact.advance_button.pressed.emit()
+		await _settle()
+	if game.state.encounter_active and not game.state.encounter_intervention_used:
+		var shift_button := game.road_contact.intervention_buttons[0] as Button
+		if shift_button.visible and not shift_button.disabled:
+			shift_button.pressed.emit()
+			await _settle()
+	for _step in range(10):
+		if not game.state.encounter_active:
+			break
+		game.road_contact.advance_button.pressed.emit()
+		await _settle()
+	_expect(not game.state.encounter_active and game.state.phase == expected_phase, "visible contact steps should resolve into " + expected_phase)
+	_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "a resolved contact should stop at a focused arrival receipt")
+
+
+func _acknowledge_arrival() -> void:
+	game.journey_arrival.continue_button.pressed.emit()
+	await _settle()
+	_expect(not game.journey_arrival.visible, "acknowledging arrival should expose the next player-facing order")
+
+
+func _complete_first_watch() -> void:
+	app.tutorial_button.pressed.emit()
+	await _settle()
+	_expect(app.tutorial_intro.visible and app.tutorial_intro.next_button.has_focus(), "Learn to Command should open the focused prologue")
+	await _capture("01_first_watch_prologue")
+	app.tutorial_intro.next_button.pressed.emit()
+	app.tutorial_intro.next_button.pressed.emit()
+	await _settle()
+	app.tutorial_intro.next_button.pressed.emit()
+	await _settle(5)
+	game = app.game_view
+	_expect(game != null and game.tutorial_mode and game.tutorial_director.lesson_id == "place_engine", "the prologue should enter the interactive muster yard")
+	game._on_grid_cell_pressed(Vector2i(0, 0))
+	await _settle()
+	game._on_grid_cell_pressed(Vector2i(5, 0))
+	await _settle()
+	game._on_grid_cell_pressed(Vector2i(0, 0))
+	game._on_grid_cell_pressed(Vector2i(5, 0))
+	await _settle()
+	_expect(game.tutorial_director.lesson_id == "plan_road", "visible chassis actions should complete the placement and dependency lessons")
+	game.travel_button.pressed.emit()
+	await _settle()
+	_expect(game.journey_transition.visible and game.tutorial_director.lesson_id == "travel", "the tutorial road should enter the shared departure presentation")
+	_expect(game.journey_transition.route_label.text.begins_with("ASHGATE MUSTER YARD → MUSTER ROAD") and game.journey_transition.destination_label.text == "MUSTER ROAD" and game.journey_transition.promise_label.text.begins_with("TRAINING ORDER"), "the tutorial departure should preserve its own place and purpose")
+	await _capture("02_first_watch_departure")
+	game.journey_transition.continue_button.pressed.emit()
+	await _settle()
+	game.road_contact.advance_button.pressed.emit()
+	await _settle()
+	game.road_contact.advance_button.pressed.emit()
+	await _settle()
+	game.road_contact.advance_button.pressed.emit()
+	await _settle()
+	var tutorial_order := game.road_contact.intervention_buttons[0] as Button
+	_expect(not tutorial_order.disabled, "the tutorial should expose a legal emergency order")
+	tutorial_order.pressed.emit()
+	await _settle()
+	var damaged: Dictionary = game._most_damaged_installed_module()
+	_expect(not damaged.is_empty(), "the tutorial contact should leave one damaged system to inspect")
+	if not damaged.is_empty():
+		game._on_grid_cell_pressed(Vector2i(damaged.get("position", Vector2i.ZERO)))
+		await _settle()
+	for _step in range(10):
+		if not game.state.encounter_active:
+			break
+		game.road_contact.advance_button.pressed.emit()
+		await _settle()
+	_expect(game.journey_arrival.visible and game.tutorial_director.lesson_id == "repair", "First Watch should reach its recovery siding through normal contact steps")
+	_expect(game.journey_arrival.destination_label.text == "MUSTER ROAD RECOVERY SIDING" and game.journey_arrival.continue_button.text == "ENTER RECOVERY SIDING", "First Watch arrival should name the training recovery handoff")
+	_expect(game.journey_arrival.report_label.text.contains("Muster Yard records the drill") and not game.journey_arrival.report_label.text.contains("Morrowline"), "First Watch arrival should use a training receipt instead of a live campaign payout")
+	await _capture("03_first_watch_arrival")
+	game.journey_arrival.continue_button.pressed.emit()
+	await _settle()
+	_expect(game.settlement_title.text.begins_with("MUSTER YARD SERVICES"), "the recovery lesson should remain visibly anchored to the Muster Yard")
+	damaged = game._most_damaged_installed_module()
+	if not damaged.is_empty():
+		game._on_grid_cell_pressed(Vector2i(damaged.get("position", Vector2i.ZERO)))
+		await _settle()
+		game.settlement_repair_button.pressed.emit()
+		await _settle()
+	_expect(game.tutorial_completion_view.visible and game.tutorial_completion_view.begin_button.has_focus(), "repair should complete First Watch and focus the campaign handoff")
+	await _capture("04_first_watch_complete")
+	game.tutorial_completion_view.begin_button.pressed.emit()
+	await _settle(5)
+	game = app.game_view
+	_expect(game != null and not game.tutorial_mode and game.state.campaign_active, "First Watch certification should enter a fresh Ashgate campaign")
+
+
+func _run_ashgate_journey() -> void:
+	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "Ashgate handoff should begin at the required assignment")
+	_expect(game.get_global_rect().encloses(game.settlement_hub.primary_action_button.get_global_rect()), "the first Ashgate action should be visible at 1600x900")
+	await _capture("05_ashgate_handoff")
+	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
+	await _settle()
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await _settle()
+	_expect(game.state.guard_contract_status == "accepted" and game.settlement_hub.station_buttons["departure_gate"].has_focus(), "accepting the assignment should hand focus to departure")
+	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
+	await _settle()
+	game.settlement_hub.primary_action_button.pressed.emit()
+	await _settle()
+	_expect(game.journey_planner.visible and game.campaign_map.button_for("rill_crossing").has_focus(), "departure should open route planning at the first available road")
+	game.campaign_map.button_for("rill_crossing").pressed.emit()
+	await _settle()
+	await _capture("06_route_commitment")
+	game.campaign_commit_button.pressed.emit()
+	await _settle()
+	await _capture("07_departure")
+	await _relaunch_and_continue("departure")
+	_expect(game.state.campaign_target_node == "rill_crossing" and game.state.encounter_step == 0, "departure resume should preserve the committed road before contact")
+	await _enter_contact()
+	await _capture("08_road_contact")
+	await _resolve_contact("map")
+	await _capture("09_arrival_receipt")
+	await _relaunch_and_continue("arrival")
+	_expect(game.state.current_location == "rill_crossing" and game.state.campaign_event_pending == "lift_chain_sings", "arrival resume should preserve the secured road and pending occurrence")
+	await _acknowledge_arrival()
+	await _capture("10_roadside_event")
+	await _choose_event("brace_lift_chain")
+
+	await _commit_route("broken_relay")
+	await _enter_contact()
+	await _resolve_contact("map")
+	await _acknowledge_arrival()
+	await _choose_event("move_silent")
+
+	await _commit_route("morrowline_camp")
+	await _enter_contact()
+	await _resolve_contact("settlement")
+	await _acknowledge_arrival()
+	_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
+	await _choose_event("decline_mara")
+	_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
+	await _capture("11_morrowline_recovery")
+	if not game.recovery_panel.refuel_button.disabled:
+		game.recovery_panel.refuel_button.pressed.emit()
+		await _settle()
+	game.recovery_panel.routes_button.pressed.emit()
+	await _settle()
+
+	await _commit_route("lower_ash_road")
+	await _enter_contact()
+	await _resolve_contact("map")
+	await _acknowledge_arrival()
+	_expect(game.state.campaign_encounters_completed == 4 and game.campaign_map.button_for("meridian_pass").visible, "the fourth road should expose the final commitment")
+
+	await _commit_route("meridian_pass")
+	await _enter_contact()
+	await _resolve_contact("results")
+	await _capture("12_final_arrival")
+	await _acknowledge_arrival()
+	_expect(game.state.run_complete and game.state.campaign_encounters_completed == 5, "the player-facing journey should complete all five encounters")
+	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "the final arrival should hand focus to the terminal Debrief")
+	_expect(game.get_global_rect().encloses(game.debrief_panel.inspect_button.get_global_rect()), "the first Debrief action should remain visible at 1600x900")
+	await _capture("13_debrief")
+
+
+func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	_remove_local_state()
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
+	root.size = Vector2i(1600, 900)
+	await _launch_app()
+	_expect(app.tutorial_button.has_focus(), "a clean save should focus Learn to Command")
+	await _capture("00_title")
+	await _complete_first_watch()
+	await _run_ashgate_journey()
+	app.queue_free()
+	await _settle()
+	_remove_local_state()
+	if failures.is_empty():
+		print("PASS: The Long March complete journey handoff")
+		quit(0)
+	else:
+		for failure in failures:
+			push_error(failure)
+		quit(1)

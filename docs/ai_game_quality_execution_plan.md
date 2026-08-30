@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.287` and later
+**Applies to:** `0.3.0-alpha.288` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -14,7 +14,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 
 | Step | Objective | Required outcome |
 |---|---|---|
-| **L1** | Prove the complete journey handoff | Run clean First Watch → live refit → route planning → commitment → travel → road contact/event → recovery → arrival → Debrief. No hidden debug action may be required and save/resume must preserve the same phase and focus. |
+| **L1 — complete in alpha.288** | Prove the complete journey handoff | Run clean First Watch → live refit → route planning → commitment → travel → road contact/event → recovery → arrival → Debrief. No hidden debug action may be required and save/resume must preserve the same phase and focus. |
 | **L2** | Finish responsive fortress presentation | At 1280×720, 1600×900, large text, high contrast, reduced motion, keyboard, and controller paths, the left status rail, center fortress/map, right selected-subject dock, and required actions remain readable and reachable. |
 | **L3** | Improve journey rhythm | Make settlement receipt, route commitment, departure, short march beat, contact/event, consequence receipt, and arrival visually distinct, concise, skippable, and deterministic. |
 | **L4** | Complete road-contact cause and effect | Stage forecast, approach, target lock, wind-up, response, impact, dependency consequence, and settle. Every major threat must have a visible intent, counter, and consequence. |
@@ -31,9 +31,9 @@ The agent must run the complete verification wrapper and the relevant focused te
 
 A task is incomplete if a transition hides the current commitment, if a threat’s target or counter is unexplained, if an animation determines an outcome, if the fortress disappears behind a menu, if a required action clips at a supported viewport, or if content breadth is used to avoid fixing the journey loop. Automated evidence proves behavior and reproducibility; it does not claim human enjoyment.
 
-## Recommended first prompt
+## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/latest_test_report_2026-08-30.md`. Implement **L1 Complete Journey Handoff** only. Use a clean save and make the existing First Watch-to-Ashgate journey reach route planning, commitment, travel, contact or event, recovery, arrival, and Debrief through normal player-facing actions. Preserve all authoritative state, save semantics, replay keys, controller behavior, reduced motion, and existing content. Add full-flow assertions and 1600×900 evidence, then run the complete verification suite. Do not add a new region, threat, specialist, or story branch.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l1_complete_journey_handoff_report.md`. Implement **L2 Responsive Fortress Presentation** only. At 1280×720 and 1600×900, then with large text, high contrast, reduced motion, keyboard, and controller input, keep the status rail, fortress or map, selected-subject dock, and primary action readable, visible, and reachable. Fix the smallest set of layout and focus defects, add bounds/focus assertions plus before/after evidence, and preserve all authoritative state, save semantics, content, and replay behavior.
 
 ## Definition of game-quality readiness
 

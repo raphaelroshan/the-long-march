@@ -25,6 +25,10 @@ The screenshots were captured from the actual latest main build and are stored u
 
 The latest build is the strongest of the three at the tested 1280×720 size. The title has a coherent visual identity, exposes the exact version, and makes First Watch and the two journey chapters easy to distinguish. The First Watch introduction is readable and has a convincing moving-fortress silhouette. The smoke test successfully reaches tutorial content, but it does not yet prove the full contract from tutorial to live refit, route planning, road contact, recovery, and Debrief in one player-facing run.
 
+## Alpha.288 follow-up
+
+The smoke-test gap above is closed by [`l1_complete_journey_handoff_report.md`](l1_complete_journey_handoff_report.md). Alpha.288 adds one clean-save, app-shell integration run through First Watch and the full five-contact Ashgate journey, including save/resume checks at committed departure and completed arrival. Its 1600×900 evidence sequence is the baseline for the next responsive-layout pass.
+
 ## Next roadmap steps
 
 ### March Quality 1 — Full journey capture and handoff validation
