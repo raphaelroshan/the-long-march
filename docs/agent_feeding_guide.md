@@ -16,6 +16,7 @@ Run docs/private_alpha_session_sheet.md against one exact PR #41 artifact cohort
 
 **Status:** First high-noise module-bay reduction and Ashgate/Veyru place-treatment pass complete in `0.3.0-alpha.280`; broader authored art and human recognition testing remain open.
 
+
 ```text
 Replace one high-noise surface in the shared fortress silhouette with a restrained authored 2D treatment that remains readable in rest, travel, contact, recovery, and Debrief. Preserve FortressState, geometry, placement, state colors, high contrast, large text, reduced motion, and screenshots at 1280x720 and 2560x1440. Do not add mechanics, regions, or decorative effects that obscure dependencies.
 ```
@@ -23,6 +24,7 @@ Replace one high-noise surface in the shared fortress silhouette with a restrain
 ### Active Feed 3 — journey transition rhythm
 
 **Status:** The settlement-to-route-to-departure handoff now carries its promise, exact committed costs, current phase, next decision, and save-safe receipt in `0.3.0-alpha.281`; later contact-to-arrival rhythm remains open.
+
 
 ```text
 Improve one transition from settlement to route, route to travel, travel to contact, or contact to arrival. It must state the current location, commitment, cost, phase, and next decision; remain skippable; preserve exact save/resume semantics; and add UI/focus tests plus normal and scaled visual captures. Do not create a cinematic sequence or alter authoritative timing.
@@ -32,6 +34,7 @@ Improve one transition from settlement to route, route to travel, travel to cont
 
 **Status:** The first shared contact now exposes Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle as a stable phase grammar in `0.3.0-alpha.282`; broader threat-specific timing and human comprehension remain open.
 
+
 ```text
 Stage one existing deterministic encounter as forecast, approach, target commitment, wind-up, response, impact, dependency consequence, and settling beat. Presentation may interpolate but must not change FortressState, random streams, target order, or replay keys. Add pause, speed, manual-step, same-seed, focus, and visual verification.
 ```
@@ -39,6 +42,7 @@ Stage one existing deterministic encounter as forecast, approach, target commitm
 ### Active Feed 5 — settlement identity and service choice
 
 **Status:** Morrowline, Evacuation Camp, Ashgate Depot, and Lantern Quay now have distinct place motifs and locally framed service priorities through `0.3.0-alpha.285`; human recognition testing remains open.
+
 
 ```text
 Deepen one existing settlement with a place-specific visual motif and two meaningful service priorities. Each service must expose cost, restored system, remaining options, and trade-off. Use existing commands and currencies; do not add a generalized reputation meter or service currency. Add deterministic, save, controller, large-text, and receipt tests.
