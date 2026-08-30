@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.288`
+**Current baseline:** `0.3.0-alpha.289`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -646,7 +646,7 @@ Tasks:
 
 ### Phase 2 — Fortress visual identity
 
-**Status:** The first shared code-native silhouette, single-condition module-bay grammar, and Ashgate/Veyru place treatment are complete through `0.3.0-alpha.280`; bespoke production art and human recognition testing remain open.
+**Status:** The shared code-native silhouette, single-condition module-bay grammar, Ashgate/Veyru place treatment, and responsive three-region presentation contract are complete through `0.3.0-alpha.289`. The complete journey now holds its left status rail, center fortress/map, right action dock, primary focus, high contrast, large text, reduced motion, and alternate controller guidance at 1280×720 and 1600×900. Bespoke production art and human recognition testing remain open.
 
 **Objective:** Make the chassis feel like a physical inhabited machine.
 
@@ -726,7 +726,7 @@ Tasks:
 
 ### Phase 7 — Human private alpha
 
-**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, checksummed artifact-cohort manifest, and one-command verifier are complete through `0.3.0-alpha.288`; five consented uncoached sessions and evidence-led fixes require human testers.
+**Status:** The local five-session sheet, feedback-export summarizer, privacy boundary, capture matrix, checksummed artifact-cohort manifest, and one-command verifier are complete through `0.3.0-alpha.289`; five consented uncoached sessions and evidence-led fixes require human testers.
 
 **Objective:** Replace assumptions with observed behavior.
 

@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.288`
+**Current code baseline:** `0.3.0-alpha.289`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.287`, bundling one-command artifact verification and cross-platform cohort identity without changing game rules. The active `0.3.0-alpha.288` follow-up proves the complete clean-save First Watch-to-Ashgate journey, including save/resume at departure and arrival.
-**Next build target:** Execute L2 from [`ai_game_quality_execution_plan.md`](ai_game_quality_execution_plan.md): verify and repair responsive fortress presentation at supported sizes, accessibility preferences, and input paths before broadening campaign content.
+**Current merged baseline:** `0.3.0-alpha.288`, proving the complete clean-save First Watch-to-Ashgate journey, including save/resume at departure and arrival. The active `0.3.0-alpha.289` follow-up enforces the three-region fortress layout through the same full journey at both supported viewport sizes and with the complete accessibility/input profile.
+**Next build target:** Execute L3 from [`ai_game_quality_execution_plan.md`](ai_game_quality_execution_plan.md): strengthen the rhythm and distinction of settlement, route, departure, march, contact/event, consequence, arrival, and Debrief without changing simulation outcomes.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -1080,4 +1080,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **L2 Responsive Fortress Presentation**, not a new region or combat system. L1 now proves one clean-save path from First Watch through the live Ashgate contract, route planning, travel, contacts, events, Morrowline recovery, final arrival, and Debrief, with save/resume at both departure and arrival. Use the alpha.288 evidence as the baseline, repair only observable layout or focus defects across supported sizes and preferences, and preserve simulation behavior. Five consented human sessions remain useful calibration after the automated and visual gates, not a blocker for L2.
+The next agent task should be **L3 Journey Rhythm**, not a new region or combat system. L1 and L2 now prove the complete journey and its responsive three-region layout at 1280×720 and 1600×900 under large text, high contrast, reduced motion, and alternate controller guidance. Improve only the distinction, brevity, pacing, skip behavior, and focus handoff of the existing journey beats. Five consented human sessions remain useful calibration after the automated and visual gates, not a blocker for L3.

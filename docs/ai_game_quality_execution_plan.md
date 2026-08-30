@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.288` and later
+**Applies to:** `0.3.0-alpha.289` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -15,7 +15,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | Step | Objective | Required outcome |
 |---|---|---|
 | **L1 — complete in alpha.288** | Prove the complete journey handoff | Run clean First Watch → live refit → route planning → commitment → travel → road contact/event → recovery → arrival → Debrief. No hidden debug action may be required and save/resume must preserve the same phase and focus. |
-| **L2** | Finish responsive fortress presentation | At 1280×720, 1600×900, large text, high contrast, reduced motion, keyboard, and controller paths, the left status rail, center fortress/map, right selected-subject dock, and required actions remain readable and reachable. |
+| **L2 — complete in alpha.289** | Finish responsive fortress presentation | At 1280×720, 1600×900, large text, high contrast, reduced motion, keyboard, and controller paths, the left status rail, center fortress/map, right selected-subject dock, and required actions remain readable and reachable. |
 | **L3** | Improve journey rhythm | Make settlement receipt, route commitment, departure, short march beat, contact/event, consequence receipt, and arrival visually distinct, concise, skippable, and deterministic. |
 | **L4** | Complete road-contact cause and effect | Stage forecast, approach, target lock, wind-up, response, impact, dependency consequence, and settle. Every major threat must have a visible intent, counter, and consequence. |
 | **L5** | Strengthen settlement and route identity | Ashgate, Morrowline, Lantern Quay, and Evacuation Camp must differ in visual motif, service priority, operational pressure, and route meaning. Avoid menu-only reskins. |
@@ -33,7 +33,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l1_complete_journey_handoff_report.md`. Implement **L2 Responsive Fortress Presentation** only. At 1280×720 and 1600×900, then with large text, high contrast, reduced motion, keyboard, and controller input, keep the status rail, fortress or map, selected-subject dock, and primary action readable, visible, and reachable. Fix the smallest set of layout and focus defects, add bounds/focus assertions plus before/after evidence, and preserve all authoritative state, save semantics, content, and replay behavior.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/l2_responsive_fortress_presentation_report.md`. Implement **L3 Journey Rhythm** only. Make settlement receipt, route commitment, departure, short march, contact or event, consequence receipt, and arrival feel like distinct beats with concise current-state and next-action copy. Keep transitions skippable and deterministic, preserve save/resume and focus, add rhythm assertions and 1600×900 evidence, and do not alter authoritative travel or encounter outcomes.
 
 ## Definition of game-quality readiness
 

@@ -4,14 +4,14 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.288`; Feeds A through AT, the automated First Watch tutorial, the complete player-facing First Watch-to-Ashgate journey handoff, the first eight game-quality transformation slices, shared-fortress continuity, battle rhythm, settlement-identity passes, and verifiable playtest-cohort packaging are complete. The next implementation gate is responsive fortress presentation. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.289`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, the first eight game-quality transformation slices, shared-fortress continuity, battle rhythm, settlement-identity passes, and verifiable playtest-cohort packaging are complete. The next implementation gate is journey rhythm. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
 
-### Active Feed 0 — responsive fortress presentation
+### Active Feed 0 — journey rhythm
 
-**Status:** Next. L1 complete-journey handoff is proven in `0.3.0-alpha.288`.
+**Status:** Next. L2 responsive fortress presentation is proven in `0.3.0-alpha.289`.
 
 ```text
-At 1280x720 and 1600x900, then with large text, high contrast, reduced motion, keyboard, and controller input, keep the status rail, fortress or map, selected-subject dock, and primary action readable, visible, and reachable. Fix the smallest set of layout and focus defects. Add bounds and focus assertions plus before/after captures. Preserve FortressState, saves, content, timing, and replay behavior.
+Make settlement receipt, route commitment, departure, short march, contact or event, consequence receipt, arrival, and Debrief feel like distinct beats. Keep current-state and next-action copy concise, keep transitions skippable, and preserve deterministic FortressState outcomes, save/resume, and focus. Add rhythm assertions and visual evidence without adding content.
 ```
 
 ### Active Feed 1 — optional five-session human validation

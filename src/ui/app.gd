@@ -21,6 +21,7 @@ const ONBOARDING_PATH := "user://the_long_march_onboarding_v1.complete"
 const PROGRESS_PATH := "user://the_long_march_progress.json"
 const PLAYTEST_JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 const CHECKPOINT_TOAST_WIDTH := 250.0
+const CHECKPOINT_TOAST_HEIGHT := 36.0
 const CHECKPOINT_TOAST_GAP := 12.0
 const CHECKPOINT_LABELS := {
 	"contract_answered": "Contract decision",
@@ -1255,9 +1256,9 @@ func _build_checkpoint_toast() -> void:
 	checkpoint_toast = PanelContainer.new()
 	checkpoint_toast.name = "CheckpointToast"
 	checkpoint_toast.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	checkpoint_toast.position = Vector2(330, 22)
-	checkpoint_toast.custom_minimum_size = Vector2(CHECKPOINT_TOAST_WIDTH, 54)
-	checkpoint_toast.size = Vector2(CHECKPOINT_TOAST_WIDTH, 54)
+	checkpoint_toast.position = Vector2(330, 4)
+	checkpoint_toast.custom_minimum_size = Vector2(CHECKPOINT_TOAST_WIDTH, CHECKPOINT_TOAST_HEIGHT)
+	checkpoint_toast.size = Vector2(CHECKPOINT_TOAST_WIDTH, CHECKPOINT_TOAST_HEIGHT)
 	checkpoint_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	checkpoint_toast.visible = false
 	checkpoint_toast.add_theme_stylebox_override("panel", _flat_style(Color("#173027f2"), Color("#76c99d"), 2, 6, 10))
@@ -2241,13 +2242,13 @@ func _show_checkpoint_toast(reason: String) -> void:
 	checkpoint_toast_tween.tween_callback(func() -> void: checkpoint_toast.visible = false)
 
 func _position_checkpoint_toast() -> void:
-	checkpoint_toast.size = Vector2(CHECKPOINT_TOAST_WIDTH, 54)
+	checkpoint_toast.size = Vector2(CHECKPOINT_TOAST_WIDTH, CHECKPOINT_TOAST_HEIGHT)
 	var toast_x := 330.0
 	if game_view != null:
 		var stage_pause_button = game_view.get("pause_button") as Control
 		if stage_pause_button != null and stage_pause_button.is_visible_in_tree():
 			toast_x = minf(toast_x, maxf(24.0, stage_pause_button.get_global_rect().position.x - checkpoint_toast.size.x - CHECKPOINT_TOAST_GAP))
-	checkpoint_toast.position = Vector2(toast_x, 22)
+	checkpoint_toast.position = Vector2(toast_x, 4)
 
 func _dismiss_checkpoint_toast() -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
