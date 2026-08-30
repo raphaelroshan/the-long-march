@@ -4,14 +4,14 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.292`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, full seven-family road-contact causality, four-stop settlement and route identity, the first eight game-quality transformation slices, shared-fortress continuity, and verifiable playtest-cohort packaging are complete. The next implementation gate extracts focused presentation boundaries. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.293`; Feeds A through AT, the automated First Watch tutorial, complete journey handoff, responsive fortress presentation, journey rhythm, full seven-family road-contact causality, four-stop settlement and route identity, focused presentation builders, the first eight game-quality transformation slices, shared-fortress continuity, and verifiable playtest-cohort packaging are complete. The next implementation gate is one controlled route-content slice. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain optional confidence and calibration evidence, not a blocker for implementation.
 
-### Active Feed 0 — presentation boundaries
+### Active Feed 0 — controlled route content
 
-**Status:** Next. L5 settlement and route identity is proven in `0.3.0-alpha.292`.
+**Status:** Next. L6 presentation boundaries are proven in `0.3.0-alpha.293`.
 
 ```text
-Extract focused settlement, route, contact, recovery, and debrief view-model builders from the monolithic main presentation script. Preserve FortressState ownership, stable command IDs, save format, focus behavior, and pixel-visible output. Add parity assertions around the extracted contracts without redesigning screens or moving simulation logic.
+Add one small authored route branch in an existing region using existing threats and facilities. Specify its player question, stable node data, trade-off, forecast, encounter composition, recovery consequence, route-map presentation, save/replay coverage, and visual evidence. It must create at least two viable plans and must not add a region, threat family, facility family, currency, or second simulation path.
 ```
 
 ### Active Feed 1 — optional five-session human validation
