@@ -59,6 +59,15 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(hub.visible and hub.station_buttons["assignment_board"].has_focus(), "returning from detailed work should restore the bazaar's current required station")
 
+	hub.station_buttons["signal_broker"].pressed.emit()
+	await process_frame
+	_expect(hub.detail_title.text == "MARCHMASTER'S DESK" and hub.primary_action_button.text.contains("QUARRY") and hub.secondary_action_button.text.contains("SIGNAL"), "Ashgate's signal stall should expose two optional field experiments")
+	var mastery_resources := {"day": game.state.day, "fuel": game.state.fuel, "money": game.state.money}
+	hub.secondary_action_button.pressed.emit()
+	await _settle_ui()
+	_expect(game.state.mastery_experiment_id == "ashgate_signal_discipline" and hub.context_label.text.contains("FIELD ORDER: SIGNAL DISCIPLINE"), "choosing Signal Discipline should retain the optional order in the bazaar context")
+	_expect(mastery_resources == {"day": game.state.day, "fuel": game.state.fuel, "money": game.state.money}, "choosing a field experiment should not grant or spend run resources")
+
 	hub.station_buttons["assignment_board"].pressed.emit()
 	await process_frame
 	_expect(hub.primary_action_button.text == "ACCEPT ASSIGNMENT" and hub.secondary_action_button.text.begins_with("DECLINE"), "the assignment board should disclose both commitment choices before activation")

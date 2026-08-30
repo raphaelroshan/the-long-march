@@ -28,11 +28,17 @@ func _init() -> void:
 	_expect(settlement.get("stations", {}).keys().size() == 6, "settlement presenter should preserve all six stable station contracts")
 	_expect(settlement.get("stations", {}).get("assignment_board", {}).get("primary", {}).get("id") == "accept_assignment" and settlement.get("stations", {}).get("departure_gate", {}).get("primary", {}).get("id") == "plan_journey", "settlement presenter should preserve stable assignment and route command IDs")
 	_expect(String(settlement.get("stations", {}).get("assignment_board", {}).get("body", "")).contains("only 1 service action") and String(settlement.get("stations", {}).get("assignment_board", {}).get("secondary", {}).get("tooltip", "")).contains("only 1 service action"), "the assignment board should disclose the exact later shortage before decline")
+	_expect(settlement.get("stations", {}).get("signal_broker", {}).get("primary", {}).get("id") == "select_experiment_quarry" and settlement.get("stations", {}).get("signal_broker", {}).get("secondary", {}).get("id") == "select_experiment_signal", "the Marchmaster's Desk should expose two stable optional mastery orders")
 	_expect_pure(state, before, "settlement presenter")
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "route_selected": false, "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
 	_expect(planner.get("region_name") == "Ashgate Lowlands" and planner.get("values", {}).get("fuel") == str(state.fuel) and planner.get("return_label") == "RETURN TO ASHGATE DEPOT BAZAAR", "route presenter should preserve region, readiness values, and return contract")
 	_expect_pure(state, before, "route planner presenter")
+	state.choose_mastery_experiment("ashgate_quarry_adaptation")
+	var mastery_before := state.serialize()
+	var mastery_planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road."})
+	_expect(String(mastery_planner.get("order", "")).contains("FIELD ORDER · QUARRY ADAPTATION") and String(mastery_planner.get("order", "")).contains("Cinder Quarry secured"), "the route planner should retain the selected mastery objective")
+	_expect_pure(state, mastery_before, "mastery route presenter")
 
 	var preview := state.campaign_node_preview("rill_crossing", "protect_cargo")
 	state.day += int(preview.get("days", 0))
@@ -83,6 +89,7 @@ func _init() -> void:
 	_expect(debrief.get("headline") == "DECISIVE" and debrief.get("run_code") == "TEST-RUN" and debrief.get("timeline", []).size() == 3, "debrief presenter should preserve outcome identity, run identity, and route timeline")
 	_expect(String(debrief.get("consequence", "")).contains("CAUSE → The fortress held") and debrief.get("march_on_label") == "MARCH ON · FLOODED VEYRU", "debrief presenter should preserve the supplied causal chain and regional handoff")
 	_expect(String(debrief.get("commitments", "")).contains("Convoy delivered · 2 recovery actions"), "the debrief should retain the convoy's resolved service consequence")
+	_expect(String(debrief.get("commitments", "")).contains("Field order · Quarry Adaptation") and String(debrief.get("experiment", "")).contains("QUARRY ADAPTATION"), "the debrief should evaluate and retain the active field order")
 	_expect_pure(state, debrief_before, "debrief presenter")
 
 	if failures.is_empty():

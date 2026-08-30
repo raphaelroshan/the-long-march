@@ -19,6 +19,7 @@ var capture_dir := ""
 var responsive_profile := false
 var cinder_quarry_profile := false
 var declined_convoy_profile := false
+var mastery_profile := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
 
@@ -249,6 +250,15 @@ func _run_ashgate_journey() -> void:
 	_expect(not app.checkpoint_toast.get_global_rect().intersects(game.settlement_hub.location_label.get_global_rect()), "the compact save notice should not obscure the current location heading")
 	_expect_three_column_contract(game.settlement_hub, game.settlement_hub.value_labels["hull"], game.settlement_hub.bazaar_canvas, game.settlement_hub.primary_action_button, "Ashgate bazaar")
 	await _capture("05_ashgate_handoff")
+	if mastery_profile:
+		game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
+		await _settle()
+		_expect(game.settlement_hub.detail_title.text == "MARCHMASTER'S DESK" and game.settlement_hub.primary_action_button.text.contains("QUARRY") and game.settlement_hub.secondary_action_button.text.contains("SIGNAL"), "the Marchmaster's Desk should offer two bounded field experiments")
+		await _capture("05c_mastery_orders")
+		game.settlement_hub.primary_action_button.pressed.emit()
+		await _settle()
+		_expect(game.state.mastery_experiment_id == "ashgate_quarry_adaptation" and game.settlement_hub.context_label.text.contains("FIELD ORDER: QUARRY ADAPTATION"), "selecting Quarry Adaptation should retain its field order before departure")
+		await _capture("05d_quarry_order_selected")
 	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
 	await _settle()
 	if declined_convoy_profile:
@@ -322,7 +332,7 @@ func _run_ashgate_journey() -> void:
 		await _settle()
 	game.recovery_panel.routes_button.pressed.emit()
 	await _settle()
-	if cinder_quarry_profile:
+	if cinder_quarry_profile or mastery_profile:
 		game.doctrine_option.select(2)
 		game.doctrine_option.item_selected.emit(2)
 		await _settle()
@@ -333,7 +343,7 @@ func _run_ashgate_journey() -> void:
 	_expect(game.route_preview_label.text.contains("CINDER QUARRY") and game.route_preview_label.text.contains("2 fuel") and game.route_preview_label.text.contains("weakest damaged system") and game.campaign_map.detail_for("cinder_quarry").contains("weakest damaged system"), "the Cinder Quarry preview should visibly disclose its exact cost and guaranteed field-recovery consequence")
 	await _capture("11b_cinder_quarry_route")
 
-	if cinder_quarry_profile:
+	if cinder_quarry_profile or mastery_profile:
 		await _commit_route("cinder_quarry")
 		await _enter_contact()
 		await _capture("11c_cinder_quarry_contact")
@@ -355,6 +365,8 @@ func _run_ashgate_journey() -> void:
 	await _acknowledge_arrival()
 	_expect(game.state.run_complete and game.state.campaign_encounters_completed == 5, "the player-facing journey should complete all five encounters")
 	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "the final arrival should hand focus to the terminal Debrief")
+	if mastery_profile:
+		_expect(game.state.mastery_experiment_details().get("status") == "PROVEN" and game.debrief_panel.commitments_label.text.contains("Quarry Adaptation · PROVEN") and game.debrief_panel.experiment_label.text.contains("PROVEN · QUARRY ADAPTATION"), "the Debrief should evaluate the selected field order without granting progression")
 	_expect(game.get_global_rect().encloses(game.debrief_panel.inspect_button.get_global_rect()), "the first Debrief action should remain visible at 1600x900")
 	_expect_three_column_contract(game.debrief_panel, game.debrief_panel.timeline_labels[0], game.debrief_panel.fortress_canvas, game.debrief_panel.inspect_button, "terminal Debrief")
 	await _capture("13_debrief")
@@ -370,6 +382,7 @@ func _run() -> void:
 	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	cinder_quarry_profile = OS.get_environment("LONG_MARCH_CINDER_QUARRY_PROFILE") == "1"
 	declined_convoy_profile = OS.get_environment("LONG_MARCH_DECLINED_CONVOY_PROFILE") == "1"
+	mastery_profile = OS.get_environment("LONG_MARCH_MASTERY_PROFILE") == "1"
 	var capture_filter_text := OS.get_environment("LONG_MARCH_CAPTURE_FILTER")
 	if not capture_filter_text.is_empty():
 		for capture_name in capture_filter_text.split(",", false):
@@ -391,6 +404,8 @@ func _run() -> void:
 			print("PASS: The Long March Cinder Quarry route profile")
 		if declined_convoy_profile:
 			print("PASS: The Long March declined convoy consequence profile")
+		if mastery_profile:
+			print("PASS: The Long March replayable mastery profile")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")

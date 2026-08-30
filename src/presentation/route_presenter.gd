@@ -1,10 +1,14 @@
 extends RefCounted
 
 static func build_planner(state: LongMarchState, snapshot: Dictionary, context: Dictionary) -> Dictionary:
+	var order := String(context.get("order", "Review the next road."))
+	var experiment := state.mastery_experiment_details()
+	if bool(experiment.get("active", false)):
+		order += "  FIELD ORDER · %s · %s" % [String(experiment.get("title", "Experiment")).to_upper(), String(experiment.get("proof", "Complete the stated objective."))]
 	return {
 		"region_name": state.campaign_region_name(),
 		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location)),
-		"order": String(context.get("order", "Review the next road.")),
+		"order": order,
 		"receipt": String(context.get("receipt", "")),
 		"route_selected": bool(context.get("route_selected", false)),
 		"can_return": bool(context.get("can_return", false)),
