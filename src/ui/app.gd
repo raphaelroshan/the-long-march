@@ -2197,13 +2197,14 @@ func _save_from_pause() -> bool:
 func _on_checkpoint_reached(reason: String) -> void:
 	if game_view == null:
 		return
+	var semantic_cue_played := interface_audio.play_checkpoint_cue(reason)
 	if not _active_stage_is_tutorial():
 		_record_campaign_progress()
 	if not autosave_enabled:
 		return
 	if _save_active_stage(true):
 		last_checkpoint_reason = reason
-		_show_checkpoint_toast(reason)
+		_show_checkpoint_toast(reason, not semantic_cue_played)
 
 func _record_campaign_progress() -> void:
 	if game_view == null or _active_stage_is_tutorial():
@@ -2228,14 +2229,15 @@ func _record_campaign_progress() -> void:
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
 
-func _show_checkpoint_toast(reason: String) -> void:
+func _show_checkpoint_toast(reason: String, play_audio: bool = true) -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():
 		checkpoint_toast_tween.kill()
 	checkpoint_toast_label.text = "SAVED · %s" % _checkpoint_label(reason).to_upper()
 	_position_checkpoint_toast()
 	checkpoint_toast.modulate = Color.WHITE
 	checkpoint_toast.visible = true
-	interface_audio.play_notice()
+	if play_audio:
+		interface_audio.play_notice()
 	checkpoint_toast_tween = create_tween()
 	checkpoint_toast_tween.tween_interval(1.6)
 	if not reduced_motion:

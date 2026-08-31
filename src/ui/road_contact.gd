@@ -2,6 +2,7 @@ class_name RoadContactView
 extends Control
 
 const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+const TEMP_IMPACT_SPARK: Texture2D = preload("res://assets/temporary/kenney/particle-pack/spark_03.png")
 
 const THREAT_PRESENTATION_PROFILES := {
 	"road_raiders": {"wind_up": "HARPOON VOLLEY", "response": "SHELL OR REPEATER FIRE"},
@@ -221,6 +222,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	advance_button = Button.new()
 	advance_button.text = "ADVANCE CONTACT"
 	advance_button.custom_minimum_size = Vector2(0, 58)
+	advance_button.set_meta("long_march_audio_manual_press", true)
 	advance_button.pressed.connect(func() -> void: advance_requested.emit())
 	stack.add_child(advance_button)
 	inspect_button = Button.new()
@@ -242,6 +244,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 		var button := Button.new()
 		button.text = intervention_id.replace("_", " ").capitalize()
 		button.set_meta("intervention_id", intervention_id)
+		button.set_meta("long_march_audio_manual_press", true)
 		button.pressed.connect(_emit_intervention.bind(intervention_id))
 		button.focus_entered.connect(_show_action_help.bind(button))
 		button.mouse_entered.connect(_show_action_help.bind(button))
@@ -703,7 +706,7 @@ class ContactCanvas extends Control:
 				_draw_intent_arrow(Vector2(x - 16.0, y), target_anchor, line_color)
 				var pulse_radius := 15.0 + sin(transition_progress * PI) * 8.0
 				draw_arc(target_anchor, pulse_radius, 0, TAU, 24, line_color, 3.0)
-				if report_changed and transition_progress >= 0.58 and transition_progress < 0.78:
+				if temporary_impact_vfx_active():
 					_draw_impact_burst(target_anchor, line_color)
 				var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
 				draw_string(ThemeDB.fallback_font, target_anchor + Vector2(-70.0, -23.0), target_name, HORIZONTAL_ALIGNMENT_CENTER, 140.0, 10, Color("#fff0df"))
@@ -721,10 +724,15 @@ class ContactCanvas extends Control:
 
 	func _draw_impact_burst(center: Vector2, color: Color) -> void:
 		var strength := sin(clampf((transition_progress - 0.58) / 0.20, 0.0, 1.0) * PI)
+		var texture_size := 62.0 + strength * 34.0
+		draw_texture_rect(TEMP_IMPACT_SPARK, Rect2(center - Vector2.ONE * texture_size * 0.5, Vector2.ONE * texture_size), false, Color(1.0, 0.48, 0.28, 0.30 + strength * 0.36))
 		draw_circle(center, 12.0 + strength * 8.0, Color(color.r, color.g, color.b, 0.22 + strength * 0.28))
-		for spoke in range(10):
-			var direction := Vector2.from_angle(TAU * float(spoke) / 10.0)
+		for spoke in range(6):
+			var direction := Vector2.from_angle(TAU * float(spoke) / 6.0)
 			draw_line(center + direction * 15.0, center + direction * (25.0 + strength * 13.0), color, 2.0 + strength * 2.0)
+
+	func temporary_impact_vfx_active() -> bool:
+		return not reduced_motion and report_changed and transition_progress >= 0.58 and transition_progress < 0.78
 
 	func _draw_enemy_symbol(enemy_id: String, position: Vector2, arrived: bool, scale_amount: float = 1.0) -> void:
 		var color := Color("#ff7f70") if arrived else Color("#d8a16e")

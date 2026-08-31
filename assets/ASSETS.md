@@ -17,3 +17,5 @@ These are first-pass generated project assets, not final animation sheets or a c
 ## Temporary testing kit
 
 The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Town, Interface Sounds, RPG Audio, and a curated Particle Pack subset. These files support settlement breadth, travel transitions, journey timing, animation tests, and audio feedback; they are explicitly not the final moving-fortress, settlement, or machine sound identity.
+
+Build `0.3.0-alpha.300` integrates the documented semantic audio subset plus `spark_03.png` and `smoke_03.png`. Tiny Town remains reference-only.

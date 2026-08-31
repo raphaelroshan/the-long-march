@@ -147,4 +147,4 @@ The machine-readable campaign manifest now includes regions, settlements, extend
 
 ## Temporary asset kit
 
-The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). These assets support journey breadth, transition timing, and feel testing; they are not the final moving-fortress or settlement art direction.
+The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). The integrated transition sounds are listed in [`docs/audio_cue_map.md`](docs/audio_cue_map.md). These assets support journey breadth, transition timing, and feel testing; they are not the final moving-fortress or settlement art direction.

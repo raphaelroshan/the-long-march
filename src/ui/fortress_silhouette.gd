@@ -1,6 +1,8 @@
 class_name FortressSilhouette
 extends RefCounted
 
+const TEMP_DAMAGE_SMOKE: Texture2D = preload("res://assets/temporary/kenney/particle-pack/smoke_03.png")
+
 const FAMILY_COLORS := {
 	"engine": Color("#bd7149"),
 	"weapon": Color("#bd5550"),
@@ -294,6 +296,9 @@ static func _draw_module_activity(canvas: CanvasItem, rect: Rect2, slot: Diction
 	activity_color.a = clampf(pulse, 0.28, 0.82)
 	canvas.draw_circle(rect.position + Vector2(rect.size.x * 0.78, 5.0), 3.0 if condition == "strained" else 4.5, activity_color)
 	if condition in ["damaged", "breached"]:
+		var texture_size := minf(42.0, maxf(24.0, rect.size.x * 0.78))
+		var texture_rect := Rect2(rect.position + Vector2(rect.size.x * 0.50 - texture_size * 0.5, -texture_size * 0.62), Vector2(texture_size, texture_size))
+		canvas.draw_texture_rect(TEMP_DAMAGE_SMOKE, texture_rect, false, Color(0.30, 0.25, 0.20, 0.34 if high_contrast else 0.24))
 		for smoke_index in range(2):
 			var smoke := Color(0.08, 0.10, 0.10, 0.48 - float(smoke_index) * 0.12)
 			canvas.draw_circle(rect.position + Vector2(rect.size.x * 0.76 - float(smoke_index) * 6.0, -5.0 - float(smoke_index) * 9.0), 5.0 + float(smoke_index) * 2.0, smoke)

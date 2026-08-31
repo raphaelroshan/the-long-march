@@ -20,6 +20,7 @@ func _run() -> void:
 	_expect(audio.players.size() == 3, "interface audio should keep a small overlap-safe player pool")
 	_expect(audio.focus_stream != null and audio.focus_stream.data.size() > 0 and audio.focus_stream.mix_rate == InterfaceAudio.MIX_RATE, "focus feedback should be a generated deterministic PCM cue")
 	_expect(audio.confirm_stream != null and audio.notice_stream != null and audio.warning_stream != null, "the controller should provide distinct confirmation, notice, and warning cues")
+	_expect(audio.SEMANTIC_STREAMS.size() == 10 and String(audio.SEMANTIC_STREAMS["route_commit"].resource_path).ends_with("confirmation_001.ogg") and String(audio.SEMANTIC_STREAMS["debrief"].resource_path).ends_with("bookOpen.ogg"), "the journey should load distinct licensed temporary cues for commitment through Debrief")
 	audio.set_volume_percent(55)
 	_expect(audio.volume_percent == InterfaceAudio.DEFAULT_VOLUME_PERCENT, "unsupported stored volume should normalize to the documented default")
 	audio.set_volume_percent(40)
@@ -37,10 +38,22 @@ func _run() -> void:
 	_expect(audio.last_cue_kind == "focus", "keyboard or controller focus should trigger the quiet navigation cue")
 	dynamic_button.pressed.emit()
 	_expect(audio.last_cue_kind == "confirm", "button activation should trigger the confirmation cue")
+	var transition_button := Button.new()
+	transition_button.set_meta("long_march_audio_cue", "contact_entry")
+	host.add_child(transition_button)
+	await process_frame
+	transition_button.pressed.emit()
+	_expect(audio.last_semantic_cue_kind == "contact_entry" and audio.last_semantic_asset_path.ends_with("doorOpen_1.ogg"), "a tagged journey transition should replace the generic click with its semantic cue")
+	_expect(audio.play_checkpoint_cue("route_started") and audio.last_semantic_cue_kind == "route_commit" and audio.last_semantic_asset_path.ends_with("confirmation_001.ogg"), "a successful route checkpoint should play its route-commit cue")
+	_expect(audio.play_checkpoint_cue("settlement_service") and audio.last_semantic_cue_kind == "service" and audio.last_semantic_asset_path.ends_with("metalPot1.ogg"), "a completed recovery service should play a distinct material cue")
+	var cue_before_unknown := audio.last_semantic_cue_kind
+	_expect(not audio.play_checkpoint_cue("module_moved") and audio.last_semantic_cue_kind == cue_before_unknown, "checkpoints without a semantic mapping should leave the normal save notice in control")
 	audio.set_volume_percent(0)
 	var muted_last_cue := audio.last_cue_kind
+	var muted_last_semantic := audio.last_semantic_cue_kind
 	audio.play_warning()
 	_expect(audio.last_cue_kind == muted_last_cue and audio.players[0].volume_db <= -79.0, "muting should suppress cues without changing any visual control behavior")
+	_expect(not audio.play_semantic("debrief") and audio.last_semantic_cue_kind == muted_last_semantic, "muting should suppress semantic journey cues as well as generated interface cues")
 	host.queue_free()
 	await process_frame
 	if failures.is_empty():

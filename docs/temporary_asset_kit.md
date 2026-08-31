@@ -1,7 +1,7 @@
 # The Long March — Temporary Asset Kit
 
 **Status:** Testing-only breadth kit  
-**Build target:** Current private alpha branch  
+**Build target:** `0.3.0-alpha.300` and later
 **Purpose:** Give AI agents usable temporary fortress, settlement, travel, VFX, audio, and animation ingredients while the moving-fortress identity is refined.
 
 ## Included sources
@@ -52,6 +52,10 @@ The animation layer must be driven by already-determined state. The same seed, c
 Replace Tiny Town first with a coherent set of settlement and route plates that make Ashgate, Morrowline, Lantern Quay, and Evacuation Camp distinct. Replace generic foley with engine hum, hull creaks, wheel/track rhythm, steam release, repair tools, wind, and braking sounds. Commission the moving-fortress key art and a small set of signature fortress details before commissioning many character or event illustrations.
 
 The temporary pack is successful if it makes the full journey testable and atmospheric enough to expose timing and comprehension problems. It is not successful as final commercial art; all uses in evidence reports should be labeled as temporary placeholders.
+
+## Integrated subset
+
+Build `0.3.0-alpha.300` integrates a deliberately small subset: ten journey audio cues, `spark_03.png` for resolved contact impact, and `smoke_03.png` for known damaged or breached bays. The exact audio mapping is in [`audio_cue_map.md`](audio_cue_map.md). Tiny Town remains unintegrated because its visual language conflicts with the current industrial-fantasy fortress presentation.
 
 ## Provenance
 

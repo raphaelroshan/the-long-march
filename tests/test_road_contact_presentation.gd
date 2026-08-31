@@ -61,6 +61,7 @@ func _run() -> void:
 	var contact = load("res://scenes/journey/RoadContact.tscn").instantiate()
 	root.add_child(contact)
 	await process_frame
+	_expect(contact.advance_button.has_meta("long_march_audio_manual_press") and contact.intervention_buttons.all(func(button: Button) -> bool: return button.has_meta("long_march_audio_manual_press")), "contact commands should defer audio to their authoritative encounter checkpoints")
 	for enemy_id in THREAT_CASES:
 		var case: Dictionary = THREAT_CASES[enemy_id]
 		var forecast_view := _view_for(enemy_id, false)
@@ -91,6 +92,7 @@ func _run() -> void:
 				_expect(stage_text == phase_case.text, "%s %s cue should be stable; received '%s'" % [case.name, phase_case.phase, stage_text])
 			else:
 				_expect(stage_text.begins_with("IMPACT ·") and stage_text.contains(phase_case.contains), "%s impact should repeat authoritative damage; received '%s'" % [case.name, stage_text])
+				_expect(contact.contact_canvas.temporary_impact_vfx_active(), "%s impact should expose the temporary resolved-impact VFX only during the impact beat" % case.name)
 			if enemy_id == "road_raiders" and String(phase_case.phase) in ["WIND-UP", "IMPACT", "CONSEQUENCE"]:
 				await _capture("causality_%s" % String(phase_case.phase).to_lower())
 		_expect(contact.threat_detail.text.contains("INTENT · %s" % case.signature) and contact.threat_detail.text.contains("RESPONSE WINDOW · %s" % case.counter) and contact.threat_detail.text.contains("CASCADE · Dependent System → OFFLINE"), "%s active dossier should retain intent, counter, and dependency consequence together" % case.name)
@@ -110,6 +112,7 @@ func _run() -> void:
 	contact.set_reduced_motion(true)
 	contact._refresh_battle_phase_label(true)
 	_expect(contact.contact_canvas.high_contrast_enabled and contact.contact_canvas.transition_progress == 1.0 and contact.battle_phase_for() == "CONSEQUENCE" and contact.contact_canvas.presentation_stage_text().begins_with("CONSEQUENCE"), "high contrast should preserve the cue while reduced motion resolves directly to consequence without changing state")
+	_expect(not contact.contact_canvas.temporary_impact_vfx_active(), "reduced motion should skip the temporary impact effect while retaining the consequence receipt")
 
 	var response_view := _view_for("road_raiders", true)
 	response_view["recent_report"] = []

@@ -185,6 +185,7 @@ func _build_ui() -> void:
 	continue_button.text = "CONTINUE TO CONTACT"
 	continue_button.custom_minimum_size = Vector2(0, 62)
 	continue_button.tooltip_text = "Enter the road encounter. Arrival remains pending until it is resolved."
+	continue_button.set_meta("long_march_audio_cue", "contact_entry")
 	continue_button.pressed.connect(func() -> void: continue_requested.emit())
 	detail_stack.add_child(continue_button)
 

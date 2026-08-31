@@ -29,6 +29,11 @@ func _expect(condition: bool, message: String) -> void:
 		failures.append(message)
 
 
+func _expect_semantic_cue(cue_id: String, message: String) -> void:
+	if app.interface_audio.volume_percent > 0:
+		_expect(app.interface_audio.last_semantic_cue_kind == cue_id, message)
+
+
 func _remove_local_state() -> void:
 	for path in LOCAL_PATHS:
 		var absolute := ProjectSettings.globalize_path(path)
@@ -123,6 +128,7 @@ func _choose_event(choice_id: String) -> void:
 	if button != null and button.visible and not button.disabled:
 		button.pressed.emit()
 		await _settle()
+		_expect_semantic_cue("event", "a resolved roadside choice should use the temporary event cue instead of a generic click")
 
 
 func _commit_route(node_id: String) -> void:
@@ -136,6 +142,7 @@ func _commit_route(node_id: String) -> void:
 	game.campaign_commit_button.pressed.emit()
 	await _settle()
 	_expect(game.journey_transition.visible and game.journey_transition.continue_button.has_focus(), "route commitment should open a focused departure handoff: " + node_id)
+	_expect_semantic_cue("route_commit", "a successful route commitment should use its distinct temporary confirmation cue")
 
 
 func _enter_contact() -> void:
@@ -143,6 +150,7 @@ func _enter_contact() -> void:
 	game.journey_transition.continue_button.pressed.emit()
 	await _settle()
 	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "travel should hand focus to the visible road contact")
+	_expect_semantic_cue("contact_entry", "entering contact should use a distinct temporary fortress-transition cue")
 
 
 func _resolve_contact(expected_phase: String) -> void:
@@ -161,12 +169,14 @@ func _resolve_contact(expected_phase: String) -> void:
 		await _settle()
 	_expect(not game.state.encounter_active and game.state.phase == expected_phase, "visible contact steps should resolve into " + expected_phase)
 	_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "a resolved contact should stop at a focused arrival receipt")
+	_expect_semantic_cue("debrief" if expected_phase == "results" else "arrival", "the resolved road should announce arrival or Debrief with its semantic cue")
 
 
 func _acknowledge_arrival() -> void:
 	game.journey_arrival.continue_button.pressed.emit()
 	await _settle()
 	_expect(not game.journey_arrival.visible, "acknowledging arrival should expose the next player-facing order")
+	_expect_semantic_cue("arrival_handoff", "acknowledging arrival should use the distinct location-handoff cue")
 
 
 func _complete_first_watch() -> void:
@@ -331,6 +341,7 @@ func _run_ashgate_journey() -> void:
 	if not game.recovery_panel.refuel_button.disabled:
 		game.recovery_panel.refuel_button.pressed.emit()
 		await _settle()
+		_expect_semantic_cue("service", "a completed recovery action should use the distinct material service cue")
 	game.recovery_panel.routes_button.pressed.emit()
 	await _settle()
 	if cinder_quarry_profile or mastery_profile:
