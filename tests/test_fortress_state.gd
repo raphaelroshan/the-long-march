@@ -32,6 +32,7 @@ func _init() -> void:
 	_test_cinder_quarry_route_branch()
 	_test_mara_flint_event_chain()
 	_test_bounded_occurrence_scheduler()
+	_test_pre_contact_road_interruption()
 	_test_flooded_veyru_region_state()
 	_test_flooded_veyru_threats_and_contract()
 	_test_veyru_public_archive_signal()
@@ -587,6 +588,9 @@ func _campaign_battle(state: LongMarchState, node_id: String, doctrine: String =
 	if not bool(begun.get("ok", false)):
 		return begun
 	_expect(state.current_location == origin_id and state.campaign_target_node == node_id, "campaign departure should retain the last secured location until its road contact resolves")
+	if state.pre_contact_occurrence_active():
+		var interruption := state.resolve_campaign_event("carry_lift_load")
+		_expect(bool(interruption.get("ok", false)), "the campaign fixture should resolve its authored pre-contact interruption before advancing combat")
 	state.advance_encounter(1.0)
 	state.use_encounter_intervention("shift_power")
 	return state.advance_encounter(6.0)
@@ -954,6 +958,38 @@ func _test_bounded_occurrence_scheduler() -> void:
 	var migrated := LongMarchState.new(0)
 	_expect(bool(migrated.load_serialized(version_five).get("ok", false)) and migrated.occurrence_history.is_empty() and migrated.occurrence_stream_cursor == 0, "version-five checkpoints should migrate with an empty occurrence scheduler")
 	_expect(first.occurrence_debrief_lines()[0].contains("Boiler's Second Heartbeat") and first.occurrence_debrief_lines()[0].contains("Inspect Boiler"), "resolved occurrences should produce a concise causal debrief record")
+
+func _test_pre_contact_road_interruption() -> void:
+	var state := LongMarchState.new(1107)
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.place_module("generator_core", Vector2i(2, 0))
+	state.place_module("ammunition_lift", Vector2i(2, 1))
+	state.place_module("repeater_gun", Vector2i(3, 2), true)
+	state.start_campaign()
+	state.choose_guard_contract(false)
+	var begun := state.begin_campaign_route("rill_crossing", "protect_cargo")
+	_expect(bool(begun.get("ok", false)) and String(begun.get("pre_contact_event", "")) == "lift_chain_sings", "the first Rill road should schedule its authored lift-chain interruption when the live fortress supports it")
+	_expect(state.pre_contact_occurrence_active() and state.campaign_event_pending == "lift_chain_sings" and state.occurrence_active_phase == "pre_contact_1_rill_crossing", "the interruption should retain a stable phase ID while the committed contact waits at step zero")
+	_expect(state.current_location == "ashgate_depot" and state.campaign_target_node == "rill_crossing" and state.phase == "battle" and state.encounter_step == 0, "route commitment should spend the road costs without moving the fortress to Rill before the interruption and contact resolve")
+	_expect(not bool(state.advance_encounter().get("ok", false)) and state.encounter_step == 0, "core combat advancement should not bypass an unresolved pre-contact interruption")
+	_expect(not bool(state.use_encounter_intervention("shift_power").get("ok", false)) and not state.encounter_intervention_used, "emergency contact orders should remain unavailable until the road interruption resolves")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.pre_contact_occurrence_active() and restored.current_location == "ashgate_depot", "a pre-contact interruption should survive save/load without securing the destination")
+	var lift_before := int(restored.modules[restored._module_index_by_id("ammunition_lift")].durability)
+	var resolved := restored.resolve_campaign_event("carry_lift_load")
+	_expect(bool(resolved.get("ok", false)) and not restored.pre_contact_occurrence_active() and restored.encounter_active and restored.encounter_step == 0, "resolving the interruption should hand off to the already committed contact without advancing it")
+	_expect(int(restored.modules[restored._module_index_by_id("ammunition_lift")].durability) == lift_before - 1 and restored.current_location == "ashgate_depot", "the chosen lift consequence should affect the physical fortress while arrival remains pending")
+	_expect(bool(restored.advance_encounter().get("ok", false)) and restored.encounter_step == 1, "the first contact step should become available immediately after the interruption is resolved")
+
+	var unsupported := LongMarchState.new(1107)
+	unsupported.place_module("steam_lance_engine", Vector2i(0, 0))
+	unsupported.place_module("coal_cell", Vector2i(0, 1))
+	unsupported.start_campaign()
+	unsupported.choose_guard_contract(false)
+	var unsupported_begun := unsupported.begin_campaign_route("rill_crossing", "protect_crew")
+	_expect(bool(unsupported_begun.get("ok", false)) and String(unsupported_begun.get("pre_contact_event", "")).is_empty() and not unsupported.pre_contact_occurrence_active(), "a fortress without the lift-and-weapon dependency should take the same road without receiving an impossible interruption")
+	_expect(bool(unsupported.advance_encounter().get("ok", false)), "an ineligible interruption should not block the committed road contact")
 
 func _test_flooded_veyru_region_state() -> void:
 	var state := LongMarchState.new(2204)

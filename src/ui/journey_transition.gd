@@ -250,11 +250,11 @@ func _set_presentation_beat(index: int) -> void:
 		0:
 			status_label.text = "DEPARTURE LOCKED"
 			next_label.text = "NEXT · Skip the march beat or watch the fortress take the road."
-			continue_button.text = "SKIP MARCH · ENTER CONTACT"
+			continue_button.text = String(current_view.get("skip_action_label", "SKIP MARCH · ENTER CONTACT"))
 		1:
 			status_label.text = "ROAD IN MOTION"
-			next_label.text = "NEXT · Contact is closing. Enter when ready."
-			continue_button.text = "SKIP MARCH · ENTER CONTACT"
+			next_label.text = String(current_view.get("motion_next", "NEXT · Contact is closing. Enter when ready."))
+			continue_button.text = String(current_view.get("skip_action_label", "SKIP MARCH · ENTER CONTACT"))
 		_:
 			status_label.text = String(current_view.get("status", "CONTACT AHEAD")).to_upper()
 			next_label.text = String(current_view.get("next_decision", "NEXT · Read the contact, then continue."))

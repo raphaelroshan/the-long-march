@@ -65,9 +65,13 @@ func _run() -> void:
 			{"id": "carry_lift_load", "label": "Carry the load to the next stop", "effect": "Pressure -1 · Ammunition Lift -1 durability", "enabled": true, "reason": ""}
 		]
 	})
+	lift_view["context"] = "ROAD INTERRUPTION · CONTACT WAITING"
+	lift_view["location_name"] = "Ashgate Depot → Rill Crossing"
+	lift_view["guidance"] = "Choose one response. Its listed cost applies now; the committed contact remains next and cannot be bypassed."
 	event_view.configure(lift_view)
 	await _settle_ui()
 	_expect(event_view.tableau.presentation_signature() == "LOADED LIFT · BRACE OR CARRY" and not event_view.story_panel.visible and event_view.choice_buttons[1].text.contains("Ammunition Lift -1 durability"), "the lift occurrence should stage its loaded dependency and keep its brace-or-carry cost in the primary choices")
+	_expect(event_view.context_label.text == "ROAD INTERRUPTION · CONTACT WAITING" and event_view.location_label.text.contains("ASHGATE DEPOT → RILL CROSSING") and event_view.guidance_label.text.contains("cannot be bypassed"), "the pre-contact lift tableau should preserve its road position and mandatory handoff in visible copy")
 	await _capture("02_lift_chain")
 	var miller_view: Dictionary = common.duplicate(true)
 	miller_view.merge({

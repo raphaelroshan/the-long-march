@@ -2411,7 +2411,16 @@ func _on_campaign_route_committed(node_id: String) -> void:
 	_refresh_ui()
 
 func _build_journey_transition_view(origin_id: String, destination_id: String, preview: Dictionary, day_before: int, fuel_before: int, pressure_before: int) -> Dictionary:
-	return RoutePresenter.build_transition(state, origin_id, destination_id, preview, {"day": day_before, "fuel": fuel_before, "pressure": pressure_before}, {"tutorial": tutorial_mode, "promise": _journey_promise_summary(), "fortress": _fortress_presentation_snapshot()})
+	var view := RoutePresenter.build_transition(state, origin_id, destination_id, preview, {"day": day_before, "fuel": fuel_before, "pressure": pressure_before}, {"tutorial": tutorial_mode, "promise": _journey_promise_summary(), "fortress": _fortress_presentation_snapshot()})
+	if state.pre_contact_occurrence_active():
+		var event := state.campaign_event_details()
+		var event_title := String(event.get("title", "Road interruption"))
+		view["status"] = "ROAD INTERRUPTION AHEAD"
+		view["next_decision"] = "NEXT · Resolve %s. The committed contact remains waiting." % event_title
+		view["action_label"] = "REVIEW INTERRUPTION"
+		view["skip_action_label"] = "SKIP MARCH · REVIEW INTERRUPTION"
+		view["motion_next"] = "NEXT · %s interrupts the march before contact." % event_title
+	return view
 
 func _restore_journey_transition_view() -> Dictionary:
 	var destination_id := state.campaign_target_node
@@ -2456,9 +2465,16 @@ func _on_journey_transition_continued() -> void:
 	journey_transition_active = false
 	if tutorial_mode:
 		_tutorial_advance("read_contact", "TRAVEL COMPLETE · Fuel and time are already spent. The road remains contested until contact is clear.")
-	_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
+	if state.pre_contact_occurrence_active():
+		var event := state.campaign_event_details()
+		_set_event("Road interruption: %s. Resolve it before entering the committed contact." % String(event.get("title", "A decision on the road")))
+	else:
+		_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
 	_refresh_ui()
-	road_contact.focus_default.call_deferred()
+	if state.pre_contact_occurrence_active():
+		roadside_event.focus_default.call_deferred()
+	else:
+		road_contact.focus_default.call_deferred()
 
 func _on_journey_arrival_continued() -> void:
 	if not journey_arrival_active:
@@ -2505,6 +2521,7 @@ func _on_campaign_event_pressed(index: int) -> void:
 	var choice_id := String(campaign_event_buttons[index].get_meta("choice_id", ""))
 	if choice_id.is_empty():
 		return
+	var was_pre_contact := state.pre_contact_occurrence_active()
 	var result := state.resolve_campaign_event(choice_id)
 	if bool(result.get("ok", false)):
 		var result_message := String(result.get("message", "Decision recorded: %s." % choice_id.replace("_", " ").capitalize()))
@@ -2518,6 +2535,8 @@ func _on_campaign_event_pressed(index: int) -> void:
 	if bool(result.get("ok", false)):
 		if state.campaign_event_pending.is_empty():
 			encounter_label.text = "DECISION CONSEQUENCE\n%s\nNEXT · %s" % [String(result.get("message", "Decision recorded.")), _current_guidance_action()]
+			if was_pre_contact and state.encounter_active:
+				road_contact.focus_default.call_deferred()
 		else:
 			var next_event := state.campaign_event_details()
 			encounter_label.text = "DECISION CONTINUES · %s\n%s" % [String(next_event.get("title", "Local event")).to_upper(), String(result.get("message", "Decision recorded."))]
@@ -2918,7 +2937,7 @@ func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> voi
 	if road_contact == null:
 		return
 	var battle_active := state.phase in ["battle", "final_battle"] and state.encounter_active
-	var show_contact := battle_active and not journey_transition_active and not contact_inspection_active
+	var show_contact := battle_active and not journey_transition_active and not contact_inspection_active and not state.pre_contact_occurrence_active()
 	road_contact.visible = show_contact
 	if not show_contact:
 		return
@@ -3067,26 +3086,32 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 	if roadside_event == null:
 		return
 	var event := state.campaign_event_details()
-	var show_event := not event.is_empty() and not journey_arrival_active and state.phase not in ["battle", "final_battle", "results"]
+	var pre_contact := state.pre_contact_occurrence_active() and not journey_transition_active
+	var show_event := not event.is_empty() and not journey_arrival_active and (pre_contact or state.phase not in ["battle", "final_battle", "results"])
 	roadside_event.visible = show_event
 	if not show_event:
 		return
 	settlement_hub.visible = false
+	main_columns.visible = false
 	journey_planner.visible = false
 	journey_transition.visible = false
 	road_contact.visible = false
 	var event_id := String(event.get("id", state.campaign_event_pending))
 	var occurrence := event_id in LongMarchState.OCCURRENCE_DEFS
+	var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+	if pre_contact:
+		var destination_name := String(LongMarchState.JOURNEY_NODES.get(state.journey_destination, {}).get("name", state.journey_destination))
+		location_name = "%s → %s" % [location_name, destination_name]
 	roadside_event.configure({
 		"event_id": event_id,
 		"region_id": state.campaign_region_id,
-		"context": "ROADSIDE OCCURRENCE" if occurrence else "LOCATION DECISION",
-		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location)),
+		"context": "ROAD INTERRUPTION · CONTACT WAITING" if pre_contact else ("ROADSIDE OCCURRENCE" if occurrence else "LOCATION DECISION"),
+		"location_name": location_name,
 		"title": String(event.get("title", "Roadside decision")),
 		"body": String(event.get("body", "The fortress waits for an order.")),
 		"choices": event.get("choices", []),
 		"story": _roadside_event_story(event_id, event),
-		"guidance": "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete.",
+		"guidance": "Choose one response. Its listed cost applies now; the committed contact remains next and cannot be bypassed." if pre_contact else "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete.",
 		"values": {
 			"day": str(snapshot.get("day", state.day)),
 			"fuel": str(snapshot.get("fuel", state.fuel)),

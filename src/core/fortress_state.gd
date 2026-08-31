@@ -74,7 +74,7 @@ const OCCURRENCE_STREAM_NAME := "ashgate_operational_occurrences_v1"
 const OCCURRENCE_HISTORY_LIMIT := 8
 const OCCURRENCE_DEFS := {
 	"boiler_heartbeat": {"title": "The Boiler's Second Heartbeat", "type": "operational", "phases": ["road_arrival"], "nodes": ["rill_crossing", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "cooldown", "cooldown": 2},
-	"lift_chain_sings": {"title": "The Lift Chain Sings", "type": "operational", "phases": ["road_arrival"], "nodes": ["rill_crossing", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "cooldown", "cooldown": 2},
+	"lift_chain_sings": {"title": "The Lift Chain Sings", "type": "operational", "phases": ["pre_contact", "road_arrival"], "nodes": ["rill_crossing", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "cooldown", "cooldown": 2},
 	"the_last_dry_room": {"title": "The Last Dry Room", "type": "operational", "phases": ["road_arrival", "settlement_arrival"], "nodes": ["rill_crossing", "morrowline_camp", "lower_ash_road", "dry_cistern_cut", "signal_causeway"], "repeat": "once", "cooldown": 0},
 	"the_miller_with_a_broken_wheel": {"title": "The Miller With a Broken Wheel", "type": "meeting", "phases": ["road_arrival", "settlement_arrival"], "nodes": ["rill_crossing", "morrowline_camp"], "repeat": "once", "cooldown": 0}
 }
@@ -1194,6 +1194,25 @@ func try_schedule_occurrence(phase_kind: String, node_id: String, phase_id: Stri
 	log.append("Road occurrence: %s requires a decision before departure." % String(OCCURRENCE_DEFS[selected_id].title))
 	return {"ok": true, "event_id": selected_id, "phase_id": phase_id, "candidates": candidates.duplicate()}
 
+func _schedule_first_pre_contact_occurrence(node_id: String) -> Dictionary:
+	if campaign_region_id != "ashgate_lowlands" or campaign_encounters_completed != 0 or node_id != "rill_crossing":
+		return {"ok": true, "event_id": "", "reason": "no authored pre-contact occurrence on this road"}
+	var phase_id := "pre_contact_%d_%s" % [journey_leg, node_id]
+	if phase_id in occurrence_phase_history:
+		return {"ok": true, "event_id": "", "reason": "phase already evaluated"}
+	_bounded_append(occurrence_phase_history, phase_id)
+	var event_id := "lift_chain_sings"
+	var eligibility := occurrence_eligibility(event_id, "pre_contact", node_id)
+	if not bool(eligibility.get("eligible", false)):
+		return {"ok": true, "event_id": "", "phase_id": phase_id, "reason": String(eligibility.get("reason", "occurrence unavailable"))}
+	campaign_event_pending = event_id
+	occurrence_active_phase = phase_id
+	log.append("Road interruption: %s requires a decision before contact." % String(OCCURRENCE_DEFS[event_id].title))
+	return {"ok": true, "event_id": event_id, "phase_id": phase_id}
+
+func pre_contact_occurrence_active() -> bool:
+	return encounter_active and encounter_step == 0 and phase in ["battle", "final_battle"] and campaign_event_pending in OCCURRENCE_DEFS and occurrence_active_phase.begins_with("pre_contact_")
+
 func _record_occurrence_resolution(event_id: String, choice_id: String) -> void:
 	_bounded_append(occurrence_history, {"event_id": event_id, "choice_id": choice_id, "phase_id": occurrence_active_phase})
 	var cooldown := int(OCCURRENCE_DEFS.get(event_id, {}).get("cooldown", 0))
@@ -1573,8 +1592,9 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 			encounter_enemies[index]["hp"] = int(encounter_enemies[index].get("hp", 0)) + 1
 			encounter_enemies[index]["max_hp"] = int(encounter_enemies[index].get("max_hp", 0)) + 1
 		_encounter_log("Guard contract: the raiders commit to the convoy approach, adding one enemy endurance.")
+	var pre_contact_occurrence := _schedule_first_pre_contact_occurrence(node_id)
 	log.append("Campaign route selected: %s. %s is %s (%d)." % [String(node.name), campaign_pressure_name(), campaign_pressure_band().replace("_", " "), campaign_pressure])
-	return {"ok": true, "node": node_id, "preview": preview, "forecast": encounter_forecast(), "encounter": encounter_summary(), "summary": summary()}
+	return {"ok": true, "node": node_id, "preview": preview, "forecast": encounter_forecast(), "encounter": encounter_summary(), "pre_contact_event": String(pre_contact_occurrence.get("event_id", "")), "summary": summary()}
 
 func adjacent_modules(instance: Dictionary) -> Array[Dictionary]:
 	var adjacent: Array[Dictionary] = []
@@ -3631,6 +3651,8 @@ func _encounter_step() -> Dictionary:
 func advance_encounter(delta: float = 1.0) -> Dictionary:
 	if not encounter_active:
 		return {"ok": false, "reason": "no active journey encounter"}
+	if pre_contact_occurrence_active():
+		return {"ok": false, "reason": "resolve the road interruption before entering contact"}
 	var steps: int = maxi(1, int(floor(maxf(0.0, delta))))
 	var latest: Dictionary = {"ok": true, "resolved": false, "step": encounter_step, "report": encounter_report.duplicate(), "summary": summary()}
 	for _step in range(steps):
@@ -3642,6 +3664,8 @@ func advance_encounter(delta: float = 1.0) -> Dictionary:
 func use_encounter_intervention(intervention_id: String, target_module: String = "") -> Dictionary:
 	if not encounter_active:
 		return {"ok": false, "reason": "interventions are only available during an active encounter"}
+	if pre_contact_occurrence_active():
+		return {"ok": false, "reason": "resolve the road interruption before issuing a contact order"}
 	if encounter_intervention_used:
 		return {"ok": false, "reason": "one intervention has already been used in this encounter"}
 	var shift_preview: Dictionary = encounter_shift_power_preview() if intervention_id == "shift_power" else {}

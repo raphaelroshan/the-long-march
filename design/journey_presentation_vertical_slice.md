@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-`0.3.0-alpha.270` implements the first complete presentation chain from bazaar to planning, road, contact, arrival, and roadside decision. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. Each resolved step briefly moves threats and braces the fortress; Reduced Motion renders the same final state immediately. Resolution opens a mandatory arrival or retreat receipt, followed—when the core schedules one—by a Frontier-inspired roadside tableau that keeps the fortress and event subject in the same place while exposing the authored choices in one dock. Purchasable information, marketplace inventory, true pre-contact road events, and bespoke per-enemy attack animation remain follow-up slices.
+`0.3.0-alpha.336` implements the first complete presentation chain from bazaar to planning, road, a true pre-contact interruption, contact, arrival, and later roadside decisions. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. Each resolved step briefly moves threats and braces the fortress; Reduced Motion renders the same final state immediately. The first Rill Crossing road can stop at the authored Lift Chain interruption while the fortress remains at Ashgate and the configured Road Raider contact waits at step zero. Resolution then opens that same contact; it does not reroll or bypass it. Purchasable information and bounded marketplace inventory are implemented; bespoke final art and per-enemy attack animation remain follow-up slices.
 
 ## Purpose
 
@@ -635,7 +635,7 @@ This is the necessary simulation seam. Do not begin polished animation before it
 
 ### Slice 7 — Visualize one hazard and scenario
 
-**Status:** A generalized code-native roadside tableau is complete in `0.3.0-alpha.270`; bespoke Soot Orchard art and pre-contact event scheduling remain.
+**Status:** A generalized code-native roadside tableau and the first deterministic pre-contact interruption are complete in `0.3.0-alpha.336`; bespoke Soot Orchard art remains.
 
 - Implement Storm Front takeover, exposure highlights, and the Soot Orchard tableau.
 - Resolve the existing orchard choice in place and resume the march or arrive cleanly.

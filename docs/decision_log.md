@@ -1222,3 +1222,7 @@ After a Quartermaster or Signal Broker transaction, focus now returns to that st
 ## 2026-09-01 — Information provenance crosses the Commit boundary
 
 The march transition now carries any purchased source and confidence directly from the authoritative route preview. It does not infer or duplicate intel. This was chosen so the player can connect the paid report to the known contact during departure, while operational forecasts without a purchased source keep their existing presentation.
+
+## 2026-09-01 — A skipped march beat cannot skip a road decision
+
+The opening Rill Crossing road now schedules **The Lift Chain Sings** after route costs and contact composition are committed but before encounter step one. It appears only when an operational Ammunition Lift and weapon make the problem physically meaningful. The fortress remains at Ashgate, the Road Raider contact stays configured at step zero, and both combat advancement and emergency orders reject input until the event resolves. Save/load restores the road handoff and then the same pending choice. This was chosen over a decorative random popup because the road event must be part of the authoritative journey sequence, not optional presentation or a second combat simulation.
