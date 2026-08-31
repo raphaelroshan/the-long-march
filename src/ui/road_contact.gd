@@ -436,7 +436,7 @@ func _configure_response_posture(enemy_id: String, view: Dictionary) -> void:
 		background = Color("#30201e")
 		border = Color("#db806f")
 		ink = Color("#ffd0c6")
-	elif status == "missing":
+	elif status in ["missing", "available"]:
 		background = Color("#2b271d")
 		border = Color("#caa562")
 		ink = Color("#f3dba8")

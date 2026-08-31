@@ -112,6 +112,10 @@ func _init() -> void:
 	_expect(String(armor_posture.get("heading", "")) == "DEFENSE ANSWERING" and String(armor_posture.get("text", "")).contains("absorbs 1 incoming damage"), "an effective armor counter should explain its exact impact buffer")
 	var positional_posture := ContactPresenter.build_response_posture({"arrived": true}, {"status": "ready", "text": "READY NOW · Front Armor Plate"}, [{"enabled": true}], "ENCOUNTER ORDER · 1 AVAILABLE", {"damage": 0, "sources": [], "impact_buffer": 0})
 	_expect(String(positional_posture.get("heading", "")) == "COUNTER AVAILABLE" and String(positional_posture.get("text", "")).contains("no direct attack or impact buffer is projected"), "an operational counter should not be described as answering the current target when its positional effect is absent")
+	var refined_positional := ContactPresenter.refine_counter_readiness({"arrived": true}, {"status": "ready", "text": "READY NOW · Front Armor Plate", "names": ["Front Armor Plate"]}, {"damage": 0, "sources": [], "impact_buffer": 0})
+	_expect(String(refined_positional.get("status", "")) == "available" and String(refined_positional.get("text", "")).contains("NO DIRECT EFFECT ON TARGET"), "an arrived contact should downgrade a merely installed positional counter from ready-now to available")
+	var refined_forecast := ContactPresenter.refine_counter_readiness({"arrived": false}, {"status": "ready", "text": "READY NOW · Front Armor Plate", "names": ["Front Armor Plate"]}, {"damage": 0, "sources": [], "impact_buffer": 0})
+	_expect(String(refined_forecast.get("status", "")) == "ready", "a forecast should retain counter readiness before target geometry is known")
 	var spent_posture := ContactPresenter.build_response_posture({"arrived": true}, iven_storm_counter, [], "ENCOUNTER ORDER · SPENT")
 	_expect(String(spent_posture.get("heading", "")) == "ORDER SPENT" and String(spent_posture.get("text", "")).contains("dependency changes"), "a spent order should point back to the predicted consequence and next authoritative beat")
 

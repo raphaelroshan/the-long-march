@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.321`
+**Build:** `0.3.0-alpha.322`
 
 **Engine:** Godot 4.4.1
 
@@ -28,6 +28,7 @@
 - [Threat risk preview](visual_evidence/v0.3.0-alpha.319-threat-risk-preview/)
 - [Contact response posture](visual_evidence/v0.3.0-alpha.320-response-posture/)
 - [Exact defense effect](visual_evidence/v0.3.0-alpha.321-defense-effect/)
+- [Target-effective counter state](visual_evidence/v0.3.0-alpha.322-effective-counter/)
 
 ## Findings
 
@@ -74,6 +75,8 @@ Alpha.319 completes the pre-impact question by adding a short `RISK IF IGNORED` 
 Alpha.320 turns that diagnosis into an immediate decision prompt. The contact dock now distinguishes a prepared automatic defense, an installed counter that has gone offline, a fortress that must improvise, and a spent emergency order. It points to inspection, the enabled orders below, or Advance without choosing an intervention for the player or moving rules out of `FortressState`.
 
 Alpha.321 replaces the remaining vague word “ready” with the next authoritative effect when one exists. The response posture names exact automatic damage and its sources, or exact adjacent-armor absorption; an operational counter with no direct projected effect is labeled `COUNTER AVAILABLE` and directs the player to inspect placement instead of promising protection that the current geometry does not provide.
+
+Alpha.322 aligns the compact readiness badge with that detailed posture after target assignment. A positional system that is installed and operational but neither attacks this threat nor buffers its current target now reads `AVAILABLE · … · NO DIRECT EFFECT ON TARGET` rather than the contradictory `READY NOW`.
 
 ## Next work
 

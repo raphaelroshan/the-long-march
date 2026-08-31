@@ -270,3 +270,11 @@ SHA-256: `d9b87b3157e9440a239582cb80a5c0adcbdf4c16e835fa63a5a98375d37c5fc4`
 The integrated journey capture shows the live Repeater Gun translated into its exact next-beat output: three damage on Advance. The calculation comes from the authoritative encounter model; the presenter only names the result and source.
 
 SHA-256: `61cc37c96c3f5a36935886b652be190ba31b36df594097908ee4f198a100c65a`
+
+## `v0.3.0-alpha.322` — Target-effective counter label
+
+![Civic Guardian with non-applying Front Armor](visual_evidence/v0.3.0-alpha.322-effective-counter/09_counter_available.png)
+
+The Civic Guardian is targeting the Archive Crate while the operational Front Armor Plate is not adjacent and contributes no attack. Both readiness receipts therefore say `AVAILABLE` and explain that the current target receives no direct effect, preventing a false promise of protection.
+
+SHA-256: `958613f1bd13cc0d5e5bce97c8a417660553ef08406d59dd5810c382a2ca1f42`

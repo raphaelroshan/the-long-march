@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.321` exact-defense-effect candidate |
+| Build | `0.3.0-alpha.322` target-effective-counter candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -28,6 +28,7 @@
 | Threat risk preview | PASS: all seven threat families retain a specific pre-impact `RISK IF IGNORED` statement through forecast, response, and high-contrast presentation |
 | Contact response posture | PASS: ready, offline, missing, and spent-order states each produce a concrete inspection/order/advance prompt without changing authoritative combat |
 | Exact defense effect | PASS: encounter summaries expose authored defense sources, automatic damage, and adjacent-armor absorption; the dossier falls back to positional caution when no direct effect is projected |
+| Effective counter label | PASS: arrived threats retain `READY NOW` only for a projected attack or impact buffer; non-applying positional counters become `AVAILABLE` without changing forecast or simulation state |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
@@ -49,6 +50,7 @@
 - [`Threat risk preview report`](threat_risk_preview_report.md)
 - [`Contact response posture report`](contact_response_posture_report.md)
 - [`Exact defense effect report`](exact_defense_effect_report.md)
+- [`Effective counter label report`](effective_counter_label_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -67,6 +69,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.321 adds exact automatic damage and impact-buffer projections to the target, risk, readiness, and response chain before contact advances.
+The updated strategy remains intact without changing authoritative game state. Alpha.322 aligns the readiness badge with those projections so an installed but non-applying positional counter is no longer presented as active protection.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
