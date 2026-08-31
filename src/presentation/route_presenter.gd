@@ -22,6 +22,7 @@ static func build_planner(state: LongMarchState, snapshot: Dictionary, context: 
 	var order := String(context.get("order", "Review the next road."))
 	var experiment := state.mastery_experiment_details()
 	var recruitment := state.iven_recruitment_status()
+	var selected_route := _build_selected_route(state, String(context.get("selected_node_id", "")), String(context.get("doctrine_id", "")))
 	var show_iven_offer := state.current_location == "broken_relay" and state.phase == "map" and state.specialist_id.is_empty() and state.campaign_event_pending.is_empty()
 	var specialist_card := {
 		"visible": show_iven_offer,
@@ -65,7 +66,8 @@ static func build_planner(state: LongMarchState, snapshot: Dictionary, context: 
 		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location)),
 		"order": order,
 		"receipt": String(context.get("receipt", "")),
-		"route_selected": bool(context.get("route_selected", false)),
+		"route_selected": not selected_route.is_empty(),
+		"selected_route": selected_route,
 		"can_return": bool(context.get("can_return", false)),
 		"return_label": String(context.get("return_label", "RETURN")),
 		"specialist_card": specialist_card,
@@ -78,6 +80,23 @@ static func build_planner(state: LongMarchState, snapshot: Dictionary, context: 
 			"mass": "%d/%d" % [int(snapshot.get("mass", 0)), int(snapshot.get("mass_limit", LongMarchState.BASE_MASS_LIMIT))],
 			"pressure": "%s · %d" % [state.campaign_pressure_band().replace("_", " ").to_upper(), state.campaign_pressure]
 		}
+	}
+
+static func _build_selected_route(state: LongMarchState, node_id: String, doctrine_id: String) -> Dictionary:
+	if node_id.is_empty():
+		return {}
+	var preview := state.campaign_node_preview(node_id, doctrine_id)
+	if preview.is_empty():
+		return {}
+	var days := int(preview.get("days", 0))
+	var fuel := int(preview.get("fuel", 0))
+	var pressure := int(preview.get("pressure_gain", 0))
+	var visibility := String(preview.get("visibility", "unscouted"))
+	var risk_text := "RISK UNKNOWN" if visibility == "unscouted" else "%s RISK %.0f%%" % [String(preview.get("risk_band", "unknown")).to_upper(), float(preview.get("risk", 0.0)) * 100.0]
+	return {
+		"id": node_id,
+		"name": String(preview.get("name", LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id))),
+		"receipt": "DAY %d→%d · FUEL %d→%d · PRESSURE %d→%d · %s · HEAT %d/%d" % [state.day, state.day + days, state.fuel, maxi(0, state.fuel - fuel), state.campaign_pressure, state.campaign_pressure + pressure, risk_text, int(preview.get("predicted_heat", state.heat)), LongMarchState.BASE_HEAT_LIMIT]
 	}
 
 static func build_transition(state: LongMarchState, origin_id: String, destination_id: String, preview: Dictionary, before: Dictionary, context: Dictionary) -> Dictionary:

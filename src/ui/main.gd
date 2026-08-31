@@ -2786,7 +2786,8 @@ func _refresh_journey_planner(snapshot: Dictionary) -> void:
 	journey_planner.configure(RoutePresenter.build_planner(state, snapshot, {
 		"order": _current_guidance(),
 		"receipt": _journey_planner_receipt(),
-		"route_selected": not selected_campaign_node_id.is_empty(),
+		"selected_node_id": selected_campaign_node_id,
+		"doctrine_id": _selected_id(doctrine_option),
 		"can_return": _settlement_hub_available() or state.phase == "settlement",
 		"return_label": "RETURN TO %s BAZAAR" % location_name.to_upper() if _settlement_hub_available() else "RETURN TO RECOVERY"
 	}))

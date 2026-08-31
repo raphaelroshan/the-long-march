@@ -10,6 +10,7 @@ var region_label: Label
 var order_label: Label
 var receipt_label: Label
 var route_stage_label: Label
+var route_selection_label: Label
 var value_labels: Dictionary = {}
 var map_host: CenterContainer
 var comparison_host: ScrollContainer
@@ -135,6 +136,18 @@ func _build_ui() -> void:
 	route_stage_label.add_theme_font_size_override("font_size", 10)
 	route_stage_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	map_stack.add_child(route_stage_label)
+	var route_selection_panel := PanelContainer.new()
+	route_selection_panel.custom_minimum_size = Vector2(0, 42)
+	route_selection_panel.add_theme_stylebox_override("panel", _flat_style(Color("#152126"), Color("#40565d"), 1, 4, 5))
+	map_stack.add_child(route_selection_panel)
+	route_selection_label = Label.new()
+	route_selection_label.text = "NO ROAD SELECTED · HIGHLIGHT A ROUTE FOR INTEL"
+	route_selection_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	route_selection_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	route_selection_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	route_selection_label.add_theme_font_size_override("font_size", 10)
+	route_selection_label.add_theme_color_override("font_color", Color("#8fa0a4"))
+	route_selection_panel.add_child(route_selection_label)
 	map_host = CenterContainer.new()
 	map_host.custom_minimum_size = Vector2(0, 340)
 	map_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -289,6 +302,15 @@ func configure(view: Dictionary) -> void:
 	detail_heading.text = "SELECTED ROAD" if route_selected else "ROAD DOSSIER"
 	route_stage_label.text = "ROUTE SELECTED · REVIEW COSTS → COMMIT" if route_selected else "BROWSE ROAD · NO COST · SELECT TO REVIEW"
 	route_stage_label.add_theme_color_override("font_color", Color("#f0cf96") if route_selected else Color("#9fd2c2"))
+	var selection: Dictionary = view.get("selected_route", {})
+	if route_selected and not selection.is_empty():
+		route_selection_label.text = "SELECTION PREVIEW · %s\n%s" % [String(selection.get("name", "ROAD")).to_upper(), String(selection.get("receipt", "Review the road dossier before committing."))]
+		route_selection_label.add_theme_color_override("font_color", Color("#fff0ce"))
+		route_selection_label.get_parent().add_theme_stylebox_override("panel", _flat_style(Color("#30291d"), Color("#e8c58e"), 2, 4, 5))
+	else:
+		route_selection_label.text = "NO ROAD SELECTED · HIGHLIGHT A ROUTE FOR INTEL"
+		route_selection_label.add_theme_color_override("font_color", Color("#8fa0a4"))
+		route_selection_label.get_parent().add_theme_stylebox_override("panel", _flat_style(Color("#152126"), Color("#40565d"), 1, 4, 5))
 	pause_button.text = "PAUSE · ROUTE REVIEW" if route_selected else "PAUSE · ESC / %s" % controller_cancel_label
 	pause_button.tooltip_text = "Pause with this button. %s or Escape clears the selected route first." % controller_cancel_label if route_selected else "Pause the march without committing a route."
 
