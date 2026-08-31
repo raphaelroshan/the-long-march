@@ -35,6 +35,7 @@ python3 tools/validate_versions.py --repo .
 python3 tools/validate_flooded_veyru.py --data content/flooded_veyru.json
 python3 tools/verify_offline_boundary.py --repo .
 python3 tests/test_playtest_summary.py
+python3 tests/test_playtest_cohort_summary.py
 python3 tests/test_release_manifest.py
 python3 tests/test_smoke_playtest.py
 python3 tests/test_private_alpha_contract.py

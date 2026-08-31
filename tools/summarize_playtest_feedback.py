@@ -69,7 +69,7 @@ def _display_value(value: Any) -> str:
     return rendered.replace("|", "\\|") if rendered else "—"
 
 
-def _contact_metrics(payload: dict[str, Any], events: list[Any]) -> tuple[dict[str, int], str]:
+def contact_metrics(payload: dict[str, Any], events: list[Any]) -> tuple[dict[str, int], str]:
     event_ids = [str(entry.get("event", "")) for entry in events if isinstance(entry, dict)]
     derived = {
         "encounter_steps": event_ids.count("encounter_step"),
@@ -134,7 +134,7 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
     result = str(final_state.get("result", "incomplete")).replace("_", " ").title()
     path = final_state.get("campaign_path", [])
     path_text = " → ".join(str(node).replace("_", " ").title() for node in path) if isinstance(path, list) and path else "not completed"
-    contact_metrics, metrics_status = _contact_metrics(payload, events)
+    metrics, metrics_status = contact_metrics(payload, events)
     contact_timeline = _contact_timeline(events)
     metric_check = {
         "match": "- Metric check: exported counts match the event trail.",
@@ -167,7 +167,7 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         f"- Event choices: {_property_list(events, 'campaign_event_resolved', ('event', 'choice'))}",
         f"- Final hull / fuel / pressure: {final_state.get('hull', '?')} / {final_state.get('fuel', '?')} / {final_state.get('campaign_pressure', '?')}",
         f"- Replay score: {answers.get('replay_score', '?')}/5",
-        f"- Contact navigation: steps {contact_metrics['encounter_steps']} / target locks {contact_metrics['contact_targets_locked']} / target inspections {contact_metrics['contact_target_inspections']} / emergency orders {contact_metrics['emergency_orders_used']}",
+        f"- Contact navigation: steps {metrics['encounter_steps']} / target locks {metrics['contact_targets_locked']} / target inspections {metrics['contact_target_inspections']} / emergency orders {metrics['emergency_orders_used']}",
         metric_check,
         "",
         "### Contact navigation trail",

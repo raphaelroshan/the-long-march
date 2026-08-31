@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.326` contact-session-summary candidate |
+| Build | `0.3.0-alpha.327` playtest-cohort-summary candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -33,6 +33,7 @@
 | Target-lock focus safety | PASS: forecast entry focuses Advance; first target assignment and active-contact re-entry focus Inspect; direct command activation and simulation timing remain unchanged |
 | Contact playtest metrics | PASS: local feedback exports summarize encounter steps, target locks, deliberate target inspections, and emergency-order use while retaining the no-upload privacy boundary |
 | Contact session summary | PASS: generated observer sheets show event-derived counts and the ordered lock/inspection/order trail, flag mismatched aggregates, and support older exports without claiming comprehension |
+| Playtest cohort summary | PASS: multiple local exports produce a gate-status table, mixed-build and duplicate-run warnings, navigation totals, and blank human-evidence fields without claiming the five-session gate passed |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
@@ -59,6 +60,7 @@
 - [`Target review focus report`](target_review_focus_report.md)
 - [`Contact playtest metrics report`](contact_playtest_metrics_report.md)
 - [`Contact session summary report`](contact_session_summary_report.md)
+- [`Playtest cohort summary report`](playtest_cohort_summary_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -77,6 +79,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.326 turns the local contact trail into a reviewable observer sheet while explicitly separating recorded navigation from inferred understanding.
+The updated strategy remains intact without changing authoritative game state. Alpha.327 makes five-session synthesis reproducible while requiring humans to confirm consent, unique sessions, uncoached conditions, and repeated failures.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
