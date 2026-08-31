@@ -49,3 +49,10 @@ The latest baseline is recorded in [`latest_visual_review_2026-08-30.md`](latest
 [1]: agent_handoff_roadmap.md "The Long March Agent Handoff Roadmap"
 [2]: game_quality_transformation_plan.md "The Long March Game-Quality Transformation Plan"
 [3]: latest_test_report_2026-08-30.md "The Long March Latest Main Test Report"
+
+
+## Latest verification update — 2026-08-31
+
+The current `main` build `0.3.0-alpha.298` passes `scripts/verify.sh`, including the responsive journey profile, complete journey handoff, complete prototype flow, and Flooded Veyru flow. Fresh 1280×720 captures show the strongest opening presentation of the three projects: the moving-fortress premise, primary actions, First Watch framing, and introduction handoff are clear and coherent.
+
+**Next mandatory task: L1 follow-up — Full journey evidence and battle causality.** Preserve the strong opening while proving the clean First Watch → refit → route → commitment → travel → contact/event → recovery → arrival → Debrief path. Then strengthen threat-to-target, wind-up, impact, dependency, and recovery explanation before adding another region or progression layer. Human testing remains optional and non-blocking.
