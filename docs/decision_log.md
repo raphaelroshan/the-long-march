@@ -1104,3 +1104,7 @@ The resolved arrival snapshot now retains the authoritative origin ID, destinati
 ## 2026-08-31 — Threat bodies and lanes remain presentation profiles
 
 Each implemented contact now has a stable visual form, scale, label offset, and approach lane derived from its existing threat ID. Road Raiders, Climbers, Burrowers, weather, flood, the Siege Beast, and the Civic Guardian no longer share generic symbols, but the same contact presenter still supplies every target, counter, timing, impact, and consequence. This was chosen over threat-specific combat scenes because physical identity should improve recognition without splitting the deterministic encounter grammar or moving rules into drawing code.
+
+## 2026-08-31 — Rest activity shows service, not new simulation
+
+The shared resting fortress now includes crew-scale workers, a service crane, a parts cart, valve exhaust, and a restrained lamp cycle. Settlement presentation owns the ambient phase and freezes it under Reduced Motion; `FortressState` gains no worker schedule, maintenance clock, resource effect, or save field. This was chosen over a settlement-idle subsystem because the scene needs scale and personhood, while the actual service decisions remain the existing workshop, quartermaster, hiring, assignment, and departure commands.

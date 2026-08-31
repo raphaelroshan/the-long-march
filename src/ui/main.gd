@@ -502,6 +502,7 @@ func _ready() -> void:
 	campaign_map.set_high_contrast(high_contrast_enabled)
 	combat_panel.set_high_contrast(high_contrast_enabled)
 	settlement_hub.set_high_contrast(high_contrast_enabled)
+	settlement_hub.set_reduced_motion(reduced_motion_enabled)
 	journey_transition.set_high_contrast(high_contrast_enabled)
 	journey_transition.set_reduced_motion(reduced_motion_enabled)
 	journey_planner.set_high_contrast(high_contrast_enabled)
@@ -600,6 +601,8 @@ func _refresh_controller_copy() -> void:
 
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
+	if settlement_hub != null:
+		settlement_hub.set_reduced_motion(enabled)
 	if journey_transition != null:
 		journey_transition.set_reduced_motion(enabled)
 	if road_contact != null:

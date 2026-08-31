@@ -101,10 +101,19 @@ static func mode_treatment(mode: String) -> Dictionary:
 		_:
 			return {"motion": "settled", "stance": "service"}
 
+static func rest_activity_signature(view: Dictionary = {}) -> Dictionary:
+	var reduced_motion := bool(view.get("reduced_motion", false))
+	return {
+		"motion": "static_service" if reduced_motion else "restrained_service",
+		"crew_count": 3,
+		"features": ["work_crane", "pressure_valve", "service_cart", "crew_scale", "lamp_cycle"]
+	}
+
 static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Dictionary:
 	var high_contrast := bool(view.get("high_contrast", false))
 	var mode := String(view.get("mode", "rest"))
 	var travel_phase := float(view.get("travel_phase", 0.0))
+	var idle_phase := 0.0 if bool(view.get("reduced_motion", false)) else float(view.get("idle_phase", 0.0))
 	var impact := float(view.get("impact", 0.0))
 	var damaged_count := int(view.get("damaged_count", 0))
 	var offline_count := int(view.get("offline_count", 0))
@@ -136,7 +145,7 @@ static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Di
 	_draw_rivets(canvas, body, edge.darkened(0.12))
 	var moving := mode in ["departing", "travel", "traveling", "retreating"]
 	_draw_legs(canvas, body, edge, dark_metal, travel_phase if moving else 0.0)
-	_draw_stack(canvas, roof, edge, travel_phase if moving else 0.0, overheated)
+	_draw_stack(canvas, roof, edge, travel_phase if moving else idle_phase, overheated)
 	_draw_signal_mast(canvas, body, edge, high_contrast)
 	_draw_forward_weapon(canvas, body, edge)
 	var slots := presentation_slots(view.get("modules", []))
@@ -155,7 +164,7 @@ static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Di
 		anchors[String(slot.get("id", ""))] = slot_rect.get_center()
 		anchors[String(slot.get("family", ""))] = slot_rect.get_center()
 	_draw_region_wear(canvas, body, flooded, overheated, high_contrast)
-	_draw_mode_cues(canvas, body, mode, travel_phase, impact, high_contrast)
+	_draw_mode_cues(canvas, body, mode, travel_phase, idle_phase, impact, high_contrast)
 	if breached_families > 0:
 		canvas.draw_string(ThemeDB.fallback_font, body.position + Vector2(body.size.x - 96, 18), "%d BREACH" % breached_families, HORIZONTAL_ALIGNMENT_RIGHT, 86, 10, Color("#ff9a8d"))
 	elif offline_count > 0:
@@ -303,7 +312,7 @@ static func _draw_module_activity(canvas: CanvasItem, rect: Rect2, slot: Diction
 			var smoke := Color(0.08, 0.10, 0.10, 0.48 - float(smoke_index) * 0.12)
 			canvas.draw_circle(rect.position + Vector2(rect.size.x * 0.76 - float(smoke_index) * 6.0, -5.0 - float(smoke_index) * 9.0), 5.0 + float(smoke_index) * 2.0, smoke)
 
-static func _draw_mode_cues(canvas: CanvasItem, body: Rect2, mode: String, travel_phase: float, impact: float, high_contrast: bool) -> void:
+static func _draw_mode_cues(canvas: CanvasItem, body: Rect2, mode: String, travel_phase: float, idle_phase: float, impact: float, high_contrast: bool) -> void:
 	var accent := Color.WHITE if high_contrast else Color("#d5b06c")
 	if mode in ["departing", "travel", "traveling", "retreating"]:
 		for dust_index in range(4):
@@ -316,10 +325,59 @@ static func _draw_mode_cues(canvas: CanvasItem, body: Rect2, mode: String, trave
 		canvas.draw_line(body.position + Vector2(body.size.x * 0.94, body.size.y * 0.06), body.position + Vector2(body.size.x * 1.08, -body.size.y * 0.04), brace_color, 4.0)
 		canvas.draw_line(body.position + Vector2(body.size.x * 0.94, body.size.y * 0.06), body.position + Vector2(body.size.x * 1.09, body.size.y * 0.15), brace_color, 4.0)
 	if mode == "rest":
+		_draw_rest_service(canvas, body, idle_phase, high_contrast)
 		for lamp_ratio in [0.26, 0.48, 0.70]:
 			var lamp := body.position + Vector2(body.size.x * lamp_ratio, body.size.y * 0.18)
-			canvas.draw_circle(lamp, 3.5, Color("#ffd47f"))
-			canvas.draw_circle(lamp, 8.0, Color(1.0, 0.72, 0.34, 0.08))
+			var lamp_pulse := 1.0 + sin(idle_phase * 0.045 + lamp_ratio * 12.0) * 0.12
+			canvas.draw_circle(lamp, 3.5 * lamp_pulse, Color("#ffd47f"))
+			canvas.draw_circle(lamp, 8.0 * lamp_pulse, Color(1.0, 0.72, 0.34, 0.08))
+
+static func _draw_rest_service(canvas: CanvasItem, body: Rect2, idle_phase: float, high_contrast: bool) -> void:
+	var service_edge := Color.WHITE if high_contrast else Color("#b8945d")
+	var crew_ink := Color("#fff0ba") if high_contrast else Color("#c7ac7a")
+	var ground_y := body.end.y + body.size.y * 0.39
+	var crane_base := body.position + Vector2(body.size.x * 0.10, body.size.y * 0.88)
+	var crane_top := body.position + Vector2(body.size.x * 0.06, -body.size.y * 0.17)
+	var crane_reach := crane_top + Vector2(body.size.x * 0.20, 0)
+	canvas.draw_line(crane_base, crane_top, service_edge.darkened(0.20), 5.0)
+	canvas.draw_line(crane_top, crane_reach, service_edge, 4.0)
+	canvas.draw_line(crane_top + Vector2(7.0, 0), crane_base + Vector2(7.0, 0), service_edge.darkened(0.36), 2.0)
+	var hoist_shift := sin(idle_phase * 0.025) * 3.0
+	var hoist := crane_top + Vector2(body.size.x * 0.18, body.size.y * 0.25 + hoist_shift)
+	canvas.draw_line(crane_reach - Vector2(2.0, 0), hoist, service_edge.darkened(0.08), 2.0)
+	canvas.draw_rect(Rect2(hoist - Vector2(7.0, 2.0), Vector2(14.0, 9.0)), Color("#675038"), true)
+	canvas.draw_rect(Rect2(hoist - Vector2(7.0, 2.0), Vector2(14.0, 9.0)), service_edge, false, 1.5)
+	var cart := Rect2(body.position + Vector2(body.size.x * 0.69, body.size.y * 1.22), Vector2(body.size.x * 0.12, body.size.y * 0.09))
+	canvas.draw_rect(cart, Color("#4a4033"), true)
+	canvas.draw_rect(cart, service_edge.darkened(0.12), false, 2.0)
+	canvas.draw_circle(cart.position + Vector2(5.0, cart.size.y + 3.0), 3.0, service_edge)
+	canvas.draw_circle(cart.end + Vector2(-5.0, 3.0), 3.0, service_edge)
+	for crew_data in [
+		[0.24, 0.0, false],
+		[0.60, 1.8, true],
+		[0.84, 3.4, false]
+	]:
+		var x_ratio := float(crew_data[0])
+		var phase_offset := float(crew_data[1])
+		var facing_left := bool(crew_data[2])
+		var step := sin(idle_phase * 0.035 + phase_offset) * 1.5
+		var feet := Vector2(body.position.x + body.size.x * x_ratio + step, ground_y)
+		_draw_service_crew(canvas, feet, crew_ink, facing_left)
+	var valve := body.position + Vector2(body.size.x * 0.88, body.size.y * 0.08)
+	canvas.draw_line(valve, valve + Vector2(0, -10.0), service_edge, 3.0)
+	for puff_index in range(2):
+		var puff_phase := fmod(idle_phase * 0.18 + float(puff_index) * 8.0, 22.0)
+		var puff_alpha := clampf(0.26 - puff_phase * 0.009, 0.04, 0.26)
+		canvas.draw_circle(valve + Vector2(4.0 + puff_phase * 0.45, -12.0 - puff_phase * 0.55), 3.0 + puff_phase * 0.16, Color(0.72, 0.76, 0.72, puff_alpha))
+
+static func _draw_service_crew(canvas: CanvasItem, feet: Vector2, ink: Color, facing_left: bool) -> void:
+	var facing := -1.0 if facing_left else 1.0
+	var head := feet - Vector2(0, 17.0)
+	canvas.draw_circle(head, 3.0, ink)
+	canvas.draw_line(head + Vector2(0, 4.0), feet - Vector2(0, 5.0), ink.darkened(0.30), 3.0)
+	canvas.draw_line(feet - Vector2(0, 11.0), feet + Vector2(6.0 * facing, -8.0), ink, 2.0)
+	canvas.draw_line(feet - Vector2(0, 5.0), feet + Vector2(-4.0, 0), ink.darkened(0.20), 2.0)
+	canvas.draw_line(feet - Vector2(0, 5.0), feet + Vector2(4.0, 0), ink.darkened(0.20), 2.0)
 
 static func _draw_condition_mark(canvas: CanvasItem, rect: Rect2, condition: String, high_contrast: bool, warm: Color) -> void:
 	var warning := Color("#fff0ba") if high_contrast else Color("#f1c26f")

@@ -36,6 +36,7 @@ var current_view: Dictionary = {}
 var current_primary_action_id: String = ""
 var current_secondary_action_id: String = ""
 var high_contrast_enabled: bool = false
+var reduced_motion_enabled: bool = false
 
 func _ready() -> void:
 	_build_ui()
@@ -389,6 +390,12 @@ func set_high_contrast(enabled: bool) -> void:
 		bazaar_canvas.high_contrast_enabled = enabled
 	configure(current_view)
 
+func set_reduced_motion(enabled: bool) -> void:
+	reduced_motion_enabled = enabled
+	if bazaar_canvas != null:
+		bazaar_canvas.reduced_motion = enabled
+		bazaar_canvas.queue_redraw()
+
 func set_controller_cancel_label(cancel_label: String) -> void:
 	if pause_button != null:
 		pause_button.text = "PAUSE · ESC / %s" % cancel_label
@@ -398,9 +405,18 @@ class BazaarCanvas extends Control:
 	var selected_station_id: String = "assignment_board"
 	var fortress_view: Dictionary = {}
 	var high_contrast_enabled: bool = false
+	var reduced_motion: bool = false
+	var idle_phase: float = 0.0
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_PASS
+		set_process(true)
+
+	func _process(delta: float) -> void:
+		if not visible or reduced_motion:
+			return
+		idle_phase = fmod(idle_phase + delta * 60.0, 10000.0)
+		queue_redraw()
 
 	func _draw() -> void:
 		var flooded := location_id == "lantern_quay"
@@ -446,13 +462,17 @@ class BazaarCanvas extends Control:
 
 	func _draw_bazaar_activity(flooded: bool) -> void:
 		var lamp_color := Color("#a8ece4") if flooded else Color("#ffd27d")
-		for lamp_ratio in [0.12, 0.34, 0.66, 0.88]:
+		for lamp_index in range(4):
+			var lamp_ratio: float = [0.12, 0.34, 0.66, 0.88][lamp_index]
 			var lamp := Vector2(size.x * lamp_ratio, size.y * 0.49)
+			var lamp_pulse := 1.0 + sin(idle_phase * 0.04 + float(lamp_index) * 1.7) * 0.10
 			draw_line(lamp - Vector2(0, 34), lamp, Color("#756348"), 3.0)
-			draw_circle(lamp, 4.5, lamp_color)
-			draw_circle(lamp, 12.0, Color(lamp_color.r, lamp_color.g, lamp_color.b, 0.08))
-		for person_ratio in [0.20, 0.31, 0.69, 0.80]:
-			var person := Vector2(size.x * person_ratio, size.y * 0.70)
+			draw_circle(lamp, 4.5 * lamp_pulse, lamp_color)
+			draw_circle(lamp, 12.0 * lamp_pulse, Color(lamp_color.r, lamp_color.g, lamp_color.b, 0.08))
+		for person_index in range(4):
+			var person_ratio: float = [0.20, 0.31, 0.69, 0.80][person_index]
+			var walk_offset := sin(idle_phase * 0.025 + float(person_index) * 1.3) * 2.0
+			var person := Vector2(size.x * person_ratio + walk_offset, size.y * 0.70)
 			draw_circle(person - Vector2(0, 13), 4.0, Color("#cab58a"))
 			draw_line(person - Vector2(0, 8), person + Vector2(0, 10), Color("#766653"), 4.0)
 			draw_line(person + Vector2(0, 1), person + Vector2(-6, 13), Color("#766653"), 3.0)
@@ -546,4 +566,6 @@ class BazaarCanvas extends Control:
 		var view := fortress_view.duplicate(true)
 		view["mode"] = "rest"
 		view["high_contrast"] = high_contrast_enabled
+		view["reduced_motion"] = reduced_motion
+		view["idle_phase"] = 0.0 if reduced_motion else idle_phase
 		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.22, size.y * 0.23), Vector2(size.x * 0.56, size.y * 0.50)), view)

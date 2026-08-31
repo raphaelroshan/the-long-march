@@ -41,6 +41,7 @@ func _run() -> void:
 	_expect(hub.place_identity_label.text.contains("LOWLAND RAILHEAD") and hub.pressure_label.text.contains("BLOCKADE") and hub.route_meaning_label.text.contains("Rill Crossing") and hub.route_meaning_label.text.contains("Soot Orchard"), "Ashgate should state its place, active blockade pressure, and the meaning of both opening roads")
 	_expect(hub.bazaar_canvas.route_signature() == "RILL CROSSING · SOOT ORCHARD", "Ashgate's center stage should carry a visible two-road departure sign")
 	_expect(hub.bazaar_canvas.selected_station_signature() == "ASSIGNMENTS · FORTRESS SERVICE LINK", "the selected bazaar station should have a visible service link back to the fortress")
+	_expect(not hub.reduced_motion_enabled and not hub.bazaar_canvas.reduced_motion, "the inhabited bazaar should begin with restrained ambient service movement")
 	_expect(hub.station_buttons["assignment_board"].has_focus(), "the unresolved opening assignment should receive default focus")
 	var canvas_rect: Rect2 = hub.bazaar_canvas.get_global_rect()
 	_expect(hub.value_labels["hull"].global_position.x < canvas_rect.position.x and hub.detail_title.global_position.x > canvas_rect.end.x, "the 1280x720 hub should keep values left, the fortress stage centered, and details right")
@@ -92,10 +93,13 @@ func _run() -> void:
 	_expect(game.journey_planner.value_labels["fuel"].global_position.x < planner_map_rect.position.x and game.route_preview_label.global_position.x > planner_map_rect.end.x, "the route planner should keep readiness left, the map centered, and the road dossier right")
 
 	game.set_high_contrast(true)
+	game.set_reduced_motion(true)
 	await _settle_ui(2)
 	game.journey_planner.return_button.pressed.emit()
 	await _settle_ui(2)
 	_expect(hub.high_contrast_enabled and hub.bazaar_canvas.high_contrast_enabled, "the settlement presentation should inherit the stage's high-contrast setting")
+	_expect(hub.reduced_motion_enabled and hub.bazaar_canvas.reduced_motion, "the settlement's service activity should honor reduced motion without removing the resting tableau")
+	game.set_reduced_motion(false)
 
 	hub.station_buttons["departure_gate"].pressed.emit()
 	await process_frame

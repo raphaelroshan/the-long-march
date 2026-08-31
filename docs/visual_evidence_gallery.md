@@ -143,3 +143,14 @@ A Kickstarter campaign could present this set as **“The Long March Field Journ
 A strong digital bonus would combine the screenshots with a short annotated journey diary, a fortress dependency diagram, a route-planning excerpt, and a behind-the-scenes explanation of how deterministic simulation is separated from presentation. The material should be framed as a development archive or founder’s field journal, not as a promise that every shown interface element is final.
 
 Because this capture set is a local recapture from PR #41 rather than a preserved CI screenshot artifact, any campaign page should label it accurately as **“captured from the PR41 alpha build”**. Keep the exact build number visible in the archive and avoid implying final art, final audio, a completed campaign, or a guaranteed release date.
+
+## `v0.3.0-alpha.304` — Inhabited fortress at rest
+
+These 1280×720 captures verify that the shared resting fortress now carries visible crew scale and service activity in both starting settlements without changing bazaar actions or authoritative state.
+
+| Settlement | Evidence | SHA-256 |
+|---|---|---|
+| Ashgate Depot | [Rail-yard service activity](visual_evidence/v0.3.0-alpha.304-inhabited-rest/01_ashgate_depot.png) | `149a97b4c438a9b993d15b2a90f6aa42b4e9ad8dd134442d576f19a1cdf7aabb` |
+| Lantern Quay | [Flood-dock service activity](visual_evidence/v0.3.0-alpha.304-inhabited-rest/02_lantern_quay.png) | `c54985d95ff6e70f292cda0f2a6d9e7f868d257a61771315d88d6187f972bef7` |
+
+The crane, hoist, parts cart, crew silhouettes, valve exhaust, and lamp cycle are presentation-only. Reduced Motion retains the tableau but freezes ambient movement. These images establish implementation coverage, not human-recognition evidence or final-art quality.
