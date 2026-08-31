@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.317`
+**Build:** `0.3.0-alpha.318`
 
 **Engine:** Godot 4.4.1
 
@@ -24,6 +24,7 @@
 - [Assigned specialist continuity](visual_evidence/v0.3.0-alpha.314-specialist-continuity/)
 - [Route browse-state clarity](visual_evidence/v0.3.0-alpha.316-route-browse-state/)
 - [Selected-road cost receipt](visual_evidence/v0.3.0-alpha.317-route-cost-receipt/)
+- [Live counter readiness](visual_evidence/v0.3.0-alpha.318-live-counter-readiness/)
 
 ## Findings
 
@@ -62,6 +63,8 @@ Alpha.314 keeps that identity after recruitment. The same route-planner card bec
 Alpha.316 corrects the remaining route-planner state mismatch. Merely focusing a road now leaves the dock titled `ROAD DOSSIER` and the center stage states `BROWSE ROAD · NO COST`; only activating a node changes those labels to `SELECTED ROAD` and commitment review. The authoritative selection and Commit boundary are unchanged.
 
 Alpha.317 makes the selected state carry its own exact receipt in the map center. The highlighted destination now repeats projected day, fuel, pressure, risk, and heat values before Commit, while the browse state explicitly says that no road is selected. The values come from the existing authoritative route preview and do not spend resources.
+
+Alpha.318 separates authored threat advice from the fortress's present answer. The live contact dossier now names an operational counter, identifies an installed but offline counter, or states that no listed module counter is ready. This is derived from current dependency state and specialist assignment; it does not change encounter resolution.
 
 ## Next work
 

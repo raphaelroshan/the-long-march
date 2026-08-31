@@ -11,6 +11,11 @@ static func build(state: LongMarchState, snapshot: Dictionary, combat_view: Dict
 	var recent_report: Array[String] = []
 	for report_index in range(maxi(0, state.encounter_report.size() - 6), state.encounter_report.size()):
 		recent_report.append(String(state.encounter_report[report_index]))
+	var counter_readiness := {}
+	for raw_enemy in combat_view.get("enemies", []):
+		var enemy_id := String(Dictionary(raw_enemy).get("id", ""))
+		if not enemy_id.is_empty() and not counter_readiness.has(enemy_id):
+			counter_readiness[enemy_id] = build_counter_readiness(state, enemy_id)
 	return {
 		"region_id": state.campaign_region_id,
 		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)),
@@ -25,6 +30,7 @@ static func build(state: LongMarchState, snapshot: Dictionary, combat_view: Dict
 		"interventions": Array(context.get("interventions", [])).duplicate(true),
 		"enemies": Array(combat_view.get("enemies", [])).duplicate(true),
 		"enemy_definitions": LongMarchState.ENCOUNTER_ENEMIES,
+		"counter_readiness": counter_readiness,
 		"target_names": Dictionary(combat_view.get("target_names", {})).duplicate(true),
 		"recent_report": recent_report,
 		"active_target_id": String(context.get("active_target_id", "")),
@@ -40,3 +46,27 @@ static func build(state: LongMarchState, snapshot: Dictionary, combat_view: Dict
 			"doctrine": state.encounter_target_doctrine.replace("_", " ").to_upper()
 		}
 	}
+
+static func build_counter_readiness(state: LongMarchState, enemy_id: String) -> Dictionary:
+	var definition: Dictionary = LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {})
+	var ready: Array[String] = []
+	var offline: Array[String] = []
+	for raw_module_id in definition.get("counter_modules", []):
+		var module_id := String(raw_module_id)
+		var module_name := String(state.module_definition(module_id).get("name", module_id.replace("_", " ").capitalize()))
+		if state.operational(module_id):
+			if module_name not in ready:
+				ready.append(module_name)
+			continue
+		for instance in state.modules:
+			if String(instance.get("id", "")) == module_id:
+				if module_name not in offline:
+					offline.append(module_name)
+				break
+	if enemy_id == "storm_front" and state.specialist_id == "iven_pell":
+		ready.append("Iven Pell")
+	if not ready.is_empty():
+		return {"status": "ready", "text": "READY NOW · %s" % ", ".join(ready)}
+	if not offline.is_empty():
+		return {"status": "offline", "text": "COUNTER OFFLINE · %s" % ", ".join(offline)}
+	return {"status": "missing", "text": "NO LISTED MODULE COUNTER READY"}

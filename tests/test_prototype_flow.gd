@@ -429,6 +429,7 @@ func _run() -> void:
 	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "committing a route should hand controller focus to the fortress contact scene")
 	_expect(game.road_contact.contact_canvas.visible and game.road_contact.timeline_labels.size() == 6 and game.road_contact.threat_heading.text == "ROAD RAIDER", "the road contact should center the fortress, name the nearest threat, and retain the six-step timeline")
 	_expect(game.road_contact.threat_status.text.contains("2 STEPS OUT") and game.road_contact.threat_detail.text.contains("PREFERRED TARGETS · cargo / exterior") and game.road_contact.threat_detail.text.contains("COUNTER · shell cannon or repeater gun"), "the contact dossier should explain approach timing, target priorities, and the authored counter")
+	_expect(game.road_contact.counter_readiness_label.text.contains("READY NOW") and game.road_contact.counter_readiness_label.text.contains("Repeater Gun"), "the live contact dossier should name the counter this fortress can currently use")
 	_expect(game.current_order_button.text == "GO TO BATTLE STEP ↓", "battle entry should retarget the persistent jump action to the next timeline step")
 	_expect(game.get_global_rect().encloses(game.road_contact.advance_button.get_global_rect()), "battle entry should keep the visible contact advance action fully on screen")
 	var battle_viewport_rect: Rect2 = game.right_scroll.get_global_rect()

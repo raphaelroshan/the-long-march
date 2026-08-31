@@ -238,3 +238,11 @@ SHA-256: `ce6c654848e5d3680733c977071a93190c99f9627333c34bbbe87f703db18d5e`
 | Selected road | [Exact pre-commit receipt](visual_evidence/v0.3.0-alpha.317-route-cost-receipt/03b_route_selected.png) | `f798214f2fa5bdb13804feee3ae2e27867cc33fd6796b06cbbad299d27a6773b` |
 
 The selected-road capture shows destination, day, fuel, pressure, risk, and heat together in the map center before Commit. The high-contrast 1280×720 state verifies that the receipt, dossier, and primary action remain visible; it does not substitute for human route-comprehension evidence.
+
+## `v0.3.0-alpha.318` — Live counter readiness
+
+![Road Raider with a ready Repeater Gun](visual_evidence/v0.3.0-alpha.318-live-counter-readiness/08_road_contact.png)
+
+The contact dossier preserves the general Road Raider counter and separately names the fortress's operational Repeater Gun. This verifies that the current answer is visible before the first contact step; it does not claim that a first-time player will choose the right response.
+
+SHA-256: `dc4cf2bf5c3180f16a71c6c293d4ed825ac6aaeece9a2c18466afb6108d3a224`
