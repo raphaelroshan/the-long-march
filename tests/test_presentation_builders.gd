@@ -31,6 +31,8 @@ func _init() -> void:
 	_expect(String(settlement.get("stations", {}).get("assignment_board", {}).get("body", "")).contains("only 1 service action") and String(settlement.get("stations", {}).get("assignment_board", {}).get("secondary", {}).get("tooltip", "")).contains("only 1 service action"), "the assignment board should disclose the exact later shortage before decline")
 	_expect(settlement.get("stations", {}).get("signal_broker", {}).get("primary", {}).get("id") == "buy_orchard_intel" and String(settlement.get("stations", {}).get("signal_broker", {}).get("body", "")).contains("information only"), "the Signal Broker should expose one stable authored report and disclose that it changes no route costs")
 	_expect(settlement.get("stations", {}).get("quartermaster", {}).get("primary", {}).get("id") == "buy_side_armor" and settlement.get("stations", {}).get("quartermaster", {}).get("secondary", {}).get("id") == "sell_stored_shell_cannon" and String(settlement.get("stations", {}).get("quartermaster", {}).get("body", "")).contains("Money 80→62"), "the Quartermaster should expose exact fixed-stock buy and stored-only sale previews")
+	var hiring_post: Dictionary = settlement.get("stations", {}).get("hiring_post", {})
+	_expect(hiring_post.get("status") == "LEAD · BROKEN RELAY" and String(hiring_post.get("body", "")).contains("operational Crew Quarters") and String(hiring_post.get("body", "")).contains("12 Ashmarks") and String(hiring_post.get("body", "")).contains("no payment is taken here"), "the Ashgate Hiring Post should disclose Iven's location, complete requirements, contribution, and delayed recruitment boundary")
 	_expect_pure(state, before, "settlement presenter")
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
@@ -73,6 +75,11 @@ func _init() -> void:
 	_expect_pure(state, assigned_mara_before, "assigned Mara presenter")
 	state.specialist_id = ""
 	state.current_location = "ashgate_depot"
+	state.phase = "refit"
+	state.specialist_id = "iven_pell"
+	var assigned_hiring_post: Dictionary = SettlementPresenter.build(state, state.summary(), fortress).get("stations", {}).get("hiring_post", {})
+	_expect(assigned_hiring_post.get("status") == "ASSIGNED · SIGNAL OFFICER" and String(assigned_hiring_post.get("body", "")).contains("route risk up to -8 points"), "the Hiring Post should replace an obsolete rumor with the assigned specialist's active contribution")
+	state.specialist_id = ""
 
 	var preview := state.campaign_node_preview("rill_crossing", "protect_cargo")
 	state.day += int(preview.get("days", 0))

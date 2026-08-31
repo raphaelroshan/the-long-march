@@ -2,6 +2,14 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.333` — Hiring Post lead
+
+![Iven Pell lead at Ashgate](visual_evidence/v0.3.0-alpha.333-hiring-post/02c_hiring_post.png)
+
+The Ashgate Hiring Post gives Iven Pell a location, role, complete join conditions, exact implemented contribution, and a clear no-payment-here boundary before the player chooses a road. It points toward the existing Broken Relay encounter rather than adding remote recruitment.
+
+SHA-256: `b92dcc5ee1b9d9fc7fbf407754705a1fa401e88334dc375f23e8e7b30d1f2001`
+
 ## `v0.3.0-alpha.332` — Bounded Quartermaster market
 
 | State | Evidence | SHA-256 |
