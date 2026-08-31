@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.305`
+**Build:** `0.3.0-alpha.306`
 
 **Engine:** Godot 4.4.1
 
@@ -16,6 +16,7 @@
 - [Threat silhouettes and approach lanes](visual_evidence/v0.3.0-alpha.303-threat-silhouettes/)
 - [Inhabited fortress at rest](visual_evidence/v0.3.0-alpha.304-inhabited-rest/)
 - [Route-map visual grammar](visual_evidence/v0.3.0-alpha.305-route-map-grammar/)
+- [Roadside occurrence identity](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/)
 
 ## Findings
 
@@ -39,6 +40,8 @@ Alpha.304 makes the resting fortress read as a working settlement rather than a 
 
 Alpha.305 gives the regional chart a non-color status grammar. Current, available, selected, secured, blocked, closed, bypassed, and future nodes carry distinct glyphs; future routes are dashed, active routes gain directional marks, and selected routes receive a restrained halo. The accepted convoy or medicine obligation appears directly on its destination rather than existing only in the receipt and dossier.
 
+Alpha.306 removes the final generic roadside-occurrence symbol. The damaged boiler now stages inspection against continued cadence, the ammunition lift shows its loaded chain against a fitted brace, and the miller's broken wheel sits beside the wagon and workshop-time choice. Each composition repeats the exact decision named in the right dock without inventing new mechanics.
+
 ## Next work
 
-Use the exact alpha.305 cohort for consented, uncoached sessions. Prioritize repeated failures in route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact alpha.306 cohort for consented, uncoached sessions. Prioritize repeated failures in roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

@@ -1112,3 +1112,7 @@ The shared resting fortress now includes crew-scale workers, a service crane, a 
 ## 2026-08-31 — Route state must survive without color
 
 The regional map now pairs its established status colors with node glyphs, future-route dashes, directional marks, selected-route emphasis, and destination badges for offered, accepted, fulfilled, or failed assignments. The marker projection reads existing contract status and does not create map-owned campaign state. This was chosen over decorative map art because the primary problem was distinguishing commitment, history, and obligation at a glance, including for players who cannot rely on color.
+
+## 2026-08-31 — Roadside occurrences show the physical choice
+
+The Boiler's Second Heartbeat, The Lift Chain Sings, and The Miller With a Broken Wheel now receive dedicated presentation motifs instead of the shared road-machine placeholder. Each tableau makes the existing choice physical—open or carry the bearing, brace or load the lift, lend the bench or leave the wagon—while `FortressState` continues to own eligibility, costs, durability, pressure, trust, timing, and resolution. This was chosen over adding bespoke minigames because the events need memorable objects and trade-offs, not a second interaction model.

@@ -2975,6 +2975,28 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 	})
 
 func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
+	if event_id == "boiler_heartbeat":
+		var choices: Array = event.get("choices", [])
+		return {
+			"motif": "boiler_cadence_choice",
+			"show_card": false,
+			"heading": "DAMAGED ENGINE · STOP OR CARRY THE BEARING",
+			"detail": "Inspect: %s. March: %s." % [String(choices[0].get("effect", "repair the engine with time and pressure")) if choices.size() > 0 else "repair the engine with time and pressure", String(choices[1].get("effect", "risk the bearing to lower pressure")) if choices.size() > 1 else "risk the bearing to lower pressure"]
+		}
+	if event_id == "lift_chain_sings":
+		return {
+			"motif": "lift_chain_choice",
+			"show_card": false,
+			"heading": "AMMUNITION LIFT · BRACE OR CARRY THE LOAD",
+			"detail": "Brace: spend 6 Ashmarks to lower future route risk. Carry: lower pressure now and lose 1 Ammunition Lift durability."
+		}
+	if event_id == "the_miller_with_a_broken_wheel":
+		return {
+			"motif": "miller_wheel_choice",
+			"show_card": false,
+			"heading": "BROKEN WHEEL · WORKSHOP TIME OR ROAD TIME",
+			"detail": "Help: gain fuel and trust, but spend a day, add pressure, and strain the workshop. Leave: lower pressure and lose trust."
+		}
 	if event_id == "mara_workbench_choice":
 		var choices: Array = event.get("choices", [])
 		var repair_target := String(choices[0].get("label", "Rebuild the damaged system")).trim_prefix("Rebuild ") if not choices.is_empty() else "the damaged system"

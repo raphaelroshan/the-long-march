@@ -162,3 +162,13 @@ The crane, hoist, parts cart, crew silhouettes, valve exhaust, and lamp cycle ar
 The 1280×720 route-planning capture shows the fortress position, selectable alternatives, selected road, future branches, and accepted Morrowline obligation through both color and shape. Future edges are dashed, active edges are directional, and the accepted assignment badge stays attached to its destination.
 
 SHA-256: `8c26af59f5ccf5b3746997e08573b3dcb81bd50d850293d42fcc1a65331e2cbb`
+
+## `v0.3.0-alpha.306` — Roadside occurrence identity
+
+| Occurrence | Evidence | SHA-256 |
+|---|---|---|
+| The Boiler's Second Heartbeat | [Damaged bearing and cadence choice](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/01_boiler_heartbeat.png) | `d35ad129689318a956b6ea9ab3f5da80ee9abd9c49270bf7ff339412f3559fb4` |
+| The Lift Chain Sings | [Loaded lift and brace choice](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/02_lift_chain.png) | `a0b78e6f10a36e54406ccb7890a3f7aaade7373b81cdf942dfb3282b520e5baf` |
+| The Miller With a Broken Wheel | [Stopped wagon and workshop-time choice](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/03_miller_wheel.png) | `c9e5ed609397b70e2acd43dd4d21b9fb3f70c73c4061f6b95124158f10c6ed74` |
+
+All three use the existing one-order roadside interaction and exact authoritative effects. The images verify visual specificity and layout, not human comprehension or final-art quality.
