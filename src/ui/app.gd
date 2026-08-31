@@ -2006,6 +2006,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.connect("march_on_requested", Callable(self, "_request_march_on_confirmation"))
 	game_view.connect("pause_requested", Callable(self, "_show_pause"))
 	game_view.connect("playtest_notes_closed", Callable(self, "_return_from_playtest_notes"))
+	game_view.connect("semantic_audio_requested", Callable(self, "_on_semantic_audio_requested"))
 	add_child(game_view)
 	_apply_text_scale_to_tree(game_view)
 	move_child(game_view, 0)
@@ -2206,6 +2207,9 @@ func _on_checkpoint_reached(reason: String) -> void:
 	if _save_active_stage(true):
 		last_checkpoint_reason = reason
 		_show_checkpoint_toast(reason, not semantic_cue_played)
+
+func _on_semantic_audio_requested(cue_id: String) -> void:
+	interface_audio.play_semantic(cue_id)
 
 func _record_campaign_progress() -> void:
 	if game_view == null or _active_stage_is_tutorial():

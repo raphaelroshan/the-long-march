@@ -75,6 +75,7 @@ func _run() -> void:
 	await process_frame
 	game = app.game_view
 	_expect(game != null and game.tutorial_mode, "entering the muster yard should create an isolated tutorial stage")
+	_expect(game.semantic_audio_requested.is_connected(Callable(app, "_on_semantic_audio_requested")) and game.rotate_button.has_meta("long_march_audio_manual_press") and game.remove_button.has_meta("long_march_audio_manual_press"), "the tutorial refit surface should route result-aware audio through the shell without duplicate button cues")
 	_expect(game.reduced_motion_enabled and game.journey_transition.reduced_motion, "the tutorial should inherit reduced-motion behavior before travel begins")
 	_expect(game.tutorial_director.lesson_id == "place_engine", "the first playable lesson should ask for the engine")
 	_expect(game.tutorial_objective_view.visible and game.tutorial_objective_view.action_label.text.contains("Steam Lance Engine"), "the muster yard should show one concrete current order")
@@ -83,9 +84,11 @@ func _run() -> void:
 	game._on_grid_cell_pressed(Vector2i(5, 3))
 	await process_frame
 	_expect(game.tutorial_director.lesson_id == "place_engine" and game.event_label.text.contains("Placement blocked"), "an invalid engine placement should explain the rejected command without advancing the lesson")
+	_expect(app.interface_audio.last_semantic_cue_kind == "module_invalid", "an invalid placement should add a restrained warning cue without replacing its visual explanation")
 	game._on_grid_cell_pressed(Vector2i(0, 0))
 	await process_frame
 	_expect(game.state.operational("steam_lance_engine") and game.tutorial_director.lesson_id == "place_weapon", "a fuel-connected engine should complete the movement lesson")
+	_expect(app.interface_audio.last_semantic_cue_kind == "module_place", "a successful tutorial placement should acknowledge the authoritative checkpoint with a physical latch cue")
 	app._return_to_title()
 	await process_frame
 	_expect(app.tutorial_button.text.begins_with("RESUME TUTORIAL") and not app.continue_button.visible, "returning from a tutorial checkpoint should offer tutorial resume without creating campaign Continue")

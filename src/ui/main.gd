@@ -6,6 +6,7 @@ signal play_again_requested
 signal march_on_requested(region_id: String)
 signal pause_requested
 signal playtest_notes_closed
+signal semantic_audio_requested(cue_id: String)
 
 const LongMarchState = preload("res://src/core/fortress_state.gd")
 const PlaytestJournal = preload("res://src/support/playtest_journal.gd")
@@ -878,12 +879,14 @@ func _build_ui() -> void:
 	rotate_button.text = "Rotate"
 	rotate_button.tooltip_text = "Rotate the pending or selected module. Shortcut: R while the chassis has focus."
 	rotate_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rotate_button.set_meta("long_march_audio_manual_press", true)
 	rotate_button.pressed.connect(_on_rotate_pressed)
 	refit_actions.add_child(rotate_button)
 	remove_button = Button.new()
 	remove_button.text = "Remove selected"
 	remove_button.tooltip_text = "Remove the selected installed module. Shortcut: Delete while the chassis has focus."
 	remove_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	remove_button.set_meta("long_march_audio_manual_press", true)
 	remove_button.pressed.connect(_on_remove_pressed)
 	refit_actions.add_child(remove_button)
 	controls.add_child(refit_actions)
@@ -3136,6 +3139,7 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 		return
 	if not state.can_refit():
 		_set_event("Refit is locked while the fortress is on the road. Select an installed module to inspect or seal it.")
+		semantic_audio_requested.emit("module_invalid")
 		return
 	var selected_installed := _selected_installed_module()
 	var result: Dictionary
@@ -3149,9 +3153,11 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			_tutorial_observe_state()
 		else:
 			_set_event("Move blocked: %s." % String(result.get("reason", "unknown")))
+			semantic_audio_requested.emit("module_invalid")
 	else:
 		if state.module_count(selected_module_id) > 0:
 			_set_event("That module is already installed. Select it on the chassis to move or remove it.")
+			semantic_audio_requested.emit("module_invalid")
 			return
 		result = state.deploy_stored_module(selected_module_id, cell, placement_rotated)
 		if bool(result.get("ok", false)):
@@ -3162,26 +3168,31 @@ func _on_grid_cell_pressed(cell: Vector2i) -> void:
 			_tutorial_observe_state()
 		else:
 			_set_event("Placement blocked: %s." % String(result.get("reason", "unknown")))
+			semantic_audio_requested.emit("module_invalid")
 	_refresh_ui()
 
 func _on_rotate_pressed() -> void:
 	if not state.can_refit():
 		_set_event("Rotation is only available while refitting at a settlement.")
+		semantic_audio_requested.emit("module_invalid")
 		return
 	var base_shape := state.module_shape(selected_module_id, false)
 	if base_shape.x == base_shape.y:
 		_set_event("%s has a square footprint, so rotation does not change its placement." % String(state.module_definition(selected_module_id).get("name", selected_module_id)))
+		semantic_audio_requested.emit("module_invalid")
 		return
 	var next_rotation := not placement_rotated
 	var selected_installed := _selected_installed_module()
 	if selected_installed.is_empty():
 		placement_rotated = next_rotation
 		_set_event("Placement footprint rotated. Choose a chassis cell.")
+		semantic_audio_requested.emit("module_rotate")
 	else:
 		var origin := Vector2i(selected_installed.get("position", selected_module_cell))
 		var result := state.reposition_module_at(selected_module_cell, origin, next_rotation)
 		if not bool(result.get("ok", false)):
 			_set_event("Rotation blocked: %s." % String(result.get("reason", "unknown")))
+			semantic_audio_requested.emit("module_invalid")
 		else:
 			placement_rotated = next_rotation
 			selected_module_cell = origin
@@ -3193,10 +3204,12 @@ func _on_rotate_pressed() -> void:
 func _on_remove_pressed() -> void:
 	if not state.can_refit():
 		_set_event("Removal is only available while refitting at a settlement.")
+		semantic_audio_requested.emit("module_invalid")
 		return
 	var selected_installed := _selected_installed_module()
 	if selected_installed.is_empty():
 		_set_event("Select an installed module on the chassis before removing it.")
+		semantic_audio_requested.emit("module_invalid")
 		return
 	var result := state.remove_module_at(selected_module_cell)
 	if bool(result.get("ok", false)):
@@ -3209,6 +3222,7 @@ func _on_remove_pressed() -> void:
 		_checkpoint("module_stored")
 	else:
 		_set_event("Removal blocked: %s." % String(result.get("reason", "unknown")))
+		semantic_audio_requested.emit("module_invalid")
 	_refresh_ui()
 
 func _on_travel_pressed() -> void:
@@ -3254,9 +3268,17 @@ func contact_audio_cue_for_step(step: int, enemies: Array) -> String:
 	return ""
 
 func checkpoint_audio_cue(reason: String) -> String:
-	if reason != "encounter_advanced" or state == null:
-		return ""
-	return contact_audio_cue_for_step(state.encounter_step, state.encounter_enemies)
+	match reason:
+		"encounter_advanced":
+			return contact_audio_cue_for_step(state.encounter_step, state.encounter_enemies) if state != null else ""
+		"module_installed", "module_moved":
+			return "module_place"
+		"module_rotated":
+			return "module_rotate"
+		"module_stored":
+			return "module_remove"
+		_:
+			return ""
 
 func _on_advance_encounter_pressed() -> void:
 	if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "read_contact" and not tutorial_director.premature_advance_seen:
