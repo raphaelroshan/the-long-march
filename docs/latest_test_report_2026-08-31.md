@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.334` station-receipt-focus candidate |
+| Build | `0.3.0-alpha.335` intel-handoff candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -28,6 +28,7 @@
 | Bounded Quartermaster market | PASS: one fixed Side Armor stock item and one stored Shell Cannon sale preview exact resource/inventory effects, transact atomically, persist, and never remove an installed system |
 | Hiring lead | PASS: Ashgate identifies Iven's exact location, join conditions, cost, and contribution; assigned specialists replace stale rumors and no new recruitment command is introduced |
 | Transaction focus | PASS: successful and blocked Quartermaster/Signal Broker actions restore the originating station and the next valid control instead of jumping to the assignment desk |
+| Intel handoff continuity | PASS: purchased Soot Orchard source and confidence survive the transition from selected-road review into the committed march presentation |
 | Live counter readiness | PASS: contact presentation distinguishes ready, offline, and missing module answers; Iven remains a visible Storm Front counter |
 | Threat risk preview | PASS: all seven threat families retain a specific pre-impact `RISK IF IGNORED` statement through forecast, response, and high-contrast presentation |
 | Contact response posture | PASS: ready, offline, missing, and spent-order states each produce a concrete inspection/order/advance prompt without changing authoritative combat |
@@ -62,6 +63,7 @@
 - [`Bounded Quartermaster market report`](bounded_quartermaster_market_report.md)
 - [`Hiring Post lead report`](hiring_post_lead_report.md)
 - [`Station receipt focus report`](station_receipt_focus_report.md)
+- [`Route intel handoff report`](route_intel_handoff_report.md)
 - [`Station receipt focus visual evidence`](visual_evidence/v0.3.0-alpha.334-station-receipt-focus/)
 - [`Hiring Post visual evidence`](visual_evidence/v0.3.0-alpha.333-hiring-post/02c_hiring_post.png)
 - [`Bounded Quartermaster market visual evidence`](visual_evidence/v0.3.0-alpha.332-quartermaster-market/)
@@ -97,6 +99,6 @@
 
 ## Result
 
-The updated strategy remains intact. Alpha.334 keeps market and information receipts in context after activation so the player can verify the result before moving to another obligation.
+The updated strategy remains intact. Alpha.335 preserves the provenance of purchased route information after Commit, keeping the planning promise visible during the march handoff.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

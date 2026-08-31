@@ -106,6 +106,10 @@ static func build_transition(state: LongMarchState, origin_id: String, destinati
 	var threats: Array = preview.get("threats", [])
 	var contact_text := ", ".join(threats) if not threats.is_empty() else String(preview.get("threat_hint", "uncertain movement ahead"))
 	var detail := "%s intel · %s; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, destination_name]
+	var intel_source := String(preview.get("intel_source", ""))
+	var intel_confidence := String(preview.get("intel_confidence", ""))
+	if not intel_source.is_empty():
+		detail = "%s intel · %s. Source: %s · %s; resolve the contact before %s can be secured." % [visibility.capitalize(), contact_text, intel_source, intel_confidence.capitalize(), destination_name]
 	if bool(context.get("tutorial", false)):
 		origin_name = "Ashgate Muster Yard"
 		destination_name = "Muster Road"
@@ -118,6 +122,8 @@ static func build_transition(state: LongMarchState, origin_id: String, destinati
 		"destination_visual_id": "muster_road" if bool(context.get("tutorial", false)) else destination_id,
 		"destination_name": destination_name,
 		"contact_name": contact_text,
+		"intel_source": intel_source,
+		"intel_confidence": intel_confidence,
 		"status": "%s CONTACT AHEAD" % visibility.to_upper(),
 		"promise": String(context.get("promise", "")),
 		"phase": "COMMITMENT · COSTS APPLIED · ARRIVAL PENDING",
