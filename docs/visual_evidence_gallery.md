@@ -254,3 +254,11 @@ SHA-256: `dc4cf2bf5c3180f16a71c6c293d4ed825ac6aaeece9a2c18466afb6108d3a224`
 The response-state capture keeps the Road Raider's target, authored counter, practical risk, current Repeater Gun readiness, and available emergency orders in one view.
 
 SHA-256: `c90e4f8d7394a6c47306523af4db450d86bb3c2f97b5f8b1fcc07e961320599d`
+
+## `v0.3.0-alpha.320` — Contact response posture
+
+![Road Raider prepared response](visual_evidence/v0.3.0-alpha.320-response-posture/01_road_raiders_response.png)
+
+The live dossier now states what the readiness result means for the next input: prepared defenses answer on Advance, while offline or missing counters direct the player toward target inspection and the enabled emergency orders. The prompt remains advisory and does not choose an order or change combat resolution.
+
+SHA-256: `d9b87b3157e9440a239582cb80a5c0adcbdf4c16e835fa63a5a98375d37c5fc4`

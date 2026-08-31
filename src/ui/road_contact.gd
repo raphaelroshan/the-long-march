@@ -32,6 +32,8 @@ var threat_status: Label
 var threat_detail: Label
 var counter_readiness_panel: PanelContainer
 var counter_readiness_label: Label
+var response_posture_panel: PanelContainer
+var response_posture_label: Label
 var warning_label: Label
 var advance_button: Button
 var inspect_button: Button
@@ -227,6 +229,13 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	counter_readiness_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	counter_readiness_label.add_theme_font_size_override("font_size", 10)
 	counter_readiness_panel.add_child(counter_readiness_label)
+	response_posture_panel = PanelContainer.new()
+	response_posture_panel.custom_minimum_size = Vector2(0, 68)
+	stack.add_child(response_posture_panel)
+	response_posture_label = Label.new()
+	response_posture_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	response_posture_label.add_theme_font_size_override("font_size", 10)
+	response_posture_panel.add_child(response_posture_label)
 	warning_label = Label.new()
 	warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	warning_label.add_theme_font_size_override("font_size", 10)
@@ -364,12 +373,14 @@ func _configure_threat(view: Dictionary) -> void:
 		threat_status.text = "No undefeated contact remains."
 		threat_detail.text = "Advance to settle the road and complete arrival."
 		counter_readiness_panel.visible = false
+		response_posture_panel.visible = false
 		return
 	var definition: Dictionary = definitions.get(String(chosen.get("id", "")), {})
 	var enemy_name := String(definition.get("name", String(chosen.get("id", "threat")).replace("_", " ").capitalize()))
 	var profile: Dictionary = THREAT_PRESENTATION_PROFILES.get(String(chosen.get("id", "")), {})
 	var risk_text := String(profile.get("risk", "The targeted system may be damaged or disabled."))
 	_configure_counter_readiness(String(chosen.get("id", "")), view)
+	_configure_response_posture(String(chosen.get("id", "")), view)
 	threat_heading.text = enemy_name.to_upper()
 	if bool(chosen.get("arrived", false)):
 		var impact: Dictionary = chosen.get("impact", {})
@@ -407,6 +418,35 @@ func _configure_counter_readiness(enemy_id: String, view: Dictionary) -> void:
 		ink = Color.WHITE
 	counter_readiness_panel.add_theme_stylebox_override("panel", _flat_style(background, border, 2, 4, 5))
 	counter_readiness_label.add_theme_color_override("font_color", ink)
+
+func _configure_response_posture(enemy_id: String, view: Dictionary) -> void:
+	var posture: Dictionary = Dictionary(view.get("response_postures", {})).get(enemy_id, {})
+	response_posture_panel.visible = not posture.is_empty()
+	if posture.is_empty():
+		return
+	var status := String(posture.get("status", "missing"))
+	var background := Color("#17252a")
+	var border := Color("#607f87")
+	var ink := Color("#d9e6e8")
+	if status == "ready":
+		background = Color("#142a24")
+		border = Color("#67b48b")
+		ink = Color("#d9f5e5")
+	elif status == "offline":
+		background = Color("#30201e")
+		border = Color("#db806f")
+		ink = Color("#ffd0c6")
+	elif status == "missing":
+		background = Color("#2b271d")
+		border = Color("#caa562")
+		ink = Color("#f3dba8")
+	if high_contrast_enabled:
+		background = background.darkened(0.40)
+		border = Color.WHITE
+		ink = Color.WHITE
+	response_posture_panel.add_theme_stylebox_override("panel", _flat_style(background, border, 1, 4, 7))
+	response_posture_label.add_theme_color_override("font_color", ink)
+	response_posture_label.text = "%s\n%s" % [String(posture.get("heading", "NEXT RESPONSE")), String(posture.get("text", "Inspect the target before advancing."))]
 
 func contact_readability_summary() -> Dictionary:
 	var enemy := contact_canvas._nearest_enemy() if contact_canvas != null else {}

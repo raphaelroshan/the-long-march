@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.319` threat-risk-preview candidate |
+| Build | `0.3.0-alpha.320` contact-response-posture candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -26,6 +26,7 @@
 | Route cost receipt | PASS: the selected destination projects exact day, fuel, pressure, risk, and heat values in the map center without mutating state |
 | Live counter readiness | PASS: contact presentation distinguishes ready, offline, and missing module answers; Iven remains a visible Storm Front counter |
 | Threat risk preview | PASS: all seven threat families retain a specific pre-impact `RISK IF IGNORED` statement through forecast, response, and high-contrast presentation |
+| Contact response posture | PASS: ready, offline, missing, and spent-order states each produce a concrete inspection/order/advance prompt without changing authoritative combat |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
@@ -45,6 +46,7 @@
 - [`Route cost receipt report`](route_cost_receipt_report.md)
 - [`Live counter readiness report`](live_counter_readiness_report.md)
 - [`Threat risk preview report`](threat_risk_preview_report.md)
+- [`Contact response posture report`](contact_response_posture_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -63,6 +65,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.319 keeps target, counter, practical risk, and current readiness together before the player advances contact.
+The updated strategy remains intact without changing authoritative game state. Alpha.320 keeps target, counter, practical risk, current readiness, and the player's immediate response posture together before contact advances.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

@@ -52,6 +52,7 @@ func _view_for(enemy_id: String, arrived: bool, defeated: bool = false) -> Dicti
 			{"label": "Cut loose cargo · reduce load", "tooltip": "Sacrifice cargo to reduce pressure.", "enabled": true}
 		],
 		"counter_readiness": {enemy_id: {"status": "ready", "text": "READY NOW · %s" % String(case.ready)}},
+		"response_postures": {enemy_id: {"status": "ready", "heading": "PREPARED RESPONSE" if not arrived else "DEFENSE ANSWERING", "text": "%s is ready. Advance to let it answer automatically, or inspect the target before spending one of the 4 emergency orders available below." % String(case.ready)}},
 		"enemy_definitions": {enemy_id: {"name": case.name, "arrival_step": case.arrival_step, "route": case.route, "target_tags": case.targets, "counter": case.counter}},
 		"target_names": {target_id: target_name},
 		"enemies": [{"id": enemy_id, "arrived": arrived, "defeated": defeated, "target": target_id, "impact": {"damage": 1, "current_durability": 2, "remaining_durability": 1, "target_reason": "%s route matched" % String(case.route), "dependency_changes": [{"name": "Dependent System", "to": "offline"}]}}],
@@ -85,6 +86,7 @@ func _run() -> void:
 		_expect(contact.contact_canvas.presentation_stage_text() == "FORECAST · %s · %d STEP%s OUT" % [String(case.name).to_upper(), int(case.arrival_step), "" if int(case.arrival_step) == 1 else "S"], "%s should expose stable forecast timing" % case.name)
 		_expect(contact.threat_detail.text.contains("APPROACH · %s" % String(case.route).capitalize()) and contact.threat_detail.text.contains("PREFERRED TARGETS · %s" % " / ".join(case.targets)) and contact.threat_detail.text.contains("COUNTER · %s" % case.counter) and contact.threat_detail.text.contains("RISK IF IGNORED"), "%s forecast should name approach, target preference, authored counter, and practical consequence" % case.name)
 		_expect(contact.counter_readiness_panel.visible and contact.counter_readiness_label.text == "READY NOW · %s" % String(case.ready), "%s forecast should distinguish current counter readiness from general counter advice" % case.name)
+		_expect(contact.response_posture_panel.visible and contact.response_posture_label.text.begins_with("PREPARED RESPONSE") and contact.response_posture_label.text.contains("answer automatically"), "%s forecast should convert readiness into a concrete player response" % case.name)
 
 		var impact_view := _view_for(enemy_id, true)
 		contact.configure(impact_view)
@@ -112,6 +114,7 @@ func _run() -> void:
 			if enemy_id == "road_raiders" and String(phase_case.phase) in ["WIND-UP", "IMPACT", "CONSEQUENCE"]:
 				await _capture("causality_%s" % String(phase_case.phase).to_lower())
 		_expect(contact.threat_detail.text.contains("INTENT · %s" % case.signature) and contact.threat_detail.text.contains("RESPONSE WINDOW · %s" % case.counter) and contact.threat_detail.text.contains("RISK IF IGNORED") and contact.threat_detail.text.contains("CASCADE · Dependent System → OFFLINE"), "%s active dossier should retain intent, counter, risk, and dependency consequence together" % case.name)
+		_expect(contact.response_posture_label.text.begins_with("DEFENSE ANSWERING") and contact.response_posture_label.text.contains(String(case.ready)), "%s active dossier should identify the defense currently answering the threat" % case.name)
 		var readable: Dictionary = contact.contact_readability_summary()
 		_expect(String(readable.get("threat", "")) == String(case.name) and String(readable.get("target", "")) == String(case.target_name) and int(readable.get("damage", 0)) == 1 and String(readable.get("counter", "")) == String(case.counter), "%s should expose threat, target, damage, and counter as one presentation summary" % case.name)
 		_expect(int(readable.get("durability_before", 0)) == 2 and int(readable.get("durability_after", 0)) == 1 and String(readable.get("cascade", "")).contains("Dependent System READY→OFFLINE"), "%s should expose exact durability and dependency causality in the same summary" % case.name)
@@ -141,6 +144,7 @@ func _run() -> void:
 	contact._refresh_battle_phase_label(true)
 	_expect(contact.contact_canvas.high_contrast_enabled and contact.contact_canvas.transition_progress == 1.0 and contact.battle_phase_for() == "CONSEQUENCE" and contact.contact_canvas.presentation_stage_text().begins_with("CONSEQUENCE"), "high contrast should preserve the cue while reduced motion resolves directly to consequence without changing state")
 	_expect(contact.counter_readiness_label.text == "READY NOW · Repeater Gun", "high contrast should retain the current-fortress counter receipt")
+	_expect(contact.response_posture_label.text.begins_with("DEFENSE ANSWERING") and contact.response_posture_label.get_theme_color("font_color") == Color.WHITE, "high contrast should retain the response posture with high-contrast text")
 	_expect(not contact.contact_canvas.temporary_impact_vfx_active(), "reduced motion should skip the temporary impact effect while retaining the consequence receipt")
 	_expect(int(impact_probe["count"]) == 2, "reduced motion should collapse the same resolved impact cue to the immediate consequence instead of dropping it")
 

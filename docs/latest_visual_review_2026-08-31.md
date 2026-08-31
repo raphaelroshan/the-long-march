@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.319`
+**Build:** `0.3.0-alpha.320`
 
 **Engine:** Godot 4.4.1
 
@@ -26,6 +26,7 @@
 - [Selected-road cost receipt](visual_evidence/v0.3.0-alpha.317-route-cost-receipt/)
 - [Live counter readiness](visual_evidence/v0.3.0-alpha.318-live-counter-readiness/)
 - [Threat risk preview](visual_evidence/v0.3.0-alpha.319-threat-risk-preview/)
+- [Contact response posture](visual_evidence/v0.3.0-alpha.320-response-posture/)
 
 ## Findings
 
@@ -69,6 +70,8 @@ Alpha.318 separates authored threat advice from the fortress's present answer. T
 
 Alpha.319 completes the pre-impact question by adding a short `RISK IF IGNORED` line for every implemented threat family. Target preference, general counter, practical consequence, and current readiness now remain together in the live dossier instead of requiring the player to infer the stakes from later damage.
 
+Alpha.320 turns that diagnosis into an immediate decision prompt. The contact dock now distinguishes a prepared automatic defense, an installed counter that has gone offline, a fortress that must improvise, and a spent emergency order. It points to inspection, the enabled orders below, or Advance without choosing an intervention for the player or moving rules out of `FortressState`.
+
 ## Next work
 
-Use the exact published alpha.307 cohort for current consented sessions; promote a later cohort only after the accumulated changes warrant replacing it. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact published alpha.319 cohort for current consented sessions; promote a later cohort only after the accumulated changes warrant replacing it. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

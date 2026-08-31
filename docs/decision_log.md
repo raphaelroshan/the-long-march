@@ -1158,3 +1158,7 @@ The verification suite now completes an Iven run through the same controls avail
 ## 2026-09-01 — Route focus is browsing, not selection
 
 The journey planner now labels its right dock `ROAD DOSSIER` while map focus previews a road and explicitly states that browsing has no cost. The dock becomes `SELECTED ROAD` only after the player activates a node, while Commit remains a separate action. This was chosen because controller focus must not look like an irreversible choice, especially when the map automatically focuses the first legal road.
+
+## 2026-09-01 — Contact readiness must resolve into a next action
+
+The contact dossier now interprets its live counter receipt as one of four response postures: a prepared defense that will answer automatically on Advance, an installed counter that is offline, a fortress with no listed counter, or an already-spent emergency order. Offline and missing states direct the player to inspect the target and compare the currently enabled orders; the spent state directs them back to the predicted hit and dependency consequence. This remains a read-only presentation projection because the game should clarify the decision boundary without recommending a hidden optimal move or duplicating combat rules in UI code.
