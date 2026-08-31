@@ -1182,3 +1182,7 @@ Road contact still focuses Advance during forecast, but the first transition fro
 ## 2026-09-01 — Contact-comprehension evidence stays local and behavioral
 
 The existing local playtest journal now records target assignment, deliberate target inspection, encounter steps, and emergency-order timing, and feedback exports include aggregate counts for those events. The game still performs no upload and records no identity. Counts are intentionally treated as navigation evidence rather than proof of comprehension; observers must compare them with notes and event order before drawing conclusions.
+
+## 2026-09-01 — Observer sheets preserve the contact event order
+
+The local feedback summarizer now derives contact counts from the raw event trail and renders target locks, inspections, and emergency orders in chronological order. It compares those derived counts with the export's aggregate block and calls out disagreement instead of silently trusting either representation. Older exports remain readable. The sheet continues to describe navigation only; comprehension must come from observation and tester explanation.

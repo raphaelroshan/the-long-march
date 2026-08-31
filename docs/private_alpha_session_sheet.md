@@ -36,7 +36,7 @@ After the tester chooses **Record Playtest Notes → Save Notes Locally**, copy 
 python3 tools/summarize_playtest_feedback.py /absolute/path/to/the_long_march_feedback_....json --output session-01.md
 ```
 
-The generated Markdown combines the local event trail with blank observation fields. It does not modify the source export or send data anywhere.
+The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate the metric block. It does not modify the source export, send data anywhere, or infer comprehension from interaction counts.
 
 ## Required capture matrix
 
