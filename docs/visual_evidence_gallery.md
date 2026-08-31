@@ -229,3 +229,12 @@ The same compact card now persists after recruitment, changes to `ASSIGNED TO FO
 The planner's focused Rill Crossing dossier is explicitly labeled as cost-free browsing. The node remains `KNOWN`, the action remains disabled until selection, and the dock does not claim that a road has already been selected.
 
 SHA-256: `ce6c654848e5d3680733c977071a93190c99f9627333c34bbbe87f703db18d5e`
+
+## `v0.3.0-alpha.317` — Selected-road cost receipt
+
+| Planner state | Evidence | SHA-256 |
+|---|---|---|
+| Cost-free browse | [No road selected](visual_evidence/v0.3.0-alpha.317-route-cost-receipt/03_route_browse.png) | `a38ed2b2dbfe6c843f7f7bddce9966e266ed55a24eb3609f7628313d2fe9de91` |
+| Selected road | [Exact pre-commit receipt](visual_evidence/v0.3.0-alpha.317-route-cost-receipt/03b_route_selected.png) | `f798214f2fa5bdb13804feee3ae2e27867cc33fd6796b06cbbad299d27a6773b` |
+
+The selected-road capture shows destination, day, fuel, pressure, risk, and heat together in the map center before Commit. The high-contrast 1280×720 state verifies that the receipt, dossier, and primary action remain visible; it does not substitute for human route-comprehension evidence.

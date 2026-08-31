@@ -31,8 +31,11 @@ func _init() -> void:
 	_expect(settlement.get("stations", {}).get("signal_broker", {}).get("primary", {}).get("id") == "select_experiment_quarry" and settlement.get("stations", {}).get("signal_broker", {}).get("secondary", {}).get("id") == "select_experiment_signal", "the Marchmaster's Desk should expose two stable optional mastery orders")
 	_expect_pure(state, before, "settlement presenter")
 
-	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "route_selected": false, "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
+	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
 	_expect(planner.get("region_name") == "Ashgate Lowlands" and planner.get("values", {}).get("fuel") == str(state.fuel) and planner.get("return_label") == "RETURN TO ASHGATE DEPOT BAZAAR", "route presenter should preserve region, readiness values, and return contract")
+	_expect(not bool(planner.get("route_selected", true)) and Dictionary(planner.get("selected_route", {})).is_empty(), "route browsing should not invent a selected-road receipt")
+	var selected_planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "selected_node_id": "rill_crossing", "doctrine_id": "protect_cargo"})
+	_expect(bool(selected_planner.get("route_selected", false)) and String(selected_planner.get("selected_route", {}).get("name", "")) == "Rill Crossing" and String(selected_planner.get("selected_route", {}).get("receipt", "")).contains("DAY 1→2") and String(selected_planner.get("selected_route", {}).get("receipt", "")).contains("FUEL 6→5") and String(selected_planner.get("selected_route", {}).get("receipt", "")).contains("PRESSURE 0→1"), "route selection should project exact before-and-after costs without mutating the campaign")
 	_expect(not bool(planner.get("specialist_card", {}).get("visible", true)), "the route presenter should hide Iven's offer away from the Broken Relay")
 	var offered_markers := RoutePresenter.build_assignment_markers(state)
 	_expect(offered_markers.get("morrowline_camp", {}).get("status") == "offer", "the route presenter should mark the unresolved Ashgate assignment destination as an offer")
