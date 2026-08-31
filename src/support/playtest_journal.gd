@@ -67,6 +67,7 @@ func export_feedback(
 			"replay_score": clampi(replay_score, 1, 5)
 		},
 		"final_state": final_state.duplicate(true),
+		"session_metrics": session_metrics(),
 		"session": {
 			"started_at_unix": session_started_at,
 			"events": events.duplicate(true)
@@ -74,6 +75,26 @@ func export_feedback(
 	}
 	file.store_string(JSON.stringify(payload, "\t"))
 	return {"ok": true, "path": ProjectSettings.globalize_path(destination), "payload": payload}
+
+func session_metrics() -> Dictionary:
+	var metrics := {
+		"encounter_steps": 0,
+		"contact_targets_locked": 0,
+		"contact_target_inspections": 0,
+		"emergency_orders_used": 0
+	}
+	for raw_entry in events:
+		var event_id := String(Dictionary(raw_entry).get("event", ""))
+		match event_id:
+			"encounter_step":
+				metrics["encounter_steps"] = int(metrics["encounter_steps"]) + 1
+			"contact_target_locked":
+				metrics["contact_targets_locked"] = int(metrics["contact_targets_locked"]) + 1
+			"contact_target_inspected":
+				metrics["contact_target_inspections"] = int(metrics["contact_target_inspections"]) + 1
+			"intervention_used":
+				metrics["emergency_orders_used"] = int(metrics["emergency_orders_used"]) + 1
+	return metrics
 
 func _available_feedback_path(timestamp: int) -> String:
 	var base_path := "user://the_long_march_feedback_%d.json" % timestamp

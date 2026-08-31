@@ -65,3 +65,5 @@ Do not prioritize fixes from a single preference. After five sessions, group obs
 5. Rerun the affected journey plus the full verification suite.
 
 Keep exported reports and completed sheets outside Git unless every participant explicitly agreed to repository storage and all personal information has been removed.
+
+The exported JSON includes a `session_metrics` block with counts for encounter steps, contact targets locked, deliberate target inspections, and emergency orders used. Treat these as navigation evidence, not intent: compare the event order and observer notes before concluding that a player understood or ignored a target.

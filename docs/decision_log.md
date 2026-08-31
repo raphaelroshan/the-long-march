@@ -1178,3 +1178,7 @@ The road-contact dock now presents Shift Power, Seal Compartment, Vent Heat, and
 ## 2026-09-01 — First target lock interrupts repeated Advance input
 
 Road contact still focuses Advance during forecast, but the first transition from no assigned target to an authoritative module or hull target moves keyboard/controller focus to Inspect Chassis. Returning from an inspection to an active targeted contact also defaults to Inspect. This creates a deliberate review beat without adding a modal, disabling Advance, changing combat timing, or affecting pointer users who have already chosen another control.
+
+## 2026-09-01 — Contact-comprehension evidence stays local and behavioral
+
+The existing local playtest journal now records target assignment, deliberate target inspection, encounter steps, and emergency-order timing, and feedback exports include aggregate counts for those events. The game still performs no upload and records no identity. Counts are intentionally treated as navigation evidence rather than proof of comprehension; observers must compare them with notes and event order before drawing conclusions.
