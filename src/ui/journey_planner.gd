@@ -14,6 +14,7 @@ var value_labels: Dictionary = {}
 var map_host: CenterContainer
 var comparison_host: ScrollContainer
 var comparison_stack: VBoxContainer
+var detail_heading: Label
 var detail_scroll: ScrollContainer
 var detail_stack: VBoxContainer
 var action_host: VBoxContainer
@@ -153,7 +154,7 @@ func _build_ui() -> void:
 	detail_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail_column.add_theme_constant_override("separation", 8)
 	detail_panel.add_child(detail_column)
-	var detail_heading := Label.new()
+	detail_heading = Label.new()
 	detail_heading.text = "SELECTED ROAD"
 	detail_heading.add_theme_font_size_override("font_size", 15)
 	detail_heading.add_theme_color_override("font_color", Color("#e8c58e"))
@@ -285,7 +286,8 @@ func configure(view: Dictionary) -> void:
 	return_button.disabled = not return_button.visible
 	return_button.text = String(view.get("return_label", "RETURN TO BAZAAR"))
 	var route_selected := bool(view.get("route_selected", false))
-	route_stage_label.text = "ROUTE SELECTED · REVIEW COSTS → COMMIT" if route_selected else "INSPECT ROAD · SELECT · THEN COMMIT"
+	detail_heading.text = "SELECTED ROAD" if route_selected else "ROAD DOSSIER"
+	route_stage_label.text = "ROUTE SELECTED · REVIEW COSTS → COMMIT" if route_selected else "BROWSE ROAD · NO COST · SELECT TO REVIEW"
 	route_stage_label.add_theme_color_override("font_color", Color("#f0cf96") if route_selected else Color("#9fd2c2"))
 	pause_button.text = "PAUSE · ROUTE REVIEW" if route_selected else "PAUSE · ESC / %s" % controller_cancel_label
 	pause_button.tooltip_text = "Pause with this button. %s or Escape clears the selected route first." % controller_cancel_label if route_selected else "Pause the march without committing a route."

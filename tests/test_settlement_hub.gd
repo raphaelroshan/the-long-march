@@ -90,7 +90,8 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(not hub.visible and not game.main_columns.visible and game.journey_planner.visible and game.campaign_map.visible, "planning a journey should open the dedicated regional map without moving the fortress")
 	_expect(game.journey_planner.receipt_label.visible and game.journey_planner.receipt_label.text.begins_with("LAST RECEIPT"), "route planning should carry the last committed settlement decision into the next beat")
-	_expect(game.journey_planner.route_stage_label.text == "INSPECT ROAD · SELECT · THEN COMMIT", "the route map should explain its reversible decision order before a road is selected")
+	_expect(game.journey_planner.detail_heading.text == "ROAD DOSSIER" and game.journey_planner.route_stage_label.text == "BROWSE ROAD · NO COST · SELECT TO REVIEW", "the route map should distinguish cost-free browsing from selecting a road for commitment")
+	await _capture("03_route_browse")
 	_expect(game.state.current_location == "ashgate_depot" and game.state.phase == "refit" and game.selected_campaign_node_id.is_empty(), "opening the map should not spend fuel, time, or commit a destination")
 	_expect(game.journey_planner.return_button.visible, "route planning should retain a visible return to the settlement bazaar")
 	var planner_map_rect: Rect2 = game.campaign_map.get_global_rect()
@@ -112,7 +113,7 @@ func _run() -> void:
 	await _settle_ui(2)
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await _settle_ui(2)
-	_expect(game.journey_planner.route_stage_label.text == "ROUTE SELECTED · REVIEW COSTS → COMMIT", "route selection should visibly distinguish review from commitment")
+	_expect(game.journey_planner.detail_heading.text == "SELECTED ROAD" and game.journey_planner.route_stage_label.text == "ROUTE SELECTED · REVIEW COSTS → COMMIT", "route selection should visibly distinguish review from commitment")
 	game.campaign_commit_button.pressed.emit()
 	await _settle_ui()
 	var journey = game.journey_transition
