@@ -3239,6 +3239,25 @@ func _encounter_checkpoint_reason(resolved: bool) -> String:
 		return "route_secured"
 	return "encounter_resolved"
 
+func contact_audio_cue_for_step(step: int, enemies: Array) -> String:
+	for raw_enemy in enemies:
+		var enemy: Dictionary = raw_enemy
+		if bool(enemy.get("defeated", false)):
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var definition: Dictionary = LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {})
+		if definition.is_empty():
+			continue
+		var cue_step := maxi(1, int(definition.get("arrival_step", 1)) - 1)
+		if step == cue_step:
+			return "threat_%s" % enemy_id
+	return ""
+
+func checkpoint_audio_cue(reason: String) -> String:
+	if reason != "encounter_advanced" or state == null:
+		return ""
+	return contact_audio_cue_for_step(state.encounter_step, state.encounter_enemies)
+
 func _on_advance_encounter_pressed() -> void:
 	if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "read_contact" and not tutorial_director.premature_advance_seen:
 		tutorial_director.premature_advance_seen = true

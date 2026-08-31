@@ -1120,3 +1120,7 @@ The Boiler's Second Heartbeat, The Lift Chain Sings, and The Miller With a Broke
 ## 2026-08-31 — The tutorial introduces the real fortress actor
 
 The three-page First Watch prologue now uses the shared fortress renderer instead of a separate box-and-window illustration. Page one presents the inhabited machine at rest, page two draws dependency links across real module-family bays, and page three uses the same actor in departure stance. This was chosen over polishing a tutorial-only illustration because the player's first visual lesson should transfer directly into settlement, travel, contact, recovery, and Debrief.
+
+## 2026-09-01 — Threat warnings use the existing contact clock
+
+Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, and the Civic Guardian now each play one distinct temporary warning cue at the last readable encounter step before arrival; immediate threats cue on step one. Other successful combat steps retain the quiet generic mechanism sound. The cue is selected from existing authoritative threat IDs and arrival timing after a successful command, remains presentation-only, and is suppressed by the existing mute setting. This was chosen over continuous ambience or a second audio timeline because sound should reinforce the visible forecast without driving combat, adding hidden timing, or becoming repetitive on every tick.

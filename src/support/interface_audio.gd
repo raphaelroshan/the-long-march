@@ -14,7 +14,14 @@ const SEMANTIC_STREAMS := {
 	"event": preload("res://assets/temporary/kenney/rpg-audio/Audio/bookFlip1.ogg"),
 	"intervention": preload("res://assets/temporary/kenney/interface-sounds/Audio/switch_001.ogg"),
 	"route_review": preload("res://assets/temporary/kenney/interface-sounds/Audio/open_002.ogg"),
-	"debrief": preload("res://assets/temporary/kenney/rpg-audio/Audio/bookOpen.ogg")
+	"debrief": preload("res://assets/temporary/kenney/rpg-audio/Audio/bookOpen.ogg"),
+	"threat_road_raiders": preload("res://assets/temporary/kenney/rpg-audio/Audio/drawKnife2.ogg"),
+	"threat_climbers": preload("res://assets/temporary/kenney/rpg-audio/Audio/beltHandle2.ogg"),
+	"threat_burrowers": preload("res://assets/temporary/kenney/rpg-audio/Audio/creak3.ogg"),
+	"threat_storm_front": preload("res://assets/temporary/kenney/interface-sounds/Audio/error_005.ogg"),
+	"threat_siege_beast": preload("res://assets/temporary/kenney/interface-sounds/Audio/bong_001.ogg"),
+	"threat_flood_surge": preload("res://assets/temporary/kenney/interface-sounds/Audio/drop_004.ogg"),
+	"threat_civic_guardian": preload("res://assets/temporary/kenney/interface-sounds/Audio/glitch_004.ogg")
 }
 const CHECKPOINT_CUES := {
 	"route_started": "route_commit",
@@ -98,7 +105,9 @@ func play_semantic(cue_id: String) -> bool:
 	last_semantic_asset_path = stream.resource_path
 	return true
 
-func play_checkpoint_cue(reason: String) -> bool:
+func play_checkpoint_cue(reason: String, contextual_cue_id: String = "") -> bool:
+	if reason == "encounter_advanced" and SEMANTIC_STREAMS.has(contextual_cue_id):
+		return play_semantic(contextual_cue_id)
 	var cue_id := String(CHECKPOINT_CUES.get(reason, ""))
 	return not cue_id.is_empty() and play_semantic(cue_id)
 

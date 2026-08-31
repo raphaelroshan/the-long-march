@@ -156,8 +156,11 @@ func _enter_contact() -> void:
 
 func _resolve_contact(expected_phase: String) -> void:
 	if game.state.encounter_active:
+		var first_step_cue: String = game.contact_audio_cue_for_step(game.state.encounter_step + 1, game.state.encounter_enemies)
 		game.road_contact.advance_button.pressed.emit()
 		await _settle()
+		if not first_step_cue.is_empty() and game.state.encounter_active:
+			_expect_semantic_cue(first_step_cue, "the first readable contact step should announce the approaching threat family")
 	if game.state.encounter_active and not game.state.encounter_intervention_used:
 		var shift_button := game.road_contact.intervention_buttons[0] as Button
 		if shift_button.visible and not shift_button.disabled:
