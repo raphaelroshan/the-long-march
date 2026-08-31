@@ -33,6 +33,16 @@ def _payload(build: str, run_code: str, inspected: bool, replay_score: int) -> d
             "run_code": run_code,
             "campaign_region": "ashgate_lowlands",
             "result": "scarred_march",
+            "outcome_facts": {
+                "terminal": True,
+                "result_id": "scarred_march",
+                "result_summary": "SCARRED MARCH · Hull ended below the decisive threshold.",
+                "replay_guidance": "NEXT RUN · Preserve hull before Meridian.",
+                "systems": [
+                    {"id": "steam_lance_engine", "name": "Steam Lance Engine", "durability": 2, "max_durability": 4, "operating_state": "strained", "dependency_reasons": ["fuel link damaged"]},
+                ],
+                "surviving_threats": [{"id": "siege_beast", "name": "Siege Beast", "hp": 2, "max_hp": 7}],
+            },
         },
         "session_metrics": {
             "encounter_steps": 1,
@@ -62,6 +72,10 @@ def main() -> int:
     assert "> I did not understand the first route cost." in report
     assert "> The engine failed.\n> I would repair it before Meridian." in report
     assert "not scored, classified, corrected" in report
+    assert "**Recorded game outcome**" in report
+    assert "Game result explanation: SCARRED MARCH · Hull ended below the decisive threshold." in report
+    assert "Affected systems: Steam Lance Engine 2/4 · Strained · fuel link damaged" in report
+    assert "Surviving threats: Siege Beast 2/7" in report
 
     complete_report = build_cohort_report([copy.deepcopy(first) for _ in range(5)])
     assert "READY FOR HUMAN SYNTHESIS (5/5 exports)" in complete_report
@@ -76,8 +90,10 @@ def main() -> int:
 
     legacy = copy.deepcopy(first)
     legacy["answers"].pop("causal_replay")
+    legacy["final_state"].pop("outcome_facts")
     legacy_report = build_cohort_report([legacy])
     assert "**Perceived cause and next-run change**\n\n> Not recorded." in legacy_report
+    assert "Structured outcome facts: not recorded in this export." in legacy_report
 
     try:
         build_cohort_report([])
