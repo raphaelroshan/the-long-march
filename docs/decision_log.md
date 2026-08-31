@@ -1210,3 +1210,7 @@ Ashgate's first Signal Broker offer upgrades only the Soot Orchard's authored co
 ## 2026-09-01 — The first market is fixed, explicit, and storage-only
 
 Ashgate's Quartermaster begins with one buy offer and one sale offer rather than a generated shop. Buying a spare Side Armor Skirt adds it to storage and leaves installation to the Workshop. Selling removes only a stored Shell Cannon and never searches or dismantles the live chassis. Both previews state exact money and storage deltas plus the module's physical and dependency implications. This was chosen to prove meaningful trade boundaries without introducing hidden refresh randomness, a parallel inventory interface, or low-value loot churn.
+
+## 2026-09-01 — Hiring posts advertise existing encounters instead of bypassing them
+
+Ashgate's Hiring Post now presents Iven Pell as a verified lead at Broken Relay, including every join condition and implemented effect, but provides no recruit button. Recruitment remains attached to the repaired relay where its fiction and mechanical consequence are visible together. This was chosen over remote hiring because the opening bazaar should support informed preparation without flattening authored locations into interchangeable menus.

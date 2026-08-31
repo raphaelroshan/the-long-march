@@ -89,6 +89,20 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 			quartermaster_station["secondary"] = {"id": "sell_stored_shell_cannon", "label": "SELL STORED CANNON · +%d" % int(sell_offer.get("price", 0)), "enabled": true, "tooltip": "Sell only the uninstalled Shell Cannon. The live chassis cannot be dismantled here."}
 		if buy_complete and not sell_available:
 			quartermaster_station["primary"] = {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}
+	var hiring_station := {"title": "Hiring Post", "status": "NO VERIFIED LEADS", "button_status": "NO LEADS", "body": "Lantern Quay's divers and archive crews are committed to the flood response. No specialist has posted terms here.", "tone": "muted"}
+	if not is_veyru:
+		if state.specialist_id == "iven_pell":
+			hiring_station = {"title": "Iven Pell", "status": "ASSIGNED · SIGNAL OFFICER", "button_status": "IVEN ABOARD", "body": "Recruited at Broken Relay. Active contribution: exact immediate contacts, route risk up to -8 points, encounter pressure -1, and +2 anti-storm damage.", "tone": "safe"}
+		elif state.specialist_id == "mara_flint":
+			hiring_station = {"title": "Mara Flint", "status": "ASSIGNED · FORGE MASTER", "button_status": "MARA ABOARD", "body": "Recruited at Morrowline Camp. Active contribution: Field Workshop repairs +1 durability and Morrowline module service restores +1 additional durability.", "tone": "safe"}
+		else:
+			hiring_station = {
+				"title": "Iven Pell · Relay Keeper",
+				"status": "LEAD · BROKEN RELAY",
+				"button_status": "IVEN PELL · 12",
+				"body": "RUMOR · Iven Pell is holding the Broken Relay east of either opening road.\n\nJOIN CONDITIONS · Restore the relay · operational Crew Quarters · 12 Ashmarks · empty specialist berth.\n\nCONTRIBUTION · Exact immediate contacts · route risk up to -8pt · encounter pressure -1 · anti-storm damage +2.\n\nRecruitment happens at the relay after arrival; no payment is taken here.",
+				"tone": "neutral"
+			}
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,
@@ -111,7 +125,7 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 			"workshop": {"title": "Chassis Workshop", "status": "REFIT AVAILABLE", "button_status": "REFIT", "body": ("Use the quay's dry gantry to inspect the walking fortress and protect its lower hull before the archive road." if is_veyru else "Use the depot's rail-side repair bay to inspect the walking fortress, trace dependencies, and prepare its movement chain."), "tone": "safe", "primary": {"id": "open_workshop", "label": "ENTER WORKSHOP", "enabled": true, "tooltip": "Open the detailed chassis workbench."}},
 			"quartermaster": quartermaster_station,
 			"signal_broker": signal_station,
-			"hiring_post": {"title": "Hiring Post", "status": "NO CREW AVAILABLE", "button_status": "EMPTY", "body": "Specialists are encountered through authored locations and events. The hiring board is empty at this stop.", "tone": "muted"},
+			"hiring_post": hiring_station,
 			"assignment_board": assignment_station,
 			"departure_gate": {"title": "Departure Gate", "status": "ROUTES READY" if departure_ready else "ASSIGNMENT BLOCKS DEPARTURE", "button_status": "PLAN JOURNEY" if departure_ready else "LOCKED", "body": (("Pump Gallery is the slower managed-water road; Sunken Tramworks is the shorter submerged cut. Open the route table to compare exact costs and intelligence before Commit." if is_veyru else "Rill Crossing is the direct convoy road; Soot Orchard is the longer salvage road. Open the route table to compare exact costs and intelligence before Commit.") if departure_ready else "The settlement requires an answer at the assignment board before it will clear the fortress to leave."), "tone": "safe" if departure_ready else "warning", "primary": {"id": "plan_journey", "label": "PLAN JOURNEY", "enabled": departure_ready, "tooltip": "Open the regional map without committing a route."}}
 		}

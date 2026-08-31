@@ -95,6 +95,11 @@ func _run() -> void:
 	_expect(float(game.state.campaign_node_preview("soot_orchard").get("risk", 0.0)) == intel_risk_before and hub.detail_body.text.contains("RELIABLE"), "the purchased report should expose confidence without changing route risk")
 	await _capture("02b_signal_report")
 
+	hub.station_buttons["hiring_post"].pressed.emit()
+	await process_frame
+	_expect(hub.detail_title.text == "IVEN PELL · RELAY KEEPER" and hub.detail_status.text == "LEAD · BROKEN RELAY" and hub.detail_body.text.contains("operational Crew Quarters") and hub.detail_body.text.contains("12 Ashmarks") and hub.detail_body.text.contains("anti-storm damage +2") and not hub.primary_action_button.visible, "the Hiring Post should make Iven's route, requirements, effect, and no-hire-here boundary inspectable without inventing a new action")
+	await _capture("02c_hiring_post")
+
 	hub.station_buttons["assignment_board"].pressed.emit()
 	await process_frame
 	_expect(hub.primary_action_button.text == "ACCEPT ASSIGNMENT" and hub.secondary_action_button.text.begins_with("DECLINE"), "the assignment board should disclose both commitment choices before activation")
