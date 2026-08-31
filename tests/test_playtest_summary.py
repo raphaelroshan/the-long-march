@@ -18,6 +18,7 @@ def main() -> int:
         "answers": {
             "clear_or_satisfying": "The target lock explained the hit.",
             "confusing_or_frustrating": "I missed the first route warning.",
+            "causal_replay": "The engine failed; I would protect it before Meridian.",
             "replay_score": 4,
         },
         "final_state": {
@@ -64,6 +65,7 @@ def main() -> int:
         assert "Recovery services: Refuel" in sheet
         assert "Mara Workbench Choice / Rebuild Weakest" in sheet
         assert "Replay score: 4/5" in sheet
+        assert "Result cause and next-run change: The engine failed; I would protect it before Meridian." in sheet
         assert "Contact navigation: steps 1 / target locks 1 / target inspections 1 / emergency orders 1" in sheet
         assert "Metric check: exported counts match the event trail." in sheet
         assert "Target locked: Road Raiders → Coal Cell" in sheet

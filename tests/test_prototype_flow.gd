@@ -1021,10 +1021,17 @@ func _run() -> void:
 	_expect(game.feedback_close_button.text == "BACK TO RESULTS" and game.feedback_save_button.text == "SAVE NOTES LOCALLY" and not game.feedback_path_button.visible, "the unsaved feedback form should expose clear local-only actions without promising a report path yet")
 	_expect(game.feedback_context_label.text.contains("ASHGATE LOWLANDS") and game.feedback_context_label.text.contains("Results"), "result notes should retain the completed run context")
 	_expect(game.feedback_status_label.text == "Nothing is sent automatically. Save a local copy when you are ready.", "the untouched feedback form should use a first-save prompt rather than implying that notes were already saved")
+	_expect(game.feedback_causal_label.text.contains("caused this result") and game.feedback_causal_text.placeholder_text.contains("one concrete change"), "result feedback should ask for a causal explanation and replay adjustment in player language")
 	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_close_button, "the feedback actions should have explicit horizontal controller navigation")
-	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_next) == game.feedback_clear_text and game.feedback_clear_text.get_node_or_null(game.feedback_clear_text.focus_previous) == game.feedback_save_button, "the feedback form should trap Tab navigation across fields and actions")
+	_expect(game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_next) == game.feedback_clear_text and game.feedback_clear_text.get_node_or_null(game.feedback_clear_text.focus_previous) == game.feedback_save_button and game.feedback_confusing_text.get_node_or_null(game.feedback_confusing_text.focus_neighbor_bottom) == game.feedback_causal_text and game.feedback_causal_text.get_node_or_null(game.feedback_causal_text.focus_neighbor_bottom) == game.feedback_score_option, "the feedback form should trap navigation across all fields and actions in visible order")
+	var feedback_questions := game.feedback_overlay.find_child("FeedbackQuestions", true, false) as ScrollContainer
+	game.feedback_causal_text.grab_focus()
+	await process_frame
+	await process_frame
+	_expect(feedback_questions != null and feedback_questions.get_global_rect().encloses(game.feedback_causal_text.get_global_rect()), "focusing the causal replay field should scroll the complete prompt into the visible question area")
 	game.feedback_clear_text.text = "The route consequences were clear."
 	game.feedback_confusing_text.text = "The final repair tradeoff needs another run."
+	game.feedback_causal_text.text = "The damaged engine caused the pressure loss; I would repair it before Meridian."
 	game.feedback_score_option.select(3)
 	game.feedback_save_button.pressed.emit()
 	await process_frame
@@ -1032,9 +1039,11 @@ func _run() -> void:
 	var feedback_bundle = JSON.parse_string(FileAccess.get_file_as_string(game.last_feedback_path))
 	var feedback_final_state: Dictionary = feedback_bundle.get("final_state", {}) if feedback_bundle is Dictionary else {}
 	var feedback_metrics: Dictionary = feedback_bundle.get("session_metrics", {}) if feedback_bundle is Dictionary else {}
+	var feedback_answers: Dictionary = feedback_bundle.get("answers", {}) if feedback_bundle is Dictionary else {}
 	_expect(feedback_final_state.get("campaign_path", []).size() == 6 and String(feedback_final_state.get("campaign_decisions", {}).get("lost_signal", "")) == "move_silent" and int(feedback_final_state.get("unused_recovery_actions", -1)) == completed_services, "local feedback should retain the path, authored decisions, and unused recovery behind the tester's notes")
 	_expect(String(feedback_final_state.get("run_code", "")) == "ASH-1107" and int(feedback_final_state.get("seed", -1)) == 1107, "local feedback should include the same visible run identity and authoritative seed used by the deterministic simulation")
 	_expect(int(feedback_metrics.get("contact_targets_locked", 0)) > 0 and int(feedback_metrics.get("contact_target_inspections", 0)) > 0 and int(feedback_metrics.get("emergency_orders_used", 0)) > 0, "local feedback should summarize target-lock review and emergency-order behavior from the visible journey")
+	_expect(String(feedback_answers.get("causal_replay", "")).contains("damaged engine") and String(feedback_answers.get("causal_replay", "")).contains("repair it"), "local feedback should retain the tester's causal explanation and concrete replay change")
 	_expect(game.feedback_status_label.text.begins_with("SAVED LOCALLY") and game.feedback_status_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and game.feedback_save_button.text == "SAVE AGAIN" and game.feedback_save_button.has_focus(), "saved feedback should provide a clear versioned receipt and repeat action")
 	_expect(game.feedback_path_button.visible and not game.feedback_path_button.disabled and game.feedback_path_button.tooltip_text == game.last_feedback_path, "a saved report should expose its complete path through a controller-accessible receipt action")
 	_expect(game.feedback_close_button.get_node_or_null(game.feedback_close_button.focus_neighbor_right) == game.feedback_path_button and game.feedback_path_button.get_node_or_null(game.feedback_path_button.focus_neighbor_right) == game.feedback_save_button and game.feedback_save_button.get_node_or_null(game.feedback_save_button.focus_neighbor_left) == game.feedback_path_button, "the saved-report action row should follow its visible controller order")

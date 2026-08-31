@@ -45,6 +45,7 @@ func _write_journal() -> Dictionary:
 func export_feedback(
 	clear_or_satisfying: String,
 	confusing_or_frustrating: String,
+	causal_replay: String,
 	replay_score: int,
 	final_state: Dictionary,
 	build_version: String = "unknown",
@@ -64,6 +65,7 @@ func export_feedback(
 		"answers": {
 			"clear_or_satisfying": clear_or_satisfying.strip_edges(),
 			"confusing_or_frustrating": confusing_or_frustrating.strip_edges(),
+			"causal_replay": causal_replay.strip_edges(),
 			"replay_score": clampi(replay_score, 1, 5)
 		},
 		"final_state": final_state.duplicate(true),

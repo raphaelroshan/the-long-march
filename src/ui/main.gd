@@ -268,8 +268,11 @@ var onboarding_step: int = 0
 var onboarding_reopened: bool = false
 var feedback_overlay: Control
 var feedback_context_label: Label
+var feedback_questions_scroll: ScrollContainer
 var feedback_clear_text: TextEdit
 var feedback_confusing_text: TextEdit
+var feedback_causal_label: Label
+var feedback_causal_text: TextEdit
 var feedback_score_option: OptionButton
 var feedback_status_label: Label
 var feedback_save_button: Button
@@ -1642,20 +1645,40 @@ func _build_feedback_overlay() -> void:
 	feedback_context_label.add_theme_font_size_override("font_size", 12)
 	feedback_context_label.add_theme_color_override("font_color", Color("#d8c389"))
 	content.add_child(feedback_context_label)
+	feedback_questions_scroll = ScrollContainer.new()
+	feedback_questions_scroll.name = "FeedbackQuestions"
+	feedback_questions_scroll.custom_minimum_size = Vector2(0, 300)
+	feedback_questions_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	feedback_questions_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.add_child(feedback_questions_scroll)
+	var questions := VBoxContainer.new()
+	questions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	questions.add_theme_constant_override("separation", 8)
+	feedback_questions_scroll.add_child(questions)
 	var clear_label := Label.new()
 	clear_label.text = "What felt clear or satisfying?"
-	content.add_child(clear_label)
+	questions.add_child(clear_label)
 	feedback_clear_text = TextEdit.new()
-	feedback_clear_text.custom_minimum_size = Vector2(640, 110)
+	feedback_clear_text.custom_minimum_size = Vector2(620, 80)
 	feedback_clear_text.placeholder_text = "A decision, explanation, or moment that worked..."
-	content.add_child(feedback_clear_text)
+	questions.add_child(feedback_clear_text)
 	var confusing_label := Label.new()
 	confusing_label.text = "What felt confusing or frustrating?"
-	content.add_child(confusing_label)
+	questions.add_child(confusing_label)
 	feedback_confusing_text = TextEdit.new()
-	feedback_confusing_text.custom_minimum_size = Vector2(640, 110)
+	feedback_confusing_text.custom_minimum_size = Vector2(620, 80)
 	feedback_confusing_text.placeholder_text = "Where you hesitated, guessed, or lost the causal thread..."
-	content.add_child(feedback_confusing_text)
+	questions.add_child(feedback_confusing_text)
+	feedback_causal_label = Label.new()
+	feedback_causal_label.text = "What caused this result, and what would you change next run?"
+	feedback_causal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	questions.add_child(feedback_causal_label)
+	feedback_causal_text = TextEdit.new()
+	feedback_causal_text.custom_minimum_size = Vector2(620, 80)
+	feedback_causal_text.placeholder_text = "Name the choice or failure that mattered, then one concrete change..."
+	questions.add_child(feedback_causal_text)
+	for field in [feedback_clear_text, feedback_confusing_text, feedback_causal_text]:
+		field.focus_entered.connect(_reveal_feedback_question.bind(field))
 	feedback_score_option = OptionButton.new()
 	for label in ["1 — No", "2 — Probably not", "3 — Maybe", "4 — Probably", "5 — Definitely"]:
 		feedback_score_option.add_item(label)
@@ -1687,6 +1710,10 @@ func _build_feedback_overlay() -> void:
 	content.add_child(actions)
 	_configure_feedback_focus()
 
+func _reveal_feedback_question(field: Control) -> void:
+	if feedback_questions_scroll != null:
+		feedback_questions_scroll.ensure_control_visible.call_deferred(field)
+
 func _configure_feedback_focus() -> void:
 	var has_report := feedback_path_button.visible and not feedback_path_button.disabled
 	var action_before_save: Control = feedback_path_button if has_report else feedback_close_button
@@ -1699,8 +1726,10 @@ func _configure_feedback_focus() -> void:
 	feedback_clear_text.focus_neighbor_top = feedback_clear_text.get_path_to(feedback_save_button)
 	feedback_clear_text.focus_neighbor_bottom = feedback_clear_text.get_path_to(feedback_confusing_text)
 	feedback_confusing_text.focus_neighbor_top = feedback_confusing_text.get_path_to(feedback_clear_text)
-	feedback_confusing_text.focus_neighbor_bottom = feedback_confusing_text.get_path_to(feedback_score_option)
-	feedback_score_option.focus_neighbor_top = feedback_score_option.get_path_to(feedback_confusing_text)
+	feedback_confusing_text.focus_neighbor_bottom = feedback_confusing_text.get_path_to(feedback_causal_text)
+	feedback_causal_text.focus_neighbor_top = feedback_causal_text.get_path_to(feedback_confusing_text)
+	feedback_causal_text.focus_neighbor_bottom = feedback_causal_text.get_path_to(feedback_score_option)
+	feedback_score_option.focus_neighbor_top = feedback_score_option.get_path_to(feedback_causal_text)
 	feedback_score_option.focus_neighbor_bottom = feedback_score_option.get_path_to(feedback_close_button)
 	feedback_close_button.focus_neighbor_top = feedback_close_button.get_path_to(feedback_score_option)
 	feedback_close_button.focus_neighbor_bottom = feedback_close_button.get_path_to(feedback_clear_text)
@@ -1708,7 +1737,7 @@ func _configure_feedback_focus() -> void:
 	feedback_path_button.focus_neighbor_bottom = feedback_path_button.get_path_to(feedback_clear_text)
 	feedback_save_button.focus_neighbor_top = feedback_save_button.get_path_to(feedback_score_option)
 	feedback_save_button.focus_neighbor_bottom = feedback_save_button.get_path_to(feedback_clear_text)
-	var focus_controls: Array = [feedback_clear_text, feedback_confusing_text, feedback_score_option, feedback_close_button]
+	var focus_controls: Array = [feedback_clear_text, feedback_confusing_text, feedback_causal_text, feedback_score_option, feedback_close_button]
 	if has_report:
 		focus_controls.append(feedback_path_button)
 	focus_controls.append(feedback_save_button)
@@ -1837,6 +1866,12 @@ func _show_feedback() -> void:
 		state.phase.replace("_", " ").capitalize()
 	]
 	feedback_close_button.text = "BACK TO PAUSE" if feedback_return_context == "pause" else "BACK TO RESULTS"
+	if feedback_return_context == "pause":
+		feedback_causal_label.text = "What is your current plan, and what would you change if this run ends now?"
+		feedback_causal_text.placeholder_text = "Name the risk you are managing, then one concrete alternative..."
+	else:
+		feedback_causal_label.text = "What caused this result, and what would you change next run?"
+		feedback_causal_text.placeholder_text = "Name the choice or failure that mattered, then one concrete change..."
 	if not last_feedback_path.is_empty() and FileAccess.file_exists(last_feedback_path):
 		feedback_status_label.text = "LAST SAVED LOCALLY · %s\nEdits can be saved as a fresh report." % last_feedback_path.get_file()
 		feedback_status_label.tooltip_text = last_feedback_path
@@ -1870,6 +1905,7 @@ func _save_feedback() -> void:
 	var result: Dictionary = journal.export_feedback(
 		feedback_clear_text.text,
 		feedback_confusing_text.text,
+		feedback_causal_text.text,
 		feedback_score_option.selected + 1,
 		_state_journal_summary(),
 		String(ProjectSettings.get_setting("application/config/version", "unknown"))

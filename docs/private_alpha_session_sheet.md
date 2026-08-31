@@ -26,7 +26,7 @@ Record observable behavior and direct quotes for:
 - outcome explanation from the terminal Debrief;
 - one concrete replay change.
 
-The game already records committed routes, interventions, services, event choices, final state, build version, and a replay score in a local-only feedback export. It does not record cursor movement, hesitation, incorrect predictions, spoken explanations, or emotion. Those require an observer note and must never be inferred from completion alone.
+The game already records committed routes, interventions, services, event choices, final state, build version, a replay score, and the tester's written account of the result cause and next-run change in a local-only feedback export. It does not record cursor movement, hesitation, incorrect predictions, spoken explanations, or emotion. Those require an observer note and must never be inferred from completion alone.
 
 ## Generate a session sheet from an export
 
