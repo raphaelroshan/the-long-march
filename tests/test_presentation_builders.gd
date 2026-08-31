@@ -53,7 +53,9 @@ func _init() -> void:
 	state.campaign_pressure += int(preview.get("pressure_gain", 0))
 	var transition_before := state.serialize()
 	var transition := RoutePresenter.build_transition(state, "ashgate_depot", "rill_crossing", preview, {"day": 1, "fuel": 6, "pressure": 0}, {"tutorial": false, "promise": "PROMISE · Test", "fortress": fortress})
-	_expect(transition.get("origin_name") == "Ashgate Depot" and transition.get("destination_name") == "Rill Crossing" and String(transition.get("day_receipt", "")).contains("+1"), "route transition presenter should preserve location names and exact committed receipts")
+	_expect(transition.get("origin_name") == "Ashgate Depot" and transition.get("destination_name") == "Rill Crossing" and transition.get("destination_visual_id") == "rill_crossing" and String(transition.get("day_receipt", "")).contains("+1"), "route transition presenter should preserve location names, destination visual identity, and exact committed receipts")
+	var tutorial_transition := RoutePresenter.build_transition(state, "ashgate_depot", "rill_crossing", preview, {"day": 1, "fuel": 6, "pressure": 0}, {"tutorial": true, "promise": "TRAINING ORDER", "fortress": fortress})
+	_expect(tutorial_transition.get("destination_visual_id") == "muster_road" and tutorial_transition.get("destination_name") == "Muster Road", "tutorial travel should use its own training-road landmark rather than borrowing Rill Crossing scenery")
 	_expect_pure(state, transition_before, "route transition presenter")
 
 	state.encounter_active = true
