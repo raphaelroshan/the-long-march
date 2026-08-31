@@ -1241,7 +1241,7 @@ func _build_ui() -> void:
 	journey_planner.pause_requested.connect(func() -> void: pause_requested.emit())
 	journey_planner.return_requested.connect(_on_journey_planner_returned)
 	margin.add_child(journey_planner)
-	journey_planner.attach_route_controls(campaign_map, campaign_comparison_panel, route_preview_label, doctrine_group, doctrine_detail_label, campaign_commit_intel_label, campaign_action_row)
+	journey_planner.attach_route_controls(campaign_map, campaign_comparison_panel, route_preview_label, doctrine_group, doctrine_detail_label, campaign_commit_intel_label, campaign_action_row, recruit_iven_button)
 	road_contact = RoadContactScene.instantiate()
 	road_contact.pause_requested.connect(func() -> void: pause_requested.emit())
 	road_contact.advance_requested.connect(_on_advance_encounter_pressed)
@@ -3010,6 +3010,12 @@ func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
 			"detail": "Machine: restore %s now (+1 day, +1 pressure). Shelter: reduce every Refugee Bunk hit by 1; no repair now." % repair_target,
 			"target_name": repair_target
 		}
+	if event_id == "mara_meeting":
+		return {
+			"motif": "mara_meeting",
+			"heading": "MARA FLINT · FORGE MASTER",
+			"detail": "Repair before sacrifice. Bring Mara aboard to add +1 durability to workshop repairs, or preserve the only specialist berth for another road."
+		}
 	if event_id == "mara_followup":
 		var preview := state.mara_followup_preview()
 		var repair_path := String(preview.get("path", "")) == "repair"
@@ -3795,7 +3801,7 @@ func _refresh_campaign_controls() -> void:
 	var can_recruit_iven := bool(recruit_status.get("available", false))
 	var recruit_reason := String(recruit_status.get("reason", ""))
 	recruit_iven_button.disabled = not can_recruit_iven
-	var recruit_offer := "RECRUIT IVEN PELL · 12 ASHMARKS\nREVEAL CONTACTS · RISK UP TO -8pt\nENCOUNTER PRESSURE -1 · ANTI-STORM DAMAGE +2"
+	var recruit_offer := "RECRUIT IVEN PELL · 12 ASHMARKS"
 	recruit_iven_button.text = recruit_offer if can_recruit_iven else "%s\nLOCKED · %s" % [recruit_offer, recruit_reason.to_upper()]
 	recruit_iven_button.custom_minimum_size = Vector2(0, 72 if can_recruit_iven else 90)
 	recruit_iven_button.tooltip_text = "Adds exact immediate threat forecasts and storm navigation." if can_recruit_iven else recruit_reason

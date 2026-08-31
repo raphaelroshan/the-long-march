@@ -1140,3 +1140,7 @@ Chassis placement, movement, rotation, and removal now receive distinct temporar
 ## 2026-09-01 — Impact audio follows the visible resolved hit
 
 The road-contact canvas now emits one presentation-only impact request when an already-resolved step reaches the visible Impact phase. Reduced Motion emits the same cue immediately as the view collapses to Consequence, and a per-transition guard prevents replay during later frames or redraws. This was chosen over playing the hit at button press because the sound should agree with the target flash, damage receipt, and dependency change without delaying or controlling authoritative combat.
+
+## 2026-09-01 — Specialists appear where their decisions happen
+
+Iven Pell's existing recruitment action now lives in the active Broken Relay journey planner instead of the hidden legacy planning column. His portrait, signal role, belief, exact mechanical effects, availability, and action share one card; when recruitment is legal, that action receives the planner's default focus. Mara Flint now appears beside the forge throughout her meeting, one-core choice, and fourth-road callback. This was chosen over a separate character menu because specialists should be understood through the route and facility decisions they change, without adding dialogue trees or relationship state.

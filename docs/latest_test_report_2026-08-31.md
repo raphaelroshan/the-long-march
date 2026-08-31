@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.312` phase-aligned-impact-audio candidate |
+| Build | `0.3.0-alpha.313` named-specialist-identity candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -19,6 +19,7 @@
 | Roadside identity | PASS: dedicated boiler, ammunition-lift, and broken-wheel motifs with exact choice framing at 1280×720 and 110% text/high contrast |
 | Tutorial continuity | PASS: shared fortress actor across all three prologue pages, dependency overlay, departure stance, and 110% text/high-contrast action containment |
 | Bazaar attendants | PASS: six stable station roles, Ashgate/Veyru role variants, selected-station portrait/prop updates, high contrast, and unchanged station command routing |
+| Named specialists | PASS: Iven's locked/ready offer is visible in the active Broken Relay planner; Mara's meeting, workbench choice, and callback retain one stable forge-master identity |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
@@ -31,6 +32,7 @@
 - [`Threat-family audio identity report`](threat_audio_identity_report.md)
 - [`Refit audio feedback report`](refit_audio_feedback_report.md)
 - [`Phase-aligned impact audio report`](phase_aligned_impact_audio_report.md)
+- [`Named specialist identity report`](named_specialist_identity_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -49,6 +51,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.312 adds one material hit cue at the visible Impact beat and collapses it safely to the immediate Consequence under Reduced Motion.
+The updated strategy remains intact without changing authoritative game state. Alpha.313 moves Iven's existing recruitment into the live route planner and gives both implemented specialists stable visual identities at their decisions.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

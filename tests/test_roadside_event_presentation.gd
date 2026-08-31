@@ -96,6 +96,21 @@ func _run() -> void:
 		],
 		"guidance": "Choose one response. The other need remains exposed."
 	})
+	var meeting_view: Dictionary = common.duplicate(true)
+	meeting_view.merge({
+		"event_id": "mara_meeting",
+		"title": "The Forge Without a Roof",
+		"body": "Mara Flint has kept the convoy's axles moving from an open repair bench.",
+		"story": {"motif": "mara_meeting", "heading": "MARA FLINT · FORGE MASTER", "detail": "Repair before sacrifice. Bring Mara aboard or preserve the specialist berth."},
+		"choices": [
+			{"id": "recruit_mara", "label": "Bring Mara aboard", "effect": "Specialist berth filled · Workshop repairs +1", "enabled": true, "reason": ""},
+			{"id": "decline_mara", "label": "Leave Mara with Morrowline", "effect": "Keep specialist berth open · No repair bonus", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(meeting_view)
+	await _settle_ui()
+	_expect(event_view.tableau.presentation_signature() == "MARA FLINT · OPEN FORGE · JOIN OR REMAIN" and event_view.tableau.character_signature() == "MARA FLINT · FORGE MASTER · REPAIR BEFORE SACRIFICE", "Mara's first offer should identify the named forge master and her practical belief beside the open forge")
+	await _capture("04_mara_meeting")
 	event_view.configure(choice_view)
 	event_view.focus_default()
 	await _settle_ui()

@@ -33,6 +33,7 @@ func _init() -> void:
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "route_selected": false, "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
 	_expect(planner.get("region_name") == "Ashgate Lowlands" and planner.get("values", {}).get("fuel") == str(state.fuel) and planner.get("return_label") == "RETURN TO ASHGATE DEPOT BAZAAR", "route presenter should preserve region, readiness values, and return contract")
+	_expect(not bool(planner.get("specialist_offer", {}).get("visible", true)), "the route presenter should hide Iven's offer away from the Broken Relay")
 	var offered_markers := RoutePresenter.build_assignment_markers(state)
 	_expect(offered_markers.get("morrowline_camp", {}).get("status") == "offer", "the route presenter should mark the unresolved Ashgate assignment destination as an offer")
 	_expect_pure(state, before, "route planner presenter")
@@ -46,6 +47,14 @@ func _init() -> void:
 	var mastery_planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road."})
 	_expect(String(mastery_planner.get("order", "")).contains("FIELD ORDER · QUARRY ADAPTATION") and String(mastery_planner.get("order", "")).contains("Cinder Quarry secured"), "the route planner should retain the selected mastery objective")
 	_expect_pure(state, mastery_before, "mastery route presenter")
+	state.current_location = "broken_relay"
+	state.phase = "map"
+	state.campaign_event_pending = ""
+	var iven_before := state.serialize()
+	var iven_planner := RoutePresenter.build_planner(state, state.summary(), {"order": "Choose a road."})
+	_expect(bool(iven_planner.get("specialist_offer", {}).get("visible", false)) and String(iven_planner.get("specialist_offer", {}).get("name", "")) == "Iven Pell" and String(iven_planner.get("specialist_offer", {}).get("effect", "")).contains("ANTI-STORM DAMAGE +2"), "the Broken Relay planner should expose Iven as a named mechanical offer")
+	_expect_pure(state, iven_before, "Iven offer presenter")
+	state.current_location = "ashgate_depot"
 
 	var preview := state.campaign_node_preview("rill_crossing", "protect_cargo")
 	state.day += int(preview.get("days", 0))

@@ -438,12 +438,35 @@ class ScenarioCanvas extends Control:
 		draw_circle(center + Vector2(0, -72), 28.0, Color("#8e382e"))
 
 	func _draw_forge(center: Vector2) -> void:
-		draw_rect(Rect2(center - Vector2(92, 82), Vector2(184, 82)), Color("#443d38"), true)
-		draw_rect(Rect2(center + Vector2(-34, -48), Vector2(68, 48)), Color("#1b2020"), true)
-		draw_circle(center + Vector2(0, -22), 22.0, Color("#df7b3f"))
-		draw_line(center + Vector2(68, -82), center + Vector2(68, -142), Color("#68655d"), 18.0)
+		var forge_center := center + Vector2(26, 0)
+		draw_rect(Rect2(forge_center - Vector2(84, 82), Vector2(168, 82)), Color("#443d38"), true)
+		draw_rect(Rect2(forge_center + Vector2(-30, -48), Vector2(60, 48)), Color("#1b2020"), true)
+		draw_circle(forge_center + Vector2(0, -22), 22.0, Color("#df7b3f"))
+		draw_line(forge_center + Vector2(62, -82), forge_center + Vector2(62, -142), Color("#68655d"), 18.0)
 		for index in range(3):
-			draw_circle(center + Vector2(70 + index * 12, -157 - index * 14), 13.0 + index * 3.0, Color(0.16, 0.19, 0.19, 0.42))
+			draw_circle(forge_center + Vector2(64 + index * 12, -157 - index * 14), 13.0 + index * 3.0, Color(0.16, 0.19, 0.19, 0.42))
+		_draw_mara(center + Vector2(-72, -50))
+
+	func _draw_mara(anchor: Vector2) -> void:
+		var outline := Color.WHITE if high_contrast_enabled else Color("#f0cf96")
+		var coat := Color("#934e35") if not high_contrast_enabled else Color("#4a2a20")
+		var apron := Color("#48565a") if not high_contrast_enabled else Color("#1a2225")
+		var skin := Color.WHITE if high_contrast_enabled else Color("#d9b781")
+		draw_circle(anchor - Vector2(0, 34), 10.0, skin)
+		draw_line(anchor - Vector2(7, 42), anchor + Vector2(8, -42), Color("#34261f"), 6.0)
+		var body := PackedVector2Array([
+			anchor + Vector2(-16, -21),
+			anchor + Vector2(15, -21),
+			anchor + Vector2(22, 25),
+			anchor + Vector2(-22, 25)
+		])
+		draw_colored_polygon(body, coat)
+		draw_polyline(PackedVector2Array([body[0], body[1], body[2], body[3], body[0]]), outline, 2.0)
+		draw_rect(Rect2(anchor + Vector2(-10, -10), Vector2(20, 31)), apron, true)
+		draw_line(anchor + Vector2(12, -8), anchor + Vector2(31, 17), outline, 5.0)
+		draw_line(anchor + Vector2(24, 10), anchor + Vector2(40, -7), outline, 4.0)
+		draw_line(anchor + Vector2(34, -12), anchor + Vector2(46, 0), outline, 6.0)
+		draw_string(ThemeDB.fallback_font, anchor + Vector2(-52, 47), "MARA FLINT", HORIZONTAL_ALIGNMENT_CENTER, 104.0, 10, outline)
 
 	func _draw_forge_core_choice(center: Vector2) -> void:
 		_draw_forge(center + Vector2(0, 18))
@@ -492,6 +515,8 @@ class ScenarioCanvas extends Control:
 			return "BROKEN WHEEL · HELP OR KEEP MOVING"
 		if motif == "mara_core_choice":
 			return "ONE CORE · MACHINE OR SHELTER"
+		if motif == "mara_meeting":
+			return "MARA FLINT · OPEN FORGE · JOIN OR REMAIN"
 		if motif == "mara_core_callback":
 			return "PROMISE CHECK · %s · %s" % ["HELD" if bool(story.get("held", false)) else "FAILED", String(story.get("target_name", "promise")).to_upper()]
 		if motif == "pump_gallery_choice":
@@ -499,6 +524,11 @@ class ScenarioCanvas extends Control:
 		if motif == "dry_room_choice":
 			return "ONE DRY ROOM · FAMILIES OR PARTS"
 		return "ROADSIDE OCCURRENCE"
+
+	func character_signature() -> String:
+		if event_id in ["mara_meeting", "mara_workbench_choice", "mara_followup"]:
+			return "MARA FLINT · FORGE MASTER · REPAIR BEFORE SACRIFICE"
+		return ""
 
 	func _draw_floodworks(center: Vector2) -> void:
 		draw_rect(Rect2(center - Vector2(100, 88), Vector2(200, 88)), Color("#3d4c4d"), true)
