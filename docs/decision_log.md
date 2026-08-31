@@ -1174,3 +1174,7 @@ Once a threat has arrived and selected a target, the compact counter badge now c
 ## 2026-09-01 — Emergency orders stay on the contact surface
 
 The road-contact dock now presents Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo in a two-by-two grid with concise action names. Exact live effects remain in focus and hover help, so compact controls do not hide costs. Vertical and horizontal focus neighbors follow the visual grid. This was chosen over making the dossier collapsible because threat intent and consequence should remain continuously visible while the player compares responses.
+
+## 2026-09-01 — First target lock interrupts repeated Advance input
+
+Road contact still focuses Advance during forecast, but the first transition from no assigned target to an authoritative module or hull target moves keyboard/controller focus to Inspect Chassis. Returning from an inspection to an active targeted contact also defaults to Inspect. This creates a deliberate review beat without adding a modal, disabling Advance, changing combat timing, or affecting pointer users who have already chosen another control.

@@ -46,10 +46,10 @@ func _view_for(enemy_id: String, arrived: bool, defeated: bool = false) -> Dicti
 		"intervention_heading": "EMERGENCY ORDER · 1 AVAILABLE",
 		"intervention_help": "Choose one order, or preserve it for a later step.",
 		"interventions": [
-			{"label": "Shift power · raise weapon output / add heat", "tooltip": "Trade heat for damage.", "enabled": true},
-			{"label": "Seal target compartment", "tooltip": "Protect one selected module.", "enabled": true},
-			{"label": "Vent heat · reduce heat / expose exterior", "tooltip": "Trade exposure for cooling.", "enabled": true},
-			{"label": "Cut loose cargo · reduce load", "tooltip": "Sacrifice cargo to reduce pressure.", "enabled": true}
+			{"label": "Shift power · raise weapon output / add heat", "short_label": "SHIFT POWER", "tooltip": "Trade heat for damage.", "enabled": true},
+			{"label": "Seal target compartment", "short_label": "SEAL COMPARTMENT", "tooltip": "Protect one selected module.", "enabled": true},
+			{"label": "Vent heat · reduce heat / expose exterior", "short_label": "VENT HEAT", "tooltip": "Trade exposure for cooling.", "enabled": true},
+			{"label": "Cut loose cargo · reduce load", "short_label": "CUT LOOSE CARGO", "tooltip": "Sacrifice cargo to reduce pressure.", "enabled": true}
 		],
 		"counter_readiness": {enemy_id: {"status": "ready", "text": "READY NOW · %s" % String(case.ready)}},
 		"response_postures": {enemy_id: {"status": "ready", "heading": "PREPARED RESPONSE" if not arrived else "DEFENSE ANSWERING", "text": "%s · 2 damage on Advance from %s. Advance to use it automatically, or Inspect before spending one of the 4 emergency orders available below." % [String(case.ready), String(case.ready)]}},
@@ -83,7 +83,7 @@ func _run() -> void:
 		_expect(String(visual_signature.get("enemy_id", "")) == enemy_id and not String(visual_signature.get("form", "")).is_empty() and not String(visual_signature.get("lane", "")).is_empty(), "%s should expose a stable threat silhouette and approach lane" % case.name)
 		var forecast_view := _view_for(enemy_id, false)
 		contact.configure(forecast_view)
-		_expect(contact.intervention_buttons[0].text == "Shift power · raise weapon output / add heat", "%s fixture should retain its fallback action label when no compact label is supplied" % case.name)
+		_expect(contact.intervention_buttons[0].text == "SHIFT POWER" and contact.intervention_buttons[3].text == "CUT LOOSE CARGO", "%s contact should use compact action labels while retaining exact tooltips" % case.name)
 		_expect(contact.intervention_buttons[0].get_node_or_null(contact.intervention_buttons[0].focus_neighbor_right) == contact.intervention_buttons[1] and contact.intervention_buttons[0].get_node_or_null(contact.intervention_buttons[0].focus_neighbor_bottom) == contact.intervention_buttons[2], "%s emergency orders should follow the visible two-column controller grid" % case.name)
 		_expect(contact.battle_phase_for() == "FORECAST", "%s should begin with a forecast phase" % case.name)
 		_expect(contact.contact_canvas.presentation_stage_text() == "FORECAST · %s · %d STEP%s OUT" % [String(case.name).to_upper(), int(case.arrival_step), "" if int(case.arrival_step) == 1 else "S"], "%s should expose stable forecast timing" % case.name)
@@ -155,8 +155,19 @@ func _run() -> void:
 	var response_view := _view_for("road_raiders", true)
 	response_view["recent_report"] = []
 	contact.set_reduced_motion(false)
+	var forecast_focus_view := _view_for("road_raiders", false)
+	forecast_focus_view["active_target_id"] = ""
+	contact.configure(forecast_focus_view)
+	contact.focus_default()
+	_expect(contact.advance_button.has_focus(), "forecast contact should default to the next authoritative Advance action")
+	response_view["active_target_id"] = "coal_cell"
 	contact.configure(response_view)
+	await process_frame
 	_expect(contact.battle_phase_for() == "RESPONSE" and contact.contact_canvas.presentation_stage_text() == "RESPONSE READY · SHELL OR REPEATER FIRE", "an arrived threat without a new resolved report should keep the response opportunity visible")
+	_expect(contact.inspect_button.has_focus(), "the first target lock should move focus from Advance to Inspect so a repeated confirm cannot resolve another beat unseen")
+	await _capture("10_target_review_focus")
+	contact.focus_default()
+	_expect(contact.inspect_button.has_focus(), "re-entering an active targeted contact should default to Inspect rather than Advance")
 
 	var settle_view := _view_for("road_raiders", true, true)
 	settle_view["step"] = 6
