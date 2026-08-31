@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.302`
+**Build:** `0.3.0-alpha.303`
 
 **Engine:** Godot 4.4.1
 
@@ -13,6 +13,7 @@
 - [Temporary impact and damage VFX](visual_evidence/v0.3.0-alpha.300-temporary-sensory-feedback/)
 - [Temporary travel atmosphere](visual_evidence/v0.3.0-alpha.301-temporary-travel-atmosphere/)
 - [Destination-specific arrival tableaux](visual_evidence/v0.3.0-alpha.302-arrival-identity/)
+- [Threat silhouettes and approach lanes](visual_evidence/v0.3.0-alpha.303-threat-silhouettes/)
 
 ## Findings
 
@@ -30,6 +31,8 @@ Alpha.301 makes the march sequence physically distinct without adding simulation
 
 Alpha.302 removes the generic arrival wall. The resolved destination ID now selects a named regional threshold: crossings, convoy camps, relays, salvage sites, flood machinery, archive gates, and final passes retain distinct silhouettes while the same fortress and consequence receipt remain visible. Continue restores the same destination tableau after save/load.
 
+Alpha.303 replaces the contact-stage debug symbols with distinct threat actors: a harpoon rig, grapnel climber, emerging Burrower, storm mass, armored Siege Beast, flood crest, and civic construct. Their road, upper-flank, under-road, weather, waterline, direct-charge, and archive-lane marks reinforce the already-authoritative intent and target labels.
+
 ## Next work
 
-Use the exact alpha.302 cohort for consented, uncoached sessions. Prioritize repeated failures in place recognition, march weight, contact-transition clarity, target recognition, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact alpha.303 cohort for consented, uncoached sessions. Prioritize repeated failures in threat recognition, place recognition, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

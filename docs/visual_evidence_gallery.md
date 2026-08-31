@@ -2,6 +2,12 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.303` — Threat silhouettes
+
+[Seven threat-family captures](visual_evidence/v0.3.0-alpha.303-threat-silhouettes/) show distinct physical actors and approach lanes for Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, and the Civic Guardian. Text remains authoritative for intent, target, counter, damage, and dependency consequence.
+
+These code-native actors are readability prototypes rather than final creature or vehicle art.
+
 ## `v0.3.0-alpha.302` — Destination arrival identity
 
 [Ashgate and Veyru arrival captures](visual_evidence/v0.3.0-alpha.302-arrival-identity/) show the training siding, broken crossing, Meridian threshold, flood machinery, evacuation platform, and Dry Archive. Every composition is selected from the authoritative destination ID and keeps the same fortress and applied consequence receipt visible.

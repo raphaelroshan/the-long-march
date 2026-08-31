@@ -447,6 +447,16 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 		pause_button.text = "PAUSE · ESC / %s" % cancel_label
 
 class ContactCanvas extends Control:
+	const THREAT_VISUAL_PROFILES := {
+		"road_raiders": {"form": "raider_rig", "lane": "road_flank", "scale": 1.05, "label_y": -43.0},
+		"climbers": {"form": "grapnel_climber", "lane": "upper_flank", "scale": 1.0, "label_y": -54.0},
+		"burrowers": {"form": "burrower_head", "lane": "under_road", "scale": 1.08, "label_y": -39.0},
+		"storm_front": {"form": "storm_mass", "lane": "weather_line", "scale": 1.12, "label_y": -61.0},
+		"siege_beast": {"form": "siege_beast", "lane": "direct_road", "scale": 1.22, "label_y": -50.0},
+		"flood_surge": {"form": "flood_crest", "lane": "waterline", "scale": 1.14, "label_y": -45.0},
+		"civic_guardian": {"form": "civic_guardian", "lane": "archive_gate", "scale": 1.18, "label_y": -75.0}
+	}
+
 	var current_view: Dictionary = {}
 	var high_contrast_enabled: bool = false
 	var reduced_motion: bool = false
@@ -458,7 +468,13 @@ class ContactCanvas extends Control:
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		clip_contents = true
 		set_process(true)
+
+	func threat_visual_signature(enemy_id: String) -> Dictionary:
+		var signature: Dictionary = Dictionary(THREAT_VISUAL_PROFILES.get(enemy_id, {"form": "raider_rig", "lane": "road_flank", "scale": 1.0})).duplicate(true)
+		signature["enemy_id"] = enemy_id
+		return signature
 
 	func configure(view: Dictionary) -> void:
 		var next_step := float(view.get("step", 0))
@@ -689,6 +705,7 @@ class ContactCanvas extends Control:
 				continue
 			var enemy_id := String(enemy.get("id", ""))
 			var definition: Dictionary = definitions.get(enemy_id, {})
+			var visual := threat_visual_signature(enemy_id)
 			var arrived := bool(enemy.get("arrived", false))
 			var steps_out := maxf(0.0, float(definition.get("arrival_step", 1)) - animated_step)
 			var x := fortress_rect.end.x + 46.0 + steps_out * 55.0
@@ -697,8 +714,11 @@ class ContactCanvas extends Control:
 				y = fortress_rect.position.y - 48.0 - float(visible_index) * 18.0
 			if enemy_id in ["burrowers", "flood_surge"]:
 				y = fortress_rect.end.y + 68.0
-			x = minf(size.x - 38.0, x)
-			_draw_enemy_symbol(enemy_id, Vector2(x, y), arrived, 1.30 if arrived else 1.08)
+			x = minf(size.x - 58.0, x)
+			var profile_scale := float(visual.get("scale", 1.0))
+			var draw_scale := profile_scale * (1.30 if arrived else 1.04)
+			_draw_approach_lane(String(visual.get("lane", "road_flank")), Vector2(x, y), fortress_rect, arrived)
+			_draw_enemy_symbol(enemy_id, Vector2(x, y), arrived, draw_scale)
 			if arrived and not String(enemy.get("target", "")).is_empty():
 				var line_color := Color("#ff8275")
 				line_color.a = 0.4 + transition_progress * 0.6
@@ -711,7 +731,8 @@ class ContactCanvas extends Control:
 				var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
 				draw_string(ThemeDB.fallback_font, target_anchor + Vector2(-70.0, -23.0), target_name, HORIZONTAL_ALIGNMENT_CENTER, 140.0, 10, Color("#fff0df"))
 			var name := String(definition.get("name", enemy_id.replace("_", " ").capitalize())).to_upper()
-			draw_string(ThemeDB.fallback_font, Vector2(x - 72.0, y - 30.0), name, HORIZONTAL_ALIGNMENT_CENTER, 144, 10, Color("#f1d1b2"))
+			var label_y := float(visual.get("label_y", -38.0)) * draw_scale
+			draw_string(ThemeDB.fallback_font, Vector2(x - 72.0, y + label_y), name, HORIZONTAL_ALIGNMENT_CENTER, 144, 10, Color("#f1d1b2"))
 			visible_index += 1
 
 	func _draw_intent_arrow(from: Vector2, to: Vector2, color: Color) -> void:
@@ -734,30 +755,120 @@ class ContactCanvas extends Control:
 	func temporary_impact_vfx_active() -> bool:
 		return not reduced_motion and report_changed and transition_progress >= 0.58 and transition_progress < 0.78
 
+	func _draw_approach_lane(lane: String, position: Vector2, fortress_rect: Rect2, arrived: bool) -> void:
+		var lane_color := Color(0.90, 0.42, 0.32, 0.34 if arrived else 0.18)
+		match lane:
+			"upper_flank":
+				draw_dashed_line(position + Vector2(-70.0, 18.0), fortress_rect.position + Vector2(fortress_rect.size.x * 0.78, -26.0), lane_color, 2.0, 8.0)
+			"under_road":
+				for crack_index in range(4):
+					var crack_x := fortress_rect.end.x + 14.0 + float(crack_index) * 38.0
+					draw_polyline(PackedVector2Array([Vector2(crack_x, fortress_rect.end.y + 58.0), Vector2(crack_x + 11.0, fortress_rect.end.y + 48.0), Vector2(crack_x + 19.0, fortress_rect.end.y + 63.0)]), lane_color, 2.0)
+			"weather_line":
+				for streak_index in range(4):
+					var streak_y := fortress_rect.position.y - 62.0 + float(streak_index) * 21.0
+					draw_line(Vector2(fortress_rect.end.x + 18.0, streak_y), Vector2(size.x - 14.0, streak_y - 34.0), lane_color, 3.0)
+			"waterline":
+				for wave_index in range(4):
+					var wave_x := fortress_rect.end.x + 18.0 + float(wave_index) * 39.0
+					draw_arc(Vector2(wave_x, fortress_rect.end.y + 65.0), 17.0, PI, TAU, 12, lane_color, 3.0)
+			"direct_road":
+				draw_line(Vector2(fortress_rect.end.x + 16.0, fortress_rect.end.y + 20.0), Vector2(position.x + 36.0, position.y + 20.0), lane_color, 8.0)
+				draw_line(Vector2(fortress_rect.end.x + 16.0, fortress_rect.end.y + 34.0), Vector2(position.x + 36.0, position.y + 34.0), lane_color.darkened(0.18), 4.0)
+			"archive_gate":
+				for rail_index in range(3):
+					var rail_y := position.y - 44.0 + float(rail_index) * 22.0
+					draw_line(Vector2(fortress_rect.end.x + 24.0, rail_y), Vector2(size.x - 12.0, rail_y), lane_color, 2.0)
+			_:
+				draw_line(Vector2(fortress_rect.end.x + 18.0, fortress_rect.end.y + 35.0), Vector2(position.x + 26.0, position.y + 35.0), lane_color, 3.0)
+
 	func _draw_enemy_symbol(enemy_id: String, position: Vector2, arrived: bool, scale_amount: float = 1.0) -> void:
 		var color := Color("#ff7f70") if arrived else Color("#d8a16e")
-		if enemy_id == "storm_front":
-			for offset in [Vector2(-18, 0), Vector2(0, -8), Vector2(19, 1)]:
-				draw_circle(position + offset * scale_amount, 17.0 * scale_amount, color.darkened(0.25))
-			draw_polyline(PackedVector2Array([position + Vector2(-4, 12) * scale_amount, position + Vector2(-12, 35) * scale_amount, position + Vector2(3, 26) * scale_amount, position + Vector2(-2, 47) * scale_amount]), color, 4.0 * scale_amount)
-		elif enemy_id == "flood_surge":
-			draw_arc(position, 28.0 * scale_amount, PI, TAU, 18, color, 7.0 * scale_amount)
-			draw_arc(position + Vector2(25, 6) * scale_amount, 22.0 * scale_amount, PI, TAU, 18, color.darkened(0.18), 6.0 * scale_amount)
-		elif enemy_id == "burrowers":
-			for radius in [10.0, 20.0, 30.0]:
-				draw_arc(position, radius * scale_amount, PI, TAU, 14, color, 3.0 * scale_amount)
-		elif enemy_id == "climbers":
-			draw_circle(position, 15.0 * scale_amount, color)
-			for angle in [0.2, 1.0, 2.1, 2.9]:
-				draw_line(position, position + Vector2(cos(angle), sin(angle)) * 30.0 * scale_amount, color, 4.0 * scale_amount)
-		elif enemy_id in ["siege_beast", "civic_guardian"]:
-			draw_circle(position, 25.0 * scale_amount, color.darkened(0.25))
-			draw_rect(Rect2(position - Vector2(24, 12) * scale_amount, Vector2(48, 28) * scale_amount), color, true)
-			draw_line(position + Vector2(-18, 15) * scale_amount, position + Vector2(-25, 35) * scale_amount, color, 7.0 * scale_amount)
-			draw_line(position + Vector2(18, 15) * scale_amount, position + Vector2(25, 35) * scale_amount, color, 7.0 * scale_amount)
-		else:
-			draw_rect(Rect2(position - Vector2(27, 14) * scale_amount, Vector2(54, 27) * scale_amount), color.darkened(0.18), true)
-			draw_rect(Rect2(position + Vector2(-8, -26) * scale_amount, Vector2(25, 13) * scale_amount), color.darkened(0.34), true)
-			draw_circle(position + Vector2(-17, 17) * scale_amount, 9.0 * scale_amount, color)
-			draw_circle(position + Vector2(18, 17) * scale_amount, 9.0 * scale_amount, color)
-			draw_line(position + Vector2(-22, -14) * scale_amount, position + Vector2(19, -27) * scale_amount, color, 5.0 * scale_amount)
+		var form := String(threat_visual_signature(enemy_id).get("form", "raider_rig"))
+		match form:
+			"storm_mass":
+				_draw_storm_mass(position, color, scale_amount)
+			"flood_crest":
+				_draw_flood_crest(position, color, scale_amount)
+			"burrower_head":
+				_draw_burrower(position, color, scale_amount)
+			"grapnel_climber":
+				_draw_climber(position, color, scale_amount)
+			"siege_beast":
+				_draw_siege_beast(position, color, scale_amount)
+			"civic_guardian":
+				_draw_civic_guardian(position, color, scale_amount)
+			_:
+				_draw_raider_rig(position, color, scale_amount)
+
+	func _draw_storm_mass(position: Vector2, color: Color, scale_amount: float) -> void:
+		for offset in [Vector2(-18, 0), Vector2(0, -8), Vector2(19, 1)]:
+			draw_circle(position + offset * scale_amount, 17.0 * scale_amount, color.darkened(0.25))
+		draw_arc(position + Vector2(1.0, -2.0) * scale_amount, 33.0 * scale_amount, PI, TAU, 18, color, 3.0 * scale_amount)
+		draw_polyline(PackedVector2Array([position + Vector2(-4, 12) * scale_amount, position + Vector2(-12, 35) * scale_amount, position + Vector2(3, 26) * scale_amount, position + Vector2(-2, 47) * scale_amount]), color, 4.0 * scale_amount)
+
+	func _draw_flood_crest(position: Vector2, color: Color, scale_amount: float) -> void:
+		var crest := PackedVector2Array([
+			position + Vector2(-42.0, 18.0) * scale_amount,
+			position + Vector2(-25.0, -12.0) * scale_amount,
+			position + Vector2(-5.0, 9.0) * scale_amount,
+			position + Vector2(16.0, -18.0) * scale_amount,
+			position + Vector2(43.0, 18.0) * scale_amount
+		])
+		draw_polyline(crest, color, 7.0 * scale_amount)
+		draw_arc(position + Vector2(20.0, 11.0) * scale_amount, 19.0 * scale_amount, PI, TAU, 14, color.darkened(0.18), 5.0 * scale_amount)
+		draw_line(position + Vector2(-44.0, 25.0) * scale_amount, position + Vector2(47.0, 25.0) * scale_amount, color.darkened(0.34), 4.0 * scale_amount)
+
+	func _draw_burrower(position: Vector2, color: Color, scale_amount: float) -> void:
+		for radius in [10.0, 20.0, 30.0]:
+			draw_arc(position, radius * scale_amount, PI, TAU, 14, color, 3.0 * scale_amount)
+		var head := PackedVector2Array([position + Vector2(-20.0, 0.0) * scale_amount, position + Vector2(0.0, -25.0) * scale_amount, position + Vector2(21.0, 0.0) * scale_amount])
+		draw_colored_polygon(head, color.darkened(0.20))
+		draw_line(position + Vector2(-18.0, -2.0) * scale_amount, position + Vector2(-32.0, -18.0) * scale_amount, color, 4.0 * scale_amount)
+		draw_line(position + Vector2(18.0, -2.0) * scale_amount, position + Vector2(32.0, -18.0) * scale_amount, color, 4.0 * scale_amount)
+
+	func _draw_climber(position: Vector2, color: Color, scale_amount: float) -> void:
+		draw_circle(position, 14.0 * scale_amount, color.darkened(0.18))
+		draw_circle(position + Vector2(-14.0, 5.0) * scale_amount, 10.0 * scale_amount, color)
+		for angle in [-1.0, -0.45, 0.15, 0.75, 1.35, 2.1]:
+			var direction := Vector2(cos(float(angle)), sin(float(angle)))
+			draw_line(position, position + direction * 31.0 * scale_amount, color, 4.0 * scale_amount)
+		draw_line(position + Vector2(9.0, -9.0) * scale_amount, position + Vector2(34.0, -31.0) * scale_amount, color.lightened(0.18), 3.0 * scale_amount)
+		draw_arc(position + Vector2(38.0, -34.0) * scale_amount, 8.0 * scale_amount, 0.2, PI + 0.2, 10, color.lightened(0.18), 3.0 * scale_amount)
+
+	func _draw_siege_beast(position: Vector2, color: Color, scale_amount: float) -> void:
+		var body := Rect2(position - Vector2(37.0, 19.0) * scale_amount, Vector2(72.0, 38.0) * scale_amount)
+		draw_rect(body, color.darkened(0.24), true)
+		var head := PackedVector2Array([position + Vector2(-43.0, -8.0) * scale_amount, position + Vector2(-62.0, 8.0) * scale_amount, position + Vector2(-35.0, 19.0) * scale_amount])
+		draw_colored_polygon(head, color)
+		draw_line(position + Vector2(-54.0, 6.0) * scale_amount, position + Vector2(-72.0, -8.0) * scale_amount, color.lightened(0.15), 5.0 * scale_amount)
+		for leg_x in [-24.0, -5.0, 18.0, 33.0]:
+			draw_line(position + Vector2(leg_x, 15.0) * scale_amount, position + Vector2(leg_x - 5.0, 39.0) * scale_amount, color, 7.0 * scale_amount)
+		for plate_index in range(3):
+			draw_line(position + Vector2(-18.0 + plate_index * 21.0, -19.0) * scale_amount, position + Vector2(-10.0 + plate_index * 21.0, -31.0) * scale_amount, color.lightened(0.08), 5.0 * scale_amount)
+
+	func _draw_civic_guardian(position: Vector2, color: Color, scale_amount: float) -> void:
+		var torso := Rect2(position - Vector2(22.0, 31.0) * scale_amount, Vector2(44.0, 58.0) * scale_amount)
+		draw_rect(torso, color.darkened(0.28), true)
+		draw_rect(torso, color, false, 4.0 * scale_amount)
+		draw_circle(position + Vector2(0.0, -42.0) * scale_amount, 15.0 * scale_amount, color.darkened(0.18))
+		draw_circle(position + Vector2(0.0, -42.0) * scale_amount, 5.0 * scale_amount, color.lightened(0.30))
+		draw_arc(position + Vector2(31.0, 0.0) * scale_amount, 25.0 * scale_amount, -PI * 0.5, PI * 0.5, 16, color, 5.0 * scale_amount)
+		draw_line(position + Vector2(-14.0, 27.0) * scale_amount, position + Vector2(-22.0, 49.0) * scale_amount, color, 7.0 * scale_amount)
+		draw_line(position + Vector2(14.0, 27.0) * scale_amount, position + Vector2(22.0, 49.0) * scale_amount, color, 7.0 * scale_amount)
+
+	func _draw_raider_rig(position: Vector2, color: Color, scale_amount: float) -> void:
+		var hull := PackedVector2Array([
+			position + Vector2(-32.0, -12.0) * scale_amount,
+			position + Vector2(27.0, -12.0) * scale_amount,
+			position + Vector2(38.0, 2.0) * scale_amount,
+			position + Vector2(30.0, 16.0) * scale_amount,
+			position + Vector2(-34.0, 16.0) * scale_amount
+		])
+		draw_colored_polygon(hull, color.darkened(0.18))
+		draw_rect(Rect2(position + Vector2(-8.0, -27.0) * scale_amount, Vector2(28.0, 15.0) * scale_amount), color.darkened(0.34), true)
+		for wheel_x in [-20.0, 22.0]:
+			draw_circle(position + Vector2(wheel_x, 20.0) * scale_amount, 10.0 * scale_amount, color)
+			draw_circle(position + Vector2(wheel_x, 20.0) * scale_amount, 4.0 * scale_amount, color.darkened(0.40))
+		draw_line(position + Vector2(-20.0, -13.0) * scale_amount, position + Vector2(25.0, -29.0) * scale_amount, color.lightened(0.12), 5.0 * scale_amount)
+		draw_line(position + Vector2(12.0, -27.0) * scale_amount, position + Vector2(36.0, -39.0) * scale_amount, color, 3.0 * scale_amount)

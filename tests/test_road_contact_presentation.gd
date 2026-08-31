@@ -64,6 +64,8 @@ func _run() -> void:
 	_expect(contact.advance_button.has_meta("long_march_audio_manual_press") and contact.intervention_buttons.all(func(button: Button) -> bool: return button.has_meta("long_march_audio_manual_press")), "contact commands should defer audio to their authoritative encounter checkpoints")
 	for enemy_id in THREAT_CASES:
 		var case: Dictionary = THREAT_CASES[enemy_id]
+		var visual_signature: Dictionary = contact.contact_canvas.threat_visual_signature(enemy_id)
+		_expect(String(visual_signature.get("enemy_id", "")) == enemy_id and not String(visual_signature.get("form", "")).is_empty() and not String(visual_signature.get("lane", "")).is_empty(), "%s should expose a stable threat silhouette and approach lane" % case.name)
 		var forecast_view := _view_for(enemy_id, false)
 		contact.configure(forecast_view)
 		_expect(contact.battle_phase_for() == "FORECAST", "%s should begin with a forecast phase" % case.name)
