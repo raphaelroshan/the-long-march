@@ -2252,6 +2252,7 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			else:
 				_set_event("Market purchase blocked: %s." % String(result.get("reason", "unknown")))
 			_refresh_ui()
+			settlement_hub.focus_station.call_deferred("quartermaster", "secondary" if bool(result.get("ok", false)) else "primary")
 		"sell_stored_shell_cannon":
 			var result := state.sell_stored_module_at_market("shell_cannon")
 			if bool(result.get("ok", false)):
@@ -2262,6 +2263,7 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			else:
 				_set_event("Market sale blocked: %s." % String(result.get("reason", "unknown")))
 			_refresh_ui()
+			settlement_hub.focus_station.call_deferred("quartermaster", "primary" if bool(result.get("ok", false)) else "secondary")
 		"buy_orchard_intel":
 			var result := state.purchase_intel("ashgate_orchard_weather_report")
 			if bool(result.get("ok", false)):
@@ -2272,6 +2274,7 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			else:
 				_set_event("Information purchase blocked: %s." % String(result.get("reason", "unknown")))
 			_refresh_ui()
+			settlement_hub.focus_station.call_deferred("signal_broker", "" if bool(result.get("ok", false)) else "primary")
 		"select_experiment_quarry":
 			_on_mastery_experiment_selected("ashgate_quarry_adaptation")
 		"select_experiment_signal":

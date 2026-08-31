@@ -382,6 +382,19 @@ func focus_default() -> void:
 	_refresh_station_detail()
 	_focus_selected_station()
 
+func focus_station(station_id: String, preferred_action: String = "") -> void:
+	if station_id not in STATION_ORDER:
+		focus_default()
+		return
+	_select_station(station_id, false)
+	if preferred_action == "primary" and primary_action_button.visible and not primary_action_button.disabled:
+		primary_action_button.grab_focus()
+		return
+	if preferred_action == "secondary" and secondary_action_button.visible and not secondary_action_button.disabled:
+		secondary_action_button.grab_focus()
+		return
+	_focus_selected_station()
+
 func configure(view: Dictionary) -> void:
 	current_view = view.duplicate(true)
 	location_label.text = "%s · FORTRESS AT REST" % String(view.get("location_name", "SETTLEMENT")).to_upper()

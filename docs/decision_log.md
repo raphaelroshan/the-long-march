@@ -1214,3 +1214,7 @@ Ashgate's Quartermaster begins with one buy offer and one sale offer rather than
 ## 2026-09-01 — Hiring posts advertise existing encounters instead of bypassing them
 
 Ashgate's Hiring Post now presents Iven Pell as a verified lead at Broken Relay, including every join condition and implemented effect, but provides no recruit button. Recruitment remains attached to the repaired relay where its fiction and mechanical consequence are visible together. This was chosen over remote hiring because the opening bazaar should support informed preparation without flattening authored locations into interchangeable menus.
+
+## 2026-09-01 — Transaction receipts retain local focus
+
+After a Quartermaster or Signal Broker transaction, focus now returns to that station's next valid action or landmark instead of falling through to the settlement's default assignment. The assignment remains the normal entry focus. This was chosen because an atomic receipt is only useful when the player has time to read it, and because focus recovery should preserve local intent rather than silently redirecting the next controller confirmation.

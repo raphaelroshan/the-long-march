@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.333`
+**Current code baseline:** `0.3.0-alpha.334`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.333`, preserving the complete causal journey and private-alpha evidence workflow while making every opening Ashgate bazaar station purposeful: the Quartermaster trades bounded stock, the Signal Broker sells sourced route intel, and the Hiring Post explains where Iven Pell can be found, every join condition, and his exact operational contribution without inventing remote recruitment.
+**Current merged baseline:** `0.3.0-alpha.334`, preserving the complete causal journey and private-alpha evidence workflow while making every opening Ashgate bazaar station purposeful and keeping transaction focus on the station receipt after a buy or sale. The player can read what changed and take the remaining local action before returning to the required assignment.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
