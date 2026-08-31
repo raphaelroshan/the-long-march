@@ -143,3 +143,8 @@ The broader fortress plan is documented separately so agents can implement it in
 - [`design/characters_factions_and_campaign.md`](design/characters_factions_and_campaign.md) — crew, rivals, factions, campaign pressures, regional arcs, and endings.
 
 The machine-readable campaign manifest now includes regions, settlements, extended character hooks, map rules, and authored events. Ashgate Lowlands and Flooded Veyru each have runtime graphs, regional pressure, contracts, recovery, finales, save validation, and deterministic tests; the remaining regions are design targets until implemented to the same standard.
+
+
+## Temporary asset kit
+
+The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). These assets support journey breadth, transition timing, and feel testing; they are not the final moving-fortress or settlement art direction.

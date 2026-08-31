@@ -12,3 +12,8 @@ The first journey slice uses an original hand-inked 2D industrial-fantasy direct
 | `signal_coil_icon.png` | 512×512 | Recon identity; reveals the encounter target class | Integrated in the module strip |
 
 These are first-pass generated project assets, not final animation sheets or a complete production tileset. The PNG files are stored as repository source content because they are used by the prototype and remain below the project’s artifact-size policy threshold. Godot import metadata, local saves, build output, and temporary scripts remain excluded from version control. No third-party images or credentials were added.
+
+
+## Temporary testing kit
+
+The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Town, Interface Sounds, RPG Audio, and a curated Particle Pack subset. These files support settlement breadth, travel transitions, journey timing, animation tests, and audio feedback; they are explicitly not the final moving-fortress, settlement, or machine sound identity.
