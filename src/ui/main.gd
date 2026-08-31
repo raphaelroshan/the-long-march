@@ -2436,7 +2436,9 @@ func _focus_first_campaign_event_choice() -> void:
 func _on_recruit_iven_pressed() -> void:
 	var result := state.recruit_iven_pell()
 	if bool(result.get("ok", false)):
-		_set_event("Iven Pell joins the fortress as signal officer.")
+		var message := "Iven Pell joins as signal officer. Exact immediate contacts are revealed; route risk and storm pressure are reduced."
+		last_journey_receipt = "SPECIALIST · %s · 12 Ashmarks spent" % message
+		_set_event(message)
 		_journal_event("specialist_recruited", {"specialist": "iven_pell"})
 		_checkpoint("specialist_recruited")
 	else:
