@@ -118,6 +118,7 @@ func _relaunch_and_continue(expected_surface: String) -> void:
 		"arrival":
 			_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "Continue should restore the pending arrival and its action focus")
 			_expect(game.last_journey_receipt.begins_with("ROAD"), "arrival resume should preserve the resolved-road receipt")
+			_expect(String(game.journey_arrival.current_view.get("destination_id", "")) == "rill_crossing" and String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("motif", "")) == "crossing", "arrival resume should preserve the exact destination tableau")
 		_:
 			_expect(false, "unknown relaunch surface: " + expected_surface)
 
@@ -169,6 +170,7 @@ func _resolve_contact(expected_phase: String) -> void:
 		await _settle()
 	_expect(not game.state.encounter_active and game.state.phase == expected_phase, "visible contact steps should resolve into " + expected_phase)
 	_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "a resolved contact should stop at a focused arrival receipt")
+	_expect(not String(game.journey_arrival.current_view.get("destination_id", "")).is_empty() and not String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("marker", "")).is_empty(), "arrival should preserve a stable destination identity for the center-stage tableau")
 	_expect_semantic_cue("debrief" if expected_phase == "results" else "arrival", "the resolved road should announce arrival or Debrief with its semantic cue")
 
 
@@ -374,6 +376,7 @@ func _run_ashgate_journey() -> void:
 	await _commit_route("meridian_pass")
 	await _enter_contact()
 	await _resolve_contact("results")
+	_expect(String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("motif", "")) == "finale" and String(game.journey_arrival.current_view.get("destination_id", "")) == "meridian_pass", "the final Ashgate arrival should use the Meridian Pass threshold composition")
 	await _capture("12_final_arrival")
 	await _acknowledge_arrival()
 	_expect(game.state.run_complete and game.state.campaign_encounters_completed == 5, "the player-facing journey should complete all five encounters")

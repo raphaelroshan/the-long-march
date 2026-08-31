@@ -1096,3 +1096,7 @@ Settlement, route, contact, recovery, and debrief view dictionaries now come fro
 ## 2026-08-30 — Cinder Quarry trades a mixed contact for repair
 
 Cinder Quarry is a fourth post-Morrowline road and a one-node branch to Meridian Pass. It spends one day, two fuel, and one blockade pressure to face Road Raiders above the road and Burrowers below it. Victory restores up to two durability to the weakest damaged installed system; if nothing is damaged, the recovered plate sells for eight Ashmarks. The result uses no new persistent field and is written into the normal encounter report. This was chosen over a new threat or facility because the slice tests whether existing cargo, lower-hull, doctrine, armor, and recovery systems create a meaningful new plan when recombined.
+
+## 2026-08-31 — Arrival inherits the destination instead of a generic wall
+
+The resolved arrival snapshot now retains the authoritative origin ID, destination ID, and destination kind. The arrival canvas maps that ID to a presentation-only regional motif—crossing, camp, relay, salvage site, industrial works, final pass, or archive threshold—while keeping the fortress and applied consequence receipt unchanged. Tutorial recovery uses its own siding marker, and saved arrivals restore the same composition. This was chosen over a cinematic arrival state machine or unrelated backdrop art because reaching a place should be visibly specific without delaying Continue, duplicating route logic, or allowing animation to decide campaign state.

@@ -3014,11 +3014,13 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 	var destination_id := String(result.get("recovered_to", state.current_location)) if retreat else String(before.get("destination_id", state.current_location))
 	if destination_id.is_empty():
 		destination_id = state.current_location
+	var destination_definition: Dictionary = LongMarchState.JOURNEY_NODES.get(destination_id, {})
 	var origin_name := String(LongMarchState.JOURNEY_NODES.get(origin_id, {}).get("name", origin_id.replace("_", " ").capitalize()))
-	var destination_name := String(LongMarchState.JOURNEY_NODES.get(destination_id, {}).get("name", destination_id.replace("_", " ").capitalize()))
+	var destination_name := String(destination_definition.get("name", destination_id.replace("_", " ").capitalize()))
 	if tutorial_mode:
 		origin_name = "Ashgate Muster Yard"
 		destination_name = "Muster Road Recovery Siding"
+		destination_id = "muster_recovery_siding"
 	var snapshot := state.summary()
 	var dependencies: Dictionary = snapshot.get("dependencies", {})
 	var recent_report: Array[String] = []
@@ -3039,7 +3041,10 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 	var repair_priority := _repair_priority_view()
 	return {
 		"region_id": state.campaign_region_id,
+		"origin_id": origin_id,
 		"origin_name": origin_name,
+		"destination_id": destination_id,
+		"destination_kind": "training" if tutorial_mode else String(destination_definition.get("kind", "outpost")),
 		"destination_name": destination_name,
 		"retreat": retreat,
 		"outcome_label": "FORCED RETREAT" if retreat else outcome_copy,

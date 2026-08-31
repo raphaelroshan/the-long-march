@@ -2,6 +2,12 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.302` — Destination arrival identity
+
+[Ashgate and Veyru arrival captures](visual_evidence/v0.3.0-alpha.302-arrival-identity/) show the training siding, broken crossing, Meridian threshold, flood machinery, evacuation platform, and Dry Archive. Every composition is selected from the authoritative destination ID and keeps the same fortress and applied consequence receipt visible.
+
+These are code-native alpha silhouettes intended to test place recognition, not final location art.
+
 ## `v0.3.0-alpha.301` — Temporary travel atmosphere
 
 [Departure, full-march, and contact-approach captures](visual_evidence/v0.3.0-alpha.301-temporary-travel-atmosphere/) show the new beat-specific pace, temporary tinted road atmosphere, and static contact brace. The route receipt and named contact remain authoritative; the effects do not drive simulation.
