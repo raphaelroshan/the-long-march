@@ -7,6 +7,7 @@ var failures: Array[String] = []
 var return_to_title_requested: bool = false
 var last_checkpoint_reason: String = ""
 var arrival_resume_tested: bool = false
+var capture_dir: String = ""
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -18,6 +19,17 @@ func _mark_return_to_title_requested() -> void:
 func _record_checkpoint(reason: String) -> void:
 	last_checkpoint_reason = reason
 
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "prototype-flow capture requires a rendering display: " + name)
+		return
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "prototype-flow capture should be written: " + name)
+
 func _module_picker_index(module_id: String) -> int:
 	for index in range(game.module_option.item_count):
 		if String(game.module_option.get_item_metadata(index)) == module_id:
@@ -25,6 +37,7 @@ func _module_picker_index(module_id: String) -> int:
 	return -1
 
 func _init() -> void:
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	call_deferred("_run")
 
 func _press_campaign_node(node_id: String) -> void:
@@ -687,8 +700,18 @@ func _run() -> void:
 	await _press_campaign_event("move_silent")
 	_expect(game.event_label.text.contains("pressure falls by 1") and game.event_label.text.contains("risk falls by 3%"), "event resolution should immediately explain its mechanical consequences")
 	_expect(game.encounter_label.text.begins_with("DECISION CONSEQUENCE") and game.encounter_label.text.contains("risk falls by 3%"), "the event consequence should appear above the fold immediately after selection")
-	_expect(game.recruit_iven_button.visible and game.recruit_iven_button.disabled and game.recruit_iven_button.text.contains("RELAY IS RESTORED"), "unavailable specialist recruitment should state its unmet requirement without hover")
-	_expect(game.recruit_iven_button.text.contains("REVEAL CONTACTS") and game.recruit_iven_button.text.contains("ANTI-STORM DAMAGE +2"), "locked recruitment should still disclose Iven's exact route and combat benefits")
+	_expect(game.recruit_iven_button.is_visible_in_tree() and game.recruit_iven_button.get_parent() == game.journey_planner.specialist_panel.get_child(0) and game.recruit_iven_button.disabled and game.recruit_iven_button.text.contains("RELAY IS RESTORED"), "unavailable specialist recruitment should remain visible inside the active journey planner and state its unmet requirement without hover")
+	_expect(game.journey_planner.specialist_panel.visible and game.journey_planner.specialist_name_label.text == "IVEN PELL" and game.journey_planner.specialist_effect_label.text.contains("REVEAL CONTACTS") and game.journey_planner.specialist_effect_label.text.contains("ANTI-STORM DAMAGE +2"), "the Broken Relay planner should introduce Iven as a named signal officer and disclose his exact route and combat benefits")
+	_expect(game.journey_planner.specialist_portrait.presentation_signature() == "IVEN_PELL · SIGNAL OFFICER · LOCKED", "Iven's locked offer should retain a stable character silhouette and status")
+	await _capture("01_iven_offer_locked")
+	game.state.relay_repaired = true
+	game._refresh_ui()
+	game.focus_current_action()
+	await process_frame
+	_expect(not game.recruit_iven_button.disabled and game.recruit_iven_button.has_focus() and game.journey_planner.specialist_portrait.presentation_signature() == "IVEN_PELL · SIGNAL OFFICER · READY", "a restored relay should make the named Iven offer the planner's default actionable focus")
+	await _capture("02_iven_offer_ready")
+	game.state.relay_repaired = false
+	game._refresh_ui()
 	_expect(game.campaign_map.status_for("morrowline_camp") == "available", "resolving the relay decision should activate Morrowline")
 	await _press_campaign_node("morrowline_camp")
 	await _advance_until_phase("settlement")
@@ -703,6 +726,7 @@ func _run() -> void:
 	game._refresh_ui()
 	await process_frame
 	_expect(game.state.campaign_event_pending == "mara_meeting" and game.campaign_event_title.text == "THE FORGE WITHOUT A ROOF", "Mara's meeting should interrupt Morrowline departure through the existing event card")
+	_expect(game.roadside_event.story_label.text.contains("MARA FLINT · FORGE MASTER") and game.roadside_event.tableau.character_signature() == "MARA FLINT · FORGE MASTER · REPAIR BEFORE SACRIFICE", "Mara's meeting should introduce the named forge master and her repair-first belief in the active roadside tableau")
 	game._show_onboarding(true)
 	await process_frame
 	_expect(game.onboarding_step == 3 and game.onboarding_title_label.text == "Keep repairs staffed", "Mara's settlement decision should reopen Field Briefing at the repair topic")

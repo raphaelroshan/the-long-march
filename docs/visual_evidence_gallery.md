@@ -202,3 +202,13 @@ The compact portraits make the selected service feel staffed while retaining the
 | Pump Gallery | [Gallery wheel passing](visual_evidence/v0.3.0-alpha.310-route-landmarks/03_pump_gallery_travel.png) | `ff53f02dcb99150d4579c4507ae6ef2cd7a5062c99704b8f0e0aa201efddc88f` |
 
 The short travel beat now uses the destination ID already present in the route receipt to select a stable landmark. These images verify authored route identity without claiming that the code-native scenery is final production art.
+
+## `v0.3.0-alpha.313` — Named specialist identity
+
+| Specialist state | Evidence | SHA-256 |
+|---|---|---|
+| Iven offer locked | [Broken Relay signal-officer card](visual_evidence/v0.3.0-alpha.313-specialist-identity/01_iven_offer_locked.png) | `46f66906694fae9af6b682577efd2cd7d30b872c9423a21ca5a3bc34e789290b` |
+| Iven ready to join | [Focused recruitment action](visual_evidence/v0.3.0-alpha.313-specialist-identity/02_iven_offer_ready.png) | `c938df6f643dc836c67369cf71ec02cf2fee2d82675b65322902e66eecf2ac14` |
+| Mara at the open forge | [Morrowline recruitment decision](visual_evidence/v0.3.0-alpha.313-specialist-identity/04_mara_meeting.png) | `702d6a0f0ab5109302da54ce07ad9e9780e6143f148b193d7f467f081f395745` |
+
+Iven's card is part of the live route planner and remains legible in both locked and ready states. Mara's silhouette, apron, hammer, and forge persist across her authored chain. The captures verify identity, placement, and focus—not final character illustration or human recall.

@@ -17,6 +17,13 @@ var comparison_stack: VBoxContainer
 var detail_scroll: ScrollContainer
 var detail_stack: VBoxContainer
 var action_host: VBoxContainer
+var specialist_panel: PanelContainer
+var specialist_portrait: SpecialistPortrait
+var specialist_name_label: Label
+var specialist_role_label: Label
+var specialist_belief_label: Label
+var specialist_effect_label: Label
+var specialist_action: Button
 var campaign_map: Control
 var high_contrast_enabled: bool = false
 var controller_cancel_label: String = "B"
@@ -169,6 +176,42 @@ func _build_ui() -> void:
 	receipt_label.add_theme_font_size_override("font_size", 10)
 	receipt_label.add_theme_color_override("font_color", Color("#a8d8bf"))
 	receipt_panel.add_child(receipt_label)
+	specialist_panel = PanelContainer.new()
+	specialist_panel.visible = false
+	specialist_panel.add_theme_stylebox_override("panel", _flat_style(Color("#17262a"), Color("#5c9d97"), 2, 5, 7))
+	detail_stack.add_child(specialist_panel)
+	var specialist_stack := VBoxContainer.new()
+	specialist_stack.add_theme_constant_override("separation", 5)
+	specialist_panel.add_child(specialist_stack)
+	var specialist_row := HBoxContainer.new()
+	specialist_row.add_theme_constant_override("separation", 9)
+	specialist_stack.add_child(specialist_row)
+	specialist_portrait = SpecialistPortrait.new()
+	specialist_portrait.custom_minimum_size = Vector2(72, 72)
+	specialist_row.add_child(specialist_portrait)
+	var specialist_copy := VBoxContainer.new()
+	specialist_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	specialist_copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	specialist_copy.add_theme_constant_override("separation", 1)
+	specialist_row.add_child(specialist_copy)
+	specialist_name_label = Label.new()
+	specialist_name_label.add_theme_font_size_override("font_size", 17)
+	specialist_name_label.add_theme_color_override("font_color", Color("#e8c58e"))
+	specialist_copy.add_child(specialist_name_label)
+	specialist_role_label = Label.new()
+	specialist_role_label.add_theme_font_size_override("font_size", 9)
+	specialist_role_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	specialist_copy.add_child(specialist_role_label)
+	specialist_belief_label = Label.new()
+	specialist_belief_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	specialist_belief_label.add_theme_font_size_override("font_size", 10)
+	specialist_belief_label.add_theme_color_override("font_color", Color("#c8d1d1"))
+	specialist_copy.add_child(specialist_belief_label)
+	specialist_effect_label = Label.new()
+	specialist_effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	specialist_effect_label.add_theme_font_size_override("font_size", 10)
+	specialist_effect_label.add_theme_color_override("font_color", Color("#a8d8bf"))
+	specialist_stack.add_child(specialist_effect_label)
 	action_host = VBoxContainer.new()
 	action_host.add_theme_constant_override("separation", 6)
 	detail_column.add_child(action_host)
@@ -193,7 +236,7 @@ func _add_value_card(parent: VBoxContainer, value_id: String) -> void:
 	row.add_child(value)
 	value_labels[value_id] = value
 
-func attach_route_controls(map_control: Control, comparison: Control, route_preview: Control, doctrine: Control, doctrine_detail: Control, commit_intel: Control, action_row: Control) -> void:
+func attach_route_controls(map_control: Control, comparison: Control, route_preview: Control, doctrine: Control, doctrine_detail: Control, commit_intel: Control, action_row: Control, specialist_button: Button) -> void:
 	campaign_map = map_control
 	map_control.set("compact_commit_labels", true)
 	map_control.reparent(map_host, false)
@@ -205,6 +248,10 @@ func attach_route_controls(map_control: Control, comparison: Control, route_prev
 	doctrine_detail.reparent(detail_stack, false)
 	commit_intel.reparent(detail_stack, false)
 	action_row.reparent(action_host, false)
+	specialist_action = specialist_button
+	specialist_button.reparent(specialist_panel.get_child(0), false)
+	specialist_button.custom_minimum_size = Vector2(0, 54)
+	specialist_button.add_theme_font_size_override("font_size", 10)
 	for control in [route_preview, doctrine, doctrine_detail, commit_intel, action_row]:
 		control.custom_minimum_size.x = 0
 		control.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -217,6 +264,18 @@ func configure(view: Dictionary) -> void:
 	order_label.text = String(view.get("order", "Inspect a reachable road. Selection is reversible; Commit begins travel."))
 	receipt_label.text = String(view.get("receipt", ""))
 	receipt_label.get_parent().visible = not receipt_label.text.is_empty()
+	var specialist_offer: Dictionary = view.get("specialist_offer", {})
+	specialist_panel.visible = bool(specialist_offer.get("visible", false))
+	if specialist_panel.visible:
+		specialist_name_label.text = String(specialist_offer.get("name", "SPECIALIST")).to_upper()
+		specialist_role_label.text = "%s · %s" % [String(specialist_offer.get("role", "ROAD SPECIALIST")).to_upper(), String(specialist_offer.get("status", "OFFER")).to_upper()]
+		specialist_belief_label.text = String(specialist_offer.get("belief", "A specialist offers to join the march."))
+		specialist_effect_label.text = String(specialist_offer.get("effect", "Review the practical effect before recruiting."))
+		specialist_portrait.specialist_id = String(specialist_offer.get("id", ""))
+		specialist_portrait.available = bool(specialist_offer.get("available", false))
+		specialist_portrait.high_contrast_enabled = high_contrast_enabled
+		specialist_portrait.tooltip_text = "%s · %s" % [specialist_name_label.text.capitalize(), specialist_role_label.text.capitalize()]
+		specialist_portrait.queue_redraw()
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))
@@ -230,6 +289,9 @@ func configure(view: Dictionary) -> void:
 	pause_button.tooltip_text = "Pause with this button. %s or Escape clears the selected route first." % controller_cancel_label if route_selected else "Pause the march without committing a route."
 
 func focus_default() -> void:
+	if specialist_panel.visible and specialist_action != null and specialist_action.is_visible_in_tree() and not specialist_action.disabled:
+		specialist_action.grab_focus()
+		return
 	if campaign_map == null:
 		return
 	for button in campaign_map.node_buttons:
@@ -249,8 +311,44 @@ func reveal_commit_context() -> void:
 
 func set_high_contrast(enabled: bool) -> void:
 	high_contrast_enabled = enabled
+	if specialist_portrait != null:
+		specialist_portrait.high_contrast_enabled = enabled
+		specialist_portrait.queue_redraw()
 
 func set_controller_cancel_label(cancel_label: String) -> void:
 	controller_cancel_label = cancel_label
 	if pause_button != null:
 		pause_button.text = "PAUSE · ESC / %s" % controller_cancel_label
+
+class SpecialistPortrait extends Control:
+	var specialist_id: String = ""
+	var available: bool = false
+	var high_contrast_enabled: bool = false
+
+	func _draw() -> void:
+		var border := Color.WHITE if high_contrast_enabled else Color("#8ddbd0")
+		var background := Color("#071013") if high_contrast_enabled else Color("#162b30")
+		draw_rect(Rect2(Vector2.ZERO, size), background, true)
+		draw_rect(Rect2(Vector2.ONE, size - Vector2(2, 2)), border, false, 2.0)
+		var center := Vector2(size.x * 0.43, size.y * 0.42)
+		var skin := Color.WHITE if high_contrast_enabled else Color("#d9bd82")
+		var coat := Color("#315c61") if available else Color("#39494c")
+		draw_circle(center - Vector2(0, 15), 8.0, skin)
+		draw_line(center - Vector2(7, 22), center + Vector2(8, -22), Color("#273337"), 5.0)
+		var shoulders := PackedVector2Array([
+			center + Vector2(-16, 0),
+			center + Vector2(15, 0),
+			center + Vector2(21, 27),
+			center + Vector2(-22, 27)
+		])
+		draw_colored_polygon(shoulders, coat)
+		draw_polyline(PackedVector2Array([shoulders[0], shoulders[1], shoulders[2], shoulders[3], shoulders[0]]), border, 2.0)
+		var mast := center + Vector2(22, -2)
+		draw_line(mast + Vector2(0, 27), mast + Vector2(0, -16), border, 3.0)
+		for radius in [8.0, 14.0]:
+			draw_arc(mast + Vector2(0, -14), radius, -1.15, 1.15, 12, Color(border.r, border.g, border.b, 0.75), 2.0)
+		var lamp := Color("#fff1c9") if available or high_contrast_enabled else Color("#75878a")
+		draw_circle(Vector2(size.x - 12, 12), 4.0, lamp)
+
+	func presentation_signature() -> String:
+		return "%s · SIGNAL OFFICER · %s" % [specialist_id.to_upper(), "READY" if available else "LOCKED"]
