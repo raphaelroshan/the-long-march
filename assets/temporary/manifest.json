@@ -1,0 +1,42 @@
+{
+  "status": "temporary-testing-kit",
+  "game": "the-long-march",
+  "sources": [
+    {
+      "id": "kenney-tiny-town",
+      "source_url": "https://kenney.nl/assets/tiny-town",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-tiny-town.txt",
+      "local_path": "assets/temporary/kenney/tiny-town",
+      "uses": ["settlement filler", "route plate", "travel background", "journey layout reference"],
+      "deficiency": "Cute 16x16 pixel language; not final moving-fortress identity."
+    },
+    {
+      "id": "kenney-interface-sounds",
+      "source_url": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-interface-sounds.txt",
+      "local_path": "assets/temporary/kenney/interface-sounds",
+      "uses": ["route commitment", "arrival", "recovery", "Debrief and navigation feedback"],
+      "deficiency": "Generic UI vocabulary; not final engine, hull, or frontier identity."
+    },
+    {
+      "id": "kenney-rpg-audio",
+      "source_url": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-rpg-audio.txt",
+      "local_path": "assets/temporary/kenney/rpg-audio",
+      "uses": ["temporary footsteps", "doors", "cloth", "weapon and material foley"],
+      "deficiency": "Lacks engine hum, hull creaks, wheel or track rhythm, steam, and braking character."
+    },
+    {
+      "id": "kenney-particle-pack",
+      "source_url": "https://kenney.nl/assets/particle-pack",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-particle-pack.txt",
+      "local_path": "assets/temporary/kenney/particle-pack",
+      "uses": ["steam", "travel dust", "damage smoke", "contact impact", "repair accents"],
+      "deficiency": "Generic effect language; tint toward the project machine and frontier palette."
+    }
+  ]
+}
