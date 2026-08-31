@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.330` structured-outcome-facts candidate |
+| Build | `0.3.0-alpha.331` authored-route-intel candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -24,6 +24,7 @@
 | Iven full journey | PASS: workshop-for-signal refit, relay restoration, recruitment, Morrowline berth exclusion, Signal Causeway, final commitment, and Debrief are completed through visible controls |
 | Route commitment state | PASS: focus-only browsing is labeled as a no-cost Road Dossier; node activation changes the dock and stage to Selected Road before Commit |
 | Route cost receipt | PASS: the selected destination projects exact day, fuel, pressure, risk, and heat values in the map center without mutating state |
+| Authored route intel | PASS: the Ashgate report spends exactly 8 Ashmarks, persists as a stable sourced record, reveals only Soot Orchard contact/counter fields, and leaves risk, encounter difficulty, pressure, fuel, and time unchanged |
 | Live counter readiness | PASS: contact presentation distinguishes ready, offline, and missing module answers; Iven remains a visible Storm Front counter |
 | Threat risk preview | PASS: all seven threat families retain a specific pre-impact `RISK IF IGNORED` statement through forecast, response, and high-contrast presentation |
 | Contact response posture | PASS: ready, offline, missing, and spent-order states each produce a concrete inspection/order/advance prompt without changing authoritative combat |
@@ -54,6 +55,8 @@
 - [`Iven full-flow report`](iven_full_flow_report.md)
 - [`Route browse-state report`](route_browse_state_report.md)
 - [`Route cost receipt report`](route_cost_receipt_report.md)
+- [`Authored route intel report`](authored_route_intel_report.md)
+- [`Authored route intel visual evidence`](visual_evidence/v0.3.0-alpha.331-authored-route-intel/)
 - [`Live counter readiness report`](live_counter_readiness_report.md)
 - [`Threat risk preview report`](threat_risk_preview_report.md)
 - [`Contact response posture report`](contact_response_posture_report.md)
@@ -85,6 +88,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.330 pairs the tester's causal account with exact terminal-system and threat facts while leaving agreement and comprehension judgments to the observer.
+The updated strategy remains intact. Alpha.331 makes the Signal Broker a real, bounded bazaar service while preserving simulation authority and separating purchased knowledge from operational forecasting advantages.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

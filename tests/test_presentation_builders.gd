@@ -28,7 +28,7 @@ func _init() -> void:
 	_expect(settlement.get("stations", {}).keys().size() == 6, "settlement presenter should preserve all six stable station contracts")
 	_expect(settlement.get("stations", {}).get("assignment_board", {}).get("primary", {}).get("id") == "accept_assignment" and settlement.get("stations", {}).get("departure_gate", {}).get("primary", {}).get("id") == "plan_journey", "settlement presenter should preserve stable assignment and route command IDs")
 	_expect(String(settlement.get("stations", {}).get("assignment_board", {}).get("body", "")).contains("only 1 service action") and String(settlement.get("stations", {}).get("assignment_board", {}).get("secondary", {}).get("tooltip", "")).contains("only 1 service action"), "the assignment board should disclose the exact later shortage before decline")
-	_expect(settlement.get("stations", {}).get("signal_broker", {}).get("primary", {}).get("id") == "select_experiment_quarry" and settlement.get("stations", {}).get("signal_broker", {}).get("secondary", {}).get("id") == "select_experiment_signal", "the Marchmaster's Desk should expose two stable optional mastery orders")
+	_expect(settlement.get("stations", {}).get("signal_broker", {}).get("primary", {}).get("id") == "buy_orchard_intel" and String(settlement.get("stations", {}).get("signal_broker", {}).get("body", "")).contains("information only"), "the Signal Broker should expose one stable authored report and disclose that it changes no route costs")
 	_expect_pure(state, before, "settlement presenter")
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
@@ -42,6 +42,8 @@ func _init() -> void:
 	_expect_pure(state, before, "route planner presenter")
 	state.guard_contract_status = "accepted"
 	var accepted_marker_before := state.serialize()
+	var decided_settlement := SettlementPresenter.build(state, snapshot, fortress)
+	_expect(decided_settlement.get("stations", {}).get("assignment_board", {}).get("primary", {}).get("id") == "select_experiment_quarry" and decided_settlement.get("stations", {}).get("assignment_board", {}).get("secondary", {}).get("id") == "select_experiment_signal", "the resolved assignment desk should retain both optional mastery orders after the required contract choice")
 	var accepted_markers := RoutePresenter.build_assignment_markers(state)
 	_expect(accepted_markers.get("morrowline_camp", {}).get("status") == "accepted" and accepted_markers.get("morrowline_camp", {}).get("title") == "CONVOY GUARD", "the route presenter should carry the accepted convoy obligation onto its destination")
 	_expect_pure(state, accepted_marker_before, "assignment marker presenter")

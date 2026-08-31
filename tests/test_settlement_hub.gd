@@ -67,12 +67,15 @@ func _run() -> void:
 
 	hub.station_buttons["signal_broker"].pressed.emit()
 	await process_frame
-	_expect(hub.detail_title.text == "MARCHMASTER'S DESK" and hub.primary_action_button.text.contains("QUARRY") and hub.secondary_action_button.text.contains("SIGNAL"), "Ashgate's signal stall should expose two optional field experiments")
-	var mastery_resources := {"day": game.state.day, "fuel": game.state.fuel, "money": game.state.money}
-	hub.secondary_action_button.pressed.emit()
+	_expect(hub.detail_title.text == "ORCHARD WEATHER REPORT" and hub.primary_action_button.text == "BUY REPORT · 8 ASHMARKS" and hub.detail_body.text.contains("information only"), "Ashgate's Signal Broker should sell one explicit report without implying a mechanical route discount")
+	var intel_risk_before := float(game.state.campaign_node_preview("soot_orchard").get("risk", 0.0))
+	hub.primary_action_button.pressed.emit()
 	await _settle_ui()
-	_expect(game.state.mastery_experiment_id == "ashgate_signal_discipline" and hub.context_label.text.contains("FIELD ORDER: SIGNAL DISCIPLINE"), "choosing Signal Discipline should retain the optional order in the bazaar context")
-	_expect(mastery_resources == {"day": game.state.day, "fuel": game.state.fuel, "money": game.state.money}, "choosing a field experiment should not grant or spend run resources")
+	hub.station_buttons["signal_broker"].pressed.emit()
+	await process_frame
+	_expect(game.state.money == 72 and game.state.acquired_intel_ids == ["ashgate_orchard_weather_report"] and hub.detail_status.text == "REPORT ACQUIRED", "buying the report should spend exactly 8 Ashmarks and leave a visible acquired receipt")
+	_expect(float(game.state.campaign_node_preview("soot_orchard").get("risk", 0.0)) == intel_risk_before and hub.detail_body.text.contains("RELIABLE"), "the purchased report should expose confidence without changing route risk")
+	await _capture("02b_signal_report")
 
 	hub.station_buttons["assignment_board"].pressed.emit()
 	await process_frame
@@ -82,6 +85,15 @@ func _run() -> void:
 	_expect(game.state.guard_contract_status == "accepted" and hub.visible, "accepting through the bazaar should use the existing campaign contract state")
 	_expect(hub.context_label.text.begins_with("ASSIGNMENT RECEIPT") and hub.context_label.text.contains("Morrowline convoy guard accepted"), "the settlement should retain a concise visible receipt after the assignment decision")
 	_expect(hub.station_buttons["departure_gate"].has_focus() and hub.station_buttons["departure_gate"].text.contains("PLAN JOURNEY"), "answering the assignment should hand focus to the now-open departure gate")
+
+	hub.station_buttons["assignment_board"].pressed.emit()
+	await process_frame
+	_expect(hub.detail_title.text == "MARCHMASTER'S ORDERS" and hub.primary_action_button.text.contains("QUARRY") and hub.secondary_action_button.text.contains("SIGNAL"), "the resolved assignment desk should expose both optional field experiments")
+	var mastery_resources := {"day": game.state.day, "fuel": game.state.fuel, "money": game.state.money}
+	hub.secondary_action_button.pressed.emit()
+	await _settle_ui()
+	_expect(game.state.mastery_experiment_id == "ashgate_signal_discipline" and hub.context_label.text.contains("FIELD ORDER: SIGNAL DISCIPLINE"), "choosing Signal Discipline should retain the optional order in the bazaar context")
+	_expect(mastery_resources == {"day": game.state.day, "fuel": game.state.fuel, "money": game.state.money}, "choosing a field experiment should not grant or spend run resources")
 
 	hub.station_buttons["departure_gate"].pressed.emit()
 	await process_frame
@@ -112,11 +124,14 @@ func _run() -> void:
 	await process_frame
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui(2)
-	game.campaign_map.button_for("rill_crossing").pressed.emit()
+	game.campaign_map.button_for("soot_orchard").pressed.emit()
 	await _settle_ui(2)
 	_expect(game.journey_planner.detail_heading.text == "SELECTED ROAD" and game.journey_planner.route_stage_label.text == "ROUTE SELECTED · REVIEW COSTS → COMMIT", "route selection should visibly distinguish review from commitment")
-	_expect(game.journey_planner.route_selection_label.text.contains("SELECTION PREVIEW · RILL CROSSING") and game.journey_planner.route_selection_label.text.contains("DAY 1→2") and game.journey_planner.route_selection_label.text.contains("FUEL 6→5") and game.journey_planner.route_selection_label.text.contains("PRESSURE 0→1") and game.journey_planner.route_selection_label.text.contains("LOW RISK 14%"), "the selected road should restate exact before-and-after costs in the map center before commitment")
+	_expect(game.journey_planner.route_selection_label.text.contains("SELECTION PREVIEW · THE SOOT ORCHARD") and game.journey_planner.route_selection_label.text.contains("DAY 1→3") and game.journey_planner.route_selection_label.text.contains("FUEL 6→4") and game.journey_planner.route_selection_label.text.contains("PRESSURE 0→1") and game.journey_planner.route_selection_label.text.contains("GUARDED RISK 27%"), "the selected road should restate exact before-and-after costs in the map center before commitment")
+	_expect(game.campaign_commit_intel_label.text.contains("KNOWN CONTACTS · Storm Front") and game.campaign_commit_intel_label.text.contains("SOURCE · ASHGATE SIGNAL READER · RELIABLE"), "the selected Orchard dossier should show the purchased contact, source, and confidence before Commit")
 	await _capture("03b_route_selected")
+	game.campaign_map.button_for("rill_crossing").pressed.emit()
+	await _settle_ui(2)
 	game.campaign_commit_button.pressed.emit()
 	await _settle_ui()
 	var journey = game.journey_transition
