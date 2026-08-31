@@ -97,10 +97,13 @@ func _run() -> void:
 	_expect(game.settlement_hub.context_label.text.contains("LANTERN QUAY FLOOD MARKET") and game.settlement_hub.bazaar_canvas.presentation_signature().contains("FLOOD DOCK"), "Lantern Quay's starting bazaar should identify its raised flood-market setting")
 	_expect(game.settlement_hub.place_identity_label.text.contains("FLOODLINE MARKET") and game.settlement_hub.pressure_label.text.contains("RISING WATER") and game.settlement_hub.route_meaning_label.text.contains("Pump Gallery") and game.settlement_hub.route_meaning_label.text.contains("Sunken Tramworks"), "Lantern Quay should state its place, active water pressure, and the meaning of both opening roads")
 	_expect(game.settlement_hub.bazaar_canvas.route_signature() == "PUMP GALLERY · SUNKEN TRAMWORKS", "Lantern Quay's center stage should carry a visible two-road departure sign")
+	_expect(game.settlement_hub.attendant_label.text == "ATTENDANT · MEDICINE COURIER" and game.settlement_hub.attendant_portrait.presentation_signature() == "LANTERN_QUAY · ASSIGNMENT_BOARD · MEDICINE COURIER", "Lantern Quay's initial assignment should have a place-specific human representative")
 	await _capture("02_lantern_quay")
 	game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
 	await process_frame
+	_expect(game.settlement_hub.attendant_label.text == "ATTENDANT · LANTERN READER" and game.settlement_hub.attendant_portrait.presentation_signature().contains("SIGNAL_BROKER"), "the Veyru signal stall should replace the courier with its own attendant and prop")
 	_expect(game.settlement_hub.detail_body.text.contains("water levels") and game.settlement_hub.detail_body.text.contains("archive signals"), "Lantern Quay's signal service should reflect its local route problem")
+	await _capture("02b_lantern_signal")
 	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
 	await process_frame
 	_expect(game.settlement_hub.visible and game.settlement_hub.primary_action_button.has_focus() and game.settlement_hub.detail_body.text.contains("Parts Crate"), "the opening bazaar should expose and name the medicine carrier after inspecting another local service")

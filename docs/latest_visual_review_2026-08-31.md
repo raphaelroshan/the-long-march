@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.307`
+**Build:** `0.3.0-alpha.309`
 
 **Engine:** Godot 4.4.1
 
@@ -18,6 +18,7 @@
 - [Route-map visual grammar](visual_evidence/v0.3.0-alpha.305-route-map-grammar/)
 - [Roadside occurrence identity](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/)
 - [Tutorial fortress continuity](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/)
+- [Bazaar attendant identity](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/)
 
 ## Findings
 
@@ -45,6 +46,8 @@ Alpha.306 removes the final generic roadside-occurrence symbol. The damaged boil
 
 Alpha.307 replaces the prologue's box-and-window placeholder with the shared fortress actor. The first page now establishes the machine's scale and inhabited service posture, the second annotates real module-family bays with dependency links, and the third moves that same actor into a departure stance toward the first contact.
 
+Alpha.309 gives the selected bazaar station a visible human representative without enlarging the action dock. Workshop engineers, factors, signal readers, captains, couriers, and departure marshals use stable role labels and practical props; Ashgate and Veyru variants retain their rail-yard and flood-market identity. The portraits are deliberately compact and do not replace exact service copy or controls.
+
 ## Next work
 
-Use the exact alpha.307 cohort for consented, uncoached sessions. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact published alpha.307 cohort for current consented sessions; promote a later cohort only after the accumulated changes warrant replacing it. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

@@ -1124,3 +1124,7 @@ The three-page First Watch prologue now uses the shared fortress renderer instea
 ## 2026-09-01 — Threat warnings use the existing contact clock
 
 Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, and the Civic Guardian now each play one distinct temporary warning cue at the last readable encounter step before arrival; immediate threats cue on step one. Other successful combat steps retain the quiet generic mechanism sound. The cue is selected from existing authoritative threat IDs and arrival timing after a successful command, remains presentation-only, and is suppressed by the existing mute setting. This was chosen over continuous ambience or a second audio timeline because sound should reinforce the visible forecast without driving combat, adding hidden timing, or becoming repetitive on every tick.
+
+## 2026-09-01 — Bazaar services have visible attendants
+
+The selected bazaar station now shows a compact attendant portrait with a role and practical prop. Ashgate uses rail-yard roles, while Lantern Quay uses flood-market roles; the six station IDs, actions, focus order, and authoritative service state remain unchanged. This was chosen over adding new dialogue or NPC systems because the current need is to make existing decisions feel inhabited and place-specific without increasing tutorial load or creating decorative characters disconnected from operations.

@@ -15,6 +15,24 @@ const STATION_NAMES := {
 	"assignment_board": "ASSIGNMENTS",
 	"departure_gate": "DEPARTURE GATE"
 }
+const ATTENDANT_ROLES := {
+	"ashgate_depot": {
+		"workshop": "RAIL-SIDE ENGINEER",
+		"quartermaster": "DEPOT FACTOR",
+		"signal_broker": "SIGNAL READER",
+		"hiring_post": "ROAD CAPTAIN",
+		"assignment_board": "CONVOY RUNNER",
+		"departure_gate": "GATE MARSHAL"
+	},
+	"lantern_quay": {
+		"workshop": "PUMPWRIGHT",
+		"quartermaster": "QUAY FACTOR",
+		"signal_broker": "LANTERN READER",
+		"hiring_post": "DIVER CAPTAIN",
+		"assignment_board": "MEDICINE COURIER",
+		"departure_gate": "FERRY MARSHAL"
+	}
+}
 
 var location_label: Label
 var context_label: Label
@@ -25,6 +43,8 @@ var pause_button: Button
 var value_labels: Dictionary = {}
 var bazaar_canvas: BazaarCanvas
 var station_buttons: Dictionary = {}
+var attendant_portrait: StationPortrait
+var attendant_label: Label
 var detail_title: Label
 var detail_status: Label
 var detail_body: Label
@@ -160,16 +180,33 @@ func _build_ui() -> void:
 	detail_kicker.add_theme_font_size_override("font_size", 10)
 	detail_kicker.add_theme_color_override("font_color", Color("#89999e"))
 	detail_stack.add_child(detail_kicker)
+	var attendant_row := HBoxContainer.new()
+	attendant_row.custom_minimum_size = Vector2(0, 76)
+	attendant_row.add_theme_constant_override("separation", 10)
+	detail_stack.add_child(attendant_row)
+	attendant_portrait = StationPortrait.new()
+	attendant_portrait.custom_minimum_size = Vector2(72, 72)
+	attendant_portrait.tooltip_text = "The attendant responsible for this bazaar station."
+	attendant_row.add_child(attendant_portrait)
+	var attendant_copy := VBoxContainer.new()
+	attendant_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	attendant_copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	attendant_copy.add_theme_constant_override("separation", 2)
+	attendant_row.add_child(attendant_copy)
+	attendant_label = Label.new()
+	attendant_label.add_theme_font_size_override("font_size", 9)
+	attendant_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	attendant_copy.add_child(attendant_label)
 	detail_title = Label.new()
 	detail_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail_title.add_theme_font_size_override("font_size", 20)
+	detail_title.add_theme_font_size_override("font_size", 18)
 	detail_title.add_theme_color_override("font_color", Color("#e8c58e"))
-	detail_stack.add_child(detail_title)
+	attendant_copy.add_child(detail_title)
 	detail_status = Label.new()
 	detail_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail_status.add_theme_font_size_override("font_size", 12)
+	detail_status.add_theme_font_size_override("font_size", 10)
 	detail_status.add_theme_color_override("font_color", Color("#9fd2c2"))
-	detail_stack.add_child(detail_status)
+	attendant_copy.add_child(detail_status)
 	detail_body = Label.new()
 	detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -287,6 +324,15 @@ func _refresh_station_detail() -> void:
 	if detail_title == null:
 		return
 	var station := _station_view(selected_station_id)
+	var location_id := String(current_view.get("location_id", "ashgate_depot"))
+	var attendant_role := attendant_role_for(location_id, selected_station_id)
+	attendant_label.text = "ATTENDANT · %s" % attendant_role
+	attendant_portrait.location_id = location_id
+	attendant_portrait.station_id = selected_station_id
+	attendant_portrait.role = attendant_role
+	attendant_portrait.high_contrast_enabled = high_contrast_enabled
+	attendant_portrait.tooltip_text = "%s at %s." % [attendant_role.capitalize(), String(current_view.get("location_name", "the settlement"))]
+	attendant_portrait.queue_redraw()
 	detail_title.text = String(station.get("title", STATION_NAMES.get(selected_station_id, selected_station_id))).to_upper()
 	detail_status.text = String(station.get("status", "INSPECT AVAILABLE SERVICES")).to_upper()
 	detail_body.text = String(station.get("body", "This station has no current offer."))
@@ -308,6 +354,10 @@ func _refresh_station_detail() -> void:
 	else:
 		primary_action_button.focus_neighbor_bottom = primary_action_button.get_path_to(secondary_action_button)
 		back_button.focus_neighbor_top = back_button.get_path_to(secondary_action_button)
+
+func attendant_role_for(location_id: String, station_id: String) -> String:
+	var location_roles: Dictionary = ATTENDANT_ROLES.get(location_id, ATTENDANT_ROLES["ashgate_depot"])
+	return String(location_roles.get(station_id, "ROAD KEEPER"))
 
 func _emit_primary_action() -> void:
 	if current_primary_action_id.is_empty() or primary_action_button.disabled:
@@ -388,6 +438,8 @@ func set_high_contrast(enabled: bool) -> void:
 	high_contrast_enabled = enabled
 	if bazaar_canvas != null:
 		bazaar_canvas.high_contrast_enabled = enabled
+	if attendant_portrait != null:
+		attendant_portrait.high_contrast_enabled = enabled
 	configure(current_view)
 
 func set_reduced_motion(enabled: bool) -> void:
@@ -399,6 +451,75 @@ func set_reduced_motion(enabled: bool) -> void:
 func set_controller_cancel_label(cancel_label: String) -> void:
 	if pause_button != null:
 		pause_button.text = "PAUSE · ESC / %s" % cancel_label
+
+class StationPortrait extends Control:
+	var location_id: String = "ashgate_depot"
+	var station_id: String = "assignment_board"
+	var role: String = "CONVOY RUNNER"
+	var high_contrast_enabled: bool = false
+
+	func _draw() -> void:
+		var flooded := location_id == "lantern_quay"
+		var border := Color.WHITE if high_contrast_enabled else (Color("#8ddbd0") if flooded else Color("#d8b572"))
+		var background := Color("#071013") if high_contrast_enabled else (Color("#173137") if flooded else Color("#2b251f"))
+		draw_rect(Rect2(Vector2.ZERO, size), background, true)
+		draw_rect(Rect2(Vector2.ONE, size - Vector2(2, 2)), border, false, 2.0)
+		if flooded:
+			for wave_y in [size.y - 16.0, size.y - 10.0]:
+				draw_line(Vector2(5, wave_y), Vector2(size.x - 5, wave_y), Color(border.r, border.g, border.b, 0.34), 2.0)
+		else:
+			draw_line(Vector2(5, size.y - 12), Vector2(size.x - 5, size.y - 12), Color(border.r, border.g, border.b, 0.34), 3.0)
+			draw_line(Vector2(8, size.y - 6), Vector2(size.x - 8, size.y - 6), Color(border.r, border.g, border.b, 0.22), 2.0)
+		var skin := Color("#eed19f") if not high_contrast_enabled else Color.WHITE
+		var coat := _station_color(station_id)
+		var center := Vector2(size.x * 0.47, size.y * 0.42)
+		draw_circle(center - Vector2(0, 14), 8.0, skin)
+		var shoulders := PackedVector2Array([
+			center + Vector2(-15, 1),
+			center + Vector2(13, 1),
+			center + Vector2(19, 28),
+			center + Vector2(-20, 28)
+		])
+		draw_colored_polygon(shoulders, coat)
+		draw_polyline(PackedVector2Array([shoulders[0], shoulders[1], shoulders[2], shoulders[3], shoulders[0]]), border, 2.0)
+		_draw_station_prop(center + Vector2(17, 7), border)
+
+	func _station_color(id: String) -> Color:
+		match id:
+			"workshop": return Color("#9a643e")
+			"quartermaster": return Color("#74644d")
+			"signal_broker": return Color("#3c7777")
+			"hiring_post": return Color("#536b68")
+			"assignment_board": return Color("#9a713c")
+			_: return Color("#76533b")
+
+	func _draw_station_prop(anchor: Vector2, color: Color) -> void:
+		match station_id:
+			"workshop":
+				draw_line(anchor + Vector2(-2, 18), anchor + Vector2(14, -2), color, 4.0)
+				draw_arc(anchor + Vector2(15, -3), 6.0, 0.5, 5.5, 12, color, 3.0)
+			"quartermaster":
+				draw_rect(Rect2(anchor + Vector2(-2, 1), Vector2(18, 23)), Color("#20282a"), true)
+				draw_rect(Rect2(anchor + Vector2(-2, 1), Vector2(18, 23)), color, false, 2.0)
+				draw_line(anchor + Vector2(3, 8), anchor + Vector2(11, 8), color, 1.0)
+			"signal_broker":
+				draw_line(anchor + Vector2(7, 23), anchor + Vector2(7, -4), color, 3.0)
+				draw_arc(anchor + Vector2(7, -3), 8.0, -1.2, 1.2, 12, color, 2.0)
+				draw_arc(anchor + Vector2(7, -3), 14.0, -1.0, 1.0, 12, Color(color.r, color.g, color.b, 0.55), 2.0)
+			"hiring_post":
+				draw_rect(Rect2(anchor + Vector2(-4, 3), Vector2(17, 22)), Color("#344448"), true)
+				draw_rect(Rect2(anchor + Vector2(-4, 3), Vector2(17, 22)), color, false, 2.0)
+				draw_line(anchor + Vector2(16, -3), anchor + Vector2(16, 27), color, 2.0)
+			"assignment_board":
+				draw_rect(Rect2(anchor + Vector2(-3, 0), Vector2(20, 25)), Color("#e4cf9e"), true)
+				draw_line(anchor + Vector2(1, 7), anchor + Vector2(13, 7), Color("#6d5438"), 2.0)
+				draw_line(anchor + Vector2(1, 13), anchor + Vector2(10, 13), Color("#6d5438"), 2.0)
+			"departure_gate":
+				draw_line(anchor + Vector2(2, 26), anchor + Vector2(2, -5), color, 3.0)
+				draw_colored_polygon(PackedVector2Array([anchor + Vector2(4, -4), anchor + Vector2(19, 2), anchor + Vector2(4, 8)]), Color("#d46f61"))
+
+	func presentation_signature() -> String:
+		return "%s · %s · %s" % [location_id.to_upper(), station_id.to_upper(), role]
 
 class BazaarCanvas extends Control:
 	var location_id: String = "ashgate_depot"

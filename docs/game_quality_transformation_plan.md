@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.308`
+**Current baseline:** `0.3.0-alpha.309`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -694,7 +694,7 @@ Tasks:
 
 ### Phase 5 — Settlement and event presentation
 
-**Status:** Dedicated Morrowline/Evacuation Camp recovery plus distinct Mara forge-core, Pump Gallery, and Last Dry Room commitments are complete through `0.3.0-alpha.278`; broader authored-event coverage and human memory validation remain open.
+**Status:** Dedicated Morrowline/Evacuation Camp recovery plus distinct Mara forge-core, Pump Gallery, and Last Dry Room commitments are complete through `0.3.0-alpha.278`; `0.3.0-alpha.309` gives every starting-bazaar station a region-specific attendant and practical prop. Broader authored-event coverage and human memory validation remain open.
 
 **Objective:** Make breathing spaces and obligations memorable.
 
