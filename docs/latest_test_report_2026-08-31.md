@@ -4,13 +4,13 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.311` refit-audio candidate |
+| Build | `0.3.0-alpha.312` phase-aligned-impact-audio candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
 | Responsive coverage | PASS: 1280×720 and 1600×900; the compact profile uses 110% text, high contrast, reduced motion, and alternate controller labels |
 | Performance sample | PASS: 1,800 read-only planning inspections and 60 same-seed encounter replays within the 12-second budgets |
-| Temporary asset integration | PASS: ten journey cues, seven threat-family warnings, four result-aware refit cues, muted-state suppression, deterministic routing, checkpoint ownership, impact-window VFX, and reduced-motion suppression |
+| Temporary asset integration | PASS: ten journey cues, seven threat-family warnings, four result-aware refit cues, phase-aligned impact audio, muted-state suppression, deterministic routing, checkpoint ownership, impact-window VFX, and reduced-motion suppression |
 | Travel staging | PASS: gathering departure, full-march parallax and temporary atmosphere, static contact brace, canvas clipping, and reduced-motion bypass |
 | Arrival identity | PASS: authoritative destination IDs, regional motif selection, tutorial siding, final thresholds, Veyru destinations, and save/resume preservation |
 | Threat identity | PASS: stable form, lane, and scale profiles for all seven implemented threat families |
@@ -30,6 +30,7 @@
 - [`Audio cue map`](audio_cue_map.md)
 - [`Threat-family audio identity report`](threat_audio_identity_report.md)
 - [`Refit audio feedback report`](refit_audio_feedback_report.md)
+- [`Phase-aligned impact audio report`](phase_aligned_impact_audio_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -48,6 +49,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.311 gives successful placement, movement, rotation, and removal distinct physical feedback while rejected refit commands retain their written reason and use a restrained warning cue.
+The updated strategy remains intact without changing authoritative game state. Alpha.312 adds one material hit cue at the visible Impact beat and collapses it safely to the immediate Consequence under Reduced Motion.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

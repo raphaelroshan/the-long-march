@@ -18,6 +18,7 @@ signal pause_requested
 signal advance_requested
 signal inspect_requested
 signal intervention_requested(intervention_id: String)
+signal semantic_audio_requested(cue_id: String)
 
 var pause_button: Button
 var contact_canvas: ContactCanvas
@@ -122,6 +123,7 @@ func _build_ui() -> void:
 	contact_canvas.custom_minimum_size = Vector2(590, 430)
 	contact_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	contact_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	contact_canvas.impact_reached.connect(func() -> void: semantic_audio_requested.emit("contact_impact"))
 	center.add_child(contact_canvas)
 	var timeline := HBoxContainer.new()
 	timeline.add_theme_constant_override("separation", 4)
@@ -447,6 +449,8 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 		pause_button.text = "PAUSE · ESC / %s" % cancel_label
 
 class ContactCanvas extends Control:
+	signal impact_reached
+
 	const THREAT_VISUAL_PROFILES := {
 		"road_raiders": {"form": "raider_rig", "lane": "road_flank", "scale": 1.05, "label_y": -43.0},
 		"climbers": {"form": "grapnel_climber", "lane": "upper_flank", "scale": 1.0, "label_y": -54.0},
@@ -464,6 +468,7 @@ class ContactCanvas extends Control:
 	var step_to: float = 0.0
 	var transition_progress: float = 1.0
 	var report_changed: bool = false
+	var impact_cue_emitted: bool = false
 	var fortress_anchors: Dictionary = {}
 
 	func _ready() -> void:
@@ -486,17 +491,30 @@ class ContactCanvas extends Control:
 		step_from = previous_step
 		step_to = next_step
 		transition_progress = 1.0 if reduced_motion or next_step <= previous_step else 0.0
+		impact_cue_emitted = false
+		if reduced_motion:
+			_emit_impact_once()
 		queue_redraw()
 
 	func finish_transition() -> void:
+		_emit_impact_once()
 		transition_progress = 1.0
 		queue_redraw()
 
 	func _process(delta: float) -> void:
 		if transition_progress >= 1.0:
 			return
+		var previous_progress := transition_progress
 		transition_progress = minf(1.0, transition_progress + delta * 0.42)
+		if previous_progress < 0.58 and transition_progress >= 0.58:
+			_emit_impact_once()
 		queue_redraw()
+
+	func _emit_impact_once() -> void:
+		if impact_cue_emitted or not report_changed or step_to <= step_from or not _resolved_step_has_damage():
+			return
+		impact_cue_emitted = true
+		impact_reached.emit()
 
 	func _draw() -> void:
 		var flooded := String(current_view.get("region_id", "ashgate_lowlands")) == "flooded_veyru"
@@ -673,6 +691,9 @@ class ContactCanvas extends Control:
 	func _active_contact_has_damage() -> bool:
 		if transition_progress >= 1.0:
 			return false
+		return _resolved_step_has_damage()
+
+	func _resolved_step_has_damage() -> bool:
 		for enemy in current_view.get("enemies", []):
 			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and int(enemy.get("impact", {}).get("damage", 0)) > 0:
 				return true
