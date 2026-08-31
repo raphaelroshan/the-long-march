@@ -91,6 +91,12 @@ func _init() -> void:
 	var tutorial_transition := RoutePresenter.build_transition(state, "ashgate_depot", "rill_crossing", preview, {"day": 1, "fuel": 6, "pressure": 0}, {"tutorial": true, "promise": "TRAINING ORDER", "fortress": fortress})
 	_expect(tutorial_transition.get("destination_visual_id") == "muster_road" and tutorial_transition.get("destination_name") == "Muster Road", "tutorial travel should use its own training-road landmark rather than borrowing Rill Crossing scenery")
 	_expect_pure(state, transition_before, "route transition presenter")
+	state.purchase_intel("ashgate_orchard_weather_report")
+	var intel_preview := state.campaign_node_preview("soot_orchard")
+	var intel_transition_before := state.serialize()
+	var intel_transition := RoutePresenter.build_transition(state, "ashgate_depot", "soot_orchard", intel_preview, {"day": 1, "fuel": 6, "pressure": 0}, {"tutorial": false, "promise": "PROMISE · Test", "fortress": fortress})
+	_expect(intel_transition.get("intel_source") == "Ashgate Signal Reader" and intel_transition.get("intel_confidence") == "reliable" and String(intel_transition.get("detail", "")).contains("Source: Ashgate Signal Reader · Reliable"), "the march handoff should retain purchased intel attribution after route commitment")
+	_expect_pure(state, intel_transition_before, "sourced route transition presenter")
 
 	state.encounter_active = true
 	state.encounter_step = 2

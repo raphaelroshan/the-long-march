@@ -1218,3 +1218,7 @@ Ashgate's Hiring Post now presents Iven Pell as a verified lead at Broken Relay,
 ## 2026-09-01 — Transaction receipts retain local focus
 
 After a Quartermaster or Signal Broker transaction, focus now returns to that station's next valid action or landmark instead of falling through to the settlement's default assignment. The assignment remains the normal entry focus. This was chosen because an atomic receipt is only useful when the player has time to read it, and because focus recovery should preserve local intent rather than silently redirecting the next controller confirmation.
+
+## 2026-09-01 — Information provenance crosses the Commit boundary
+
+The march transition now carries any purchased source and confidence directly from the authoritative route preview. It does not infer or duplicate intel. This was chosen so the player can connect the paid report to the known contact during departure, while operational forecasts without a purchased source keep their existing presentation.
