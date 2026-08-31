@@ -151,13 +151,13 @@ func _build_choice_dock(parent: HBoxContainer) -> void:
 	stack.add_child(title_label)
 	body_label = Label.new()
 	body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body_label.custom_minimum_size = Vector2(0, 80)
+	body_label.custom_minimum_size = Vector2(0, 64)
 	body_label.add_theme_font_size_override("font_size", 13)
 	body_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	stack.add_child(body_label)
 	story_panel = PanelContainer.new()
 	story_panel.visible = false
-	story_panel.add_theme_stylebox_override("panel", _flat_style(Color("#1b292c"), Color("#9a7544"), 2, 5, 8))
+	story_panel.add_theme_stylebox_override("panel", _flat_style(Color("#1b292c"), Color("#9a7544"), 2, 5, 6))
 	stack.add_child(story_panel)
 	story_label = Label.new()
 	story_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -172,7 +172,7 @@ func _build_choice_dock(parent: HBoxContainer) -> void:
 	for index in range(3):
 		var button := Button.new()
 		button.text = "Choice %d" % (index + 1)
-		button.custom_minimum_size = Vector2(0, 72)
+		button.custom_minimum_size = Vector2(0, 64)
 		button.set_meta("long_march_audio_manual_press", true)
 		button.add_theme_font_size_override("font_size", 11)
 		button.add_theme_stylebox_override("normal", _flat_style(Color("#1b292f"), Color("#536a70"), 2, 5, 9))
@@ -197,7 +197,7 @@ func configure(view: Dictionary) -> void:
 	title_label.text = String(view.get("title", "A DECISION")).to_upper()
 	body_label.text = String(view.get("body", "The road waits for an order."))
 	var story: Dictionary = view.get("story", {})
-	story_panel.visible = not story.is_empty()
+	story_panel.visible = not story.is_empty() and bool(story.get("show_card", true))
 	story_label.text = "%s\n%s" % [String(story.get("heading", "COMMITMENT")), String(story.get("detail", ""))] if story_panel.visible else ""
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
@@ -219,7 +219,7 @@ func configure(view: Dictionary) -> void:
 		if not enabled:
 			button.text += "\nLOCKED · %s" % reason.to_upper()
 		button.tooltip_text = reason
-		button.custom_minimum_size.y = 76 if not enabled or button.text.count("\n") >= 2 else 64
+		button.custom_minimum_size.y = 70 if not enabled or button.text.count("\n") >= 2 else 60
 	guidance_label.text = String(view.get("guidance", "Choose one response. The listed costs and effects apply immediately."))
 	tableau.event_id = String(view.get("event_id", ""))
 	tableau.region_id = String(view.get("region_id", "ashgate_lowlands"))
@@ -320,7 +320,13 @@ class ScenarioCanvas extends Control:
 		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.04, size.y * 0.30), Vector2(size.x * 0.48, size.y * 0.42)), view)
 
 	func _draw_subject(center: Vector2) -> void:
-		if event_id == "the_last_dry_room":
+		if event_id == "boiler_heartbeat":
+			_draw_boiler_choice(center)
+		elif event_id == "lift_chain_sings":
+			_draw_lift_chain_choice(center)
+		elif event_id == "the_miller_with_a_broken_wheel":
+			_draw_miller_wheel_choice(center)
+		elif event_id == "the_last_dry_room":
 			_draw_dry_room_choice(center)
 		elif event_id == "salvage_choice":
 			_draw_ruin(center)
@@ -346,6 +352,60 @@ class ScenarioCanvas extends Control:
 		for x in [-58.0, -15.0, 32.0, 70.0]:
 			draw_line(center + Vector2(x, -88), center + Vector2(x - 18, -133), Color("#242624"), 8.0)
 			draw_circle(center + Vector2(x - 20, -140), 16.0, Color(0.85, 0.31, 0.16, 0.65))
+
+	func _draw_boiler_choice(center: Vector2) -> void:
+		var boiler_center := center + Vector2(0, -48)
+		draw_circle(boiler_center, 68.0, Color("#2f3634"))
+		draw_circle(boiler_center, 68.0, Color("#c18a4c"), false, 8.0)
+		draw_circle(boiler_center, 28.0, Color("#592f25"))
+		draw_circle(boiler_center, 16.0, Color("#ef9b4d"))
+		for angle in [0.0, PI * 0.5, PI, PI * 1.5]:
+			var bolt := boiler_center + Vector2(cos(angle), sin(angle)) * 51.0
+			draw_circle(bolt, 5.0, Color("#d9bd82"))
+		var inspect := center + Vector2(-94, -142)
+		var march := center + Vector2(94, -142)
+		draw_line(inspect, boiler_center - Vector2(25, 42), Color("#9fd2c2"), 3.0)
+		draw_line(march, boiler_center + Vector2(25, -42), Color("#e8c58e"), 3.0)
+		draw_rect(Rect2(inspect - Vector2(18, 13), Vector2(36, 26)), Color("#26383a"), false, 4.0)
+		draw_line(inspect - Vector2(10, -7), inspect + Vector2(10, -7), Color("#9fd2c2"), 3.0)
+		for echo_index in range(3):
+			draw_arc(march, 12.0 + float(echo_index) * 12.0, -PI * 0.75, PI * 0.75, 16, Color(0.91, 0.73, 0.42, 0.72 - float(echo_index) * 0.16), 3.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-145, -177), "OPEN CASING", HORIZONTAL_ALIGNMENT_CENTER, 102.0, 10, Color("#9fd2c2"))
+		draw_string(ThemeDB.fallback_font, center + Vector2(43, -177), "KEEP CADENCE", HORIZONTAL_ALIGNMENT_CENTER, 104.0, 10, Color("#e8c58e"))
+
+	func _draw_lift_chain_choice(center: Vector2) -> void:
+		var rail_y := center.y - 135.0
+		draw_line(center + Vector2(-96, -135), center + Vector2(96, -135), Color("#807461"), 8.0)
+		for link_index in range(6):
+			var link_center := Vector2(center.x - 46.0 + float(link_index % 2) * 6.0, rail_y + 18.0 + float(link_index) * 25.0)
+			draw_arc(link_center, 12.0, 0, TAU, 18, Color("#d1b06f"), 5.0)
+		var load := Rect2(center + Vector2(-91, -4), Vector2(90, 42))
+		draw_rect(load, Color("#704d38"), true)
+		draw_rect(load, Color("#d09a5f"), false, 4.0)
+		for shell_index in range(3):
+			var shell_x := load.position.x + 18.0 + float(shell_index) * 27.0
+			draw_circle(Vector2(shell_x, load.position.y + 19.0), 7.0, Color("#d9bd82"))
+		var brace := center + Vector2(66, -40)
+		draw_line(brace + Vector2(-25, -24), brace + Vector2(25, 24), Color("#9fd2c2"), 7.0)
+		draw_line(brace + Vector2(25, -24), brace + Vector2(-25, 24), Color("#9fd2c2"), 7.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-121, 70), "CARRY LOAD", HORIZONTAL_ALIGNMENT_CENTER, 96.0, 10, Color("#e8c58e"))
+		draw_string(ThemeDB.fallback_font, center + Vector2(20, 70), "FIT BRACE", HORIZONTAL_ALIGNMENT_CENTER, 96.0, 10, Color("#9fd2c2"))
+
+	func _draw_miller_wheel_choice(center: Vector2) -> void:
+		var wagon := Rect2(center + Vector2(-105, -105), Vector2(165, 70))
+		draw_rect(wagon, Color("#6b5038"), true)
+		draw_rect(wagon, Color("#d0ad6d"), false, 4.0)
+		for wheel_x in [wagon.position.x + 30.0, wagon.end.x - 30.0]:
+			draw_circle(Vector2(wheel_x, wagon.end.y + 18.0), 29.0, Color("#332c25"))
+			draw_circle(Vector2(wheel_x, wagon.end.y + 18.0), 19.0, Color("#9b7650"), false, 5.0)
+		var broken_center := Vector2(wagon.end.x + 54.0, wagon.end.y + 12.0)
+		draw_arc(broken_center, 35.0, PI * 0.12, PI * 1.32, 20, Color("#ef8375"), 7.0)
+		draw_line(broken_center - Vector2(3, 4), broken_center + Vector2(20, -32), Color("#ef8375"), 5.0)
+		var miller := wagon.position + Vector2(78.0, -26.0)
+		draw_circle(miller, 9.0, Color("#e2cc98"))
+		draw_line(miller + Vector2(0, 9), miller + Vector2(0, 36), Color("#8f7859"), 7.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-121, 64), "LEND BENCH", HORIZONTAL_ALIGNMENT_CENTER, 108.0, 10, Color("#9fd2c2"))
+		draw_string(ThemeDB.fallback_font, center + Vector2(20, 64), "KEEP MOVING", HORIZONTAL_ALIGNMENT_CENTER, 108.0, 10, Color("#e8c58e"))
 
 	func _draw_dry_room_choice(center: Vector2) -> void:
 		var room := Rect2(center - Vector2(74, 105), Vector2(148, 105))
@@ -424,6 +484,12 @@ class ScenarioCanvas extends Control:
 
 	func presentation_signature() -> String:
 		var motif := String(story.get("motif", ""))
+		if motif == "boiler_cadence_choice":
+			return "DAMAGED BOILER · INSPECT OR KEEP CADENCE"
+		if motif == "lift_chain_choice":
+			return "LOADED LIFT · BRACE OR CARRY"
+		if motif == "miller_wheel_choice":
+			return "BROKEN WHEEL · HELP OR KEEP MOVING"
 		if motif == "mara_core_choice":
 			return "ONE CORE · MACHINE OR SHELTER"
 		if motif == "mara_core_callback":

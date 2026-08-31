@@ -1,6 +1,7 @@
 extends SceneTree
 
 var failures: Array[String] = []
+var capture_dir := ""
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -10,10 +11,22 @@ func _settle_ui(frames: int = 3) -> void:
 	for _frame in range(frames):
 		await process_frame
 
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "roadside occurrence capture requires a rendering display: " + name)
+		return
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "roadside occurrence capture should be written: " + name)
+
 func _init() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	root.size = Vector2i(1280, 720)
 	var event_view = load("res://scenes/journey/RoadsideEvent.tscn").instantiate()
 	root.add_child(event_view)
@@ -26,6 +39,51 @@ func _run() -> void:
 		"values": {"day": "6", "fuel": "4", "hull": "8/10", "ashmarks": "36", "pressure": "CLOSING · 4", "trust": "2"},
 		"fortress": {"modules": [{"id": "field_workshop", "family": "workshop", "state": "strained", "damaged": true, "sealed": false, "targeted": false}]}
 	}
+	var boiler_view: Dictionary = common.duplicate(true)
+	boiler_view.merge({
+		"event_id": "boiler_heartbeat",
+		"title": "The Boiler's Second Heartbeat",
+		"body": "A second rhythm answers the engine stroke. The workshop can open the casing now, or the fortress can keep cadence.",
+		"story": {"motif": "boiler_cadence_choice", "show_card": false, "heading": "DAMAGED ENGINE · STOP OR CARRY THE BEARING", "detail": "Inspect: Engine +1 durability · Day +1 · Pressure +1. March: Pressure -1 · Engine -1 durability."},
+		"choices": [
+			{"id": "inspect_boiler", "label": "Stop and inspect Steam Lance Engine", "effect": "Engine +1 durability · Day +1 · Pressure +1", "enabled": true, "reason": ""},
+			{"id": "keep_cadence", "label": "Keep the marching cadence", "effect": "Pressure -1 · Engine -1 durability", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(boiler_view)
+	await _settle_ui()
+	_expect(event_view.tableau.presentation_signature() == "DAMAGED BOILER · INSPECT OR KEEP CADENCE" and not event_view.story_panel.visible and event_view.choice_buttons[0].text.contains("Engine +1 durability"), "the boiler occurrence should stage the damaged bearing and keep its stop-or-march cost in the primary choices")
+	await _capture("01_boiler_heartbeat")
+	var lift_view: Dictionary = common.duplicate(true)
+	lift_view.merge({
+		"event_id": "lift_chain_sings",
+		"title": "The Lift Chain Sings",
+		"body": "The Ammunition Lift vibrates under a full road load.",
+		"story": {"motif": "lift_chain_choice", "show_card": false, "heading": "AMMUNITION LIFT · BRACE OR CARRY THE LOAD", "detail": "Brace: spend 6 Ashmarks. Carry: lower pressure and lose 1 lift durability."},
+		"choices": [
+			{"id": "brace_lift_chain", "label": "Fit a proper chain brace", "effect": "Ashmarks -6 · Future route risk -2%", "enabled": true, "reason": ""},
+			{"id": "carry_lift_load", "label": "Carry the load to the next stop", "effect": "Pressure -1 · Ammunition Lift -1 durability", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(lift_view)
+	await _settle_ui()
+	_expect(event_view.tableau.presentation_signature() == "LOADED LIFT · BRACE OR CARRY" and not event_view.story_panel.visible and event_view.choice_buttons[1].text.contains("Ammunition Lift -1 durability"), "the lift occurrence should stage its loaded dependency and keep its brace-or-carry cost in the primary choices")
+	await _capture("02_lift_chain")
+	var miller_view: Dictionary = common.duplicate(true)
+	miller_view.merge({
+		"event_id": "the_miller_with_a_broken_wheel",
+		"title": "The Miller With a Broken Wheel",
+		"body": "A miller offers sealed fuel tins if the fortress lends its bench and fitter.",
+		"story": {"motif": "miller_wheel_choice", "show_card": false, "heading": "BROKEN WHEEL · WORKSHOP TIME OR ROAD TIME", "detail": "Help: gain fuel and trust with delay and workshop wear. Leave: lower pressure and lose trust."},
+		"choices": [
+			{"id": "lend_workshop_bench", "label": "Lend the workshop bench", "effect": "Fuel +1 · Trust +1 · Day +1 · Pressure +1 · Workshop -1 durability", "enabled": true, "reason": ""},
+			{"id": "keep_moving", "label": "Keep the column moving", "effect": "Pressure -1 · Trust -1", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(miller_view)
+	await _settle_ui()
+	_expect(event_view.tableau.presentation_signature() == "BROKEN WHEEL · HELP OR KEEP MOVING" and not event_view.story_panel.visible and event_view.choice_buttons[0].text.contains("Workshop -1 durability"), "the miller occurrence should stage the broken wagon and keep its help-or-leave cost in the primary choices")
+	await _capture("03_miller_wheel")
 	var choice_view: Dictionary = common.duplicate(true)
 	choice_view.merge({
 		"event_id": "mara_workbench_choice",
