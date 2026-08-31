@@ -154,3 +154,11 @@ These 1280×720 captures verify that the shared resting fortress now carries vis
 | Lantern Quay | [Flood-dock service activity](visual_evidence/v0.3.0-alpha.304-inhabited-rest/02_lantern_quay.png) | `c54985d95ff6e70f292cda0f2a6d9e7f868d257a61771315d88d6187f972bef7` |
 
 The crane, hoist, parts cart, crew silhouettes, valve exhaust, and lamp cycle are presentation-only. Reduced Motion retains the tableau but freezes ambient movement. These images establish implementation coverage, not human-recognition evidence or final-art quality.
+
+## `v0.3.0-alpha.305` — Route-map visual grammar
+
+![Ashgate selected route and accepted assignment](visual_evidence/v0.3.0-alpha.305-route-map-grammar/06_route_commitment.png)
+
+The 1280×720 route-planning capture shows the fortress position, selectable alternatives, selected road, future branches, and accepted Morrowline obligation through both color and shape. Future edges are dashed, active edges are directional, and the accepted assignment badge stays attached to its destination.
+
+SHA-256: `8c26af59f5ccf5b3746997e08573b3dcb81bd50d850293d42fcc1a65331e2cbb`

@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.304` and later
+**Applies to:** `0.3.0-alpha.305` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -31,6 +31,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **Arrival identity — complete in alpha.302** | Make reaching a place visible | Render destination-specific crossing, camp, relay, salvage, industrial, pass, and archive silhouettes from the authoritative destination ID. |
 | **Threat silhouettes — complete in alpha.303** | Make contact actors readable | Give every implemented threat a stable physical form and approach lane while preserving the shared target and consequence grammar. |
 | **Inhabited fortress at rest — complete in alpha.304** | Make the fortress feel like a working settlement | Add crew-scale service work, a crane, cart, valve exhaust, and restrained lamp motion while preserving reduced-motion behavior and simulation ownership. |
+| **Route-map visual grammar — complete in alpha.305** | Make map state readable before dossier text | Add non-color node glyphs, directional route marks, future-route dashes, selected-route emphasis, and assignment badges derived from existing contract state. |
 
 ## Acceptance tests for every AI task
 
@@ -40,7 +41,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, travel atmosphere, arrival identity, threat silhouettes, and inhabited resting fortress are complete in `0.3.0-alpha.304`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, travel atmosphere, arrival identity, threat silhouettes, inhabited resting fortress, and route-map visual grammar are complete in `0.3.0-alpha.305`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 

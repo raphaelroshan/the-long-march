@@ -305,6 +305,7 @@ func _run() -> void:
 	_expect(game.campaign_map.get_parent() == game.journey_planner.map_host and game.campaign_commit_intel_label.get_parent() == game.journey_planner.detail_stack and campaign_action_row.get_parent() == game.journey_planner.action_host and game.campaign_cancel_button.get_parent() == campaign_action_row, "the route map, dossier, and reversible commit actions should occupy their dedicated planner regions")
 	_expect(game.campaign_map.status_for("ashgate_depot") == "current", "the map should mark Ashgate as the current node")
 	_expect(game.campaign_map.status_for("rill_crossing") == "blocked" and game.campaign_map.status_for("soot_orchard") == "blocked", "the opening roads should visibly wait for the contract decision")
+	_expect(game.campaign_map.assignment_marker_for("morrowline_camp") == "offer", "the blocked opening map should still identify where the unresolved assignment leads")
 	game.settlement_hub_return_button.pressed.emit()
 	await process_frame
 	await process_frame
@@ -336,6 +337,8 @@ func _run() -> void:
 	_expect(game.state.serialize() == route_briefing_state, "opening and closing contextual route guidance should preserve the live campaign state")
 	_expect(game.current_run_flow_step == 1 and game.run_flow_labels[0].text.begins_with("✓"), "answering the contract should advance the tracker to the Lowlands roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "available" and not game.campaign_map.button_for("rill_crossing").disabled, "answering the contract should activate the opening map nodes")
+	_expect(game.campaign_map.assignment_marker_for("morrowline_camp") == "accepted" and game.campaign_map.marker_labels["morrowline_camp"].visible and game.campaign_map.marker_labels["morrowline_camp"].text == "ACCEPTED", "the map should turn the destination's assignment marker from an offer into an accepted obligation")
+	_expect(game.campaign_map.route_visual_signature("ashgate_depot", "rill_crossing") == "available" and game.campaign_map.button_for("ashgate_depot").text.begins_with("◆") and game.campaign_map.button_for("rill_crossing").text.begins_with("○"), "node shape and route treatment should identify current position and selectable roads before color or dossier copy")
 	_expect(game.campaign_comparison_panel.visible and game.campaign_comparison_label.text.contains("RILL CROSSING · 1D · 1 FUEL · KNOWN · LOW 14% RISK") and game.campaign_comparison_label.text.contains("SOOT ORCHARD · 2D · 2 FUEL · FORECAST · GUARDED 27% RISK") and game.campaign_comparison_label.text.contains("PRESSURE +1") and game.campaign_comparison_label.text.contains("NO SETTLEMENT NEXT"), "route planning should compare confidence, days, fuel, risk band, pressure, threat clue, and onward recovery before selection")
 	_expect(game.campaign_pressure_label.text.contains("Closing begins at 3") and game.campaign_pressure_label.text.contains("Break at 5"), "Watch pressure should explain both upcoming closure thresholds before route choice")
 	_expect(game.campaign_map.button_for("rill_crossing").text.contains("KNOWN · LOW") and game.campaign_map.button_for("soot_orchard").text.contains("FORECAST · GUARDED"), "available map nodes should expose compact scouting and risk comparisons before focus")
@@ -348,6 +351,7 @@ func _run() -> void:
 	_expect(game.campaign_comparison_label.text.contains("RILL CROSSING · 1D · 1 FUEL · KNOWN · GUARDED 22% RISK"), "route comparison should update its risk band and value when doctrine changes before selection")
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await process_frame
+	_expect(game.campaign_map.route_visual_signature("ashgate_depot", "rill_crossing") == "selected" and game.campaign_map.button_for("rill_crossing").text.begins_with("●"), "selecting a road should convert both its node and connecting route to the committed-preview grammar")
 	_expect(game.campaign_commit_intel_label.visible and game.campaign_commit_intel_label.text.contains("KNOWN CONTACTS") and game.campaign_commit_intel_label.text.contains("Road Raider") and game.campaign_commit_intel_label.text.contains("PREPARE") and game.campaign_commit_intel_label.text.contains("repeater gun") and game.campaign_commit_intel_label.text.contains("READY NOW · Repeater Gun"), "route commitment should keep known contacts, their counters, and current chassis readiness adjacent to the final action")
 	_expect(game.campaign_commit_intel_label.text.contains("DOCTRINE · RUN HOT") and game.campaign_commit_intel_label.text.contains("all attacks +1") and game.campaign_commit_intel_label.text.contains("heat +2"), "route commitment should restate the selected doctrine and its core tradeoff")
 	_expect(game.doctrine_detail_label.text.begins_with("OVERHEAT WARNING") and game.campaign_map.commit_button.text.contains("HEAT 7/6"), "an overheating doctrine should expose predicted heat in the route commitment")
@@ -610,6 +614,7 @@ func _run() -> void:
 	_expect(game.journey_label.text.contains("1/5 encounters secured"), "planning between roads should distinguish completed encounters from one currently underway")
 	_expect(game.campaign_pressure_label.text.contains("secured 1/5"), "the blockade summary should agree with completed campaign progress between roads")
 	_expect(game.campaign_map.status_for("rill_crossing") == "current" and game.campaign_map.status_for("ashgate_depot") == "secured", "the map should retain the secured route and move the current marker")
+	_expect(game.campaign_map.route_visual_signature("ashgate_depot", "rill_crossing") == "secured" and game.campaign_map.button_for("ashgate_depot").text.begins_with("✓"), "a traveled edge and its origin should retain a non-color secured grammar")
 	_expect(game.campaign_map.status_for("soot_orchard") == "bypassed" and game.campaign_map.button_for("soot_orchard").text.contains("BYPASSED") and game.campaign_map.detail_for("soot_orchard").contains("cannot be revisited"), "the unchosen opening branch should be marked bypassed rather than presented as a future destination")
 	await process_frame
 	await process_frame

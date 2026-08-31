@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.304`
+**Build:** `0.3.0-alpha.305`
 
 **Engine:** Godot 4.4.1
 
@@ -15,6 +15,7 @@
 - [Destination-specific arrival tableaux](visual_evidence/v0.3.0-alpha.302-arrival-identity/)
 - [Threat silhouettes and approach lanes](visual_evidence/v0.3.0-alpha.303-threat-silhouettes/)
 - [Inhabited fortress at rest](visual_evidence/v0.3.0-alpha.304-inhabited-rest/)
+- [Route-map visual grammar](visual_evidence/v0.3.0-alpha.305-route-map-grammar/)
 
 ## Findings
 
@@ -36,6 +37,8 @@ Alpha.303 replaces the contact-stage debug symbols with distinct threat actors: 
 
 Alpha.304 makes the resting fortress read as a working settlement rather than a paused vehicle. Three crew-scale workers, a service crane and hoist, a parts cart, breathing pressure valve, and restrained lamp movement establish scale and maintenance activity in both starting bazaars. Reduced Motion freezes ambient movement while retaining every service landmark.
 
+Alpha.305 gives the regional chart a non-color status grammar. Current, available, selected, secured, blocked, closed, bypassed, and future nodes carry distinct glyphs; future routes are dashed, active routes gain directional marks, and selected routes receive a restrained halo. The accepted convoy or medicine obligation appears directly on its destination rather than existing only in the receipt and dossier.
+
 ## Next work
 
-Use the exact alpha.304 cohort for consented, uncoached sessions. Prioritize repeated failures in threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact alpha.305 cohort for consented, uncoached sessions. Prioritize repeated failures in route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

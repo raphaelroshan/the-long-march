@@ -33,7 +33,14 @@ func _init() -> void:
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "route_selected": false, "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
 	_expect(planner.get("region_name") == "Ashgate Lowlands" and planner.get("values", {}).get("fuel") == str(state.fuel) and planner.get("return_label") == "RETURN TO ASHGATE DEPOT BAZAAR", "route presenter should preserve region, readiness values, and return contract")
+	var offered_markers := RoutePresenter.build_assignment_markers(state)
+	_expect(offered_markers.get("morrowline_camp", {}).get("status") == "offer", "the route presenter should mark the unresolved Ashgate assignment destination as an offer")
 	_expect_pure(state, before, "route planner presenter")
+	state.guard_contract_status = "accepted"
+	var accepted_marker_before := state.serialize()
+	var accepted_markers := RoutePresenter.build_assignment_markers(state)
+	_expect(accepted_markers.get("morrowline_camp", {}).get("status") == "accepted" and accepted_markers.get("morrowline_camp", {}).get("title") == "CONVOY GUARD", "the route presenter should carry the accepted convoy obligation onto its destination")
+	_expect_pure(state, accepted_marker_before, "assignment marker presenter")
 	state.choose_mastery_experiment("ashgate_quarry_adaptation")
 	var mastery_before := state.serialize()
 	var mastery_planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road."})

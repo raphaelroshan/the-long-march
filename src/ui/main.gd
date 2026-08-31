@@ -3659,6 +3659,7 @@ func _refresh_campaign_controls() -> void:
 		"outgoing_nodes": outgoing_nodes,
 		"selected_node": selected_campaign_node_id,
 		"previews": previews,
+		"assignment_markers": RoutePresenter.build_assignment_markers(state),
 		"can_depart": phase_can_depart,
 		"departure_block_reason": departure_block_reason,
 		"heat_limit": LongMarchState.BASE_HEAT_LIMIT,

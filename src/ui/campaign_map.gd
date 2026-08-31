@@ -87,6 +87,7 @@ const REGION_LAYOUTS := {
 
 var node_buttons: Array[Button] = []
 var buttons_by_id: Dictionary = {}
+var marker_labels: Dictionary = {}
 var region_id: String = "ashgate_lowlands"
 var node_order: Array[String] = []
 var node_positions: Dictionary = {}
@@ -102,6 +103,7 @@ var closed_nodes: Array[String] = []
 var locked_reasons: Dictionary = {}
 var outgoing_nodes: Array[String] = []
 var current_previews: Dictionary = {}
+var assignment_markers: Dictionary = {}
 var interaction_is_blocked: bool = false
 var selected_node: String = ""
 var current_fuel: int = 0
@@ -149,6 +151,17 @@ func _build_node_buttons() -> void:
 		node_buttons.append(button)
 		buttons_by_id[node_id] = button
 		add_child(button)
+		var marker := Label.new()
+		marker.name = "AssignmentMarker_" + String(node_id)
+		marker.custom_minimum_size = Vector2(66, 17)
+		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		marker.z_index = 2
+		marker.add_theme_font_size_override("font_size", 8)
+		marker.visible = false
+		marker_labels[node_id] = marker
+		add_child(marker)
 	_layout_node_buttons.call_deferred()
 
 func _layout_node_buttons() -> void:
@@ -157,6 +170,9 @@ func _layout_node_buttons() -> void:
 		var button := buttons_by_id.get(node_id) as Button
 		if button != null:
 			button.position = Vector2(node_positions.get(node_id, Vector2.ZERO)) + offset
+			var marker := marker_labels.get(node_id) as Label
+			if marker != null:
+				marker.position = button.position + Vector2(NODE_SIZE.x - marker.custom_minimum_size.x - 4.0, -7.0)
 	queue_redraw()
 
 func _apply_region_layout(next_region_id: String) -> void:
@@ -177,6 +193,10 @@ func set_region_layout(next_region_id: String) -> void:
 			button.queue_free()
 	node_buttons.clear()
 	buttons_by_id.clear()
+	for marker in marker_labels.values():
+		if is_instance_valid(marker):
+			marker.queue_free()
+	marker_labels.clear()
 	node_statuses.clear()
 	_apply_region_layout(resolved_region)
 	_build_node_buttons()
@@ -329,6 +349,35 @@ func _node_state_text(node_id: String, status: String) -> String:
 		return "SYSTEM REQUIRED"
 	return status.to_upper()
 
+func _node_glyph(status: String) -> String:
+	match status:
+		"current": return "◆"
+		"secured": return "✓"
+		"available": return "○"
+		"selected": return "●"
+		"closed": return "×"
+		"locked", "blocked": return "!"
+		"bypassed": return "—"
+		_: return "◇"
+
+func assignment_marker_for(node_id: String) -> String:
+	return String(Dictionary(assignment_markers.get(node_id, {})).get("status", ""))
+
+func route_visual_signature(from_id: String, to_id: String) -> String:
+	if _path_contains_edge(from_id, to_id):
+		return "secured"
+	if from_id == current_node and to_id == selected_node and to_id in available_nodes:
+		return "selected"
+	if from_id == current_node and to_id in closed_nodes:
+		return "closed"
+	if from_id == current_node and locked_reasons.has(to_id):
+		return "locked"
+	if from_id == current_node and to_id in available_nodes:
+		return "available"
+	if from_id == current_node and to_id in outgoing_nodes:
+		return "blocked"
+	return "future"
+
 func _show_node_detail(node_id: String) -> void:
 	node_inspected.emit(node_id, detail_for(node_id))
 
@@ -384,6 +433,7 @@ func configure(view: Dictionary) -> void:
 	current_day = int(view.get("current_day", 0))
 	current_pressure = int(view.get("current_pressure", 0))
 	current_previews = view.get("previews", {}).duplicate(true)
+	assignment_markers = view.get("assignment_markers", {}).duplicate(true)
 	var can_depart := bool(view.get("can_depart", false))
 	var departure_block_reason := String(view.get("departure_block_reason", ""))
 	var heat_limit := int(view.get("heat_limit", 6))
@@ -409,7 +459,7 @@ func configure(view: Dictionary) -> void:
 			status = "available"
 		node_statuses[node_id] = status
 		var state_text := _node_state_text(node_id, status)
-		button.text = "%s\n%s" % [String(short_names.get(node_id, node_id)), state_text]
+		button.text = "%s %s\n%s" % [_node_glyph(status), String(short_names.get(node_id, node_id)), state_text]
 		button.disabled = status not in ["available", "selected"] or interaction_is_blocked
 		if status in ["available", "selected"]:
 			button.tooltip_text = _preview_tooltip(current_previews.get(node_id, {}))
@@ -428,6 +478,7 @@ func configure(view: Dictionary) -> void:
 		else:
 			button.tooltip_text = "This node is visible on the regional chart but is not yet reachable."
 		_apply_button_style(button, status)
+		_apply_assignment_marker(node_id)
 	commit_button.visible = show_commit and not interaction_is_blocked
 	commit_button.disabled = selected_node.is_empty() or selected_node not in available_nodes or not can_depart or not departure_block_reason.is_empty() or interaction_is_blocked
 	if not selected_node.is_empty() and selected_node in available_nodes:
@@ -495,6 +546,40 @@ func status_for(node_id: String) -> String:
 func button_for(node_id: String) -> Button:
 	return buttons_by_id.get(node_id)
 
+func _apply_assignment_marker(node_id: String) -> void:
+	var marker := marker_labels.get(node_id) as Label
+	if marker == null:
+		return
+	var data: Dictionary = assignment_markers.get(node_id, {})
+	var marker_status := String(data.get("status", ""))
+	marker.visible = not marker_status.is_empty()
+	if not marker.visible:
+		return
+	var fill := Color("#263139")
+	var border := Color("#7a898e")
+	var ink := Color("#c5ced0")
+	match marker_status:
+		"accepted":
+			fill = Color("#24443b")
+			border = Color("#73c99b")
+			ink = Color("#d4f1e4")
+		"fulfilled":
+			fill = Color("#38452c")
+			border = Color("#a8cf74")
+			ink = Color("#e2f2cb")
+		"failed":
+			fill = Color("#482929")
+			border = Color("#e06f61")
+			ink = Color("#ffd4cd")
+	if high_contrast_enabled:
+		fill = fill.darkened(0.38)
+		border = VisualContrast.display_color(border)
+		ink = VisualContrast.display_color(ink)
+	marker.text = marker_status.to_upper()
+	marker.tooltip_text = "%s · %s" % [String(data.get("title", "ASSIGNMENT")), marker_status.replace("_", " ").to_upper()]
+	marker.add_theme_stylebox_override("normal", _style(fill, border, 2))
+	marker.add_theme_color_override("font_color", ink)
+
 func _node_center(node_id: String) -> Vector2:
 	var button := buttons_by_id.get(node_id) as Button
 	return button.position + NODE_SIZE * 0.5 if button != null else Vector2(node_positions.get(node_id, Vector2.ZERO)) + NODE_SIZE * 0.5
@@ -512,28 +597,47 @@ func _draw() -> void:
 		var source := String(raw_source)
 		for raw_target in campaign_edges.get(source, []):
 			var target := String(raw_target)
+			var visual_state := route_visual_signature(source, target)
 			var color := Color("#39484e")
 			var width := 2.0
-			if _path_contains_edge(source, target):
+			if visual_state == "secured":
 				color = Color("#73c99b")
 				width = 4.0
-			elif source == current_node and target in closed_nodes:
+			elif visual_state == "closed":
 				color = Color("#e06f61")
 				width = 3.0
-			elif source == current_node and locked_reasons.has(target):
+			elif visual_state == "locked" or visual_state == "blocked":
 				color = Color("#d8a650")
 				width = 3.0
-			elif source == current_node and target in available_nodes:
-				if target == selected_node:
-					color = Color("#eee2ff")
-					width = 4.0
-				else:
-					color = Color("#69d8cf")
-					width = 3.0
-			elif source == current_node and target in outgoing_nodes:
-				color = Color("#d8a650")
+			elif visual_state == "selected":
+				color = Color("#eee2ff")
+				width = 4.0
+			elif visual_state == "available":
+				color = Color("#69d8cf")
 				width = 3.0
 			if high_contrast_enabled:
 				color = VisualContrast.display_color(color)
 				width += 1.0
-			draw_line(_node_center(source), _node_center(target), color, width, true)
+			var from := _node_center(source)
+			var to := _node_center(target)
+			if visual_state == "future":
+				draw_dashed_line(from, to, color, width, 8.0, true)
+			else:
+				if visual_state == "selected":
+					draw_line(from, to, Color(0.93, 0.89, 1.0, 0.14), width + 7.0, true)
+				draw_line(from, to, color, width, true)
+			_draw_route_mark(from, to, visual_state, color)
+
+func _draw_route_mark(from: Vector2, to: Vector2, visual_state: String, color: Color) -> void:
+	var midpoint := from.lerp(to, 0.5)
+	if visual_state == "closed":
+		draw_line(midpoint - Vector2(5.0, 5.0), midpoint + Vector2(5.0, 5.0), color, 3.0)
+		draw_line(midpoint + Vector2(5.0, -5.0), midpoint + Vector2(-5.0, 5.0), color, 3.0)
+		return
+	if visual_state not in ["available", "selected", "secured"]:
+		return
+	var direction := (to - from).normalized()
+	var side := direction.orthogonal()
+	var tip := midpoint + direction * 7.0
+	var arrow := PackedVector2Array([tip, midpoint - direction * 5.0 + side * 5.0, midpoint - direction * 5.0 - side * 5.0])
+	draw_colored_polygon(arrow, color)
