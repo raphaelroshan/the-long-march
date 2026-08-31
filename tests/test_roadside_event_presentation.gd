@@ -44,6 +44,7 @@ func _run() -> void:
 	_expect(event_view.story_panel.visible and event_view.story_label.text.contains("ONE USE ONLY") and event_view.story_label.text.contains("Field Workshop"), "Mara's workbench event should frame the one-core commitment and exact repair target")
 	_expect(event_view.choice_buttons[0].text.contains("Day +1") and event_view.choice_buttons[0].text.contains("Pressure +1") and event_view.choice_buttons[1].text.contains("damage -1 per hit"), "the two workbench choices should disclose immediate and persistent practical costs")
 	_expect(event_view.tableau.presentation_signature() == "ONE CORE · MACHINE OR SHELTER", "the workbench should use its own machine-versus-shelter visual motif")
+	_expect(event_view.tableau.decision_signature() == "ONE CORE · MACHINE OR SHELTER · FORTRESS HALTED · CONSEQUENCE PENDING", "the event tableau should visibly connect its subject to a halted fortress and pending consequence")
 	_expect(event_view.choice_buttons[0].has_focus(), "the first legal workbench commitment should receive controller focus")
 	event_view.set_high_contrast(true)
 	var scaler = load("res://scenes/App.tscn").instantiate()

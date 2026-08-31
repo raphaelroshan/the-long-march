@@ -2,6 +2,17 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.298` — Presentation clarity
+
+This targeted set records the visual-quality pass prompted by the alpha.297 review: stronger fortress state, three distinct travel beats, explicit threat-to-target intent, a more inhabited bazaar, isolated roadside decisions, and a causal Debrief summary.
+
+| Profile | Evidence | Contract |
+|---|---|---|
+| 1600×900 | [Presentation sequence and threat-response frames](visual_evidence/v0.3.0-alpha.298-presentation-clarity-1600x900/) | Standard text and motion, including the corrected title capture, moving landmark, contact horizon, target path, event, and Debrief |
+| 1280×720 | [Responsive presentation sequence](visual_evidence/v0.3.0-alpha.298-presentation-clarity-1280x720/) | 110% text, high contrast, reduced motion, alternate controller guidance, and preserved three-column bounds |
+
+The visuals remain code-native alpha art. These captures demonstrate the implemented presentation contract, not final asset quality or human comprehension.
+
 ## `v0.3.0-alpha.297` — Complete journey acceptance
 
 The current private-alpha baseline has a complete capture from title and First Watch through Ashgate preparation, route commitment, travel, contact, arrival, roadside consequence, Morrowline recovery, Meridian Pass, and Debrief.

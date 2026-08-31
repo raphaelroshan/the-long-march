@@ -9,6 +9,7 @@ var return_button: Button
 var region_label: Label
 var order_label: Label
 var receipt_label: Label
+var route_stage_label: Label
 var value_labels: Dictionary = {}
 var map_host: CenterContainer
 var comparison_host: ScrollContainer
@@ -120,6 +121,12 @@ func _build_ui() -> void:
 	map_heading.add_theme_font_size_override("font_size", 15)
 	map_heading.add_theme_color_override("font_color", Color("#e8c58e"))
 	map_stack.add_child(map_heading)
+	route_stage_label = Label.new()
+	route_stage_label.text = "INSPECT ROAD · NO COST YET"
+	route_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	route_stage_label.add_theme_font_size_override("font_size", 10)
+	route_stage_label.add_theme_color_override("font_color", Color("#9fd2c2"))
+	map_stack.add_child(route_stage_label)
 	map_host = CenterContainer.new()
 	map_host.custom_minimum_size = Vector2(0, 340)
 	map_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -217,6 +224,8 @@ func configure(view: Dictionary) -> void:
 	return_button.disabled = not return_button.visible
 	return_button.text = String(view.get("return_label", "RETURN TO BAZAAR"))
 	var route_selected := bool(view.get("route_selected", false))
+	route_stage_label.text = "ROUTE SELECTED · REVIEW COSTS → COMMIT" if route_selected else "INSPECT ROAD · SELECT · THEN COMMIT"
+	route_stage_label.add_theme_color_override("font_color", Color("#f0cf96") if route_selected else Color("#9fd2c2"))
 	pause_button.text = "PAUSE · ROUTE REVIEW" if route_selected else "PAUSE · ESC / %s" % controller_cancel_label
 	pause_button.tooltip_text = "Pause with this button. %s or Escape clears the selected route first." % controller_cancel_label if route_selected else "Pause the march without committing a route."
 

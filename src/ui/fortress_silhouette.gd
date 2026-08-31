@@ -77,8 +77,27 @@ static func visual_signature(view: Dictionary) -> Dictionary:
 		"mode": String(view.get("mode", "rest")),
 		"overheated": heat > heat_limit,
 		"heat": heat,
-		"heat_limit": heat_limit
+		"heat_limit": heat_limit,
+		"motion_profile": mode_treatment(String(view.get("mode", "rest"))).get("motion", "settled"),
+		"stance": mode_treatment(String(view.get("mode", "rest"))).get("stance", "service")
 	}
+
+static func mode_treatment(mode: String) -> Dictionary:
+	match mode:
+		"departing":
+			return {"motion": "gathering", "stance": "forward"}
+		"travel", "traveling":
+			return {"motion": "marching", "stance": "forward"}
+		"retreating":
+			return {"motion": "limping", "stance": "rearward"}
+		"contact":
+			return {"motion": "braced", "stance": "combat"}
+		"event":
+			return {"motion": "halted", "stance": "watchful"}
+		"debrief":
+			return {"motion": "settled", "stance": "scarred"}
+		_:
+			return {"motion": "settled", "stance": "service"}
 
 static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Dictionary:
 	var high_contrast := bool(view.get("high_contrast", false))
@@ -97,6 +116,7 @@ static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Di
 	var body := Rect2(bounds.position + Vector2(bounds.size.x * 0.12, bounds.size.y * 0.28), Vector2(bounds.size.x * 0.76, bounds.size.y * 0.43))
 	body.position += Vector2(-impact * 5.0, impact * 2.0)
 	var roof := Rect2(body.position + Vector2(body.size.x * 0.12, -body.size.y * 0.26), Vector2(body.size.x * 0.34, body.size.y * 0.27))
+	_draw_ground_shadow(canvas, body, mode, impact)
 	var lower_hull := PackedVector2Array([
 		body.position + Vector2(0, body.size.y * 0.78),
 		body.position + Vector2(body.size.x, body.size.y * 0.78),
@@ -107,6 +127,7 @@ static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Di
 	canvas.draw_polyline(PackedVector2Array([lower_hull[0], lower_hull[1], lower_hull[2], lower_hull[3], lower_hull[0]]), edge, 3.0)
 	canvas.draw_rect(body, metal, true)
 	canvas.draw_rect(body, edge, false, 4.0)
+	_draw_hull_profile(canvas, body, metal, dark_metal, edge)
 	canvas.draw_rect(roof, dark_metal, true)
 	canvas.draw_rect(roof, edge, false, 3.0)
 	_draw_material_layers(canvas, body, roof, edge, dark_metal, flooded, high_contrast)
@@ -128,9 +149,11 @@ static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Di
 			breached_families += 1
 		var slot_rect := Rect2(body.position + Vector2(14.0 + float(index) * (slot_width + slot_gap), body.size.y * 0.34), Vector2(slot_width, slot_height))
 		_draw_module_slot(canvas, slot_rect, slot, high_contrast, warm)
+		_draw_module_activity(canvas, slot_rect, slot, travel_phase, high_contrast)
 		anchors[String(slot.get("id", ""))] = slot_rect.get_center()
 		anchors[String(slot.get("family", ""))] = slot_rect.get_center()
 	_draw_region_wear(canvas, body, flooded, overheated, high_contrast)
+	_draw_mode_cues(canvas, body, mode, travel_phase, impact, high_contrast)
 	if breached_families > 0:
 		canvas.draw_string(ThemeDB.fallback_font, body.position + Vector2(body.size.x - 96, 18), "%d BREACH" % breached_families, HORIZONTAL_ALIGNMENT_RIGHT, 86, 10, Color("#ff9a8d"))
 	elif offline_count > 0:
@@ -142,6 +165,41 @@ static func draw(canvas: CanvasItem, bounds: Rect2, view: Dictionary = {}) -> Di
 	else:
 		canvas.draw_string(ThemeDB.fallback_font, body.position + Vector2(body.size.x - 78, 18), "READY", HORIZONTAL_ALIGNMENT_RIGHT, 68, 9, Color("#9fddbd"))
 	return {"body": body, "anchors": anchors}
+
+static func _draw_ground_shadow(canvas: CanvasItem, body: Rect2, mode: String, impact: float) -> void:
+	var moving := mode in ["departing", "travel", "traveling", "retreating"]
+	var shadow_y := body.end.y + body.size.y * 0.41
+	var inset := body.size.x * (0.08 if moving else 0.02)
+	var shadow := PackedVector2Array([
+		Vector2(body.position.x + inset, shadow_y),
+		Vector2(body.end.x - inset, shadow_y),
+		Vector2(body.end.x - body.size.x * 0.18, shadow_y + 12.0 + impact * 3.0),
+		Vector2(body.position.x + body.size.x * 0.18, shadow_y + 12.0 + impact * 3.0)
+	])
+	canvas.draw_colored_polygon(shadow, Color(0.02, 0.025, 0.025, 0.55))
+
+static func _draw_hull_profile(canvas: CanvasItem, body: Rect2, metal: Color, dark_metal: Color, edge: Color) -> void:
+	var rear := PackedVector2Array([
+		body.position + Vector2(-body.size.x * 0.045, body.size.y * 0.18),
+		body.position + Vector2(0, body.size.y * 0.08),
+		body.position + Vector2(0, body.size.y * 0.72),
+		body.position + Vector2(-body.size.x * 0.035, body.size.y * 0.64)
+	])
+	canvas.draw_colored_polygon(rear, dark_metal)
+	canvas.draw_polyline(PackedVector2Array([rear[0], rear[1], rear[2], rear[3], rear[0]]), edge.darkened(0.12), 2.0)
+	var prow := PackedVector2Array([
+		body.position + Vector2(body.size.x, body.size.y * 0.12),
+		body.position + Vector2(body.size.x * 1.055, body.size.y * 0.25),
+		body.position + Vector2(body.size.x * 1.055, body.size.y * 0.68),
+		body.position + Vector2(body.size.x, body.size.y * 0.82)
+	])
+	canvas.draw_colored_polygon(prow, metal.darkened(0.12))
+	canvas.draw_polyline(PackedVector2Array([prow[0], prow[1], prow[2], prow[3], prow[0]]), edge, 2.0)
+	canvas.draw_line(body.position + Vector2(body.size.x * 0.04, body.size.y * 0.12), body.position + Vector2(body.size.x * 0.96, body.size.y * 0.12), edge.darkened(0.18), 2.0)
+	for raw_brace_ratio in [0.28, 0.52, 0.76]:
+		var brace_ratio: float = float(raw_brace_ratio)
+		var x: float = body.position.x + body.size.x * brace_ratio
+		canvas.draw_line(Vector2(x - 12.0, body.end.y - 4.0), Vector2(x + 8.0, body.position.y + body.size.y * 0.79), edge.darkened(0.26), 3.0)
 
 static func _state_priority(state_name: String) -> int:
 	if state_name == "offline":
@@ -226,6 +284,37 @@ static func _draw_module_slot(canvas: CanvasItem, rect: Rect2, slot: Dictionary,
 		canvas.draw_rect(rect.grow(3.0), Color("#83e5df"), false, 3.0)
 	if bool(slot.get("targeted", false)):
 		_draw_target_bracket(canvas, rect.grow(5.0), Color("#ff786b"))
+
+static func _draw_module_activity(canvas: CanvasItem, rect: Rect2, slot: Dictionary, travel_phase: float, high_contrast: bool) -> void:
+	var condition := primary_condition(slot)
+	if condition not in ["damaged", "breached", "strained"]:
+		return
+	var pulse := 0.55 + sin(travel_phase * 0.09 + rect.position.x * 0.02) * 0.18
+	var activity_color := Color("#fff0ba") if high_contrast else Color("#e99a59")
+	activity_color.a = clampf(pulse, 0.28, 0.82)
+	canvas.draw_circle(rect.position + Vector2(rect.size.x * 0.78, 5.0), 3.0 if condition == "strained" else 4.5, activity_color)
+	if condition in ["damaged", "breached"]:
+		for smoke_index in range(2):
+			var smoke := Color(0.08, 0.10, 0.10, 0.48 - float(smoke_index) * 0.12)
+			canvas.draw_circle(rect.position + Vector2(rect.size.x * 0.76 - float(smoke_index) * 6.0, -5.0 - float(smoke_index) * 9.0), 5.0 + float(smoke_index) * 2.0, smoke)
+
+static func _draw_mode_cues(canvas: CanvasItem, body: Rect2, mode: String, travel_phase: float, impact: float, high_contrast: bool) -> void:
+	var accent := Color.WHITE if high_contrast else Color("#d5b06c")
+	if mode in ["departing", "travel", "traveling", "retreating"]:
+		for dust_index in range(4):
+			var drift := fmod(travel_phase * 0.8 + float(dust_index) * 19.0, body.size.x * 0.34)
+			var dust_color := Color(0.68, 0.49, 0.28, 0.18 + float(dust_index) * 0.035)
+			canvas.draw_circle(Vector2(body.position.x - 8.0 - drift, body.end.y + body.size.y * 0.34), 7.0 + float(dust_index) * 2.0, dust_color)
+		canvas.draw_line(body.position + Vector2(-body.size.x * 0.18, body.size.y * 0.25), body.position + Vector2(-8.0, body.size.y * 0.25), accent.darkened(0.34), 2.0)
+	if mode == "contact":
+		var brace_color := Color("#ff9a8d") if impact > 0.1 else accent
+		canvas.draw_line(body.position + Vector2(body.size.x * 0.94, body.size.y * 0.06), body.position + Vector2(body.size.x * 1.08, -body.size.y * 0.04), brace_color, 4.0)
+		canvas.draw_line(body.position + Vector2(body.size.x * 0.94, body.size.y * 0.06), body.position + Vector2(body.size.x * 1.09, body.size.y * 0.15), brace_color, 4.0)
+	if mode == "rest":
+		for lamp_ratio in [0.26, 0.48, 0.70]:
+			var lamp := body.position + Vector2(body.size.x * lamp_ratio, body.size.y * 0.18)
+			canvas.draw_circle(lamp, 3.5, Color("#ffd47f"))
+			canvas.draw_circle(lamp, 8.0, Color(1.0, 0.72, 0.34, 0.08))
 
 static func _draw_condition_mark(canvas: CanvasItem, rect: Rect2, condition: String, high_contrast: bool, warm: Color) -> void:
 	var warning := Color("#fff0ba") if high_contrast else Color("#f1c26f")

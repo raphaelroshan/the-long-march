@@ -39,7 +39,7 @@ func _build_ui() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var background := ColorRect.new()
-	background.color = Color("#0d1519")
+	background.color = Color("#081014")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 	var page := VBoxContainer.new()
@@ -174,6 +174,10 @@ func _build_choice_dock(parent: HBoxContainer) -> void:
 		button.text = "Choice %d" % (index + 1)
 		button.custom_minimum_size = Vector2(0, 72)
 		button.add_theme_font_size_override("font_size", 11)
+		button.add_theme_stylebox_override("normal", _flat_style(Color("#1b292f"), Color("#536a70"), 2, 5, 9))
+		button.add_theme_stylebox_override("hover", _flat_style(Color("#263941"), Color("#f0cf96"), 3, 5, 8))
+		button.add_theme_stylebox_override("focus", _flat_style(Color("#263941"), Color("#fff1c9"), 4, 5, 7))
+		button.add_theme_stylebox_override("pressed", _flat_style(Color("#35412f"), Color("#9fddbd"), 3, 5, 8))
 		button.pressed.connect(_emit_choice.bind(button))
 		choice_buttons.append(button)
 		stack.add_child(button)
@@ -282,9 +286,31 @@ class ScenarioCanvas extends Control:
 			var y := size.y * (0.31 + ridge * 0.05)
 			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#39575d") if flooded else Color("#665c4e"), 26.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.65), Vector2(size.x, size.y * 0.35)), Color("#10282c") if flooded else Color("#31271e"), true)
+		_draw_tableau_frame()
 		_draw_fortress()
-		_draw_subject(Vector2(size.x * 0.73, size.y * 0.61))
-		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 18), "THE ROAD WAITS FOR YOUR ORDER", HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#dfc990"))
+		var subject_center := Vector2(size.x * 0.75, size.y * 0.61)
+		_draw_decision_link(subject_center)
+		_draw_subject(subject_center)
+		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 18), "HALTED · ONE ORDER CHANGES THE ROAD", HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#dfc990"))
+
+	func decision_signature() -> String:
+		return "%s · FORTRESS HALTED · CONSEQUENCE PENDING" % presentation_signature()
+
+	func _draw_tableau_frame() -> void:
+		var frame := Rect2(Vector2(5.0, 5.0), size - Vector2(10.0, 10.0))
+		draw_rect(frame, Color(0.02, 0.04, 0.05, 0.08), true)
+		draw_rect(frame, Color("#e7d5a6") if high_contrast_enabled else Color("#5c6d6d"), false, 2.0)
+		var divider_x := size.x * 0.58
+		draw_line(Vector2(divider_x, size.y * 0.18), Vector2(divider_x, size.y * 0.82), Color(0.78, 0.61, 0.36, 0.28), 2.0)
+
+	func _draw_decision_link(subject_center: Vector2) -> void:
+		var from := Vector2(size.x * 0.48, size.y * 0.52)
+		var to := subject_center + Vector2(-74.0, -20.0)
+		var link_color := Color("#f0cf96")
+		link_color.a = 0.46
+		draw_dashed_line(from, to, link_color, 2.0, 9.0)
+		draw_circle(subject_center, 74.0, Color(0.93, 0.68, 0.31, 0.06))
+		draw_arc(subject_center, 80.0, -PI * 0.85, PI * 0.30, 32, link_color, 2.0)
 
 	func _draw_fortress() -> void:
 		var view := fortress_view.duplicate(true)
