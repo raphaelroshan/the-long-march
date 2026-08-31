@@ -45,7 +45,7 @@ jobs:
       - name: Require export presets for release builds
         run: test -f export_presets.cfg
       - name: Export desktop playtest
-        run: bash scripts/export_playtest.sh "${{ matrix.target }}"
+        run: LONG_MARCH_SKIP_IMPORT=1 bash scripts/export_playtest.sh "${{ matrix.target }}"
       - name: Smoke packaged desktop build
         run: |
           if [ "${{ matrix.target }}" = "windows" ]; then

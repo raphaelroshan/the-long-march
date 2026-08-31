@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.317` and later
+**Applies to:** `0.3.0-alpha.318` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -44,6 +44,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **Iven full-flow profile — complete in alpha.315** | Prove the alternate specialist path through the same visible UI as a player | Trade workshop capacity for a Wall Lamp, restore the relay, recruit Iven, carry him through Morrowline and Signal Causeway, and retain him in Debrief. |
 | **Route browse-state clarity — complete in alpha.316** | Keep inspection from feeling like an accidental commitment | Label the right dock as a Road Dossier while browsing, state that browsing has no cost, and promote it to Selected Road only after activation. |
 | **Selected-road cost receipt — complete in alpha.317** | Keep previewed costs adjacent to the selected map node | Restate destination, day, fuel, pressure, risk, and heat before Commit without mutating authoritative state. |
+| **Live counter readiness — complete in alpha.318** | Turn threat advice into a current-fortress answer | Name operational, offline, or missing module counters in the live contact dossier while preserving deterministic combat. |
 
 ## Acceptance tests for every AI task
 
@@ -53,7 +54,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, specialist continuity, the Iven full-flow profile, route browse-state clarity, and selected-road cost receipt are complete in `0.3.0-alpha.317`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, specialist continuity, the Iven full-flow profile, route browse-state clarity, selected-road cost receipt, and live counter readiness are complete in `0.3.0-alpha.318`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 

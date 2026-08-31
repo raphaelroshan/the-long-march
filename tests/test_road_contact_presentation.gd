@@ -44,6 +44,7 @@ func _view_for(enemy_id: String, arrived: bool, defeated: bool = false) -> Dicti
 		"advance_label": "RESOLVE CONTACT",
 		"inspect_label": "INSPECT CHASSIS",
 		"interventions": [],
+		"counter_readiness": {enemy_id: {"status": "ready", "text": "READY NOW · TEST COUNTER"}},
 		"enemy_definitions": {enemy_id: {"name": case.name, "arrival_step": case.arrival_step, "route": case.route, "target_tags": case.targets, "counter": case.counter}},
 		"target_names": {target_id: target_name},
 		"enemies": [{"id": enemy_id, "arrived": arrived, "defeated": defeated, "target": target_id, "impact": {"damage": 1, "current_durability": 2, "remaining_durability": 1, "target_reason": "%s route matched" % String(case.route), "dependency_changes": [{"name": "Dependent System", "to": "offline"}]}}],
@@ -76,6 +77,7 @@ func _run() -> void:
 		_expect(contact.battle_phase_for() == "FORECAST", "%s should begin with a forecast phase" % case.name)
 		_expect(contact.contact_canvas.presentation_stage_text() == "FORECAST · %s · %d STEP%s OUT" % [String(case.name).to_upper(), int(case.arrival_step), "" if int(case.arrival_step) == 1 else "S"], "%s should expose stable forecast timing" % case.name)
 		_expect(contact.threat_detail.text.contains("APPROACH · %s" % String(case.route).capitalize()) and contact.threat_detail.text.contains("PREFERRED TARGETS · %s" % " / ".join(case.targets)) and contact.threat_detail.text.contains("COUNTER · %s" % case.counter), "%s forecast should name approach, target preference, and authored counter" % case.name)
+		_expect(contact.counter_readiness_panel.visible and contact.counter_readiness_label.text == "READY NOW · TEST COUNTER", "%s forecast should distinguish current counter readiness from general counter advice" % case.name)
 
 		var impact_view := _view_for(enemy_id, true)
 		contact.configure(impact_view)
@@ -131,6 +133,7 @@ func _run() -> void:
 	contact.contact_canvas.finish_transition()
 	contact._refresh_battle_phase_label(true)
 	_expect(contact.contact_canvas.high_contrast_enabled and contact.contact_canvas.transition_progress == 1.0 and contact.battle_phase_for() == "CONSEQUENCE" and contact.contact_canvas.presentation_stage_text().begins_with("CONSEQUENCE"), "high contrast should preserve the cue while reduced motion resolves directly to consequence without changing state")
+	_expect(contact.counter_readiness_label.text == "READY NOW · TEST COUNTER", "high contrast should retain the current-fortress counter receipt")
 	_expect(not contact.contact_canvas.temporary_impact_vfx_active(), "reduced motion should skip the temporary impact effect while retaining the consequence receipt")
 	_expect(int(impact_probe["count"]) == 2, "reduced motion should collapse the same resolved impact cue to the immediate consequence instead of dropping it")
 

@@ -91,7 +91,18 @@ func _init() -> void:
 	var contact := ContactPresenter.build(state, snapshot, combat_view, {"order": "Read contact.", "interventions": [{"id": "shift_power", "enabled": true}], "active_target_id": active_target, "fortress": fortress, "fortress_before": fortress})
 	_expect(active_target == "coal_cell" and contact.get("active_target_id") == "coal_cell", "contact presenter should preserve the authoritative target ID")
 	_expect(contact.get("recent_report", []).size() == 6 and contact.get("interventions", [])[0].get("id") == "shift_power", "contact presenter should preserve the bounded report and stable intervention command ID")
+	_expect(String(contact.get("counter_readiness", {}).get("road_raiders", {}).get("status", "")) == "missing" and String(contact.get("counter_readiness", {}).get("road_raiders", {}).get("text", "")).contains("NO LISTED MODULE COUNTER READY"), "contact presenter should distinguish a fortress without a ready counter from the threat's general counter advice")
 	_expect_pure(state, contact_before, "contact presenter")
+	var offline_counter_state := LongMarchState.new(1107)
+	var offline_repeater := offline_counter_state.module_instance("repeater_gun", Vector2i(0, 0), true)
+	offline_repeater["durability"] = 0
+	offline_counter_state.modules = [offline_repeater]
+	var offline_raider_counter := ContactPresenter.build_counter_readiness(offline_counter_state, "road_raiders")
+	_expect(String(offline_raider_counter.get("status", "")) == "offline" and String(offline_raider_counter.get("text", "")).contains("Repeater Gun"), "an installed counter with unmet dependencies should be reported as offline rather than ready")
+	var iven_counter_state := LongMarchState.new(1107)
+	iven_counter_state.specialist_id = "iven_pell"
+	var iven_storm_counter := ContactPresenter.build_counter_readiness(iven_counter_state, "storm_front")
+	_expect(String(iven_storm_counter.get("status", "")) == "ready" and String(iven_storm_counter.get("text", "")).contains("Iven Pell"), "Iven's anti-storm contribution should appear as a ready live-contact answer")
 
 	state.phase = "settlement"
 	state.current_location = "morrowline_camp"

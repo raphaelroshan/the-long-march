@@ -30,6 +30,8 @@ var timeline_labels: Array[Label] = []
 var threat_heading: Label
 var threat_status: Label
 var threat_detail: Label
+var counter_readiness_panel: PanelContainer
+var counter_readiness_label: Label
 var warning_label: Label
 var advance_button: Button
 var inspect_button: Button
@@ -212,10 +214,19 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	stack.add_child(threat_status)
 	threat_detail = Label.new()
 	threat_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	threat_detail.custom_minimum_size = Vector2(0, 104)
+	threat_detail.custom_minimum_size = Vector2(0, 88)
 	threat_detail.add_theme_font_size_override("font_size", 11)
 	threat_detail.add_theme_color_override("font_color", Color("#c8d1d1"))
 	stack.add_child(threat_detail)
+	counter_readiness_panel = PanelContainer.new()
+	counter_readiness_panel.custom_minimum_size = Vector2(0, 42)
+	stack.add_child(counter_readiness_panel)
+	counter_readiness_label = Label.new()
+	counter_readiness_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	counter_readiness_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	counter_readiness_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	counter_readiness_label.add_theme_font_size_override("font_size", 10)
+	counter_readiness_panel.add_child(counter_readiness_label)
 	warning_label = Label.new()
 	warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	warning_label.add_theme_font_size_override("font_size", 10)
@@ -352,9 +363,11 @@ func _configure_threat(view: Dictionary) -> void:
 		threat_heading.text = "ROAD OPEN"
 		threat_status.text = "No undefeated contact remains."
 		threat_detail.text = "Advance to settle the road and complete arrival."
+		counter_readiness_panel.visible = false
 		return
 	var definition: Dictionary = definitions.get(String(chosen.get("id", "")), {})
 	var enemy_name := String(definition.get("name", String(chosen.get("id", "threat")).replace("_", " ").capitalize()))
+	_configure_counter_readiness(String(chosen.get("id", "")), view)
 	threat_heading.text = enemy_name.to_upper()
 	if bool(chosen.get("arrived", false)):
 		var impact: Dictionary = chosen.get("impact", {})
@@ -370,6 +383,29 @@ func _configure_threat(view: Dictionary) -> void:
 	else:
 		threat_status.text = "%d STEP%s OUT · %s" % [chosen_distance, "" if chosen_distance == 1 else "S", String(definition.get("flank", "road approach")).to_upper()]
 		threat_detail.text = "APPROACH · %s\nPREFERRED TARGETS · %s\nCOUNTER · %s" % [String(definition.get("route", "road approach")).capitalize(), " / ".join(definition.get("target_tags", [])), String(definition.get("counter", "No listed system counter"))]
+
+func _configure_counter_readiness(enemy_id: String, view: Dictionary) -> void:
+	var readiness: Dictionary = Dictionary(view.get("counter_readiness", {})).get(enemy_id, {})
+	var status := String(readiness.get("status", "missing"))
+	counter_readiness_label.text = String(readiness.get("text", "NO LISTED MODULE COUNTER READY"))
+	counter_readiness_panel.visible = not enemy_id.is_empty()
+	var background := Color("#172b25")
+	var border := Color("#67b48b")
+	var ink := Color("#bfe8cf")
+	if status == "offline":
+		background = Color("#33221f")
+		border = Color("#db806f")
+		ink = Color("#ffd0c6")
+	elif status == "missing":
+		background = Color("#2d291f")
+		border = Color("#caa562")
+		ink = Color("#f3dba8")
+	if high_contrast_enabled:
+		background = background.darkened(0.40)
+		border = Color.WHITE
+		ink = Color.WHITE
+	counter_readiness_panel.add_theme_stylebox_override("panel", _flat_style(background, border, 2, 4, 5))
+	counter_readiness_label.add_theme_color_override("font_color", ink)
 
 func contact_readability_summary() -> Dictionary:
 	var enemy := contact_canvas._nearest_enemy() if contact_canvas != null else {}
@@ -433,6 +469,8 @@ func set_high_contrast(enabled: bool) -> void:
 	high_contrast_enabled = enabled
 	if battle_phase_label != null:
 		_refresh_battle_phase_label(true)
+	if not current_view.is_empty():
+		_configure_threat(current_view)
 	if contact_canvas != null:
 		contact_canvas.high_contrast_enabled = enabled
 		contact_canvas.queue_redraw()
