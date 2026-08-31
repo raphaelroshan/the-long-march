@@ -172,3 +172,13 @@ SHA-256: `8c26af59f5ccf5b3746997e08573b3dcb81bd50d850293d42fcc1a65331e2cbb`
 | The Miller With a Broken Wheel | [Stopped wagon and workshop-time choice](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/03_miller_wheel.png) | `c9e5ed609397b70e2acd43dd4d21b9fb3f70c73c4061f6b95124158f10c6ed74` |
 
 All three use the existing one-order roadside interaction and exact authoritative effects. The images verify visual specificity and layout, not human comprehension or final-art quality.
+
+## `v0.3.0-alpha.307` — Tutorial fortress continuity
+
+| Prologue page | Evidence | SHA-256 |
+|---|---|---|
+| A Moving Settlement | [Shared fortress at rest](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/01_moving_settlement.png) | `e63932e190aaf9c29c2808fca0474e57c663c3733dc9da645b0ca2baa8c8d88d` |
+| Build the Chain | [Module-family dependency overlay](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/02_dependency_chains.png) | `31da001dba0db38d3fa3ad58d721894d90694391c093aa40f1ff98aeb9c5c147` |
+| Read the Road | [Shared fortress departure stance](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/03_road_ahead.png) | `18c4ce15869597127808991d8698dc344dbe94f3ea4755a47c2d4adbbb11b84b` |
+
+The prologue now teaches with the same visual object used throughout the playable slice. These images verify continuity and layout, not final illustration quality or uncoached comprehension.

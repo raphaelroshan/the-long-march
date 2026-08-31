@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.306` roadside-occurrence-identity candidate |
+| Build | `0.3.0-alpha.307` tutorial-fortress-continuity candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -17,6 +17,7 @@
 | Rest presentation | PASS: crew-scale service activity, crane, cart, valve exhaust, lamp cycle, and reduced-motion propagation through the settlement hub |
 | Route-map grammar | PASS: stable node glyphs, route-state signatures, accepted assignment marker, presenter purity, and reversible selection behavior |
 | Roadside identity | PASS: dedicated boiler, ammunition-lift, and broken-wheel motifs with exact choice framing at 1280×720 and 110% text/high contrast |
+| Tutorial continuity | PASS: shared fortress actor across all three prologue pages, dependency overlay, departure stance, and 110% text/high-contrast action containment |
 
 ## Evidence
 
@@ -34,9 +35,11 @@
 - [`Route-map visual evidence`](visual_evidence/v0.3.0-alpha.305-route-map-grammar/)
 - [`Roadside occurrence identity report`](roadside_occurrence_identity_report.md)
 - [`Roadside occurrence visual evidence`](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/)
+- [`Tutorial fortress continuity report`](tutorial_fortress_continuity_report.md)
+- [`Tutorial prologue visual evidence`](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/)
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.306 replaces the remaining generic roadside-event symbol with three decision-specific tableaux while preserving the existing bounded occurrence system and exact costs.
+The updated strategy remains intact without changing authoritative game state. Alpha.307 introduces the same shared fortress silhouette, module families, dependency language, and departure stance that the player encounters in the actual tutorial and campaign.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

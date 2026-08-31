@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.306`
+**Build:** `0.3.0-alpha.307`
 
 **Engine:** Godot 4.4.1
 
@@ -17,6 +17,7 @@
 - [Inhabited fortress at rest](visual_evidence/v0.3.0-alpha.304-inhabited-rest/)
 - [Route-map visual grammar](visual_evidence/v0.3.0-alpha.305-route-map-grammar/)
 - [Roadside occurrence identity](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/)
+- [Tutorial fortress continuity](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/)
 
 ## Findings
 
@@ -42,6 +43,8 @@ Alpha.305 gives the regional chart a non-color status grammar. Current, availabl
 
 Alpha.306 removes the final generic roadside-occurrence symbol. The damaged boiler now stages inspection against continued cadence, the ammunition lift shows its loaded chain against a fitted brace, and the miller's broken wheel sits beside the wagon and workshop-time choice. Each composition repeats the exact decision named in the right dock without inventing new mechanics.
 
+Alpha.307 replaces the prologue's box-and-window placeholder with the shared fortress actor. The first page now establishes the machine's scale and inhabited service posture, the second annotates real module-family bays with dependency links, and the third moves that same actor into a departure stance toward the first contact.
+
 ## Next work
 
-Use the exact alpha.306 cohort for consented, uncoached sessions. Prioritize repeated failures in roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact alpha.307 cohort for consented, uncoached sessions. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
