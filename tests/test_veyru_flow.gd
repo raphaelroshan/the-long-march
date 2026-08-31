@@ -70,6 +70,8 @@ func _finish_battle() -> void:
 		if not game.state.encounter_active:
 			await _settle_ui()
 			_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "a resolved Veyru road should stop at its arrival receipt")
+			_expect(String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("destination_id", "")) == String(game.journey_arrival.current_view.get("destination_id", "")) and not String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("motif", "")).is_empty(), "Veyru arrival should render the authoritative destination with a named regional motif")
+			await _capture("arrival_%s" % String(game.journey_arrival.current_view.get("destination_id", "unknown")))
 			game.journey_arrival.continue_button.pressed.emit()
 			await process_frame
 			return
