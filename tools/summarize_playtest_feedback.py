@@ -22,6 +22,12 @@ PLAYER_ACTIONS = {
     "settlement_service",
 }
 
+CONTACT_EVENTS = {
+    "contact_target_locked",
+    "contact_target_inspected",
+    "intervention_used",
+}
+
 
 def load_feedback(path: Path) -> dict[str, Any]:
     try:
@@ -58,6 +64,60 @@ def _property_list(events: list[Any], event_id: str, fields: tuple[str, ...]) ->
     return ", ".join(rows) if rows else "not recorded"
 
 
+def _display_value(value: Any) -> str:
+    rendered = str(value).strip().replace("_", " ").title()
+    return rendered.replace("|", "\\|") if rendered else "—"
+
+
+def _contact_metrics(payload: dict[str, Any], events: list[Any]) -> tuple[dict[str, int], str]:
+    event_ids = [str(entry.get("event", "")) for entry in events if isinstance(entry, dict)]
+    derived = {
+        "encounter_steps": event_ids.count("encounter_step"),
+        "contact_targets_locked": event_ids.count("contact_target_locked"),
+        "contact_target_inspections": event_ids.count("contact_target_inspected"),
+        "emergency_orders_used": event_ids.count("intervention_used"),
+    }
+    exported = payload.get("session_metrics", {})
+    if not isinstance(exported, dict) or not all(key in exported for key in derived):
+        return derived, "missing"
+    comparable: dict[str, int] = {}
+    for key in derived:
+        try:
+            comparable[key] = int(exported.get(key, derived[key]))
+        except (TypeError, ValueError):
+            return derived, "mismatch"
+    return derived, "match" if comparable == derived else "mismatch"
+
+
+def _contact_timeline(events: list[Any]) -> list[str]:
+    rows: list[str] = []
+    for entry in events:
+        if not isinstance(entry, dict):
+            continue
+        event_id = str(entry.get("event", ""))
+        if event_id not in CONTACT_EVENTS:
+            continue
+        properties = entry.get("properties", {})
+        if not isinstance(properties, dict):
+            properties = {}
+        leg = _display_value(properties.get("leg", "?"))
+        step = _display_value(properties.get("step", "?"))
+        if event_id == "contact_target_locked":
+            detail = "Target locked: %s → %s" % (
+                _display_value(properties.get("enemy") or "unknown enemy"),
+                _display_value(properties.get("target") or "unknown target"),
+            )
+        elif event_id == "contact_target_inspected":
+            detail = "Target inspected: %s" % _display_value(properties.get("target") or "unknown target")
+        else:
+            detail = "Emergency order: %s → %s" % (
+                _display_value(properties.get("intervention") or "unknown order"),
+                _display_value(properties.get("target") or "automatic target"),
+            )
+        rows.append(f"| {leg} | {step} | {detail} |")
+    return rows
+
+
 def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.json") -> str:
     answers: dict[str, Any] = payload["answers"]
     final_state: dict[str, Any] = payload["final_state"]
@@ -74,6 +134,13 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
     result = str(final_state.get("result", "incomplete")).replace("_", " ").title()
     path = final_state.get("campaign_path", [])
     path_text = " → ".join(str(node).replace("_", " ").title() for node in path) if isinstance(path, list) and path else "not completed"
+    contact_metrics, metrics_status = _contact_metrics(payload, events)
+    contact_timeline = _contact_timeline(events)
+    metric_check = {
+        "match": "- Metric check: exported counts match the event trail.",
+        "mismatch": "- Metric check: exported counts differ from the event trail; use the chronological trail below.",
+        "missing": "- Metric check: this older export has no complete metric block; counts were derived from its event trail.",
+    }[metrics_status]
     lines = [
         "# The Long March — Private Alpha Session",
         "",
@@ -100,6 +167,16 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         f"- Event choices: {_property_list(events, 'campaign_event_resolved', ('event', 'choice'))}",
         f"- Final hull / fuel / pressure: {final_state.get('hull', '?')} / {final_state.get('fuel', '?')} / {final_state.get('campaign_pressure', '?')}",
         f"- Replay score: {answers.get('replay_score', '?')}/5",
+        f"- Contact navigation: steps {contact_metrics['encounter_steps']} / target locks {contact_metrics['contact_targets_locked']} / target inspections {contact_metrics['contact_target_inspections']} / emergency orders {contact_metrics['emergency_orders_used']}",
+        metric_check,
+        "",
+        "### Contact navigation trail",
+        "",
+        "These rows show recorded navigation in order. They do not establish what the tester understood.",
+        "",
+        "| Leg | Step | Recorded event |",
+        "|---:|---:|---|",
+        *(contact_timeline if contact_timeline else ["| — | — | No contact navigation recorded. |"]),
         "",
         "## Observe without coaching",
         "",

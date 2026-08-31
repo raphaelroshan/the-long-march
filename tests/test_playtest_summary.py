@@ -29,13 +29,22 @@ def main() -> int:
             "fuel": 2,
             "campaign_pressure": 7,
         },
+        "session_metrics": {
+            "encounter_steps": 1,
+            "contact_targets_locked": 1,
+            "contact_target_inspections": 1,
+            "emergency_orders_used": 1,
+        },
         "session": {
             "started_at_unix": 1000,
             "events": [
                 {"timestamp_unix": 1000, "event": "run_started", "properties": {}},
                 {"timestamp_unix": 1060, "event": "module_moved", "properties": {"module": "field_workshop"}},
                 {"timestamp_unix": 1180, "event": "campaign_node_started", "properties": {"node": "rill_crossing", "doctrine": "protect_cargo"}},
-                {"timestamp_unix": 1240, "event": "intervention_used", "properties": {"intervention": "seal_compartment", "target": "coal_cell"}},
+                {"timestamp_unix": 1200, "event": "encounter_step", "properties": {"leg": 1, "step": 2}},
+                {"timestamp_unix": 1210, "event": "contact_target_locked", "properties": {"leg": 1, "step": 2, "enemy": "road_raiders", "target": "coal_cell"}},
+                {"timestamp_unix": 1220, "event": "contact_target_inspected", "properties": {"leg": 1, "step": 2, "enemy": "road_raiders", "target": "coal_cell"}},
+                {"timestamp_unix": 1240, "event": "intervention_used", "properties": {"intervention": "seal_compartment", "target": "coal_cell", "leg": 1, "step": 2}},
                 {"timestamp_unix": 1360, "event": "settlement_service", "properties": {"service": "refuel"}},
                 {"timestamp_unix": 1420, "event": "campaign_event_resolved", "properties": {"event": "mara_workbench_choice", "choice": "rebuild_weakest"}},
             ],
@@ -55,7 +64,20 @@ def main() -> int:
         assert "Recovery services: Refuel" in sheet
         assert "Mara Workbench Choice / Rebuild Weakest" in sheet
         assert "Replay score: 4/5" in sheet
+        assert "Contact navigation: steps 1 / target locks 1 / target inspections 1 / emergency orders 1" in sheet
+        assert "Metric check: exported counts match the event trail." in sheet
+        assert "Target locked: Road Raiders → Coal Cell" in sheet
+        assert "Target inspected: Coal Cell" in sheet
+        assert "Emergency order: Seal Compartment → Coal Cell" in sheet
+        assert "They do not establish what the tester understood." in sheet
         assert "Consent confirmed" in sheet and "The game does not upload them" in sheet
+
+        payload["session_metrics"]["contact_target_inspections"] = 9
+        mismatch_sheet = build_session_sheet(payload, path.name)
+        assert "exported counts differ from the event trail" in mismatch_sheet
+        del payload["session_metrics"]
+        older_sheet = build_session_sheet(payload, path.name)
+        assert "older export has no complete metric block" in older_sheet
         invalid_path = Path(directory) / "invalid.json"
         invalid_path.write_text("{}", encoding="utf-8")
         try:
