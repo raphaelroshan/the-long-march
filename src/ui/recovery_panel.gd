@@ -17,6 +17,8 @@ var recovery_canvas: RecoveryCanvas
 var receipt_label: Label
 var place_label: Label
 var priority_label: Label
+var repair_priority_label: Label
+var repair_effect_label: Label
 var local_stake_label: Label
 var route_outlook_label: Label
 var repair_button: Button
@@ -131,7 +133,7 @@ func _build_ui() -> void:
 	services_panel.add_theme_stylebox_override("panel", _style(Color("#111b20"), Color("#536a70"), 1, 6, 11))
 	body.add_child(services_panel)
 	var services := VBoxContainer.new()
-	services.add_theme_constant_override("separation", 6)
+	services.add_theme_constant_override("separation", 4)
 	services_panel.add_child(services)
 	var heading := Label.new()
 	heading.text = "LOCAL SERVICES"
@@ -158,6 +160,22 @@ func _build_ui() -> void:
 	route_outlook_label.add_theme_font_size_override("font_size", 10)
 	route_outlook_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	services.add_child(route_outlook_label)
+	var repair_priority_panel := PanelContainer.new()
+	repair_priority_panel.add_theme_stylebox_override("panel", _style(Color("#2b211a"), Color("#b07b4e"), 1, 5, 7))
+	services.add_child(repair_priority_panel)
+	var repair_priority_stack := VBoxContainer.new()
+	repair_priority_stack.add_theme_constant_override("separation", 2)
+	repair_priority_panel.add_child(repair_priority_stack)
+	repair_priority_label = Label.new()
+	repair_priority_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	repair_priority_label.add_theme_font_size_override("font_size", 10)
+	repair_priority_label.add_theme_color_override("font_color", Color("#f2d49f"))
+	repair_priority_stack.add_child(repair_priority_label)
+	repair_effect_label = Label.new()
+	repair_effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	repair_effect_label.add_theme_font_size_override("font_size", 9)
+	repair_effect_label.add_theme_color_override("font_color", Color("#d7c6aa"))
+	repair_priority_stack.add_child(repair_effect_label)
 	var help := Label.new()
 	help.text = "Each service spends one opportunity. Its button shows the exact before → after result."
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -171,7 +189,7 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	services.add_child(spacer)
 	routes_button = Button.new()
-	routes_button.custom_minimum_size = Vector2(0, 52)
+	routes_button.custom_minimum_size = Vector2(0, 48)
 	routes_button.add_theme_font_size_override("font_size", 12)
 	routes_button.pressed.connect(func() -> void: routes_requested.emit())
 	services.add_child(routes_button)
@@ -179,7 +197,7 @@ func _build_ui() -> void:
 
 func _service_button(parent: VBoxContainer, callback: Signal) -> Button:
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(0, 64)
+	button.custom_minimum_size = Vector2(0, 56)
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.add_theme_font_size_override("font_size", 12)
 	button.pressed.connect(func() -> void: callback.emit())
@@ -193,6 +211,8 @@ func configure(view: Dictionary) -> void:
 	priority_label.text = String(view.get("service_priority", "PRIORITY · Restore the most exposed system before departure."))
 	local_stake_label.text = String(view.get("local_stake", "STAKE · The fortress must leave this stop able to carry its promise."))
 	route_outlook_label.text = String(view.get("route_outlook", "OUTBOUND ROADS · Review the next commitments before spending the final service opportunity."))
+	repair_priority_label.text = String(view.get("repair_priority", "REPAIR PRIORITY · All installed systems are at full durability."))
+	repair_effect_label.text = String(view.get("repair_effect", "WHY IT MATTERS · No damage is currently threatening a dependency chain."))
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))
@@ -266,7 +286,20 @@ class RecoveryCanvas extends Control:
 		view["mode"] = "rest"
 		view["high_contrast"] = high_contrast_enabled
 		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.15, size.y * 0.25), Vector2(size.x * 0.70, size.y * 0.52)), view)
+		_draw_repair_callout()
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), String(current_view.get("caption", "ONE STOP · FINITE TIME · THE ROAD CONTINUES")), HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#e2cc98"))
+
+	func _draw_repair_callout() -> void:
+		var priority: Dictionary = current_view.get("repair_priority_view", {})
+		if priority.is_empty() or String(priority.get("module_id", "")).is_empty():
+			return
+		var box := Rect2(Vector2(size.x * 0.25, size.y * 0.72), Vector2(size.x * 0.50, 48))
+		draw_rect(box, Color("#2c1d19"), true)
+		draw_rect(box, Color.WHITE if high_contrast_enabled else Color("#d17c62"), false, 2.0)
+		var name := String(priority.get("name", "DAMAGED SYSTEM")).to_upper()
+		var condition := "%d/%d · %s" % [int(priority.get("current", 0)), int(priority.get("maximum", 0)), String(priority.get("state", "strained")).to_upper()]
+		draw_string(ThemeDB.fallback_font, box.position + Vector2(8, 19), "REPAIR TARGET · %s" % name, HORIZONTAL_ALIGNMENT_CENTER, box.size.x - 16, 10, Color("#f4d6a1"))
+		draw_string(ThemeDB.fallback_font, box.position + Vector2(8, 38), condition, HORIZONTAL_ALIGNMENT_CENTER, box.size.x - 16, 10, Color("#fff0df"))
 
 	func _draw_morrowline_shelter() -> void:
 		var cloth := Color("#c5a56d") if high_contrast_enabled else Color("#70583c")

@@ -14,6 +14,7 @@ var outcome_label: Label
 var beat_label: Label
 var destination_label: Label
 var summary_label: Label
+var recovery_priority_label: Label
 var report_label: Label
 var next_label: Label
 var continue_button: Button
@@ -149,6 +150,14 @@ func _build_ui() -> void:
 	summary_label.add_theme_font_size_override("font_size", 12)
 	summary_label.add_theme_color_override("font_color", Color("#c8d1d1"))
 	detail_stack.add_child(summary_label)
+	var priority_panel := PanelContainer.new()
+	priority_panel.add_theme_stylebox_override("panel", _flat_style(Color("#2a211b"), Color("#b07b4e"), 1, 5, 7))
+	detail_stack.add_child(priority_panel)
+	recovery_priority_label = Label.new()
+	recovery_priority_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recovery_priority_label.add_theme_font_size_override("font_size", 10)
+	recovery_priority_label.add_theme_color_override("font_color", Color("#f2d49f"))
+	priority_panel.add_child(recovery_priority_label)
 	var report_heading := Label.new()
 	report_heading.text = "LAST ROAD EFFECTS"
 	report_heading.add_theme_font_size_override("font_size", 9)
@@ -183,6 +192,7 @@ func configure(view: Dictionary) -> void:
 	beat_label.text = "RECOVERY · RETREAT COMPLETE · CONSEQUENCES APPLIED" if retreat else "ARRIVAL · ROAD SECURED · CONSEQUENCES APPLIED"
 	destination_label.text = destination.to_upper()
 	summary_label.text = String(view.get("summary", "The fortress has reached the next stop."))
+	recovery_priority_label.text = String(view.get("recovery_priority", "RECOVERY PRIORITY · Review the fortress before the next road."))
 	var report: Array = view.get("report", [])
 	report_label.text = "• " + "\n• ".join(report) if not report.is_empty() else "• The road is quiet behind the fortress."
 	next_label.text = String(view.get("next_decision", "NEXT · Acknowledge the receipt."))

@@ -2679,6 +2679,31 @@ func _most_damaged_installed_module() -> Dictionary:
 			largest_shortfall = shortfall
 	return candidate
 
+func _repair_priority_view() -> Dictionary:
+	var candidate := _most_damaged_installed_module()
+	if candidate.is_empty():
+		return {
+			"headline": "REPAIR PRIORITY · All installed systems are at full durability.",
+			"effect": "WHY IT MATTERS · No damage is currently threatening a dependency chain."
+		}
+	var module_id := String(candidate.get("id", ""))
+	var definition := state.module_definition(module_id)
+	var card := state.module_dependency_card(candidate)
+	var status := state.dependency_status(candidate)
+	var current := int(candidate.get("durability", 0))
+	var maximum := int(candidate.get("maximum_durability", definition.get("durability", 1)))
+	var module_name := String(definition.get("name", module_id.replace("_", " ").capitalize()))
+	return {
+		"module_id": module_id,
+		"name": module_name,
+		"current": current,
+		"maximum": maximum,
+		"state": String(status.get("state", "offline")),
+		"headline": "REPAIR PRIORITY · %s · %d/%d · %s" % [module_name.to_upper(), current, maximum, String(status.get("state", "offline")).to_upper()],
+		"effect": "WHY IT MATTERS · %s RISK IF LOST · %s" % [String(definition.get("capability", "This system supports the march.")), String(card.get("next_failure", "Further damage can remove this system's capability."))],
+		"counter": String(card.get("legal_counter", "Repair this system before departure."))
+	}
+
 func _campaign_departure_block_reason(node_id: String) -> String:
 	if node_id.is_empty():
 		return ""
@@ -2841,7 +2866,8 @@ func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 	journey_arrival.visible = false
 	debrief_panel.visible = false
 	var location_name := _recovery_location_name()
-	recovery_panel.configure(RecoveryPresenter.build(state, _fortress_presentation_snapshot(), {
+	var repair_priority := _repair_priority_view()
+	recovery_panel.configure(RecoveryPresenter.build(state, _fortress_presentation_snapshot(String(repair_priority.get("module_id", ""))), {
 		"repair_text": settlement_repair_button.text,
 		"repair_tooltip": settlement_repair_button.tooltip_text,
 		"repair_disabled": settlement_repair_button.disabled,
@@ -2851,7 +2877,8 @@ func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 		"hull_text": settlement_hull_button.text,
 		"hull_tooltip": settlement_hull_button.tooltip_text,
 		"hull_disabled": settlement_hull_button.disabled,
-		"routes_text": settlement_routes_button.text
+		"routes_text": settlement_routes_button.text,
+		"repair_priority_view": repair_priority
 	}, last_recovery_receipt, location_name))
 
 func _on_recovery_repair_requested() -> void:
@@ -3007,6 +3034,7 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 		summary = "The training road is secured. Review the damage receipt, then enter the recovery siding and restore the affected system."
 		action_label = "ENTER RECOVERY SIDING"
 		next_decision = "NEXT · Enter recovery and restore the affected system."
+	var repair_priority := _repair_priority_view()
 	return {
 		"region_id": state.campaign_region_id,
 		"origin_name": origin_name,
@@ -3014,6 +3042,7 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 		"retreat": retreat,
 		"outcome_label": "FORCED RETREAT" if retreat else outcome_copy,
 		"summary": summary,
+		"recovery_priority": String(repair_priority.get("headline", "REPAIR PRIORITY · Review the fortress before the next road.")) + "\n" + String(repair_priority.get("effect", "")),
 		"report": recent_report,
 		"next_decision": next_decision,
 		"action_label": action_label,

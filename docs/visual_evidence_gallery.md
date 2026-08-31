@@ -2,6 +2,17 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.299` — Battle and recovery causality
+
+This set records the strategy follow-up that connects a road contact's wind-up, target, impact, dependency consequence, arrival receipt, and recovery priority.
+
+| Profile | Evidence | Contract |
+|---|---|---|
+| 1600×900 | [Combat beats and complete recovery handoff](visual_evidence/v0.3.0-alpha.299-battle-recovery-causality-1600x900/) | Named target, exact impact, dependency cascade, First Watch/live arrival, recovery, and Debrief |
+| 1280×720 | [Responsive arrival and recovery handoff](visual_evidence/v0.3.0-alpha.299-battle-recovery-causality-1280x720/) | 110% text, high contrast, reduced motion, alternate controller guidance, and visible required actions |
+
+The contact effect visualizes an already-resolved outcome. Text remains authoritative for target, damage, dependency state, and repair priority.
+
 ## `v0.3.0-alpha.298` — Presentation clarity
 
 This targeted set records the visual-quality pass prompted by the alpha.297 review: stronger fortress state, three distinct travel beats, explicit threat-to-target intent, a more inhabited bazaar, isolated roadside decisions, and a causal Debrief summary.

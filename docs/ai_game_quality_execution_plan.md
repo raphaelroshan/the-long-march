@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.298` and later
+**Applies to:** `0.3.0-alpha.299` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -25,6 +25,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **L9 — complete in alpha.296** | Build replayable mastery | Offer bounded route, doctrine, specialist, and recovery variations. Avoid grind and forced build orders; each expanded teaching scenario needs at least two viable solutions. |
 | **L10 — complete in alpha.297** | Harden the private alpha | Verify saves, migration, clean install, controller, scaling, audio, performance, package provenance, offline behavior, and complete-flow evidence. Human sessions may be run afterward for calibration but do not block the artifact. |
 | **L11 — complete in alpha.298** | Improve presentation clarity | Strengthen fortress state, travel rhythm, threat-to-target causality, settlement atmosphere, roadside framing, route decision hierarchy, and Debrief causality without changing authoritative simulation. |
+| **L1 follow-up — complete in alpha.299** | Prove battle-to-recovery causality | Preserve the complete journey while keeping threat, target, wind-up, impact, dependency loss, arrival priority, and recovery action in one readable chain. |
 
 ## Acceptance tests for every AI task
 
@@ -34,7 +35,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated L1–L11 implementation roadmap is complete in `0.3.0-alpha.298`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, or balance failures before adding another region or progression layer.
+> The automated roadmap and the mandatory L1 battle/recovery follow-up are complete in `0.3.0-alpha.299`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 
@@ -42,13 +43,13 @@ The Long March is ready for private alpha when the complete journey is playable 
 
 ## Historical evidence
 
-The latest baseline is recorded in [`latest_visual_review_2026-08-30.md`](latest_visual_review_2026-08-30.md) and [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), and the versioned captures are in `docs/visual_evidence/`. The broader roadmap remains [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md).
+The latest baseline is recorded in [`latest_visual_review_2026-08-31.md`](latest_visual_review_2026-08-31.md) and [`latest_test_report_2026-08-31.md`](latest_test_report_2026-08-31.md), and the versioned captures are in `docs/visual_evidence/`. The broader roadmap remains [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md).
 
 ## References
 
 [1]: agent_handoff_roadmap.md "The Long March Agent Handoff Roadmap"
 [2]: game_quality_transformation_plan.md "The Long March Game-Quality Transformation Plan"
-[3]: latest_test_report_2026-08-30.md "The Long March Latest Main Test Report"
+[3]: latest_test_report_2026-08-31.md "The Long March Latest Main Test Report"
 
 
 ## Latest verification update — 2026-08-31
@@ -56,3 +57,7 @@ The latest baseline is recorded in [`latest_visual_review_2026-08-30.md`](latest
 The current `main` build `0.3.0-alpha.298` passes `scripts/verify.sh`, including the responsive journey profile, complete journey handoff, complete prototype flow, and Flooded Veyru flow. Fresh 1280×720 captures show the strongest opening presentation of the three projects: the moving-fortress premise, primary actions, First Watch framing, and introduction handoff are clear and coherent.
 
 **Next mandatory task: L1 follow-up — Full journey evidence and battle causality.** Preserve the strong opening while proving the clean First Watch → refit → route → commitment → travel → contact/event → recovery → arrival → Debrief path. Then strengthen threat-to-target, wind-up, impact, dependency, and recovery explanation before adding another region or progression layer. Human testing remains optional and non-blocking.
+
+## L1 follow-up completion — 2026-08-31
+
+Build `0.3.0-alpha.299` completes the mandatory follow-up. The verified journey remains intact; contact now holds threat, target, counter, durability, and dependency change in one causal receipt, while arrival and recovery carry the exact damaged system and capability risk into the next player order. Full verification and both supported responsive profiles pass. The next evidence source is uncoached private-alpha observation, not additional campaign breadth.
