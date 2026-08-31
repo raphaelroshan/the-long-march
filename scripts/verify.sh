@@ -58,6 +58,7 @@ run_checked "PASS: The Long March complete journey handoff" "$GODOT_BIN" --headl
 run_checked "PASS: The Long March Cinder Quarry route profile" env LONG_MARCH_CINDER_QUARRY_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
 run_checked "PASS: The Long March declined convoy consequence profile" env LONG_MARCH_DECLINED_CONVOY_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
 run_checked "PASS: The Long March replayable mastery profile" env LONG_MARCH_MASTERY_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
+run_checked "PASS: The Long March Iven specialist profile" env LONG_MARCH_IVEN_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
 run_checked "PASS: The Long March responsive journey profile 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
 run_checked "PASS: The Long March responsive journey profile 1600x900" env LONG_MARCH_VIEWPORT_WIDTH=1600 LONG_MARCH_VIEWPORT_HEIGHT=900 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
 run_checked "PASS: The Long March complete prototype flow" "$GODOT_BIN" --headless --path . --script res://tests/test_prototype_flow.gd

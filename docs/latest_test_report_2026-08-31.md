@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.314` specialist-continuity candidate |
+| Build | `0.3.0-alpha.315` Iven-full-flow candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -21,6 +21,7 @@
 | Bazaar attendants | PASS: six stable station roles, Ashgate/Veyru role variants, selected-station portrait/prop updates, high contrast, and unchanged station command routing |
 | Named specialists | PASS: Iven's locked/ready offer is visible in the active Broken Relay planner; Mara's meeting, workbench choice, and callback retain one stable forge-master identity |
 | Specialist continuity | PASS: recruited Iven and Mara remain visible in later route planning; Iven's recruitment produces an explicit cost-and-effect receipt and removes the obsolete action |
+| Iven full journey | PASS: workshop-for-signal refit, relay restoration, recruitment, Morrowline berth exclusion, Signal Causeway, final commitment, and Debrief are completed through visible controls |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
@@ -35,6 +36,7 @@
 - [`Phase-aligned impact audio report`](phase_aligned_impact_audio_report.md)
 - [`Named specialist identity report`](named_specialist_identity_report.md)
 - [`Specialist continuity report`](specialist_continuity_report.md)
+- [`Iven full-flow report`](iven_full_flow_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -53,6 +55,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.314 keeps recruited specialists present in later planning and makes Iven's recruitment consequence explicit.
+The updated strategy remains intact without changing authoritative game state. Alpha.315 adds a complete player-facing verification profile for the Iven path, including the refit trade-off required to earn it.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
