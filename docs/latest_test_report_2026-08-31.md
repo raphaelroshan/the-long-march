@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.335` intel-handoff candidate |
+| Build | `0.3.0-alpha.336` pre-contact interruption candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -43,6 +43,7 @@
 | Cohort written evidence | PASS: cohort reports retain each session's three written answers and line breaks in argument order, mark missing legacy answers, and explicitly avoid scoring, correction, or classification |
 | Structured outcome facts | PASS: local exports retain the visible result explanation, replay guidance, every installed system's durability/state, and surviving threats; session and cohort reports present them without grading the tester's answer |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
+| Pre-contact interruption | PASS: the first eligible Rill road pauses at The Lift Chain Sings after travel and before contact; origin, destination, exact costs, focus, save/load, Skip, Reduced Motion, core combat blocking, and post-choice contact handoff are deterministic. |
 
 ## Evidence
 
@@ -96,9 +97,12 @@
 - [`Bazaar attendant visual evidence`](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/)
 - [`Route-specific travel landmark report`](route_specific_travel_landmark_report.md)
 - [`Route-specific travel visual evidence`](visual_evidence/v0.3.0-alpha.310-route-landmarks/)
+- [`Pre-contact road interruption report`](pre_contact_road_interruption_report.md)
+- [`Pre-contact road interruption evidence`](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1600x900/)
+- [`Responsive pre-contact road interruption evidence`](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1280x720/)
 
 ## Result
 
-The updated strategy remains intact. Alpha.335 preserves the provenance of purchased route information after Commit, keeping the planning promise visible during the march handoff.
+The updated strategy remains intact. Alpha.336 adds a real gameplay beat between the march presentation and contact: a machine-specific road interruption that changes the physical fortress or future route posture while the already configured enemy contact waits.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

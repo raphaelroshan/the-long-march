@@ -21,6 +21,7 @@ var cinder_quarry_profile := false
 var declined_convoy_profile := false
 var mastery_profile := false
 var iven_profile := false
+var pre_contact_resume_tested := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
 
@@ -170,8 +171,25 @@ func _enter_contact() -> void:
 	_expect(game.journey_transition.visible, "contact entry should begin at the travel handoff")
 	game.journey_transition.continue_button.pressed.emit()
 	await _settle()
+	var interruption_seen := false
+	if game.roadside_event.visible:
+		interruption_seen = true
+		_expect(game.state.pre_contact_occurrence_active() and not game.road_contact.visible and game.state.current_location == "ashgate_depot" and game.state.encounter_step == 0, "the authored road interruption should hold the fortress at its origin before exposing contact")
+		_expect(game.roadside_event.context_label.text == "ROAD INTERRUPTION · CONTACT WAITING" and game.roadside_event.location_label.text.contains("ASHGATE DEPOT → RILL CROSSING"), "the interruption tableau should name both ends of the road and the waiting contact")
+		_expect(game.roadside_event.guidance_label.text.contains("cannot be bypassed"), "the interruption should explain that its committed contact remains mandatory")
+		await _capture("07d_pre_contact_interruption")
+		if not pre_contact_resume_tested:
+			pre_contact_resume_tested = true
+			_expect(game.save_run(true), "the visible pre-contact interruption should save successfully")
+			_expect(game.load_saved_run(), "the pre-contact interruption checkpoint should load successfully")
+			await _settle()
+			_expect(game.journey_transition.visible and game.state.pre_contact_occurrence_active(), "loading an unresolved interruption should restore the road handoff before the decision")
+			game.journey_transition.continue_button.pressed.emit()
+			await _settle()
+			_expect(game.roadside_event.visible and game.roadside_event.choice_buttons[0].has_focus(), "continuing a restored road should return to the unresolved interruption without entering contact")
+		await _choose_event("brace_lift_chain")
 	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "travel should hand focus to the visible road contact")
-	_expect_semantic_cue("contact_entry", "entering contact should use a distinct temporary fortress-transition cue")
+	_expect_semantic_cue("event" if interruption_seen else "contact_entry", "the road handoff should use the semantic cue for the surface it actually enters")
 
 
 func _resolve_contact(expected_phase: String) -> void:
@@ -340,7 +358,7 @@ func _run_ashgate_journey() -> void:
 	await _settle()
 	_expect_three_column_contract(game.journey_transition, game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button, "Ashgate departure")
 	if responsive_profile:
-		_expect(game.journey_transition.high_contrast_enabled and game.journey_transition.reduced_motion and game.journey_transition.presentation_beat() == "contact_ahead" and game.journey_transition.continue_button.text == "ENTER CONTACT" and game.journey_transition.pause_button.text.contains("A"), "the live departure should preserve contrast, skip motion, expose contact, and retain alternate controller guidance")
+		_expect(game.journey_transition.high_contrast_enabled and game.journey_transition.reduced_motion and game.journey_transition.presentation_beat() == "contact_ahead" and game.journey_transition.continue_button.text == "REVIEW INTERRUPTION" and game.journey_transition.pause_button.text.contains("A"), "the live departure should preserve contrast, skip motion, expose the mandatory interruption, and retain alternate controller guidance")
 		_expect(not game.journey_transition.march_canvas.temporary_travel_vfx_active() and float(game.journey_transition.march_canvas.motion_signature().get("speed_scale", 1.0)) == 0.0, "reduced motion should land on the static contact brace without temporary march effects")
 	await _capture("07_departure")
 	if not responsive_profile and not capture_dir.is_empty():
@@ -356,19 +374,16 @@ func _run_ashgate_journey() -> void:
 	await _resolve_contact("map")
 	await _capture("09_arrival_receipt")
 	await _relaunch_and_continue("arrival")
-	_expect(game.state.current_location == "rill_crossing" and (iven_profile or game.state.campaign_event_pending == "lift_chain_sings"), "arrival resume should preserve the secured road and its deterministic pending state")
+	_expect(game.state.current_location == "rill_crossing" and not game.state.pre_contact_occurrence_active(), "arrival resume should preserve the secured road after its pre-contact interruption was resolved")
 	await _acknowledge_arrival()
 	if game.roadside_event.visible:
 		_expect_three_column_contract(game.roadside_event, game.roadside_event.value_labels["day"], game.roadside_event.tableau, game.roadside_event.choice_buttons[0], "roadside event")
 		await _capture("10_roadside_event")
-		if iven_profile:
-			await _choose_first_available_event()
-		else:
-			await _choose_event("brace_lift_chain")
+		await _choose_first_available_event()
 		_expect(game.journey_planner.visible and game.journey_planner.receipt_label.text.contains("LAST RECEIPT"), "a resolved roadside event should leave its consequence receipt on the reopened route table")
 		await _capture("10b_consequence_receipt")
 	else:
-		_expect(iven_profile and game.journey_planner.visible, "the signal-refit profile may proceed directly when no Rill occurrence is eligible")
+		_expect(game.journey_planner.visible, "a secured Rill road may proceed directly when no post-arrival occurrence is eligible")
 
 	await _commit_route("broken_relay")
 	await _enter_contact()

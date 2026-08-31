@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.335`
+**Current code baseline:** `0.3.0-alpha.336`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.335`, preserving the complete causal journey and private-alpha evidence workflow while carrying purchased route-intel attribution across the Commit boundary. The Soot Orchard march handoff retains the same named source and confidence shown during planning rather than collapsing back to unattributed “Known” information.
+**Current merged baseline:** `0.3.0-alpha.336`, preserving the complete causal journey and private-alpha evidence workflow while adding the first true pre-contact road interruption. On the opening Rill Crossing road, an eligible Ammunition Lift can demand one authored decision after the march presentation but before the configured Road Raider contact. Save/load, Skip, Reduced Motion, and direct core commands all preserve the interruption and the still-pending contact.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -36,7 +36,7 @@ The implemented slice includes the following capabilities:
 | Character | Iven Pell changes forecasting and route safety; Mara Flint changes workshop recovery and a later route consequence. Other specialists remain designed extension points. |
 | Recovery | Non-final defeats retreat to a valid regional anchor with explicit time, money, pressure, and limping-state costs. Meridian Pass and the Dry Archive are declared final commitments. |
 | Persistence | Versioned saves, backup recovery, incompatible-save handling, isolated profiles, local playtest notes, and explicit Continue/New Run behavior exist. |
-| Presentation | Ashgate Depot and Lantern Quay now open as fortress-centered bazaars with six stable stations. Plan Journey has a full-frame readiness/map/dossier layout, and route commitment enters a mandatory side-on moving-fortress road screen with exact cost receipts before combat. The UI also shows modules, dependencies, threat forecasts, encounter progress, services, and debrief information. |
+| Presentation | Ashgate Depot and Lantern Quay open as fortress-centered bazaars with six stable stations. Plan Journey has a full-frame readiness/map/dossier layout, route commitment enters a mandatory side-on moving-fortress road screen with exact cost receipts, and eligible authored interruptions can now occur before contact without moving the fortress to the destination. The UI also shows modules, dependencies, threat forecasts, encounter progress, services, and debrief information. |
 | Packaging | Local and CI verification includes Godot tests, policy/content checks, Windows/macOS export scripts, packaged smoke coverage, offline boundaries, input, scaling, pause, save path, and teardown checks. |
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.

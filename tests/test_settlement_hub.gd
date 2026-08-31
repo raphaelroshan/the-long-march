@@ -162,7 +162,7 @@ func _run() -> void:
 	_expect(journey.next_label.text.contains("Skip the march beat"), "the departure beat should explain that its presentation can be skipped immediately")
 	var march_rect: Rect2 = journey.march_canvas.get_global_rect()
 	_expect(journey.day_label.global_position.x < march_rect.position.x and journey.destination_label.global_position.x > march_rect.end.x, "the road view should retain the left-values, centered-fortress, right-details hierarchy")
-	_expect(journey.continue_button.has_focus() and journey.continue_button.text == "SKIP MARCH · ENTER CONTACT" and journey.presentation_beat() == "departed", "the road view should begin with an immediately skippable departure beat")
+	_expect(journey.continue_button.has_focus() and journey.continue_button.text == "SKIP MARCH · REVIEW INTERRUPTION" and journey.presentation_beat() == "departed", "the road view should begin with an immediately skippable presentation beat that still preserves the road interruption")
 	_expect(journey.march_canvas.beat_visual_signature() == "GATE RECEDING", "departure should begin with a distinct receding-settlement visual")
 	_expect(String(journey.march_canvas.motion_signature().get("pace", "")) == "gathering" and not journey.march_canvas.temporary_travel_vfx_active(), "departure should gather momentum without showing full-march dust")
 	journey._process(0.4)
@@ -174,7 +174,7 @@ func _run() -> void:
 	journey.march_canvas._process(0.2)
 	_expect(journey.march_canvas.travel_offset > travel_offset_before and journey.march_canvas.temporary_travel_vfx_active() and String(journey.march_canvas.motion_signature().get("fortress_mode", "")) == "travel", "the full-march beat should move the layered road and enable temporary travel atmosphere without changing route state")
 	journey._process(0.7)
-	_expect(journey.presentation_beat() == "contact_ahead" and journey.continue_button.text == "ENTER CONTACT" and journey.status_label.text.contains("CONTACT AHEAD") and journey.next_label.text.contains("Road Raider"), "the short march should settle on the known contact and its explicit entry action")
+	_expect(journey.presentation_beat() == "contact_ahead" and journey.continue_button.text == "REVIEW INTERRUPTION" and journey.status_label.text.contains("ROAD INTERRUPTION AHEAD") and journey.next_label.text.contains("Lift Chain"), "the short march should settle on the authored interruption while retaining the committed contact behind it")
 	_expect(journey.march_canvas.beat_visual_signature() == "CONTACT ON HORIZON" and journey.march_canvas.contact_name.contains("Road Raider"), "the final travel beat should put the named contact on the horizon")
 	_expect(not journey.march_canvas.temporary_travel_vfx_active() and String(journey.march_canvas.motion_signature().get("pace", "")) == "contact_brace", "contact reveal should stop full-march dust and brace the fortress before encounter entry")
 	var committed_day_receipt: String = journey.day_label.text
@@ -190,7 +190,11 @@ func _run() -> void:
 	_expect(journey.continue_button.has_focus() and journey.presentation_beat() == "departed", "restored departure should return focus to the explicit, skippable start of the march beat")
 	journey.continue_button.pressed.emit()
 	await _settle_ui()
-	_expect(not journey.visible and game.main_columns.visible and game.combat_panel.visible and game.road_contact.visible and game.road_contact.advance_button.has_focus(), "continuing from the road should reveal the fortress contact without resolving a combat step")
+	_expect(not journey.visible and game.roadside_event.visible and not game.road_contact.visible and game.state.pre_contact_occurrence_active(), "continuing from the first road should reveal its authored interruption before contact")
+	_expect(game.roadside_event.context_label.text == "ROAD INTERRUPTION · CONTACT WAITING" and game.roadside_event.location_label.text.contains("ASHGATE DEPOT → RILL CROSSING"), "the first interruption should preserve the road's origin, destination, and pending-contact state")
+	game.roadside_event.button_for("brace_lift_chain").pressed.emit()
+	await _settle_ui()
+	_expect(game.main_columns.visible and game.combat_panel.visible and game.road_contact.visible and game.road_contact.advance_button.has_focus(), "resolving the road interruption should reveal the fortress contact without advancing a combat step")
 
 	game.queue_free()
 	await process_frame

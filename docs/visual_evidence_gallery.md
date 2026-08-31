@@ -2,6 +2,15 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.336` — Pre-contact road interruption
+
+| Profile | Evidence | SHA-256 |
+|---|---|---|
+| 1600×900 | [The Lift Chain Sings between march and contact](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1600x900/01_lift_chain_interruption.png) | `cca49ba7838394381afabac335adc4da4a2e78729412dfbb77e4e73a11d92eac` |
+| 1280×720, 110% text, high contrast, reduced motion | [Responsive interruption handoff](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1280x720/01_lift_chain_interruption.png) | `35d628540660d0688fe16f9fc6916812e8f070e8aaa841d7c394c973c20f3baa` |
+
+The fortress remains at Ashgate while the selected Rill Crossing contact waits at step zero. The tableau names both ends of the road, exposes both exact consequences, and states that the committed contact cannot be bypassed. These captures verify implemented layout and state continuity, not uncoached comprehension or final art quality.
+
 ## `v0.3.0-alpha.334` — Station receipt focus
 
 | Receipt | Evidence | SHA-256 |
