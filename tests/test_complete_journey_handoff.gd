@@ -20,6 +20,7 @@ var responsive_profile := false
 var cinder_quarry_profile := false
 var declined_convoy_profile := false
 var mastery_profile := false
+var iven_profile := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
 
@@ -130,6 +131,25 @@ func _choose_event(choice_id: String) -> void:
 		button.pressed.emit()
 		await _settle()
 		_expect_semantic_cue("event", "a resolved roadside choice should use the temporary event cue instead of a generic click")
+
+
+func _choose_first_available_event() -> void:
+	for button in game.roadside_event.choice_buttons:
+		if button.visible and not button.disabled:
+			var choice_id := String(button.get_meta("choice_id", ""))
+			await _choose_event(choice_id)
+			return
+	_expect(false, "the visible roadside event should expose at least one legal response")
+
+
+func _select_module(module_id: String) -> void:
+	for index in range(game.module_option.item_count):
+		if String(game.module_option.get_item_metadata(index)) == module_id:
+			game.module_option.select(index)
+			game.module_option.item_selected.emit(index)
+			await _settle()
+			return
+	_expect(false, "stored or installed module should be selectable: " + module_id)
 
 
 func _commit_route(node_id: String) -> void:
@@ -266,6 +286,24 @@ func _run_ashgate_journey() -> void:
 	_expect(not app.checkpoint_toast.get_global_rect().intersects(game.settlement_hub.location_label.get_global_rect()), "the compact save notice should not obscure the current location heading")
 	_expect_three_column_contract(game.settlement_hub, game.settlement_hub.value_labels["hull"], game.settlement_hub.bazaar_canvas, game.settlement_hub.primary_action_button, "Ashgate bazaar")
 	await _capture("05_ashgate_handoff")
+	if iven_profile:
+		game.settlement_hub.station_buttons["workshop"].pressed.emit()
+		await _settle()
+		game.settlement_hub.primary_action_button.pressed.emit()
+		await _settle()
+		_expect(game.main_columns.visible and game.state.can_refit(), "the Iven profile should enter Ashgate's workshop before departure")
+		game._on_grid_cell_pressed(Vector2i(3, 1))
+		await _settle()
+		_expect(game.selected_module_id == "field_workshop" and not game.remove_button.disabled, "the Iven profile should select the installed workshop it will trade for signal capacity")
+		game.remove_button.pressed.emit()
+		await _settle()
+		await _select_module("wall_lamp")
+		game._on_grid_cell_pressed(Vector2i(5, 2))
+		await _settle()
+		_expect(game.state.operational("wall_lamp") and game.state.total_mass() <= game.state.BASE_MASS_LIMIT, "the Iven profile should install an operational Wall Lamp within the normal mass and exterior-mount limits")
+		game.settlement_hub_return_button.pressed.emit()
+		await _settle()
+		_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "returning from the signal refit should restore the required Ashgate assignment")
 	if mastery_profile:
 		game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
 		await _settle()
@@ -316,27 +354,42 @@ func _run_ashgate_journey() -> void:
 	await _resolve_contact("map")
 	await _capture("09_arrival_receipt")
 	await _relaunch_and_continue("arrival")
-	_expect(game.state.current_location == "rill_crossing" and game.state.campaign_event_pending == "lift_chain_sings", "arrival resume should preserve the secured road and pending occurrence")
+	_expect(game.state.current_location == "rill_crossing" and (iven_profile or game.state.campaign_event_pending == "lift_chain_sings"), "arrival resume should preserve the secured road and its deterministic pending state")
 	await _acknowledge_arrival()
-	_expect_three_column_contract(game.roadside_event, game.roadside_event.value_labels["day"], game.roadside_event.tableau, game.roadside_event.choice_buttons[0], "roadside event")
-	await _capture("10_roadside_event")
-	await _choose_event("brace_lift_chain")
-	_expect(game.journey_planner.visible and game.journey_planner.receipt_label.text.contains("LAST RECEIPT"), "a resolved roadside event should leave its consequence receipt on the reopened route table")
-	await _capture("10b_consequence_receipt")
+	if game.roadside_event.visible:
+		_expect_three_column_contract(game.roadside_event, game.roadside_event.value_labels["day"], game.roadside_event.tableau, game.roadside_event.choice_buttons[0], "roadside event")
+		await _capture("10_roadside_event")
+		if iven_profile:
+			await _choose_first_available_event()
+		else:
+			await _choose_event("brace_lift_chain")
+		_expect(game.journey_planner.visible and game.journey_planner.receipt_label.text.contains("LAST RECEIPT"), "a resolved roadside event should leave its consequence receipt on the reopened route table")
+		await _capture("10b_consequence_receipt")
+	else:
+		_expect(iven_profile and game.journey_planner.visible, "the signal-refit profile may proceed directly when no Rill occurrence is eligible")
 
 	await _commit_route("broken_relay")
 	await _enter_contact()
 	await _resolve_contact("map")
 	await _acknowledge_arrival()
-	await _choose_event("move_silent")
+	await _choose_event("restore_relay" if iven_profile else "move_silent")
+	if iven_profile:
+		_expect(game.journey_planner.visible and game.recruit_iven_button.is_visible_in_tree() and not game.recruit_iven_button.disabled, "restoring the relay should expose Iven's legal recruitment action inside the active planner")
+		game.recruit_iven_button.pressed.emit()
+		await _settle()
+		_expect(game.state.specialist_id == "iven_pell" and game.journey_planner.specialist_portrait.presentation_signature() == "IVEN_PELL · SIGNAL OFFICER · ASSIGNED", "recruiting Iven should persist the assigned signal officer in route planning")
+		_expect(game.journey_planner.receipt_label.text.contains("12 Ashmarks spent") and game.journey_planner.specialist_effect_label.text.contains("EXACT IMMEDIATE CONTACTS"), "the recruited-Iven planner should retain his cost and active forecasting effect")
 
 	await _commit_route("morrowline_camp")
 	await _enter_contact()
 	await _resolve_contact("settlement")
 	await _acknowledge_arrival()
-	_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
-	await _choose_event("decline_mara")
-	_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
+	if iven_profile:
+		_expect(game.state.campaign_event_pending.is_empty() and game.recovery_panel.visible and game.state.specialist_id == "iven_pell", "an occupied specialist berth should bypass Mara's offer and continue into recovery with Iven assigned")
+	else:
+		_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
+		await _choose_event("decline_mara")
+		_expect(game.recovery_panel.visible and game.recovery_panel.routes_button.visible, "declining Mara should continue into the normal recovery tableau")
 	if declined_convoy_profile:
 		_expect(game.state.settlement_actions_remaining == 1 and game.recovery_panel.local_stake_label.text.contains("PARTS SHORTAGE") and game.recovery_panel.local_stake_label.text.contains("only 1 service action"), "Morrowline recovery should expose the declined convoy as a one-action parts shortage")
 	else:
@@ -350,6 +403,8 @@ func _run_ashgate_journey() -> void:
 		_expect_semantic_cue("service", "a completed recovery action should use the distinct material service cue")
 	game.recovery_panel.routes_button.pressed.emit()
 	await _settle()
+	if iven_profile:
+		_expect(game.journey_planner.specialist_name_label.text == "IVEN PELL" and game.journey_planner.specialist_effect_label.text.begins_with("ACTIVE"), "Iven should remain visibly assigned after Morrowline recovery")
 	if cinder_quarry_profile or mastery_profile:
 		game.doctrine_option.select(2)
 		game.doctrine_option.item_selected.emit(2)
@@ -369,6 +424,11 @@ func _run_ashgate_journey() -> void:
 		_expect(game.journey_arrival.report_label.text.contains("Cinder Quarry recovery:"), "Cinder Quarry arrival should expose its guaranteed field-recovery consequence")
 		await _capture("11d_cinder_quarry_recovery")
 		await _acknowledge_arrival()
+	elif iven_profile:
+		await _commit_route("signal_causeway")
+		await _enter_contact()
+		await _resolve_contact("map")
+		await _acknowledge_arrival()
 	else:
 		await _commit_route("lower_ash_road")
 		await _enter_contact()
@@ -384,6 +444,8 @@ func _run_ashgate_journey() -> void:
 	await _acknowledge_arrival()
 	_expect(game.state.run_complete and game.state.campaign_encounters_completed == 5, "the player-facing journey should complete all five encounters")
 	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "the final arrival should hand focus to the terminal Debrief")
+	if iven_profile:
+		_expect(game.debrief_panel.commitments_label.text.contains("Carried · Iven Pell"), "the terminal Debrief should retain Iven as part of what the fortress carried")
 	if mastery_profile:
 		_expect(game.state.mastery_experiment_details().get("status") == "PROVEN" and game.debrief_panel.commitments_label.text.contains("Quarry Adaptation · PROVEN") and game.debrief_panel.experiment_label.text.contains("PROVEN · QUARRY ADAPTATION"), "the Debrief should evaluate the selected field order without granting progression")
 	_expect(game.get_global_rect().encloses(game.debrief_panel.inspect_button.get_global_rect()), "the first Debrief action should remain visible at 1600x900")
@@ -402,6 +464,7 @@ func _run() -> void:
 	cinder_quarry_profile = OS.get_environment("LONG_MARCH_CINDER_QUARRY_PROFILE") == "1"
 	declined_convoy_profile = OS.get_environment("LONG_MARCH_DECLINED_CONVOY_PROFILE") == "1"
 	mastery_profile = OS.get_environment("LONG_MARCH_MASTERY_PROFILE") == "1"
+	iven_profile = OS.get_environment("LONG_MARCH_IVEN_PROFILE") == "1"
 	var capture_filter_text := OS.get_environment("LONG_MARCH_CAPTURE_FILTER")
 	if not capture_filter_text.is_empty():
 		for capture_name in capture_filter_text.split(",", false):
@@ -425,6 +488,8 @@ func _run() -> void:
 			print("PASS: The Long March declined convoy consequence profile")
 		if mastery_profile:
 			print("PASS: The Long March replayable mastery profile")
+		if iven_profile:
+			print("PASS: The Long March Iven specialist profile")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")

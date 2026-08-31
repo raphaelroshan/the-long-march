@@ -1148,3 +1148,7 @@ Iven Pell's existing recruitment action now lives in the active Broken Relay jou
 ## 2026-09-01 — Recruited specialists remain part of route planning
 
 After recruitment, the specialist card now changes from an offer into an assigned-crew status instead of disappearing. Iven's recruitment leaves a visible receipt naming the spent Ashmarks and active forecast benefits; later planners show either Iven's signal contribution or Mara's repair contribution without another action button. This was chosen over a separate roster screen because the immediate planning question is which capability the current fortress carries onto the next road.
+
+## 2026-09-01 — Specialist paths require a complete UI-driven release profile
+
+The verification suite now completes an Iven run through the same controls available to a player. The profile removes the Field Workshop, installs a stored Wall Lamp within mass and mount limits, restores the Broken Relay, recruits Iven, confirms Mara's occupied-berth exclusion, travels through Signal Causeway, and retains Iven in Debrief. This was chosen over setting `specialist_id` directly because the important risk lies in the handoffs between refit, event eligibility, recruitment, route visibility, recovery, and terminal reporting.
