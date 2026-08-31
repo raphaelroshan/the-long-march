@@ -38,6 +38,14 @@ python3 tools/summarize_playtest_feedback.py /absolute/path/to/the_long_march_fe
 
 The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate the metric block. It does not modify the source export, send data anywhere, or infer comprehension from interaction counts.
 
+After collecting the intended five exports, generate a cohort review in the same argument order used for the session numbers:
+
+```bash
+python3 tools/summarize_playtest_cohort.py /path/session-01.json /path/session-02.json /path/session-03.json /path/session-04.json /path/session-05.json --output cohort-review.md
+```
+
+The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
+
 ## Required capture matrix
 
 Capture only with tester consent.

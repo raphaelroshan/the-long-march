@@ -1186,3 +1186,7 @@ The existing local playtest journal now records target assignment, deliberate ta
 ## 2026-09-01 — Observer sheets preserve the contact event order
 
 The local feedback summarizer now derives contact counts from the raw event trail and renders target locks, inspections, and emergency orders in chronological order. It compares those derived counts with the export's aggregate block and calls out disagreement instead of silently trusting either representation. Older exports remain readable. The sheet continues to describe navigation only; comprehension must come from observation and tester explanation.
+
+## 2026-09-01 — Five exports do not automatically pass the human gate
+
+The cohort summarizer reports collection progress and cross-session navigation facts, but labels five exports only as ready for human synthesis. It flags mixed builds, repeated run identities, aggregate mismatches, and sessions with locks but no inspections while leaving consent, participant uniqueness, coaching status, severity, and interpretation blank for the observer. Both local summarizers are included and checksummed in release cohorts so the evidence workflow travels with the build.

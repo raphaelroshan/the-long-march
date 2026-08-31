@@ -40,6 +40,8 @@ def main() -> int:
     require(workflows, "tools/smoke_playtest.py", "packaged smoke", errors)
     require(workflows, "--engine-version", "engine provenance", errors)
     require(workflows, "tools/verify_release_manifest.py", "manifest verification", errors)
+    require(workflows, "session_summarizer=tools/summarize_playtest_feedback.py", "session summarizer in exact cohort", errors)
+    require(workflows, "cohort_summarizer=tools/summarize_playtest_cohort.py", "cohort summarizer in exact cohort", errors)
 
     release_doc = (root / "docs/internal_test_release.md").read_text(encoding="utf-8")
     for statement in (
