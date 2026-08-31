@@ -31,7 +31,11 @@ case "$platform" in
 		;;
 esac
 
-"$engine" --headless --path . --import
+if [[ "${LONG_MARCH_SKIP_IMPORT:-0}" == "1" ]]; then
+	echo "Using the project import cache prepared by the caller."
+else
+	"$engine" --headless --path . --import
+fi
 
 export_playtest() {
 	local preset="$1"

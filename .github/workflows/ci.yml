@@ -145,7 +145,7 @@ jobs:
         run: |
           mkdir -p build artifacts
           if [ -f export_presets.cfg ]; then
-            bash scripts/export_playtest.sh windows
+            LONG_MARCH_SKIP_IMPORT=1 bash scripts/export_playtest.sh windows
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi
