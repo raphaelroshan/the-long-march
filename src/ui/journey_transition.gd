@@ -223,6 +223,7 @@ func configure(view: Dictionary) -> void:
 	pressure_label.text = String(view.get("pressure_receipt", "—"))
 	heat_label.text = String(view.get("heat_receipt", "—"))
 	march_canvas.region_id = String(view.get("region_id", "ashgate_lowlands"))
+	march_canvas.destination_id = String(view.get("destination_visual_id", view.get("destination_id", "")))
 	march_canvas.destination_name = destination
 	march_canvas.contact_name = String(view.get("contact_name", "contact ahead"))
 	march_canvas.fortress_view = view.get("fortress", {}).duplicate(true)
@@ -288,8 +289,30 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 class MarchCanvas extends Control:
 	const TEMP_TRAVEL_DUST_A: Texture2D = preload("res://assets/temporary/kenney/particle-pack/smoke_01.png")
 	const TEMP_TRAVEL_DUST_B: Texture2D = preload("res://assets/temporary/kenney/particle-pack/smoke_02.png")
+	const ROUTE_VISUALS := {
+		"muster_road": {"motif": "training", "marker": "MUSTER POSTS"},
+		"rill_crossing": {"motif": "crossing", "marker": "BRIDGE RIBS"},
+		"soot_orchard": {"motif": "orchard", "marker": "BLACKENED ORCHARD"},
+		"broken_relay": {"motif": "relay", "marker": "BROKEN RELAY"},
+		"red_wheel_toll_bridge": {"motif": "blockade", "marker": "RED WHEEL GANTRY"},
+		"morrowline_camp": {"motif": "camp", "marker": "CONVOY CAMP"},
+		"lower_ash_road": {"motif": "lower_cut", "marker": "LOWER-HULL STAKES"},
+		"dry_cistern_cut": {"motif": "cistern", "marker": "BURIED CISTERNS"},
+		"signal_causeway": {"motif": "relay", "marker": "CAUSEWAY PYLONS"},
+		"cinder_quarry": {"motif": "quarry", "marker": "QUARRY TERRACES"},
+		"meridian_pass": {"motif": "pass", "marker": "PASS PENNANTS"},
+		"pump_gallery": {"motif": "pump", "marker": "GALLERY WHEEL"},
+		"sunken_tramworks": {"motif": "tram", "marker": "SUNKEN RAILS"},
+		"veyru_evacuation_camp": {"motif": "camp", "marker": "RAISED SHELTERS"},
+		"archive_causeway": {"motif": "crossing", "marker": "ARCHIVE CAUSEWAY"},
+		"drowned_registry": {"motif": "archive", "marker": "DROWNED STACKS"},
+		"pilgrim_gantry": {"motif": "gantry", "marker": "PILGRIM GANTRY"},
+		"dry_archive_gate": {"motif": "archive", "marker": "ARCHIVE GATE"},
+		"dry_archive": {"motif": "archive", "marker": "DRY ARCHIVE"}
+	}
 
 	var region_id: String = "ashgate_lowlands"
+	var destination_id: String = ""
 	var destination_name: String = ""
 	var contact_name: String = "contact ahead"
 	var high_contrast_enabled: bool = false
@@ -299,7 +322,14 @@ class MarchCanvas extends Control:
 	var fortress_view: Dictionary = {}
 
 	func beat_visual_signature() -> String:
-		return ["GATE RECEDING", "LANDMARK PASSING", "CONTACT ON HORIZON"][clampi(presentation_beat_index, 0, 2)]
+		if presentation_beat_index == 1:
+			return "%s PASSING" % String(route_visual_signature().get("marker", "ROAD LANDMARK"))
+		return ["GATE RECEDING", "ROAD LANDMARK PASSING", "CONTACT ON HORIZON"][clampi(presentation_beat_index, 0, 2)]
+
+	func route_visual_signature() -> Dictionary:
+		var profile: Dictionary = Dictionary(ROUTE_VISUALS.get(destination_id, {"motif": "road", "marker": "ROAD LANDMARK"})).duplicate(true)
+		profile["destination_id"] = destination_id
+		return profile
 
 	func motion_signature() -> Dictionary:
 		match clampi(presentation_beat_index, 0, 2):
@@ -384,16 +414,83 @@ class MarchCanvas extends Control:
 				draw_string(ThemeDB.fallback_font, Vector2(gate_x + 7.0, size.y * 0.21), "DEPARTURE GATE", HORIZONTAL_ALIGNMENT_LEFT, 130.0, 10, accent)
 			1:
 				var landmark_x := fmod(size.x * 0.82 - travel_offset * 0.55, size.x + 220.0)
-				if flooded:
-					draw_circle(Vector2(landmark_x, size.y * 0.48), 44.0, accent.darkened(0.42), false, 9.0)
-					draw_line(Vector2(landmark_x - 62.0, size.y * 0.53), Vector2(landmark_x + 62.0, size.y * 0.53), accent.darkened(0.18), 7.0)
-				else:
-					draw_line(Vector2(landmark_x, size.y * 0.57), Vector2(landmark_x, size.y * 0.28), accent.darkened(0.28), 8.0)
-					draw_line(Vector2(landmark_x - 45.0, size.y * 0.34), Vector2(landmark_x + 38.0, size.y * 0.34), accent.darkened(0.14), 6.0)
+				_draw_route_landmark(landmark_x, size.y * 0.57, flooded, accent, route_visual_signature())
 			2:
 				for plume_index in range(3):
 					var plume := Color(0.16, 0.12, 0.10, 0.34 - float(plume_index) * 0.06)
 					draw_circle(Vector2(size.x * 0.92 + float(plume_index) * 15.0, size.y * 0.48 - float(plume_index) * 18.0), 14.0 + float(plume_index) * 5.0, plume)
+
+	func _draw_route_landmark(x: float, road_y: float, flooded: bool, accent: Color, profile: Dictionary) -> void:
+		var structure := accent.darkened(0.30)
+		match String(profile.get("motif", "road")):
+			"training":
+				for offset in [-34.0, 34.0]:
+					draw_line(Vector2(x + offset, road_y), Vector2(x + offset, road_y - 92.0), structure, 6.0)
+					draw_line(Vector2(x - 38.0, road_y - 72.0), Vector2(x + 38.0, road_y - 72.0), accent, 4.0)
+			"crossing":
+				for offset in [-50.0, 50.0]:
+					draw_rect(Rect2(Vector2(x + offset - 8.0, road_y - 92.0), Vector2(16.0, 92.0)), structure, true)
+				draw_line(Vector2(x - 58.0, road_y - 66.0), Vector2(x - 10.0, road_y - 58.0), accent, 6.0)
+				draw_line(Vector2(x + 12.0, road_y - 56.0), Vector2(x + 58.0, road_y - 66.0), accent, 6.0)
+			"orchard":
+				for offset in [-48.0, 0.0, 46.0]:
+					var trunk_height := 62.0 + absf(offset) * 0.28
+					draw_line(Vector2(x + offset, road_y), Vector2(x + offset - 5.0, road_y - trunk_height), structure, 8.0)
+					draw_line(Vector2(x + offset - 4.0, road_y - trunk_height + 17.0), Vector2(x + offset + 19.0, road_y - trunk_height - 3.0), accent.darkened(0.18), 4.0)
+			"relay":
+				draw_line(Vector2(x, road_y), Vector2(x + 15.0, road_y - 126.0), structure, 8.0)
+				draw_line(Vector2(x + 14.0, road_y - 118.0), Vector2(x + 54.0, road_y - 90.0), accent, 3.0)
+				draw_arc(Vector2(x + 16.0, road_y - 124.0), 24.0, -0.9, 0.7, 12, accent, 3.0)
+			"blockade":
+				draw_line(Vector2(x - 56.0, road_y), Vector2(x - 56.0, road_y - 92.0), structure, 8.0)
+				draw_line(Vector2(x + 56.0, road_y), Vector2(x + 56.0, road_y - 92.0), structure, 8.0)
+				draw_line(Vector2(x - 60.0, road_y - 86.0), Vector2(x + 60.0, road_y - 86.0), accent, 8.0)
+				draw_circle(Vector2(x, road_y - 58.0), 18.0, Color("#8f3f35"), false, 5.0)
+			"camp":
+				for offset in [-48.0, 42.0]:
+					var tent := PackedVector2Array([Vector2(x + offset - 34.0, road_y), Vector2(x + offset, road_y - 58.0), Vector2(x + offset + 34.0, road_y)])
+					draw_colored_polygon(tent, structure)
+					draw_polyline(tent, accent, 3.0)
+			"lower_cut":
+				draw_line(Vector2(x - 72.0, road_y - 56.0), Vector2(x + 72.0, road_y - 18.0), structure, 18.0)
+				for offset in [-54.0, -12.0, 34.0]:
+					draw_line(Vector2(x + offset, road_y), Vector2(x + offset - 9.0, road_y - 42.0), accent, 4.0)
+			"cistern":
+				for offset in [-44.0, 32.0]:
+					draw_arc(Vector2(x + offset, road_y - 8.0), 34.0, PI, TAU, 16, accent, 6.0)
+				draw_line(Vector2(x - 80.0, road_y - 8.0), Vector2(x + 76.0, road_y - 8.0), structure, 7.0)
+			"quarry":
+				for level in range(4):
+					var width := 126.0 - float(level) * 24.0
+					draw_line(Vector2(x - width * 0.5, road_y - float(level) * 22.0), Vector2(x + width * 0.5, road_y - float(level) * 22.0), accent.darkened(float(level) * 0.08), 8.0)
+			"pass":
+				draw_line(Vector2(x - 62.0, road_y), Vector2(x - 32.0, road_y - 118.0), structure, 22.0)
+				draw_line(Vector2(x + 62.0, road_y), Vector2(x + 34.0, road_y - 118.0), structure, 22.0)
+				draw_line(Vector2(x, road_y - 34.0), Vector2(x, road_y - 96.0), accent, 3.0)
+				draw_colored_polygon(PackedVector2Array([Vector2(x + 3.0, road_y - 94.0), Vector2(x + 28.0, road_y - 84.0), Vector2(x + 3.0, road_y - 74.0)]), Color("#b95d4f"))
+			"pump":
+				draw_circle(Vector2(x, road_y - 42.0), 38.0, structure, false, 8.0)
+				for angle in [0.0, PI * 0.5, PI, PI * 1.5]:
+					draw_line(Vector2(x, road_y - 42.0), Vector2(x, road_y - 42.0) + Vector2(cos(angle), sin(angle)) * 34.0, accent, 4.0)
+				draw_line(Vector2(x - 64.0, road_y - 4.0), Vector2(x + 62.0, road_y - 4.0), accent, 6.0)
+			"tram":
+				for offset in [-18.0, 18.0]:
+					draw_line(Vector2(x - 72.0, road_y + offset), Vector2(x + 72.0, road_y + offset - 12.0), accent, 4.0)
+				draw_rect(Rect2(Vector2(x - 35.0, road_y - 72.0), Vector2(70.0, 45.0)), structure, true)
+			"archive":
+				for offset in [-48.0, 48.0]:
+					draw_rect(Rect2(Vector2(x + offset - 10.0, road_y - 105.0), Vector2(20.0, 105.0)), structure, true)
+				draw_line(Vector2(x - 60.0, road_y - 100.0), Vector2(x + 60.0, road_y - 100.0), accent, 7.0)
+				draw_circle(Vector2(x, road_y - 72.0), 9.0, accent, false, 3.0)
+			"gantry":
+				draw_line(Vector2(x - 52.0, road_y), Vector2(x - 36.0, road_y - 118.0), structure, 7.0)
+				draw_line(Vector2(x + 52.0, road_y), Vector2(x + 36.0, road_y - 118.0), structure, 7.0)
+				draw_line(Vector2(x - 40.0, road_y - 105.0), Vector2(x + 40.0, road_y - 105.0), accent, 5.0)
+				for offset in [-20.0, 0.0, 20.0]:
+					draw_line(Vector2(x + offset, road_y - 104.0), Vector2(x + offset, road_y - 48.0), accent.darkened(0.25), 2.0)
+			_:
+				draw_line(Vector2(x, road_y), Vector2(x, road_y - 92.0), structure, 8.0)
+				draw_line(Vector2(x - 45.0, road_y - 72.0), Vector2(x + 38.0, road_y - 72.0), accent, 6.0)
 
 	func _draw_contact_horizon() -> void:
 		if presentation_beat_index < 2:

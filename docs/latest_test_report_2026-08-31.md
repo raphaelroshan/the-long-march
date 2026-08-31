@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.309` bazaar-attendant candidate |
+| Build | `0.3.0-alpha.310` route-landmark candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -19,6 +19,7 @@
 | Roadside identity | PASS: dedicated boiler, ammunition-lift, and broken-wheel motifs with exact choice framing at 1280×720 and 110% text/high contrast |
 | Tutorial continuity | PASS: shared fortress actor across all three prologue pages, dependency overlay, departure stance, and 110% text/high-contrast action containment |
 | Bazaar attendants | PASS: six stable station roles, Ashgate/Veyru role variants, selected-station portrait/prop updates, high contrast, and unchanged station command routing |
+| Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
 
@@ -41,9 +42,11 @@
 - [`Tutorial prologue visual evidence`](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/)
 - [`Bazaar attendant report`](bazaar_attendant_report.md)
 - [`Bazaar attendant visual evidence`](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/)
+- [`Route-specific travel landmark report`](route_specific_travel_landmark_report.md)
+- [`Route-specific travel visual evidence`](visual_evidence/v0.3.0-alpha.310-route-landmarks/)
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.309 makes each selected bazaar service visibly staffed through a compact portrait, regional role, and practical prop while preserving the six stable station controls and responsive three-column layout.
+The updated strategy remains intact without changing authoritative game state. Alpha.310 replaces the generic passing landmark with destination-specific road scenery while preserving the same committed costs, skippable timing, encounter handoff, and reduced-motion behavior.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

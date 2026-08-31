@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.309`
+**Build:** `0.3.0-alpha.310`
 
 **Engine:** Godot 4.4.1
 
@@ -19,6 +19,7 @@
 - [Roadside occurrence identity](visual_evidence/v0.3.0-alpha.306-roadside-occurrence-identity/)
 - [Tutorial fortress continuity](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/)
 - [Bazaar attendant identity](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/)
+- [Route-specific travel landmarks](visual_evidence/v0.3.0-alpha.310-route-landmarks/)
 
 ## Findings
 
@@ -47,6 +48,8 @@ Alpha.306 removes the final generic roadside-occurrence symbol. The damaged boil
 Alpha.307 replaces the prologue's box-and-window placeholder with the shared fortress actor. The first page now establishes the machine's scale and inhabited service posture, the second annotates real module-family bays with dependency links, and the third moves that same actor into a departure stance toward the first contact.
 
 Alpha.309 gives the selected bazaar station a visible human representative without enlarging the action dock. Workshop engineers, factors, signal readers, captains, couriers, and departure marshals use stable role labels and practical props; Ashgate and Veyru variants retain their rail-yard and flood-market identity. The portraits are deliberately compact and do not replace exact service copy or controls.
+
+Alpha.310 makes the short march foreshadow its committed destination. Rill Crossing passes broken bridge ribs, Pump Gallery passes a working wheel and pipe, and the remaining current destinations map to stable orchard, relay, blockade, camp, lower-cut, cistern, quarry, pass, tram, gantry, or archive motifs. These silhouettes remain behind the shared fortress and do not alter route timing or costs.
 
 ## Next work
 

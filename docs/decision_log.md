@@ -1128,3 +1128,7 @@ Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, 
 ## 2026-09-01 — Bazaar services have visible attendants
 
 The selected bazaar station now shows a compact attendant portrait with a role and practical prop. Ashgate uses rail-yard roles, while Lantern Quay uses flood-market roles; the six station IDs, actions, focus order, and authoritative service state remain unchanged. This was chosen over adding new dialogue or NPC systems because the current need is to make existing decisions feel inhabited and place-specific without increasing tutorial load or creating decorative characters disconnected from operations.
+
+## 2026-09-01 — The road foreshadows the destination
+
+The road-in-motion beat now selects a stable landmark profile from the committed destination ID. Crossings, orchards, relays, blockades, camps, lower cuts, cisterns, quarries, passes, pumps, tramworks, gantries, and archive approaches therefore enter view before contact instead of sharing one generic roadside structure. First Watch retains a separate muster-road profile. This was chosen over a longer cinematic or route-specific simulation because the existing one-second, immediately skippable handoff already has the correct pacing and authoritative boundary; it needed place memory, not another gameplay phase.

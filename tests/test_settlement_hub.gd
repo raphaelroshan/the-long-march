@@ -128,7 +128,9 @@ func _run() -> void:
 	_expect(String(journey.march_canvas.motion_signature().get("pace", "")) == "gathering" and not journey.march_canvas.temporary_travel_vfx_active(), "departure should gather momentum without showing full-march dust")
 	journey._process(0.4)
 	_expect(journey.presentation_beat() == "road_in_motion" and journey.status_label.text == "ROAD IN MOTION", "the road view should establish a short distinct motion beat without changing game state")
-	_expect(journey.march_canvas.beat_visual_signature() == "LANDMARK PASSING", "the road-in-motion beat should replace the gate with a passing regional landmark")
+	_expect(journey.march_canvas.ROUTE_VISUALS.size() == 19 and journey.march_canvas.ROUTE_VISUALS.has("meridian_pass") and journey.march_canvas.ROUTE_VISUALS.has("dry_archive"), "every current route destination plus the tutorial road should have an authored travel-landmark profile")
+	_expect(journey.march_canvas.beat_visual_signature() == "BRIDGE RIBS PASSING" and String(journey.march_canvas.route_visual_signature().get("destination_id", "")) == "rill_crossing", "the road-in-motion beat should foreshadow the committed crossing instead of using a generic landmark")
+	await _capture("03_rill_crossing_travel")
 	var travel_offset_before: float = journey.march_canvas.travel_offset
 	journey.march_canvas._process(0.2)
 	_expect(journey.march_canvas.travel_offset > travel_offset_before and journey.march_canvas.temporary_travel_vfx_active() and String(journey.march_canvas.motion_signature().get("fortress_mode", "")) == "travel", "the full-march beat should move the layered road and enable temporary travel atmosphere without changing route state")

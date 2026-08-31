@@ -2,7 +2,7 @@
 
 **Repository:** The Long March
 **Game identity:** The Long Road, a moving-fortress crawler
-**Current baseline:** `0.3.0-alpha.309`
+**Current baseline:** `0.3.0-alpha.310`
 **Current implemented chapters:** Ashgate Lowlands and Flooded Veyru, each with a five-encounter authored journey
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, private alpha, owner-controlled merges
@@ -662,7 +662,7 @@ Tasks:
 
 ### Phase 3 — Map and travel game feel
 
-**Status:** The save-safe settlement-to-route-to-departure handoff and complete L3 rhythm pass are complete through `0.3.0-alpha.290`. Commitment now leads through an immediately skippable Departed → Road in Motion → Contact Ahead beat; reduced motion resolves directly to Contact Ahead. Arrival separates applied consequences from the next order, and route planning retains the last committed contract, road, event, or service receipt. Broader route-specific authored motion remains open.
+**Status:** The save-safe settlement-to-route-to-departure handoff and complete L3 rhythm pass are complete through `0.3.0-alpha.290`. Commitment now leads through an immediately skippable Departed → Road in Motion → Contact Ahead beat; reduced motion resolves directly to Contact Ahead. Alpha.310 adds route-specific passing landmarks for every current destination. Arrival separates applied consequences from the next order, and route planning retains the last committed contract, road, event, or service receipt. Human recognition and pacing validation remain open.
 
 **Objective:** Make routes feel like roads with stakes.
 

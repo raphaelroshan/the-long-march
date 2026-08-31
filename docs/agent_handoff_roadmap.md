@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.309`
+**Current code baseline:** `0.3.0-alpha.310`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.309`, preserving the complete causal journey while carrying the same fortress actor from the prologue into play, giving each implemented threat family a distinct approach warning, and representing every bazaar station through a place-specific attendant.
+**Current merged baseline:** `0.3.0-alpha.310`, preserving the complete causal journey while carrying the same fortress actor from the prologue into play, giving each implemented threat family a distinct approach warning, representing every bazaar station through a place-specific attendant, and foreshadowing the committed destination during travel.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -976,7 +976,7 @@ Create a visual state inventory for idle, selected, strained, disabled, damaged,
 
 **Objective:** Make travel feel like a sequence of commitments instead of a chain of menus.
 
-**Status:** Long Road 11.1 is complete in `0.3.0-alpha.281`: departure now preserves the origin/destination, accepted or declined promise, exact committed day/fuel/pressure/heat receipt, explicit departing phase, next contact decision, and focus across save/load. Contact-to-arrival rhythm remains open.
+**Status:** The complete departure-to-arrival rhythm is implemented through `0.3.0-alpha.310`: departure preserves the origin/destination, accepted or declined promise, exact committed day/fuel/pressure/heat receipt, explicit phase, next contact decision, and focus across save/load. The short road beat now foreshadows each committed destination with its own landmark, contact resolves before arrival, and the destination receives its own arrival tableau.
 
 
 The target rhythm is:
@@ -1001,7 +1001,7 @@ Keep transitions short and skippable. The player should always know whether the 
 
 **Objective:** Make automatic encounters read as consequences of the chassis and route plan.
 
-**Status:** Long Road 12.1 is complete in `0.3.0-alpha.282`: the shared contact header and center-stage banner now name Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle without changing authoritative step resolution. Threat-specific timing and broader human validation remain open.
+**Status:** The shared contact header and center-stage banner name Forecast, Approach, Target, Wind-up, Impact, Consequence, Response, and Settle without changing authoritative step resolution. All seven implemented threat families have distinct silhouettes, lanes, attack labels, and warning cues through `0.3.0-alpha.308`. Broader human timing and comprehension validation remain open.
 
 
 Every meaningful encounter should stage forecast, approach, target commitment, attack wind-up, defender response, impact, dependency consequence, and settling beat. The player should see why a Burrower reached the Boiler Heart, why a Storm Front raised heat, or why a Flood Surge threatened the lower chassis. Threats need distinct silhouettes and attack signatures; target lines and effects must remain sparse enough to read.
@@ -1080,4 +1080,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next agent task should be **L4 Road-Contact Cause and Effect**, not a new threat or combat system. L3 makes route commitment, departure, the short march, contact, event consequence, arrival, recovery, and Debrief distinct, with the march beat immediately skippable and removed under reduced motion. Exercise every existing threat family through the shared phase grammar and prove that target, counter, impact, dependency change, and settle remain readable without changing authoritative outcomes.
+The next evidence task is **Long Road 9: five consented, uncoached private-alpha sessions** using the published cohort and `docs/private_alpha_session_sheet.md`. Record where players hesitate, what they predict before route commitment or impact, what they recall after arrival, and whether the Debrief creates a concrete replay plan. Implement only repeated, high-severity comprehension, pacing, comfort, audio, or balance fixes before adding another region or progression layer.

@@ -193,3 +193,12 @@ The prologue now teaches with the same visual object used throughout the playabl
 | Lantern Quay signals | [Lantern reader](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/02b_lantern_signal.png) | `cf2df3e38f2962c76de2602e56fc37b205d861940cd5a91202a27a424684b0c9` |
 
 The compact portraits make the selected service feel staffed while retaining the exact action, status, and consequence text. They verify visual differentiation and responsive fit, not final character art or human recall.
+
+## `v0.3.0-alpha.310` — Route-specific travel landmarks
+
+| Committed road | Evidence | SHA-256 |
+|---|---|---|
+| Rill Crossing | [Bridge ribs passing](visual_evidence/v0.3.0-alpha.310-route-landmarks/03_rill_crossing_travel.png) | `baabdb272f2fd354c7b03114c4840031a2a1b00b7e2c52d3e509c1aff904622d` |
+| Pump Gallery | [Gallery wheel passing](visual_evidence/v0.3.0-alpha.310-route-landmarks/03_pump_gallery_travel.png) | `ff53f02dcb99150d4579c4507ae6ef2cd7a5062c99704b8f0e0aa201efddc88f` |
+
+The short travel beat now uses the destination ID already present in the route receipt to select a stable landmark. These images verify authored route identity without claiming that the code-native scenery is final production art.
