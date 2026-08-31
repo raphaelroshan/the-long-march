@@ -286,3 +286,11 @@ SHA-256: `958613f1bd13cc0d5e5bce97c8a417660553ef08406d59dd5810c382a2ca1f42`
 The richer threat dossier no longer pushes emergency orders out of the initial viewport. Concise two-column controls keep all four choices visible at 1600×900; their exact benefits and costs remain in the existing focus/hover help above the grid.
 
 SHA-256: `ea2440e3bf4158588ddd322543447c72a61401687f37a494f7801fa8c32e7694`
+
+## `v0.3.0-alpha.324` — Target-review focus
+
+![Inspect focused after target lock](visual_evidence/v0.3.0-alpha.324-target-review-focus/10_target_review_focus.png)
+
+When the Road Raider first assigns the Coal Cell as its target, focus moves from Resolve Contact to Inspect Chassis. The player can still advance immediately, but a repeated confirm no longer resolves another beat before the new target is reviewed.
+
+SHA-256: `e5ddd16b0b7d9b030cf11803d3fd5cd8533698fe904cbd883d10da5a6fec543c`

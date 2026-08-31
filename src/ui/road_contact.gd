@@ -284,6 +284,8 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 		intervention_grid.add_child(button)
 
 func configure(view: Dictionary) -> void:
+	var previous_target_id := String(current_view.get("active_target_id", ""))
+	var advance_was_focused := advance_button != null and advance_button.has_focus()
 	current_view = view.duplicate(true)
 	phase_label.text = "%s · CONTACT STEP %d OF 6" % [String(view.get("location_name", "ROAD")).to_upper(), int(view.get("step", 0))]
 	order_label.text = String(view.get("order", "Read the contact before advancing."))
@@ -322,6 +324,9 @@ func configure(view: Dictionary) -> void:
 	contact_canvas.configure(current_view)
 	_refresh_battle_phase_label(true)
 	_configure_focus()
+	var current_target_id := String(current_view.get("active_target_id", ""))
+	if advance_was_focused and previous_target_id.is_empty() and not current_target_id.is_empty() and not inspect_button.disabled:
+		inspect_button.grab_focus.call_deferred()
 
 func _refresh_battle_phase_label(force: bool = false) -> void:
 	var battle_phase := battle_phase_for()
@@ -540,7 +545,10 @@ func _configure_focus() -> void:
 		button.focus_neighbor_bottom = button.get_path_to(below)
 
 func focus_default() -> void:
-	advance_button.grab_focus()
+	if not String(current_view.get("active_target_id", "")).is_empty() and not inspect_button.disabled:
+		inspect_button.grab_focus()
+	else:
+		advance_button.grab_focus()
 
 func set_high_contrast(enabled: bool) -> void:
 	high_contrast_enabled = enabled
