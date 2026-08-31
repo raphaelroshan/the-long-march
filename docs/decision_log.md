@@ -1136,3 +1136,7 @@ The road-in-motion beat now selects a stable landmark profile from the committed
 ## 2026-09-01 — Refit audio follows command results
 
 Chassis placement, movement, rotation, and removal now receive distinct temporary mechanical cues only after their authoritative operation succeeds. Rejected placement, rotation, removal, and road-locked refit attempts emit one restrained warning while preserving the exact written blocker. Button-owned generic clicks are suppressed for rotation and removal so a single action cannot produce competing feedback. This was chosen over hover sounds or continuous workshop ambience because early learning depends on distinguishing accepted from rejected physical edits, while silence and visual-only play must remain complete options.
+
+## 2026-09-01 — Impact audio follows the visible resolved hit
+
+The road-contact canvas now emits one presentation-only impact request when an already-resolved step reaches the visible Impact phase. Reduced Motion emits the same cue immediately as the view collapses to Consequence, and a per-transition guard prevents replay during later frames or redraws. This was chosen over playing the hit at button press because the sound should agree with the target flash, damage receipt, and dependency change without delaying or controlling authoritative combat.

@@ -25,7 +25,8 @@ const SEMANTIC_STREAMS := {
 	"module_place": preload("res://assets/temporary/kenney/rpg-audio/Audio/metalLatch.ogg"),
 	"module_rotate": preload("res://assets/temporary/kenney/rpg-audio/Audio/beltHandle1.ogg"),
 	"module_remove": preload("res://assets/temporary/kenney/rpg-audio/Audio/doorClose_2.ogg"),
-	"module_invalid": preload("res://assets/temporary/kenney/interface-sounds/Audio/error_004.ogg")
+	"module_invalid": preload("res://assets/temporary/kenney/interface-sounds/Audio/error_004.ogg"),
+	"contact_impact": preload("res://assets/temporary/kenney/rpg-audio/Audio/metalPot3.ogg")
 }
 const CHECKPOINT_CUES := {
 	"route_started": "route_commit",

@@ -61,6 +61,11 @@ func _run() -> void:
 	var contact = load("res://scenes/journey/RoadContact.tscn").instantiate()
 	root.add_child(contact)
 	await process_frame
+	var impact_probe := {"count": 0, "cue": ""}
+	contact.semantic_audio_requested.connect(func(cue_id: String) -> void:
+		impact_probe["count"] = int(impact_probe["count"]) + 1
+		impact_probe["cue"] = cue_id
+	)
 	_expect(contact.advance_button.has_meta("long_march_audio_manual_press") and contact.intervention_buttons.all(func(button: Button) -> bool: return button.has_meta("long_march_audio_manual_press")), "contact commands should defer audio to their authoritative encounter checkpoints")
 	for enemy_id in THREAT_CASES:
 		var case: Dictionary = THREAT_CASES[enemy_id]
@@ -105,16 +110,29 @@ func _run() -> void:
 		contact._refresh_battle_phase_label(true)
 		await _capture("%02d_%s_response" % [THREAT_CASES.keys().find(enemy_id) + 1, enemy_id])
 
+	var impact_audio_view := _view_for("road_raiders", false)
+	contact.configure(impact_audio_view)
+	impact_audio_view = _view_for("road_raiders", true)
+	contact.configure(impact_audio_view)
+	contact.contact_canvas._process(1.4)
+	_expect(int(impact_probe["count"]) == 1 and String(impact_probe["cue"]) == "contact_impact", "the contact view should request one impact cue when the staged transition reaches Impact")
+	contact.contact_canvas._process(1.4)
+	_expect(int(impact_probe["count"]) == 1, "a resolved impact should not replay its cue later in the same transition")
+
 	var reduced_view := _view_for("road_raiders", true)
+	contact.set_reduced_motion(true)
+	var reduced_warning_view := _view_for("road_raiders", false)
+	contact.configure(reduced_warning_view)
 	contact.configure(reduced_view)
 	contact.contact_canvas.report_changed = true
 	contact.contact_canvas.step_from = 1.0
 	contact.contact_canvas.step_to = 2.0
 	contact.set_high_contrast(true)
-	contact.set_reduced_motion(true)
+	contact.contact_canvas.finish_transition()
 	contact._refresh_battle_phase_label(true)
 	_expect(contact.contact_canvas.high_contrast_enabled and contact.contact_canvas.transition_progress == 1.0 and contact.battle_phase_for() == "CONSEQUENCE" and contact.contact_canvas.presentation_stage_text().begins_with("CONSEQUENCE"), "high contrast should preserve the cue while reduced motion resolves directly to consequence without changing state")
 	_expect(not contact.contact_canvas.temporary_impact_vfx_active(), "reduced motion should skip the temporary impact effect while retaining the consequence receipt")
+	_expect(int(impact_probe["count"]) == 2, "reduced motion should collapse the same resolved impact cue to the immediate consequence instead of dropping it")
 
 	var response_view := _view_for("road_raiders", true)
 	response_view["recent_report"] = []

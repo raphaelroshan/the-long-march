@@ -1247,6 +1247,7 @@ func _build_ui() -> void:
 	road_contact.advance_requested.connect(_on_advance_encounter_pressed)
 	road_contact.inspect_requested.connect(_focus_chassis_for_combat)
 	road_contact.intervention_requested.connect(_use_intervention)
+	road_contact.semantic_audio_requested.connect(func(cue_id: String) -> void: semantic_audio_requested.emit(cue_id))
 	margin.add_child(road_contact)
 	roadside_event = RoadsideEventScene.instantiate()
 	roadside_event.pause_requested.connect(func() -> void: pause_requested.emit())
