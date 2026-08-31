@@ -44,7 +44,7 @@ After collecting the intended five exports, generate a cohort review in the same
 python3 tools/summarize_playtest_cohort.py /path/session-01.json /path/session-02.json /path/session-03.json /path/session-04.json /path/session-05.json --output cohort-review.md
 ```
 
-The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
+The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. It also places each tester's three written answers in session order without scoring or classifying them. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
 
 ## Required capture matrix
 

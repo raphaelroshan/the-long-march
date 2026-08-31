@@ -23,7 +23,12 @@ def _payload(build: str, run_code: str, inspected: bool, replay_score: int) -> d
     return {
         "schema_version": 1,
         "build_version": build,
-        "answers": {"replay_score": replay_score},
+        "answers": {
+            "clear_or_satisfying": "The target warning connected to the hit.",
+            "confusing_or_frustrating": "I did not understand the first route cost.",
+            "causal_replay": "The engine failed.\nI would repair it before Meridian.",
+            "replay_score": replay_score,
+        },
         "final_state": {
             "run_code": run_code,
             "campaign_region": "ashgate_lowlands",
@@ -52,6 +57,11 @@ def main() -> int:
     assert "do not establish comprehension" in report
     assert "Input filenames are omitted" in report
     assert "Duplicate run identity: none detected" in report
+    assert "## Tester-written evidence" in report
+    assert "> The target warning connected to the hit." in report
+    assert "> I did not understand the first route cost." in report
+    assert "> The engine failed.\n> I would repair it before Meridian." in report
+    assert "not scored, classified, corrected" in report
 
     complete_report = build_cohort_report([copy.deepcopy(first) for _ in range(5)])
     assert "READY FOR HUMAN SYNTHESIS (5/5 exports)" in complete_report
@@ -63,6 +73,11 @@ def main() -> int:
     mismatched["session_metrics"]["contact_target_inspections"] = 8
     mismatch_report = build_cohort_report([mismatched])
     assert "disagrees with the raw event trail: 1" in mismatch_report
+
+    legacy = copy.deepcopy(first)
+    legacy["answers"].pop("causal_replay")
+    legacy_report = build_cohort_report([legacy])
+    assert "**Perceived cause and next-run change**\n\n> Not recorded." in legacy_report
 
     try:
         build_cohort_report([])
