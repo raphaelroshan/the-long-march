@@ -1100,3 +1100,7 @@ Cinder Quarry is a fourth post-Morrowline road and a one-node branch to Meridian
 ## 2026-08-31 — Arrival inherits the destination instead of a generic wall
 
 The resolved arrival snapshot now retains the authoritative origin ID, destination ID, and destination kind. The arrival canvas maps that ID to a presentation-only regional motif—crossing, camp, relay, salvage site, industrial works, final pass, or archive threshold—while keeping the fortress and applied consequence receipt unchanged. Tutorial recovery uses its own siding marker, and saved arrivals restore the same composition. This was chosen over a cinematic arrival state machine or unrelated backdrop art because reaching a place should be visibly specific without delaying Continue, duplicating route logic, or allowing animation to decide campaign state.
+
+## 2026-08-31 — Threat bodies and lanes remain presentation profiles
+
+Each implemented contact now has a stable visual form, scale, label offset, and approach lane derived from its existing threat ID. Road Raiders, Climbers, Burrowers, weather, flood, the Siege Beast, and the Civic Guardian no longer share generic symbols, but the same contact presenter still supplies every target, counter, timing, impact, and consequence. This was chosen over threat-specific combat scenes because physical identity should improve recognition without splitting the deterministic encounter grammar or moving rules into drawing code.

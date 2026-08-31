@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.302` destination-arrival candidate |
+| Build | `0.3.0-alpha.303` threat-silhouette candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -13,6 +13,7 @@
 | Temporary asset integration | PASS: ten semantic audio cues, muted-state suppression, checkpoint ownership, impact-window VFX, and reduced-motion suppression |
 | Travel staging | PASS: gathering departure, full-march parallax and temporary atmosphere, static contact brace, canvas clipping, and reduced-motion bypass |
 | Arrival identity | PASS: authoritative destination IDs, regional motif selection, tutorial siding, final thresholds, Veyru destinations, and save/resume preservation |
+| Threat identity | PASS: stable form, lane, and scale profiles for all seven implemented threat families |
 
 ## Evidence
 
@@ -23,9 +24,10 @@
 - [`Audio cue map`](audio_cue_map.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
+- [`Threat silhouette report`](threat_silhouette_report.md)
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.302 carries each secured destination into a recognizable arrival tableau while preserving the full route → threat → target → damage → dependency → recovery chain.
+The updated strategy remains intact without changing authoritative game state. Alpha.303 gives each contact a recognizable body and route into the fortress while preserving the full route → threat → target → damage → dependency → recovery chain.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
