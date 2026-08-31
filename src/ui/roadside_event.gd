@@ -173,6 +173,7 @@ func _build_choice_dock(parent: HBoxContainer) -> void:
 		var button := Button.new()
 		button.text = "Choice %d" % (index + 1)
 		button.custom_minimum_size = Vector2(0, 72)
+		button.set_meta("long_march_audio_manual_press", true)
 		button.add_theme_font_size_override("font_size", 11)
 		button.add_theme_stylebox_override("normal", _flat_style(Color("#1b292f"), Color("#536a70"), 2, 5, 9))
 		button.add_theme_stylebox_override("hover", _flat_style(Color("#263941"), Color("#f0cf96"), 3, 5, 8))

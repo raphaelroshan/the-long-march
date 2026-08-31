@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.299`
+**Build:** `0.3.0-alpha.300`
 
 **Engine:** Godot 4.4.1
 
@@ -10,6 +10,7 @@
 
 - [1600×900 battle and recovery set](visual_evidence/v0.3.0-alpha.299-battle-recovery-causality-1600x900/)
 - [1280×720 accessibility set](visual_evidence/v0.3.0-alpha.299-battle-recovery-causality-1280x720/)
+- [Temporary impact and damage VFX](visual_evidence/v0.3.0-alpha.300-temporary-sensory-feedback/)
 
 ## Findings
 
@@ -20,6 +21,8 @@ Arrival now turns battle damage into a concrete next order. When a system is dam
 The new information fits at 1600×900 and at 1280×720 with the accessibility profile. The initial recovery layout exceeded the compact viewport; reducing service-button height and stack spacing restored the required route action without removing information.
 
 The presentation remains code-native alpha art. The new effect is deliberately restrained and does not replace the textual target, damage, or dependency receipt. Human comprehension and emotional impact remain unproven.
+
+Alpha.300 adds a small CC0 spark texture at resolved impact and smoke over known damaged bays. Both are tinted into the existing palette and remain subordinate to the target and consequence receipts. Tiny Town was reviewed but not integrated because it would weaken the established industrial-fantasy tone.
 
 ## Next work
 

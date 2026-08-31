@@ -190,6 +190,7 @@ func _build_ui() -> void:
 	services.add_child(spacer)
 	routes_button = Button.new()
 	routes_button.custom_minimum_size = Vector2(0, 48)
+	routes_button.set_meta("long_march_audio_cue", "route_review")
 	routes_button.add_theme_font_size_override("font_size", 12)
 	routes_button.pressed.connect(func() -> void: routes_requested.emit())
 	services.add_child(routes_button)
@@ -198,6 +199,7 @@ func _build_ui() -> void:
 func _service_button(parent: VBoxContainer, callback: Signal) -> Button:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(0, 56)
+	button.set_meta("long_march_audio_manual_press", true)
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.add_theme_font_size_override("font_size", 12)
 	button.pressed.connect(func() -> void: callback.emit())

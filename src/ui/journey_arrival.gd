@@ -178,6 +178,7 @@ func _build_ui() -> void:
 	continue_button = Button.new()
 	continue_button.text = "ENTER LOCATION"
 	continue_button.custom_minimum_size = Vector2(0, 62)
+	continue_button.set_meta("long_march_audio_cue", "arrival_handoff")
 	continue_button.pressed.connect(func() -> void: continue_requested.emit())
 	detail_stack.add_child(continue_button)
 

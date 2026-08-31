@@ -4,6 +4,29 @@ extends Node
 const DEFAULT_VOLUME_PERCENT := 70
 const VOLUME_LEVELS: Array[int] = [0, 40, 70, 100]
 const MIX_RATE := 24000
+const SEMANTIC_STREAMS := {
+	"route_commit": preload("res://assets/temporary/kenney/interface-sounds/Audio/confirmation_001.ogg"),
+	"contact_entry": preload("res://assets/temporary/kenney/rpg-audio/Audio/doorOpen_1.ogg"),
+	"contact_step": preload("res://assets/temporary/kenney/rpg-audio/Audio/metalClick.ogg"),
+	"arrival": preload("res://assets/temporary/kenney/rpg-audio/Audio/bookPlace1.ogg"),
+	"arrival_handoff": preload("res://assets/temporary/kenney/interface-sounds/Audio/open_001.ogg"),
+	"service": preload("res://assets/temporary/kenney/rpg-audio/Audio/metalPot1.ogg"),
+	"event": preload("res://assets/temporary/kenney/rpg-audio/Audio/bookFlip1.ogg"),
+	"intervention": preload("res://assets/temporary/kenney/interface-sounds/Audio/switch_001.ogg"),
+	"route_review": preload("res://assets/temporary/kenney/interface-sounds/Audio/open_002.ogg"),
+	"debrief": preload("res://assets/temporary/kenney/rpg-audio/Audio/bookOpen.ogg")
+}
+const CHECKPOINT_CUES := {
+	"route_started": "route_commit",
+	"encounter_advanced": "contact_step",
+	"route_secured": "arrival",
+	"recovery_reached": "arrival",
+	"encounter_resolved": "arrival",
+	"run_ended": "debrief",
+	"settlement_service": "service",
+	"event_resolved": "event",
+	"intervention_used": "intervention"
+}
 
 var volume_percent: int = DEFAULT_VOLUME_PERCENT
 var focus_stream: AudioStreamWAV
@@ -13,6 +36,9 @@ var warning_stream: AudioStreamWAV
 var players: Array[AudioStreamPlayer] = []
 var next_player_index: int = 0
 var last_cue_kind: String = ""
+var last_cue_asset_path: String = ""
+var last_semantic_cue_kind: String = ""
+var last_semantic_asset_path: String = ""
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -63,6 +89,19 @@ func play_notice() -> void:
 func play_warning() -> void:
 	_play(warning_stream, "warning")
 
+func play_semantic(cue_id: String) -> bool:
+	var stream: AudioStream = SEMANTIC_STREAMS.get(cue_id)
+	if stream == null or volume_percent <= 0:
+		return false
+	_play(stream, cue_id)
+	last_semantic_cue_kind = cue_id
+	last_semantic_asset_path = stream.resource_path
+	return true
+
+func play_checkpoint_cue(reason: String) -> bool:
+	var cue_id := String(CHECKPOINT_CUES.get(reason, ""))
+	return not cue_id.is_empty() and play_semantic(cue_id)
+
 func _register_node(node: Node) -> void:
 	if node is BaseButton:
 		_register_button(node as BaseButton)
@@ -87,9 +126,12 @@ func _on_button_focused(_button: BaseButton) -> void:
 func _on_button_pressed(button: BaseButton) -> void:
 	if button.has_meta("long_march_audio_manual_press"):
 		return
+	var semantic_cue := String(button.get_meta("long_march_audio_cue", ""))
+	if not semantic_cue.is_empty() and play_semantic(semantic_cue):
+		return
 	play_confirm()
 
-func _play(stream: AudioStreamWAV, cue_kind: String) -> void:
+func _play(stream: AudioStream, cue_kind: String) -> void:
 	if volume_percent <= 0 or stream == null or players.is_empty():
 		return
 	var player := players[next_player_index]
@@ -98,6 +140,7 @@ func _play(stream: AudioStreamWAV, cue_kind: String) -> void:
 	if AudioServer.get_driver_name() != "Dummy":
 		player.play()
 	last_cue_kind = cue_kind
+	last_cue_asset_path = stream.resource_path
 
 func _apply_volume() -> void:
 	var linear_volume := float(volume_percent) / 100.0

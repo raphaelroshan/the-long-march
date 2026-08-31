@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.299` and later
+**Applies to:** `0.3.0-alpha.300` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -26,6 +26,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **L10 — complete in alpha.297** | Harden the private alpha | Verify saves, migration, clean install, controller, scaling, audio, performance, package provenance, offline behavior, and complete-flow evidence. Human sessions may be run afterward for calibration but do not block the artifact. |
 | **L11 — complete in alpha.298** | Improve presentation clarity | Strengthen fortress state, travel rhythm, threat-to-target causality, settlement atmosphere, roadside framing, route decision hierarchy, and Debrief causality without changing authoritative simulation. |
 | **L1 follow-up — complete in alpha.299** | Prove battle-to-recovery causality | Preserve the complete journey while keeping threat, target, wind-up, impact, dependency loss, arrival priority, and recovery action in one readable chain. |
+| **Temporary sensory pass — complete in alpha.300** | Test journey acknowledgment and damage feel | Integrate a restrained, licensed subset of semantic audio and resolved-state VFX without allowing presentation to drive simulation. |
 
 ## Acceptance tests for every AI task
 
@@ -35,7 +36,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap and the mandatory L1 battle/recovery follow-up are complete in `0.3.0-alpha.299`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, and temporary sensory-feedback pass are complete in `0.3.0-alpha.300`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 
@@ -61,3 +62,7 @@ The current `main` build `0.3.0-alpha.298` passes `scripts/verify.sh`, including
 ## L1 follow-up completion — 2026-08-31
 
 Build `0.3.0-alpha.299` completes the mandatory follow-up. The verified journey remains intact; contact now holds threat, target, counter, durability, and dependency change in one causal receipt, while arrival and recovery carry the exact damaged system and capability risk into the next player order. Full verification and both supported responsive profiles pass. The next evidence source is uncoached private-alpha observation, not additional campaign breadth.
+
+## Temporary sensory-feedback completion — 2026-08-31
+
+Build `0.3.0-alpha.300` integrates the licensed temporary kit selectively: semantic transition audio, a resolved-impact spark, and damage smoke. Tiny Town remains unused because it conflicts with the current art direction. Full verification passes, including mute and reduced-motion behavior.

@@ -62,6 +62,7 @@ func _run() -> void:
 	panel.configure(view)
 	panel.focus_default()
 	await _settle_ui()
+	_expect(panel.repair_button.has_meta("long_march_audio_manual_press") and String(panel.routes_button.get_meta("long_march_audio_cue", "")) == "route_review", "recovery should separate completed-service audio from immediate route-review feedback")
 	_expect(panel.location_label.text.contains("MORROWLINE CAMP") and panel.context_label.text.contains("2 finite service opportunities"), "the recovery tableau should identify its place and finite opportunity budget")
 	_expect(panel.place_label.text.contains("canvas repair bays") and panel.priority_label.text.contains("movement or repair chain") and panel.priority_label.text.contains("fuel and hull"), "Morrowline should present a place-specific identity and two practical service priorities")
 	_expect(panel.recovery_canvas.presentation_signature().contains("CANVAS REPAIR BAYS") and panel.recovery_canvas.presentation_signature().contains("PARTS WAGONS"), "Morrowline's recovery canvas should expose its authored convoy-shelter motif")

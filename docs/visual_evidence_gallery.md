@@ -2,6 +2,12 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.300` — Temporary sensory feedback
+
+[Impact, consequence, and recovery captures](visual_evidence/v0.3.0-alpha.300-temporary-sensory-feedback/) show the restrained temporary spark and damage-smoke treatment. Audio routing is documented separately in [`audio_cue_map.md`](audio_cue_map.md), because screenshots cannot establish sound quality.
+
+The integrated files are CC0 testing placeholders. Tiny Town remains intentionally unused because it conflicts with the current visual direction.
+
 ## `v0.3.0-alpha.299` — Battle and recovery causality
 
 This set records the strategy follow-up that connects a road contact's wind-up, target, impact, dependency consequence, arrival receipt, and recovery priority.

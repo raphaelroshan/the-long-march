@@ -993,6 +993,7 @@ func _build_ui() -> void:
 	campaign_map.node_inspected.connect(_on_campaign_node_inspected)
 	campaign_node_buttons = campaign_map.node_buttons
 	campaign_commit_button = campaign_map.commit_button
+	campaign_commit_button.set_meta("long_march_audio_manual_press", true)
 	campaign_map.remove_child(campaign_commit_button)
 
 	campaign_event_title = Label.new()
@@ -1056,6 +1057,7 @@ func _build_ui() -> void:
 	travel_button = Button.new()
 	travel_button.text = "Depart: Ashgate → Morrowline"
 	travel_button.tooltip_text = "Pay the route cost and begin the deterministic City 1 → City 2 encounter."
+	travel_button.set_meta("long_march_audio_cue", "route_commit")
 	travel_button.pressed.connect(_on_travel_pressed)
 	controls.add_child(travel_button)
 
