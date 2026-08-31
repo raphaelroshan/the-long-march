@@ -1162,3 +1162,7 @@ The journey planner now labels its right dock `ROAD DOSSIER` while map focus pre
 ## 2026-09-01 — Contact readiness must resolve into a next action
 
 The contact dossier now interprets its live counter receipt as one of four response postures: a prepared defense that will answer automatically on Advance, an installed counter that is offline, a fortress with no listed counter, or an already-spent emergency order. Offline and missing states direct the player to inspect the target and compare the currently enabled orders; the spent state directs them back to the predicted hit and dependency consequence. This remains a read-only presentation projection because the game should clarify the decision boundary without recommending a hidden optimal move or duplicating combat rules in UI code.
+
+## 2026-09-01 — “Ready” must name its projected effect
+
+Encounter summaries now expose a read-only defense preview derived from the same automatic-attack and impact-mitigation calculations used by resolution. The contact response names exact next-beat damage and authored sources, plus any adjacent armor absorption. If a counter module is operational but its placement provides no direct effect against the current target, the UI says `COUNTER AVAILABLE` and asks the player to inspect the layout instead of promising that the counter is already answering.

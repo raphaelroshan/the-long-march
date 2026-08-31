@@ -262,3 +262,11 @@ SHA-256: `c90e4f8d7394a6c47306523af4db450d86bb3c2f97b5f8b1fcc07e961320599d`
 The live dossier now states what the readiness result means for the next input: prepared defenses answer on Advance, while offline or missing counters direct the player toward target inspection and the enabled emergency orders. The prompt remains advisory and does not choose an order or change combat resolution.
 
 SHA-256: `d9b87b3157e9440a239582cb80a5c0adcbdf4c16e835fa63a5a98375d37c5fc4`
+
+## `v0.3.0-alpha.321` — Exact defense effect
+
+![Road Raider exact automatic defense](visual_evidence/v0.3.0-alpha.321-defense-effect/08_road_contact.png)
+
+The integrated journey capture shows the live Repeater Gun translated into its exact next-beat output: three damage on Advance. The calculation comes from the authoritative encounter model; the presenter only names the result and source.
+
+SHA-256: `61cc37c96c3f5a36935886b652be190ba31b36df594097908ee4f198a100c65a`

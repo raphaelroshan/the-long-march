@@ -408,7 +408,7 @@ func _configure_counter_readiness(enemy_id: String, view: Dictionary) -> void:
 		background = Color("#33221f")
 		border = Color("#db806f")
 		ink = Color("#ffd0c6")
-	elif status == "missing":
+	elif status in ["missing", "uncertain"]:
 		background = Color("#2d291f")
 		border = Color("#caa562")
 		ink = Color("#f3dba8")
@@ -456,12 +456,17 @@ func contact_readability_summary() -> Dictionary:
 	var enemy_id := String(enemy.get("id", "threat"))
 	var definition: Dictionary = definitions.get(enemy_id, {})
 	var impact: Dictionary = enemy.get("impact", {})
+	var defense: Dictionary = enemy.get("defense", {})
 	return {
 		"phase": battle_phase_for().to_lower(),
 		"threat": String(definition.get("name", enemy_id.replace("_", " ").capitalize())),
 		"target": _target_name(String(enemy.get("target", "")), current_view),
 		"damage": int(impact.get("damage", 0)),
 		"counter": String(definition.get("counter", "")),
+		"defense_damage": int(defense.get("damage", 0)),
+		"defense_sources": Array(defense.get("sources", [])).duplicate(),
+		"impact_buffer": int(defense.get("impact_buffer", 0)),
+		"buffer_source": String(defense.get("buffer_source", "")),
 		"durability_before": int(impact.get("current_durability", 0)),
 		"durability_after": int(impact.get("remaining_durability", 0)),
 		"cascade": _dependency_cascade_text(impact)

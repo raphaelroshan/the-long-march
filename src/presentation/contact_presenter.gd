@@ -21,7 +21,7 @@ static func build(state: LongMarchState, snapshot: Dictionary, combat_view: Dict
 		if not enemy_id.is_empty() and not counter_readiness.has(enemy_id):
 			var readiness := build_counter_readiness(state, enemy_id)
 			counter_readiness[enemy_id] = readiness
-			response_postures[enemy_id] = build_response_posture(enemy, readiness, interventions, intervention_heading)
+			response_postures[enemy_id] = build_response_posture(enemy, readiness, interventions, intervention_heading, Dictionary(enemy.get("defense", {})))
 	return {
 		"region_id": state.campaign_region_id,
 		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)),
@@ -54,7 +54,7 @@ static func build(state: LongMarchState, snapshot: Dictionary, combat_view: Dict
 		}
 	}
 
-static func build_response_posture(enemy: Dictionary, readiness: Dictionary, interventions: Array, intervention_heading: String) -> Dictionary:
+static func build_response_posture(enemy: Dictionary, readiness: Dictionary, interventions: Array, intervention_heading: String, defense: Dictionary = {}) -> Dictionary:
 	var enabled_orders := 0
 	for raw_action in interventions:
 		if bool(Dictionary(raw_action).get("enabled", false)):
@@ -72,10 +72,25 @@ static func build_response_posture(enemy: Dictionary, readiness: Dictionary, int
 	var order_choices := "the emergency order available below" if enabled_orders == 1 else "one of the %d emergency orders available below" % enabled_orders
 	var order_comparison := "the emergency order available below" if enabled_orders == 1 else "the %d emergency orders available below" % enabled_orders
 	if readiness_status == "ready":
+		var defense_effects: Array[String] = []
+		var defense_damage := int(defense.get("damage", 0))
+		var defense_sources: Array = defense.get("sources", [])
+		if defense_damage > 0:
+			defense_effects.append("%d damage on Advance%s" % [defense_damage, " from %s" % ", ".join(defense_sources) if not defense_sources.is_empty() else ""])
+		var impact_buffer := int(defense.get("impact_buffer", 0))
+		if impact_buffer > 0:
+			defense_effects.append("%s absorbs %d incoming damage" % [String(defense.get("buffer_source", "Armor")), impact_buffer])
+		var effect_text := "; ".join(defense_effects)
+		if effect_text.is_empty():
+			return {
+				"status": "uncertain",
+				"heading": "COUNTER AVAILABLE",
+				"text": "%s is operational, but no direct attack or impact buffer is projected for this target. Inspect the layout before spending %s." % [counter_name, order_choices]
+			}
 		return {
 			"status": "ready",
 			"heading": "DEFENSE ANSWERING" if arrived else "PREPARED RESPONSE",
-			"text": "%s is ready. Advance to let it answer automatically, or inspect the target before spending %s." % [counter_name, order_choices]
+			"text": "%s is ready · %s. Advance to resolve it automatically, or inspect the target before spending %s." % [counter_name, effect_text, order_choices]
 		}
 	if readiness_status == "offline":
 		return {
