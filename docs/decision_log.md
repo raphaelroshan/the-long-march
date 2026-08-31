@@ -1116,3 +1116,7 @@ The regional map now pairs its established status colors with node glyphs, futur
 ## 2026-08-31 — Roadside occurrences show the physical choice
 
 The Boiler's Second Heartbeat, The Lift Chain Sings, and The Miller With a Broken Wheel now receive dedicated presentation motifs instead of the shared road-machine placeholder. Each tableau makes the existing choice physical—open or carry the bearing, brace or load the lift, lend the bench or leave the wagon—while `FortressState` continues to own eligibility, costs, durability, pressure, trust, timing, and resolution. This was chosen over adding bespoke minigames because the events need memorable objects and trade-offs, not a second interaction model.
+
+## 2026-08-31 — The tutorial introduces the real fortress actor
+
+The three-page First Watch prologue now uses the shared fortress renderer instead of a separate box-and-window illustration. Page one presents the inhabited machine at rest, page two draws dependency links across real module-family bays, and page three uses the same actor in departure stance. This was chosen over polishing a tutorial-only illustration because the player's first visual lesson should transfer directly into settlement, travel, contact, recovery, and Debrief.

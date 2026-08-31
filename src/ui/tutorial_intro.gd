@@ -1,6 +1,8 @@
 class_name TutorialIntroView
 extends Control
 
+const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
+
 signal begin_requested
 signal back_requested
 signal skip_requested
@@ -194,6 +196,15 @@ func set_high_contrast(enabled: bool) -> void:
 		canvas.queue_redraw()
 
 class IntroCanvas extends Control:
+	const INTRO_MODULES := [
+		{"id": "steam_lance_engine", "family": "engine", "state": "ready"},
+		{"id": "coal_cell", "family": "cargo", "state": "ready"},
+		{"id": "generator_core", "family": "power", "state": "ready"},
+		{"id": "crew_quarters", "family": "crew_room", "state": "ready"},
+		{"id": "field_workshop", "family": "workshop", "state": "ready"},
+		{"id": "repeater_gun", "family": "weapon", "state": "ready"},
+		{"id": "signal_coil", "family": "signal", "state": "ready"}
+	]
 	var page_index: int = 0
 	var high_contrast_enabled: bool = false
 
@@ -207,36 +218,43 @@ class IntroCanvas extends Control:
 			var y := size.y * (0.31 + ridge * 0.045)
 			draw_line(Vector2(0, y), Vector2(size.x, y - 30.0 + ridge * 8.0), Color("#645b4f").darkened(float(ridge) * 0.06), 28.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.66), Vector2(size.x, size.y * 0.34)), Color("#30261e"), true)
-		_draw_fortress(Vector2(size.x * 0.43, size.y * 0.62))
+		var fortress_view := {
+			"mode": "departing" if page_index == 2 else "rest",
+			"region_id": "ashgate_lowlands",
+			"modules": INTRO_MODULES,
+			"high_contrast": high_contrast_enabled,
+			"reduced_motion": true,
+			"travel_phase": 12.0 if page_index == 2 else 0.0
+		}
+		var rendered := FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.04, size.y * 0.20), Vector2(size.x * 0.76, size.y * 0.58)), fortress_view)
 		if page_index == 1:
-			_draw_dependency_lines(Vector2(size.x * 0.43, size.y * 0.62))
+			_draw_dependency_lines(rendered.get("anchors", {}))
 		elif page_index == 2:
 			_draw_road_markers()
 
-	func _draw_fortress(center: Vector2) -> void:
-		var body := Rect2(center - Vector2(185, 82), Vector2(370, 140))
-		var metal := Color("#303837") if high_contrast_enabled else Color("#4b4a41")
-		var edge := Color("#ead69e") if high_contrast_enabled else Color("#9a825a")
-		draw_rect(body, metal, true)
-		draw_rect(body, edge, false, 5.0)
-		draw_rect(Rect2(body.position + Vector2(34, -48), Vector2(112, 48)), metal.lightened(0.06), true)
-		draw_rect(Rect2(body.position + Vector2(34, -48), Vector2(112, 48)), edge, false, 4.0)
-		draw_line(body.position + Vector2(276, 0), body.position + Vector2(276, -82), edge, 6.0)
-		for leg_x in [body.position.x + 58.0, body.position.x + 136.0, body.end.x - 136.0, body.end.x - 58.0]:
-			draw_line(Vector2(leg_x, body.end.y), Vector2(leg_x - 10, body.end.y + 58), edge, 12.0)
-			draw_line(Vector2(leg_x - 26, body.end.y + 58), Vector2(leg_x + 18, body.end.y + 58), edge, 9.0)
-		for window_x in [body.position.x + 64.0, body.position.x + 128.0, body.position.x + 202.0, body.position.x + 278.0]:
-			draw_rect(Rect2(Vector2(window_x, body.position.y + 42), Vector2(27, 30)), Color("#dfa759"), true)
-
-	func _draw_dependency_lines(center: Vector2) -> void:
-		var anchors := [center + Vector2(-120, 5), center + Vector2(-45, 38), center + Vector2(45, 8), center + Vector2(125, 38)]
-		for index in range(anchors.size() - 1):
-			draw_dashed_line(anchors[index], anchors[index + 1], Color("#78d3c5"), 3.0, 8.0)
-		for anchor in anchors:
-			draw_circle(anchor, 11.0, Color("#e8c58e"))
+	func _draw_dependency_lines(anchors: Dictionary) -> void:
+		var chains := [
+			["steam_lance_engine", "coal_cell"],
+			["repeater_gun", "field_workshop"],
+			["field_workshop", "crew_quarters"]
+		]
+		for chain in chains:
+			var from: Vector2 = anchors.get(String(chain[0]), Vector2.ZERO)
+			var to: Vector2 = anchors.get(String(chain[1]), Vector2.ZERO)
+			if from == Vector2.ZERO or to == Vector2.ZERO:
+				continue
+			draw_dashed_line(from, to, Color("#78d3c5"), 3.0, 8.0)
+			draw_circle(from, 8.0, Color("#e8c58e"), false, 3.0)
+			draw_circle(to, 8.0, Color("#e8c58e"), false, 3.0)
 
 	func _draw_road_markers() -> void:
 		for index in range(5):
 			var x := size.x * 0.64 + index * 54.0
 			draw_line(Vector2(x, size.y * 0.82), Vector2(x + 28, size.y * 0.82), Color("#b28d58"), 5.0)
 		draw_circle(Vector2(size.x * 0.86, size.y * 0.62), 24.0, Color("#9e453a"))
+
+	func presentation_signature() -> String:
+		match page_index:
+			1: return "SHARED FORTRESS · DEPENDENCY CHAINS"
+			2: return "SHARED FORTRESS · ROAD AHEAD"
+			_: return "SHARED FORTRESS · MOVING SETTLEMENT"

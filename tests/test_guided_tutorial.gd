@@ -6,6 +6,7 @@ const TUTORIAL_SAVE := "user://the_long_march_tutorial.save"
 var failures: Array[String] = []
 var app: Control
 var game: Control
+var capture_dir := ""
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
@@ -16,10 +17,22 @@ func _remove(path: String) -> void:
 	if FileAccess.file_exists(absolute):
 		DirAccess.remove_absolute(absolute)
 
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(capture_dir)
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_expect(false, "tutorial prologue capture requires a rendering display: " + name)
+		return
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "tutorial prologue capture should be written: " + name)
+
 func _init() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
 	_remove(CAMPAIGN_SAVE)
 	_remove("user://the_long_march_prototype.backup.save")
 	_remove(TUTORIAL_SAVE)
@@ -37,6 +50,8 @@ func _run() -> void:
 	_expect(app.tutorial_intro.visible and not app.menu_view.visible, "Learn to Command should open the prologue without starting gameplay behind it")
 	_expect(app.game_view == null, "reading the prologue must not create or mutate a fortress run")
 	_expect(app.tutorial_intro.page_index == 0 and app.tutorial_intro.next_button.has_focus(), "the prologue should begin on its first page with a focused forward action")
+	_expect(app.tutorial_intro.canvas.presentation_signature() == "SHARED FORTRESS · MOVING SETTLEMENT", "the first prologue page should introduce the same physical fortress used by the playable journey")
+	await _capture("01_moving_settlement")
 	app.text_scale_percent = 110
 	app.high_contrast_enabled = true
 	app._apply_visual_contrast()
@@ -48,8 +63,12 @@ func _run() -> void:
 	app.reduced_motion = true
 	app._apply_visual_contrast()
 	app.tutorial_intro.next_button.pressed.emit()
+	_expect(app.tutorial_intro.canvas.presentation_signature() == "SHARED FORTRESS · DEPENDENCY CHAINS", "the dependency page should annotate the shared fortress instead of swapping to a diagram-only machine")
+	await _capture("02_dependency_chains")
 	app.tutorial_intro.next_button.pressed.emit()
 	await process_frame
+	_expect(app.tutorial_intro.canvas.presentation_signature() == "SHARED FORTRESS · ROAD AHEAD", "the final prologue page should stage the shared fortress toward the road")
+	await _capture("03_road_ahead")
 	_expect(app.tutorial_intro.next_button.text == "ENTER THE MUSTER YARD", "the final prologue page should name the transition into play")
 	app.tutorial_intro.next_button.pressed.emit()
 	await process_frame
