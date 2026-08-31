@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.300`
+**Build:** `0.3.0-alpha.301`
 
 **Engine:** Godot 4.4.1
 
@@ -11,6 +11,7 @@
 - [1600×900 battle and recovery set](visual_evidence/v0.3.0-alpha.299-battle-recovery-causality-1600x900/)
 - [1280×720 accessibility set](visual_evidence/v0.3.0-alpha.299-battle-recovery-causality-1280x720/)
 - [Temporary impact and damage VFX](visual_evidence/v0.3.0-alpha.300-temporary-sensory-feedback/)
+- [Temporary travel atmosphere](visual_evidence/v0.3.0-alpha.301-temporary-travel-atmosphere/)
 
 ## Findings
 
@@ -24,6 +25,8 @@ The presentation remains code-native alpha art. The new effect is deliberately r
 
 Alpha.300 adds a small CC0 spark texture at resolved impact and smoke over known damaged bays. Both are tinted into the existing palette and remain subordinate to the target and consequence receipts. Tiny Town was reviewed but not integrated because it would weaken the established industrial-fantasy tone.
 
+Alpha.301 makes the march sequence physically distinct without adding simulation. Departure gathers speed beneath the receding gate, the center beat carries full parallax with restrained dust or flood mist and a slight fortress bob, and contact approach stops movement in a braced composition. Effects are clipped to the center stage and suppressed by reduced motion.
+
 ## Next work
 
-Use the exact alpha.299 cohort for consented, uncoached sessions. Prioritize repeated failures in target recognition, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact alpha.301 cohort for consented, uncoached sessions. Prioritize repeated failures in march weight, contact-transition clarity, target recognition, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

@@ -1,7 +1,7 @@
 # The Long March — Temporary Asset Kit
 
 **Status:** Testing-only breadth kit  
-**Build target:** `0.3.0-alpha.300` and later
+**Build target:** `0.3.0-alpha.301` and later
 **Purpose:** Give AI agents usable temporary fortress, settlement, travel, VFX, audio, and animation ingredients while the moving-fortress identity is refined.
 
 ## Included sources
@@ -56,6 +56,8 @@ The temporary pack is successful if it makes the full journey testable and atmos
 ## Integrated subset
 
 Build `0.3.0-alpha.300` integrates a deliberately small subset: ten journey audio cues, `spark_03.png` for resolved contact impact, and `smoke_03.png` for known damaged or breached bays. The exact audio mapping is in [`audio_cue_map.md`](audio_cue_map.md). Tiny Town remains unintegrated because its visual language conflicts with the current industrial-fantasy fortress presentation.
+
+Build `0.3.0-alpha.301` additionally uses tinted `smoke_01.png` and `smoke_02.png` as temporary road dust or flood mist only during the full-march presentation beat. Departure uses a slower gathering pace; contact approach stops scenery motion and braces the fortress. Reduced motion skips directly to the static contact composition. Tiny Town remains unintegrated.
 
 ## Provenance
 
