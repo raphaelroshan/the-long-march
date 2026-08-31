@@ -115,6 +115,7 @@ func _run() -> void:
 	await _settle_ui()
 	var opening_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(opening_focus in game.campaign_node_buttons and game.journey_planner.map_host.get_global_rect().encloses(opening_focus.get_global_rect()), "opening the Veyru route table should focus a visible opening road")
+	_expect(game.campaign_map.assignment_marker_for("dry_archive") == "accepted" and game.campaign_map.marker_labels["dry_archive"].text == "ACCEPTED", "the Veyru route map should carry the medicine obligation onto the Dry Archive destination")
 
 	await _press_route("pump_gallery")
 	_expect(game.state.phase == "battle" and game.combat_panel.visible and _combat_names_include("Flood Surge") and not _combat_names_include("Climber"), "Pump Gallery should show Flood Surge alone in the combat UI")

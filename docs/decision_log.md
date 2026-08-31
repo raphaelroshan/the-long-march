@@ -1108,3 +1108,7 @@ Each implemented contact now has a stable visual form, scale, label offset, and 
 ## 2026-08-31 — Rest activity shows service, not new simulation
 
 The shared resting fortress now includes crew-scale workers, a service crane, a parts cart, valve exhaust, and a restrained lamp cycle. Settlement presentation owns the ambient phase and freezes it under Reduced Motion; `FortressState` gains no worker schedule, maintenance clock, resource effect, or save field. This was chosen over a settlement-idle subsystem because the scene needs scale and personhood, while the actual service decisions remain the existing workshop, quartermaster, hiring, assignment, and departure commands.
+
+## 2026-08-31 — Route state must survive without color
+
+The regional map now pairs its established status colors with node glyphs, future-route dashes, directional marks, selected-route emphasis, and destination badges for offered, accepted, fulfilled, or failed assignments. The marker projection reads existing contract status and does not create map-owned campaign state. This was chosen over decorative map art because the primary problem was distinguishing commitment, history, and obligation at a glance, including for players who cannot rely on color.

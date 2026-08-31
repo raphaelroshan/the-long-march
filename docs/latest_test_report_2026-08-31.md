@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.304` inhabited-rest candidate |
+| Build | `0.3.0-alpha.305` route-map-grammar candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -15,6 +15,7 @@
 | Arrival identity | PASS: authoritative destination IDs, regional motif selection, tutorial siding, final thresholds, Veyru destinations, and save/resume preservation |
 | Threat identity | PASS: stable form, lane, and scale profiles for all seven implemented threat families |
 | Rest presentation | PASS: crew-scale service activity, crane, cart, valve exhaust, lamp cycle, and reduced-motion propagation through the settlement hub |
+| Route-map grammar | PASS: stable node glyphs, route-state signatures, accepted assignment marker, presenter purity, and reversible selection behavior |
 
 ## Evidence
 
@@ -28,9 +29,11 @@
 - [`Threat silhouette report`](threat_silhouette_report.md)
 - [`Inhabited fortress-at-rest report`](inhabited_rest_report.md)
 - [`Inhabited fortress-at-rest evidence`](visual_evidence/v0.3.0-alpha.304-inhabited-rest/)
+- [`Route-map visual grammar report`](route_map_visual_grammar_report.md)
+- [`Route-map visual evidence`](visual_evidence/v0.3.0-alpha.305-route-map-grammar/)
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.304 makes the fortress-at-rest tableau feel inhabited and serviceable while preserving the full route → threat → target → damage → dependency → recovery chain.
+The updated strategy remains intact without changing authoritative game state. Alpha.305 makes current, selectable, selected, secured, blocked, closed, and future roads distinguishable by shape and line treatment while carrying accepted assignments onto their destination.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

@@ -1,5 +1,23 @@
 extends RefCounted
 
+static func build_assignment_markers(state: LongMarchState) -> Dictionary:
+	var target_id := "dry_archive" if state.campaign_region_id == "flooded_veyru" else "morrowline_camp"
+	var status := state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
+	var title := "SEALED MEDICINES" if state.campaign_region_id == "flooded_veyru" else "CONVOY GUARD"
+	var marker_status := ""
+	match status:
+		"offered":
+			marker_status = "offer"
+		"accepted":
+			marker_status = "accepted"
+		"completed":
+			marker_status = "fulfilled"
+		"failed":
+			marker_status = "failed"
+	if marker_status.is_empty():
+		return {}
+	return {target_id: {"status": marker_status, "title": title}}
+
 static func build_planner(state: LongMarchState, snapshot: Dictionary, context: Dictionary) -> Dictionary:
 	var order := String(context.get("order", "Review the next road."))
 	var experiment := state.mastery_experiment_details()
