@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.320` and later
+**Applies to:** `0.3.0-alpha.321` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -47,6 +47,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **Live counter readiness — complete in alpha.318** | Turn threat advice into a current-fortress answer | Name operational, offline, or missing module counters in the live contact dossier while preserving deterministic combat. |
 | **Threat risk preview — complete in alpha.319** | Make the cost of inaction legible before impact | State each threat family's practical consequence beside its target, counter, and current readiness. |
 | **Contact response posture — complete in alpha.320** | Turn diagnosis into an immediate player decision | State whether the fortress has a prepared automatic defense, has lost an installed counter, must improvise, or has already spent its order; point the player to inspection, orders, or Advance without changing combat rules. |
+| **Exact defense effect — complete in alpha.321** | Explain what a prepared defense will do | Project the next automatic attack damage and any adjacent-armor absorption from authoritative encounter calculations; do not claim an operational counter is affecting the current target when positioning provides no direct benefit. |
 
 ## Acceptance tests for every AI task
 
@@ -56,7 +57,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, specialist continuity, the Iven full-flow profile, route browse-state clarity, selected-road cost receipt, live counter readiness, threat-risk preview, and contact response posture are complete in `0.3.0-alpha.320`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, specialist continuity, the Iven full-flow profile, route browse-state clarity, selected-road cost receipt, live counter readiness, threat-risk preview, contact response posture, and exact defense-effect preview are complete in `0.3.0-alpha.321`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 

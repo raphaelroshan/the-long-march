@@ -2886,6 +2886,7 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 		profile["vent_exposed"] = true
 	if target_id == "front_armor_plate" and enemy_id == "siege_beast":
 		damage = maxi(1, damage - 1)
+		profile["front_armor_effect"] = "braced_plate"
 	profile["damage"] = damage
 	return profile
 
@@ -2908,6 +2909,28 @@ func encounter_enemy_impact_preview(enemy: Dictionary) -> Dictionary:
 	profile["remaining_durability"] = maxi(0, current_durability - int(profile.get("damage", 0)))
 	profile["dependency_changes"] = _encounter_dependency_impact_preview(profile)
 	return profile
+
+func encounter_defense_preview(enemy: Dictionary) -> Dictionary:
+	if bool(enemy.get("defeated", false)):
+		return {}
+	var enemy_id := String(enemy.get("id", ""))
+	if not ENCOUNTER_ENEMIES.has(enemy_id):
+		return {}
+	var attack := _encounter_module_damage(enemy_id)
+	var source_names: Array[String] = _encounter_source_names(Array(attack.get("attackers", [])))
+	var impact := encounter_enemy_impact_preview(enemy)
+	var armor_name := ""
+	var armor_id := String(impact.get("armor_id", ""))
+	if not armor_id.is_empty():
+		armor_name = String(module_definition(armor_id).get("name", armor_id.replace("_", " ").capitalize()))
+	var direct_buffer := 1 if String(impact.get("front_armor_effect", "")) == "braced_plate" else 0
+	var buffer_source := "Front Armor Plate" if direct_buffer > 0 else armor_name
+	return {
+		"damage": int(attack.get("damage", 0)),
+		"sources": source_names,
+		"impact_buffer": int(impact.get("armor_absorbed", 0)) + direct_buffer,
+		"buffer_source": buffer_source
+	}
 
 func _encounter_dependency_impact_preview(profile: Dictionary) -> Array[Dictionary]:
 	var affected_indices: Array[int] = []
@@ -3499,6 +3522,7 @@ func encounter_summary() -> Dictionary:
 	var enemy_views: Array = encounter_enemies.duplicate(true)
 	for index in range(enemy_views.size()):
 		enemy_views[index]["impact"] = encounter_enemy_impact_preview(enemy_views[index])
+		enemy_views[index]["defense"] = encounter_defense_preview(enemy_views[index])
 	return {"active": encounter_active, "step": encounter_step, "progress": encounter_progress, "outcome": encounter_outcome, "intervention_used": encounter_intervention_used, "forecast": encounter_forecast(), "enemies": enemy_views, "report": encounter_report.duplicate()}
 
 func _cell_occupied(cell: Vector2i, ignore_index: int = -1) -> bool:
