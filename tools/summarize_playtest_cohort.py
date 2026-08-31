@@ -9,7 +9,7 @@ from pathlib import Path
 from statistics import mean
 from typing import Any
 
-from summarize_playtest_feedback import contact_metrics, load_feedback
+from summarize_playtest_feedback import contact_metrics, load_feedback, outcome_fact_lines
 
 
 def _cell(value: Any) -> str:
@@ -89,9 +89,14 @@ def build_cohort_report(
         if run_code != "unknown":
             run_codes.append(run_code)
         normalized_answers = answers if isinstance(answers, dict) else {}
+        normalized_final_state = final_state if isinstance(final_state, dict) else {}
         written_evidence.extend(
             [
                 f"### Session {index}",
+                "",
+                "**Recorded game outcome**",
+                "",
+                *[f"- {line}" for line in outcome_fact_lines(normalized_final_state)],
                 "",
                 "**Clear or satisfying**",
                 "",

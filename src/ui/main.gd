@@ -1991,7 +1991,48 @@ func _state_journal_summary() -> Dictionary:
 		"occurrence_history": state.occurrence_history.duplicate(true),
 		"ready_systems": int(dependencies.get("ready", 0)),
 		"strained_systems": int(dependencies.get("strained", 0)),
-		"offline_systems": int(dependencies.get("offline", 0))
+		"offline_systems": int(dependencies.get("offline", 0)),
+		"outcome_facts": _playtest_outcome_facts()
+	}
+
+func _playtest_outcome_facts() -> Dictionary:
+	var systems: Array[Dictionary] = []
+	for instance in state.modules:
+		var module_id := String(instance.get("id", ""))
+		var definition := state.module_definition(module_id)
+		var dependency := state.dependency_status(instance)
+		systems.append({
+			"id": module_id,
+			"name": String(definition.get("name", module_id.replace("_", " ").capitalize())),
+			"durability": int(instance.get("durability", 0)),
+			"max_durability": int(definition.get("durability", 0)),
+			"operating_state": String(dependency.get("state", "offline")),
+			"dependency_reasons": Array(dependency.get("reasons", [])).duplicate(),
+			"exterior": bool(instance.get("exterior", false))
+		})
+	var surviving_threats: Array[Dictionary] = []
+	for enemy in state.encounter_enemies:
+		if bool(enemy.get("defeated", false)) or int(enemy.get("hp", 0)) <= 0:
+			continue
+		var enemy_id := String(enemy.get("id", ""))
+		var enemy_definition: Dictionary = LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {})
+		surviving_threats.append({
+			"id": enemy_id,
+			"name": String(enemy_definition.get("name", enemy_id.replace("_", " ").capitalize())),
+			"hp": int(enemy.get("hp", 0)),
+			"max_hp": int(enemy.get("max_hp", 0)),
+			"target": String(enemy.get("target", ""))
+		})
+	var terminal := state.phase == "results" and not state.final_result.is_empty()
+	return {
+		"terminal": terminal,
+		"result_id": state.final_result,
+		"encounter_outcome": state.encounter_outcome,
+		"hull": state.hull_condition,
+		"result_summary": _result_summary_text() if terminal else "",
+		"replay_guidance": _result_replay_text() if terminal else "",
+		"systems": systems,
+		"surviving_threats": surviving_threats
 	}
 
 func _fortress_presentation_snapshot(active_target_id: String = "") -> Dictionary:

@@ -69,6 +69,59 @@ def _display_value(value: Any) -> str:
     return rendered.replace("|", "\\|") if rendered else "—"
 
 
+def _inline_text(value: Any) -> str:
+    return " ".join(str(value).split()).strip()
+
+
+def outcome_fact_lines(final_state: dict[str, Any]) -> list[str]:
+    facts = final_state.get("outcome_facts")
+    if not isinstance(facts, dict) or not facts:
+        return ["Structured outcome facts: not recorded in this export."]
+    lines: list[str] = []
+    summary = _inline_text(facts.get("result_summary", ""))
+    guidance = _inline_text(facts.get("replay_guidance", ""))
+    if summary:
+        lines.append(f"Game result explanation: {summary}")
+    if guidance:
+        lines.append(f"Game replay guidance: {guidance}")
+    systems = facts.get("systems", [])
+    affected: list[str] = []
+    if isinstance(systems, list):
+        for system in systems:
+            if not isinstance(system, dict):
+                continue
+            try:
+                durability = int(system.get("durability", 0))
+                maximum = int(system.get("max_durability", 0))
+            except (TypeError, ValueError):
+                durability, maximum = 0, 0
+            operating_state = str(system.get("operating_state", "offline"))
+            if durability >= maximum and operating_state == "ready":
+                continue
+            detail = f"{_inline_text(system.get('name', system.get('id', 'Unknown system')))} {durability}/{maximum} · {operating_state.replace('_', ' ').title()}"
+            reasons = system.get("dependency_reasons", [])
+            if isinstance(reasons, list) and reasons:
+                detail += " · " + "; ".join(_inline_text(reason) for reason in reasons if _inline_text(reason))
+            affected.append(detail)
+    lines.append("Affected systems: " + (", ".join(affected) if affected else "none"))
+    threats = facts.get("surviving_threats", [])
+    survivors: list[str] = []
+    if isinstance(threats, list):
+        for threat in threats:
+            if not isinstance(threat, dict):
+                continue
+            survivors.append(
+                "%s %s/%s"
+                % (
+                    _inline_text(threat.get("name", threat.get("id", "Unknown threat"))),
+                    threat.get("hp", "?"),
+                    threat.get("max_hp", "?"),
+                )
+            )
+    lines.append("Surviving threats: " + (", ".join(survivors) if survivors else "none"))
+    return lines
+
+
 def contact_metrics(payload: dict[str, Any], events: list[Any]) -> tuple[dict[str, int], str]:
     event_ids = [str(entry.get("event", "")) for entry in events if isinstance(entry, dict)]
     derived = {
@@ -136,6 +189,7 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
     path_text = " → ".join(str(node).replace("_", " ").title() for node in path) if isinstance(path, list) and path else "not completed"
     metrics, metrics_status = contact_metrics(payload, events)
     contact_timeline = _contact_timeline(events)
+    outcome_lines = outcome_fact_lines(final_state)
     metric_check = {
         "match": "- Metric check: exported counts match the event trail.",
         "mismatch": "- Metric check: exported counts differ from the event trail; use the chronological trail below.",
@@ -169,6 +223,12 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         f"- Replay score: {answers.get('replay_score', '?')}/5",
         f"- Contact navigation: steps {metrics['encounter_steps']} / target locks {metrics['contact_targets_locked']} / target inspections {metrics['contact_target_inspections']} / emergency orders {metrics['emergency_orders_used']}",
         metric_check,
+        "",
+        "### Recorded outcome facts",
+        "",
+        "These are exported game-state facts for comparison with the tester's explanation; the sheet does not grade agreement.",
+        "",
+        *[f"- {line}" for line in outcome_lines],
         "",
         "### Contact navigation trail",
         "",

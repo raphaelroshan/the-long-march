@@ -1198,3 +1198,7 @@ The opt-in local notes form retains its clear/satisfying and confusing/frustrati
 ## 2026-09-01 — Cohort synthesis retains the tester's own words
 
 The cohort report now shows all three written responses for each session in command-line argument order, preserving line breaks and marking absent legacy answers as not recorded. It does not summarize, correct, cluster, sentiment-score, or label those answers. Reviewers can therefore cite direct evidence while still using the separate human-validation matrix to decide whether a pattern is repeated and severe.
+
+## 2026-09-01 — Compare causal answers with structured facts, never an automatic grade
+
+Feedback exports now include the same result explanation and replay guidance shown by the terminal Debrief, plus every installed system's durability and operating state and any surviving final threats. Session and cohort reports place these facts beside the tester's words. The tooling deliberately does not decide whether the answer agrees with the state; that comparison remains a human observation because phrasing, partial understanding, and alternative valid explanations cannot be reduced to a string match.

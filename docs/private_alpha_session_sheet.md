@@ -26,7 +26,7 @@ Record observable behavior and direct quotes for:
 - outcome explanation from the terminal Debrief;
 - one concrete replay change.
 
-The game already records committed routes, interventions, services, event choices, final state, build version, a replay score, and the tester's written account of the result cause and next-run change in a local-only feedback export. It does not record cursor movement, hesitation, incorrect predictions, spoken explanations, or emotion. Those require an observer note and must never be inferred from completion alone.
+The game already records committed routes, interventions, services, event choices, final state, build version, a replay score, the tester's written account of the result cause and next-run change, and structured outcome facts for installed systems and surviving threats in a local-only feedback export. It does not record cursor movement, hesitation, incorrect predictions, spoken explanations, or emotion. Those require an observer note and must never be inferred from completion alone.
 
 ## Generate a session sheet from an export
 
@@ -44,7 +44,7 @@ After collecting the intended five exports, generate a cohort review in the same
 python3 tools/summarize_playtest_cohort.py /path/session-01.json /path/session-02.json /path/session-03.json /path/session-04.json /path/session-05.json --output cohort-review.md
 ```
 
-The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. It also places each tester's three written answers in session order without scoring or classifying them. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
+The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. It places each tester's three written answers beside the exported game-result explanation, system condition, and surviving-threat facts without scoring agreement. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
 
 ## Required capture matrix
 

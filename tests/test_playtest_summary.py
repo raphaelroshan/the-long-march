@@ -29,6 +29,17 @@ def main() -> int:
             "hull": 6,
             "fuel": 2,
             "campaign_pressure": 7,
+            "outcome_facts": {
+                "terminal": True,
+                "result_id": "scarred_march",
+                "result_summary": "SCARRED MARCH · The fortress crossed with a disabled engine.",
+                "replay_guidance": "NEXT RUN · Repair the Steam Lance Engine before Meridian.",
+                "systems": [
+                    {"id": "steam_lance_engine", "name": "Steam Lance Engine", "durability": 0, "max_durability": 4, "operating_state": "offline", "dependency_reasons": ["destroyed"]},
+                    {"id": "coal_cell", "name": "Coal Cell", "durability": 3, "max_durability": 3, "operating_state": "ready", "dependency_reasons": []},
+                ],
+                "surviving_threats": [{"id": "siege_beast", "name": "Siege Beast", "hp": 2, "max_hp": 7}],
+            },
         },
         "session_metrics": {
             "encounter_steps": 1,
@@ -65,6 +76,10 @@ def main() -> int:
         assert "Recovery services: Refuel" in sheet
         assert "Mara Workbench Choice / Rebuild Weakest" in sheet
         assert "Replay score: 4/5" in sheet
+        assert "Game result explanation: SCARRED MARCH · The fortress crossed with a disabled engine." in sheet
+        assert "Affected systems: Steam Lance Engine 0/4 · Offline · destroyed" in sheet
+        assert "Surviving threats: Siege Beast 2/7" in sheet
+        assert "the sheet does not grade agreement" in sheet
         assert "Result cause and next-run change: The engine failed; I would protect it before Meridian." in sheet
         assert "Contact navigation: steps 1 / target locks 1 / target inspections 1 / emergency orders 1" in sheet
         assert "Metric check: exported counts match the event trail." in sheet
@@ -80,6 +95,9 @@ def main() -> int:
         del payload["session_metrics"]
         older_sheet = build_session_sheet(payload, path.name)
         assert "older export has no complete metric block" in older_sheet
+        del payload["final_state"]["outcome_facts"]
+        oldest_sheet = build_session_sheet(payload, path.name)
+        assert "Structured outcome facts: not recorded in this export." in oldest_sheet
         invalid_path = Path(directory) / "invalid.json"
         invalid_path.write_text("{}", encoding="utf-8")
         try:
