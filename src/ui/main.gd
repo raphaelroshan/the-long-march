@@ -2242,6 +2242,26 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_set_event("The quartermaster opens the fortress stores. Review carried modules, fuel, and current capacity.")
 			_refresh_ui()
 			_focus_control.call_deferred(module_option)
+		"buy_side_armor":
+			var result := state.buy_market_offer("ashgate_spare_side_armor")
+			if bool(result.get("ok", false)):
+				last_journey_receipt = "QUARTERMASTER · SIDE ARMOR BOUGHT · −%d ASHMARKS · %d REMAIN · STORAGE %d→%d" % [int(result.get("cost", 0)), int(result.get("remaining_money", state.money)), int(result.get("storage_before", 0)), int(result.get("storage_after", 0))]
+				_set_event(String(result.get("message", "Market purchase completed.")))
+				_journal_event("market_purchase", {"offer_id": "ashgate_spare_side_armor", "module_id": String(result.get("module_id", "")), "cost": int(result.get("cost", 0))})
+				_checkpoint("market_purchase")
+			else:
+				_set_event("Market purchase blocked: %s." % String(result.get("reason", "unknown")))
+			_refresh_ui()
+		"sell_stored_shell_cannon":
+			var result := state.sell_stored_module_at_market("shell_cannon")
+			if bool(result.get("ok", false)):
+				last_journey_receipt = "QUARTERMASTER · STORED SHELL CANNON SOLD · +%d ASHMARKS · %d TOTAL · STORAGE %d→%d" % [int(result.get("price", 0)), int(result.get("remaining_money", state.money)), int(result.get("storage_before", 0)), int(result.get("storage_after", 0))]
+				_set_event(String(result.get("message", "Stored module sold.")))
+				_journal_event("market_sale", {"module_id": "shell_cannon", "price": int(result.get("price", 0))})
+				_checkpoint("market_sale")
+			else:
+				_set_event("Market sale blocked: %s." % String(result.get("reason", "unknown")))
+			_refresh_ui()
 		"buy_orchard_intel":
 			var result := state.purchase_intel("ashgate_orchard_weather_report")
 			if bool(result.get("ok", false)):

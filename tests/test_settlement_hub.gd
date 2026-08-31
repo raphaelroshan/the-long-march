@@ -65,6 +65,24 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(hub.visible and hub.station_buttons["assignment_board"].has_focus(), "returning from detailed work should restore the bazaar's current required station")
 
+	hub.station_buttons["quartermaster"].pressed.emit()
+	await process_frame
+	_expect(hub.primary_action_button.text == "BUY SIDE ARMOR · 18" and hub.secondary_action_button.text == "SELL STORED CANNON · +14" and hub.detail_body.text.contains("Money 80→62") and hub.detail_body.text.contains("Selling cannot remove"), "the Quartermaster should preview exact money, storage, footprint, mass, power, and stored-only sale boundaries")
+	await _capture("02a_quartermaster_offer")
+	var installed_before_trade: Array = game.state.modules.duplicate(true)
+	var side_armor_before: int = game.state.stored_module_count("side_armor_skirt")
+	hub.primary_action_button.pressed.emit()
+	await _settle_ui()
+	hub.station_buttons["quartermaster"].pressed.emit()
+	await process_frame
+	_expect(game.state.money == 62 and game.state.stored_module_count("side_armor_skirt") == side_armor_before + 1 and game.state.modules == installed_before_trade and hub.detail_body.text.contains("BOUGHT"), "buying fixed stock should place one Side Armor Skirt in storage without changing the live chassis")
+	hub.secondary_action_button.pressed.emit()
+	await _settle_ui()
+	hub.station_buttons["quartermaster"].pressed.emit()
+	await process_frame
+	_expect(game.state.money == 76 and game.state.stored_module_count("shell_cannon") == 0 and game.state.modules == installed_before_trade and hub.detail_body.text.contains("SOLD"), "selling should remove only the stored Shell Cannon and add its exact 14-Ashmark price")
+	await _capture("02a_quartermaster_trade")
+
 	hub.station_buttons["signal_broker"].pressed.emit()
 	await process_frame
 	_expect(hub.detail_title.text == "ORCHARD WEATHER REPORT" and hub.primary_action_button.text == "BUY REPORT · 8 ASHMARKS" and hub.detail_body.text.contains("information only"), "Ashgate's Signal Broker should sell one explicit report without implying a mechanical route discount")
@@ -73,7 +91,7 @@ func _run() -> void:
 	await _settle_ui()
 	hub.station_buttons["signal_broker"].pressed.emit()
 	await process_frame
-	_expect(game.state.money == 72 and game.state.acquired_intel_ids == ["ashgate_orchard_weather_report"] and hub.detail_status.text == "REPORT ACQUIRED", "buying the report should spend exactly 8 Ashmarks and leave a visible acquired receipt")
+	_expect(game.state.money == 68 and game.state.acquired_intel_ids == ["ashgate_orchard_weather_report"] and hub.detail_status.text == "REPORT ACQUIRED", "buying the report should spend exactly 8 Ashmarks and leave a visible acquired receipt")
 	_expect(float(game.state.campaign_node_preview("soot_orchard").get("risk", 0.0)) == intel_risk_before and hub.detail_body.text.contains("RELIABLE"), "the purchased report should expose confidence without changing route risk")
 	await _capture("02b_signal_report")
 

@@ -2,6 +2,15 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.332` — Bounded Quartermaster market
+
+| State | Evidence | SHA-256 |
+|---|---|---|
+| Trade preview | [Exact buy and stored-only sale terms](visual_evidence/v0.3.0-alpha.332-quartermaster-market/02a_quartermaster_offer.png) | `35367311533f3473c31a2fd3e823df13baffc3c2012244a34ddda32120e80513` |
+| Trades complete | [Armor stored and cannon sold](visual_evidence/v0.3.0-alpha.332-quartermaster-market/02a_quartermaster_trade.png) | `9cc8d3b86508109e82e5513f144a9b75ca81352632307db886970b0bd2a4e0b7` |
+
+The first capture keeps both exact transactions and their module consequences visible at 1280×720. The second confirms that the armor remains stored for later Workshop installation and the cannon sale cannot remove any installed fortress system.
+
 ## `v0.3.0-alpha.331` — Authored route intel
 
 | State | Evidence | SHA-256 |

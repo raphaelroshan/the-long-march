@@ -58,6 +58,37 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		var active_experiment := state.mastery_experiment_details()
 		if bool(active_experiment.get("active", false)):
 			settlement_context += " · FIELD ORDER: %s" % String(active_experiment.get("title", "Experiment")).to_upper()
+	var quartermaster_station := {"title": "Quartermaster Stores", "status": "%d ASHMARKS · %d FUEL" % [state.money, state.fuel], "button_status": "STORES", "body": "Review medicine space, fuel, and carried modules before the flood roads. No fixed trade is posted at this quay." if is_veyru else "Review fuel, parts, and carried modules before leaving the rail depot.", "tone": "neutral", "primary": {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}}
+	if not is_veyru:
+		var buy_offer := state.active_settlement_market_buy_offer()
+		var sell_offer := state.market_sell_preview("shell_cannon")
+		var buy_price := int(buy_offer.get("price", 0))
+		var buy_complete := bool(buy_offer.get("purchased", false))
+		var sell_available := bool(sell_offer.get("available", false))
+		var trade_lines: Array[String] = []
+		if buy_complete:
+			trade_lines.append("BOUGHT · Spare Side Armor Skirt is in storage. Install it in the Workshop; it uses a 1×2 footprint, 2 mass, no power, and protects the lower hull.")
+		elif state.money < buy_price:
+			trade_lines.append("BUY · Spare Side Armor Skirt · %d Ashmarks\nBLOCKED · %d available · %d short. Storage is unchanged until purchase; installed footprint 1×2 · mass 2 · power 0." % [buy_price, state.money, buy_price - state.money])
+		else:
+			trade_lines.append("BUY · Spare Side Armor Skirt · %d Ashmarks\nMoney %d→%d · Storage %d→%d · installed footprint 1×2 · mass 2 · power 0." % [buy_price, state.money, state.money - buy_price, state.stored_modules.size(), state.stored_modules.size() + 1])
+		if sell_available:
+			trade_lines.append("SELL · Stored Shell Cannon · +%d Ashmarks\nMoney %d→%d · Storage %d→%d. Selling cannot remove the installed fortress; it gives up a 2×1 exterior weapon that needs 2 power and adjacent ammunition." % [int(sell_offer.get("price", 0)), state.money, state.money + int(sell_offer.get("price", 0)), state.stored_modules.size(), state.stored_modules.size() - 1])
+		else:
+			trade_lines.append("SOLD · No stored Shell Cannon remains. Installed systems are never eligible for this sale.")
+		quartermaster_station = {
+			"title": "Quartermaster Stores",
+			"status": "%d ASHMARKS · %d STORED" % [state.money, state.stored_modules.size()],
+			"button_status": "TRADES SETTLED" if buy_complete and not sell_available else "BUY / SELL",
+			"body": "\n\n".join(trade_lines),
+			"tone": "safe" if buy_complete and not sell_available else "neutral"
+		}
+		if not buy_complete:
+			quartermaster_station["primary"] = {"id": "buy_side_armor", "label": "BUY SIDE ARMOR · %d" % buy_price, "enabled": state.money >= buy_price, "tooltip": "Purchase one fixed-stock Side Armor Skirt into storage for %d Ashmarks." % buy_price if state.money >= buy_price else "Requires %d Ashmarks; only %d remain." % [buy_price, state.money]}
+		if sell_available:
+			quartermaster_station["secondary"] = {"id": "sell_stored_shell_cannon", "label": "SELL STORED CANNON · +%d" % int(sell_offer.get("price", 0)), "enabled": true, "tooltip": "Sell only the uninstalled Shell Cannon. The live chassis cannot be dismantled here."}
+		if buy_complete and not sell_available:
+			quartermaster_station["primary"] = {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,
@@ -78,7 +109,7 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		"fortress": fortress.duplicate(true),
 		"stations": {
 			"workshop": {"title": "Chassis Workshop", "status": "REFIT AVAILABLE", "button_status": "REFIT", "body": ("Use the quay's dry gantry to inspect the walking fortress and protect its lower hull before the archive road." if is_veyru else "Use the depot's rail-side repair bay to inspect the walking fortress, trace dependencies, and prepare its movement chain."), "tone": "safe", "primary": {"id": "open_workshop", "label": "ENTER WORKSHOP", "enabled": true, "tooltip": "Open the detailed chassis workbench."}},
-			"quartermaster": {"title": "Quartermaster Stores", "status": "%d ASHMARKS · %d FUEL" % [state.money, state.fuel], "button_status": "STORES", "body": ("Review medicine space, fuel, and carried modules before the flood roads. Trading inventory is not yet available here." if is_veyru else "Review fuel, parts, and carried modules before leaving the rail depot. Trading inventory is not yet available here."), "tone": "neutral", "primary": {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}},
+			"quartermaster": quartermaster_station,
 			"signal_broker": signal_station,
 			"hiring_post": {"title": "Hiring Post", "status": "NO CREW AVAILABLE", "button_status": "EMPTY", "body": "Specialists are encountered through authored locations and events. The hiring board is empty at this stop.", "tone": "muted"},
 			"assignment_board": assignment_station,

@@ -7,7 +7,7 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 9
+const SAVE_VERSION := 10
 const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru"]
 const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal"]
@@ -41,6 +41,18 @@ const INTEL_OFFERS := {
 		"revealed_fields": ["threats", "counter_hints"],
 		"price": 8
 	}
+}
+const MARKET_BUY_OFFERS := {
+	"ashgate_spare_side_armor": {
+		"name": "Spare Side Armor Skirt",
+		"region_id": "ashgate_lowlands",
+		"origin_location_id": "ashgate_depot",
+		"module_id": "side_armor_skirt",
+		"price": 18
+	}
+}
+const MARKET_SELL_PRICES := {
+	"shell_cannon": 14
 }
 const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint"}
 const CAMPAIGN_DECISION_OPTIONS := {
@@ -251,6 +263,7 @@ var workers_rescued: bool = false
 var regional_developments: Array[String] = []
 var mastery_experiment_id: String = ""
 var acquired_intel_ids: Array[String] = []
+var purchased_market_offer_ids: Array[String] = []
 
 func _init(world_seed: int = 1107) -> void:
 	seed = world_seed
@@ -329,6 +342,86 @@ func acquired_intel_for_node(node_id: String) -> Dictionary:
 		if String(offer.get("subject_node_id", "")) == node_id:
 			return offer
 	return {}
+
+func market_buy_offer(offer_id: String) -> Dictionary:
+	if offer_id not in MARKET_BUY_OFFERS:
+		return {}
+	var offer: Dictionary = Dictionary(MARKET_BUY_OFFERS[offer_id]).duplicate(true)
+	var module_id := String(offer.get("module_id", ""))
+	offer["id"] = offer_id
+	offer["module"] = module_definition(module_id).duplicate(true)
+	offer["purchased"] = offer_id in purchased_market_offer_ids
+	return offer
+
+func active_settlement_market_buy_offer() -> Dictionary:
+	for offer_id in MARKET_BUY_OFFERS:
+		var offer := market_buy_offer(String(offer_id))
+		if String(offer.get("region_id", "")) == campaign_region_id and String(offer.get("origin_location_id", "")) == current_location:
+			return offer
+	return {}
+
+func buy_market_offer(offer_id: String) -> Dictionary:
+	var offer := market_buy_offer(offer_id)
+	if offer.is_empty():
+		return {"ok": false, "reason": "unknown market offer"}
+	if not campaign_active or phase not in ["refit", "settlement"] or encounter_active:
+		return {"ok": false, "reason": "market trades require the fortress to be at rest"}
+	if campaign_region_id != String(offer.get("region_id", "")) or current_location != String(offer.get("origin_location_id", "")):
+		return {"ok": false, "reason": "this stock is not available at the current settlement"}
+	if offer_id in purchased_market_offer_ids:
+		return {"ok": false, "reason": "this fixed-stock item has already been purchased"}
+	var module_id := String(offer.get("module_id", ""))
+	var definition := module_definition(module_id)
+	if definition.is_empty():
+		return {"ok": false, "reason": "market offer references an unknown module"}
+	var price := int(offer.get("price", 0))
+	if money < price:
+		return {"ok": false, "reason": "requires %d Ashmarks; only %d remain" % [price, money]}
+	var storage_before := stored_modules.size()
+	money -= price
+	purchased_market_offer_ids.append(offer_id)
+	purchased_market_offer_ids.sort()
+	stored_modules.append(module_instance(module_id, Vector2i(-1, -1), "exterior" in definition.get("tags", []), false))
+	var message := "%s purchased for %d Ashmarks and placed in storage. Installation remains a separate workshop action." % [String(offer.get("name", definition.get("name", module_id))), price]
+	log.append(message)
+	return {"ok": true, "offer": market_buy_offer(offer_id), "module_id": module_id, "cost": price, "remaining_money": money, "storage_before": storage_before, "storage_after": stored_modules.size(), "message": message}
+
+func market_sell_preview(module_id: String) -> Dictionary:
+	if module_id not in MARKET_SELL_PRICES:
+		return {}
+	var definition := module_definition(module_id)
+	return {
+		"module_id": module_id,
+		"name": String(definition.get("name", module_id)),
+		"price": int(MARKET_SELL_PRICES[module_id]),
+		"available": stored_module_count(module_id) > 0,
+		"stored_count": stored_module_count(module_id),
+		"module": definition.duplicate(true)
+	}
+
+func sell_stored_module_at_market(module_id: String) -> Dictionary:
+	if not campaign_active or phase not in ["refit", "settlement"] or encounter_active:
+		return {"ok": false, "reason": "market trades require the fortress to be at rest"}
+	if campaign_region_id != "ashgate_lowlands" or current_location != "ashgate_depot":
+		return {"ok": false, "reason": "this buyer is not available at the current settlement"}
+	var preview := market_sell_preview(module_id)
+	if preview.is_empty():
+		return {"ok": false, "reason": "the quartermaster has no standing offer for that module"}
+	var stored_index := -1
+	for index in range(stored_modules.size()):
+		if String(stored_modules[index].get("id", "")) == module_id:
+			stored_index = index
+			break
+	if stored_index < 0:
+		return {"ok": false, "reason": "%s is not in storage; installed systems cannot be sold" % String(preview.get("name", "module"))}
+	var storage_before := stored_modules.size()
+	var sold: Dictionary = stored_modules[stored_index].duplicate(true)
+	stored_modules.remove_at(stored_index)
+	var price := int(preview.get("price", 0))
+	money += price
+	var message := "%s sold from storage for %d Ashmarks. No installed system was removed." % [String(preview.get("name", module_id)), price]
+	log.append(message)
+	return {"ok": true, "module": sold, "module_id": module_id, "price": price, "remaining_money": money, "storage_before": storage_before, "storage_after": stored_modules.size(), "message": message}
 
 func module_shape(module_id: String, rotated: bool = false) -> Vector2i:
 	var definition := module_definition(module_id)
@@ -533,6 +626,7 @@ func start_campaign() -> Dictionary:
 	workers_rescued = false
 	mastery_experiment_id = ""
 	acquired_intel_ids.clear()
+	purchased_market_offer_ids.clear()
 	journey_node = "ashgate_depot"
 	journey_destination = ""
 	journey_route = ""
@@ -564,6 +658,7 @@ func start_tutorial() -> Dictionary:
 	specialist_id = ""
 	mastery_experiment_id = ""
 	acquired_intel_ids.clear()
+	purchased_market_offer_ids.clear()
 	journey_node = "ashgate_depot"
 	journey_destination = ""
 	journey_route = ""
@@ -646,6 +741,7 @@ func start_flooded_veyru() -> Dictionary:
 	workers_rescued = false
 	mastery_experiment_id = ""
 	acquired_intel_ids.clear()
+	purchased_market_offer_ids.clear()
 	journey_node = "lantern_quay"
 	journey_destination = ""
 	journey_route = ""
@@ -1933,7 +2029,8 @@ func summary() -> Dictionary:
 		"workers_rescued": workers_rescued,
 		"regional_developments": regional_developments.duplicate(),
 		"mastery_experiment_id": mastery_experiment_id,
-		"acquired_intel_ids": acquired_intel_ids.duplicate()
+		"acquired_intel_ids": acquired_intel_ids.duplicate(),
+		"purchased_market_offer_ids": purchased_market_offer_ids.duplicate()
 	}
 
 func serialize() -> Dictionary:
@@ -2004,6 +2101,7 @@ func serialize() -> Dictionary:
 		"mastery_experiment_id": mastery_experiment_id,
 		"regional_developments": regional_developments.duplicate(),
 		"acquired_intel_ids": acquired_intel_ids.duplicate(),
+		"purchased_market_offer_ids": purchased_market_offer_ids.duplicate(),
 		"modules": _serialized_modules(),
 		"stored_modules": _serialized_stored_modules(),
 		"log": log.duplicate()
@@ -2210,6 +2308,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_mastery_experiment_id := String(data.get("mastery_experiment_id", ""))
 	var raw_regional_developments: Variant = data.get("regional_developments", [])
 	var raw_acquired_intel_ids: Variant = data.get("acquired_intel_ids", [])
+	var raw_purchased_market_offer_ids: Variant = data.get("purchased_market_offer_ids", [])
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
 	if restored_campaign_region_id not in VALID_CAMPAIGN_REGIONS:
 		return {"ok": false, "reason": "checkpoint contains an unknown campaign region"}
@@ -2242,6 +2341,20 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "acquired intel conflicts with the campaign region"}
 		restored_acquired_intel_ids.append(intel_id)
 	restored_acquired_intel_ids.sort()
+	if not raw_purchased_market_offer_ids is Array or raw_purchased_market_offer_ids.size() > MARKET_BUY_OFFERS.size():
+		return {"ok": false, "reason": "checkpoint market purchase list is malformed"}
+	var restored_market_offer_ids: Array[String] = []
+	for raw_id in raw_purchased_market_offer_ids:
+		var offer_id := String(raw_id)
+		if offer_id not in MARKET_BUY_OFFERS:
+			return {"ok": false, "reason": "checkpoint contains an unknown market purchase"}
+		if offer_id in restored_market_offer_ids:
+			return {"ok": false, "reason": "checkpoint contains a duplicate market purchase"}
+		var offer_region := String(Dictionary(MARKET_BUY_OFFERS[offer_id]).get("region_id", ""))
+		if offer_region != restored_campaign_region_id:
+			return {"ok": false, "reason": "market purchase conflicts with the campaign region"}
+		restored_market_offer_ids.append(offer_id)
+	restored_market_offer_ids.sort()
 	if restored_current_location not in JOURNEY_NODES or restored_journey_node not in JOURNEY_NODES:
 		return {"ok": false, "reason": "checkpoint contains an unknown journey location"}
 	if not restored_journey_destination.is_empty() and restored_journey_destination not in JOURNEY_NODES:
@@ -2393,6 +2506,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	mastery_experiment_id = restored_mastery_experiment_id
 	regional_developments = restored_regional_developments
 	acquired_intel_ids = restored_acquired_intel_ids
+	purchased_market_offer_ids = restored_market_offer_ids
 	modules = restored_modules_result.get("modules", []).duplicate(true)
 	stored_modules = restored_stored_modules_result.get("modules", []).duplicate(true)
 	if not data.has("stored_modules"):

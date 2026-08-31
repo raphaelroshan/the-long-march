@@ -36,6 +36,7 @@ func _init() -> void:
 	_test_flooded_veyru_threats_and_contract()
 	_test_veyru_public_archive_signal()
 	_test_authored_intel_purchase()
+	_test_fixed_market_transactions()
 	_test_complete_flooded_veyru_campaign()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
@@ -1163,6 +1164,41 @@ func _test_authored_intel_purchase() -> void:
 	poor_state.start_campaign()
 	poor_state.money = 7
 	_expect(not bool(poor_state.purchase_intel("ashgate_orchard_weather_report").get("ok", false)) and poor_state.money == 7 and poor_state.acquired_intel_ids.is_empty(), "an unaffordable report should leave money and the route ledger unchanged")
+
+func _test_fixed_market_transactions() -> void:
+	var state := LongMarchState.new(1107)
+	state.place_module("steam_lance_engine", Vector2i(0, 0))
+	state.place_module("coal_cell", Vector2i(0, 1))
+	state.seed_starter_inventory()
+	state.start_campaign()
+	var modules_before := state.modules.duplicate(true)
+	var storage_before := state.stored_modules.size()
+	var side_armor_before := state.stored_module_count("side_armor_skirt")
+	var purchase := state.buy_market_offer("ashgate_spare_side_armor")
+	_expect(bool(purchase.get("ok", false)) and state.money == 62 and state.stored_modules.size() == storage_before + 1 and state.stored_module_count("side_armor_skirt") == side_armor_before + 1, "the fixed Ashgate armor offer should atomically spend 18 Ashmarks and add one full-condition module to storage")
+	_expect(state.modules == modules_before and int(purchase.get("storage_before", -1)) == storage_before and int(purchase.get("storage_after", -1)) == storage_before + 1, "market buying should never install or move a live fortress system")
+	var duplicate_money := state.money
+	_expect(not bool(state.buy_market_offer("ashgate_spare_side_armor").get("ok", false)) and state.money == duplicate_money, "fixed market stock should not be purchasable twice")
+	var sale_storage_before := state.stored_modules.size()
+	var sale := state.sell_stored_module_at_market("shell_cannon")
+	_expect(bool(sale.get("ok", false)) and state.money == 76 and state.stored_module_count("shell_cannon") == 0 and state.stored_modules.size() == sale_storage_before - 1, "the standing Shell Cannon offer should add 14 Ashmarks and remove only the stored instance")
+	_expect(state.modules == modules_before, "selling from storage should leave the installed fortress byte-for-byte unchanged")
+	var money_after_sale := state.money
+	_expect(not bool(state.sell_stored_module_at_market("shell_cannon").get("ok", false)) and state.money == money_after_sale, "selling an unavailable stored module should fail without granting money")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.purchased_market_offer_ids == ["ashgate_spare_side_armor"] and restored.stored_module_count("side_armor_skirt") == side_armor_before + 1 and restored.stored_module_count("shell_cannon") == 0, "market stock and completed inventory transactions should survive save/load")
+	var legacy_payload := state.serialize()
+	legacy_payload["save_version"] = 9
+	legacy_payload.erase("purchased_market_offer_ids")
+	var legacy_restore := LongMarchState.new(0)
+	_expect(bool(legacy_restore.load_serialized(legacy_payload).get("ok", false)) and legacy_restore.purchased_market_offer_ids.is_empty(), "schema-9 saves should migrate without inventing a fixed-stock purchase")
+	var invalid_payload := state.serialize()
+	invalid_payload["purchased_market_offer_ids"] = ["invented_stock"]
+	_expect(not bool(LongMarchState.new(0).load_serialized(invalid_payload).get("ok", false)), "unknown market purchase records should be rejected")
+	var poor_state := LongMarchState.new(1107)
+	poor_state.start_campaign()
+	poor_state.money = 17
+	_expect(not bool(poor_state.buy_market_offer("ashgate_spare_side_armor").get("ok", false)) and poor_state.money == 17 and poor_state.purchased_market_offer_ids.is_empty(), "an unaffordable stock purchase should leave money and market state unchanged")
 
 func _test_complete_flooded_veyru_campaign() -> void:
 	var state := LongMarchState.new(2204)

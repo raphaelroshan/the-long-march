@@ -18,6 +18,7 @@ func _expect_pure(state: LongMarchState, before: Dictionary, label: String) -> v
 
 func _init() -> void:
 	var state := LongMarchState.new(1107)
+	state.seed_starter_inventory()
 	state.start_campaign()
 	var snapshot := state.summary()
 	var fortress := {"modules": [], "damaged_count": 0, "offline_count": 0}
@@ -29,6 +30,7 @@ func _init() -> void:
 	_expect(settlement.get("stations", {}).get("assignment_board", {}).get("primary", {}).get("id") == "accept_assignment" and settlement.get("stations", {}).get("departure_gate", {}).get("primary", {}).get("id") == "plan_journey", "settlement presenter should preserve stable assignment and route command IDs")
 	_expect(String(settlement.get("stations", {}).get("assignment_board", {}).get("body", "")).contains("only 1 service action") and String(settlement.get("stations", {}).get("assignment_board", {}).get("secondary", {}).get("tooltip", "")).contains("only 1 service action"), "the assignment board should disclose the exact later shortage before decline")
 	_expect(settlement.get("stations", {}).get("signal_broker", {}).get("primary", {}).get("id") == "buy_orchard_intel" and String(settlement.get("stations", {}).get("signal_broker", {}).get("body", "")).contains("information only"), "the Signal Broker should expose one stable authored report and disclose that it changes no route costs")
+	_expect(settlement.get("stations", {}).get("quartermaster", {}).get("primary", {}).get("id") == "buy_side_armor" and settlement.get("stations", {}).get("quartermaster", {}).get("secondary", {}).get("id") == "sell_stored_shell_cannon" and String(settlement.get("stations", {}).get("quartermaster", {}).get("body", "")).contains("Money 80→62"), "the Quartermaster should expose exact fixed-stock buy and stored-only sale previews")
 	_expect_pure(state, before, "settlement presenter")
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
