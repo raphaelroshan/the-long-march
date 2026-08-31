@@ -246,3 +246,11 @@ The selected-road capture shows destination, day, fuel, pressure, risk, and heat
 The contact dossier preserves the general Road Raider counter and separately names the fortress's operational Repeater Gun. This verifies that the current answer is visible before the first contact step; it does not claim that a first-time player will choose the right response.
 
 SHA-256: `dc4cf2bf5c3180f16a71c6c293d4ed825ac6aaeece9a2c18466afb6108d3a224`
+
+## `v0.3.0-alpha.319` — Threat risk preview
+
+![Road Raider risk and response](visual_evidence/v0.3.0-alpha.319-threat-risk-preview/08_road_contact.png)
+
+The response-state capture keeps the Road Raider's target, authored counter, practical risk, current Repeater Gun readiness, and available emergency orders in one view.
+
+SHA-256: `c90e4f8d7394a6c47306523af4db450d86bb3c2f97b5f8b1fcc07e961320599d`

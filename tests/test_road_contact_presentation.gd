@@ -4,13 +4,13 @@ var failures: Array[String] = []
 var capture_dir := ""
 
 const THREAT_CASES := {
-	"road_raiders": {"name": "Road Raider", "arrival_step": 2, "route": "road flank", "targets": ["cargo", "exterior"], "counter": "shell cannon or repeater gun", "signature": "HARPOON VOLLEY", "response": "SHELL OR REPEATER FIRE", "target": "coal_cell", "target_name": "Coal Cell"},
-	"climbers": {"name": "Climber", "arrival_step": 3, "route": "fortress flank", "targets": ["signal", "exterior", "crew"], "counter": "wall lamp or repeater gun", "signature": "GRAPNEL RUSH", "response": "WALL LIGHT OR REPEATER FIRE", "target": "signal_coil", "target_name": "Signal Coil"},
-	"burrowers": {"name": "Burrower", "arrival_step": 3, "route": "under-road", "targets": ["engine", "workshop", "lower_hull"], "counter": "lower-hull armor, shifted weapons, or a spare engine", "signature": "UNDERCARRIAGE BREACH", "response": "LOWER-HULL ARMOR · SHIFTED GUNS · SPARE ENGINE", "target": "steam_lance_engine", "target_name": "Steam Lance Engine"},
-	"storm_front": {"name": "Storm Front", "arrival_step": 1, "route": "weather line", "targets": ["signal", "exterior", "sustain"], "counter": "signal coverage, adjacent armor, Seal Compartment, or vent heat", "signature": "ARC DISCHARGE", "response": "SIGNAL · ADJACENT ARMOR · SEAL · VENT", "target": "signal_mast", "target_name": "Signal Mast"},
-	"siege_beast": {"name": "Siege Beast", "arrival_step": 4, "route": "direct road", "targets": ["armor", "crew"], "counter": "shell cannon and front armor", "signature": "RAM CHARGE", "response": "SHELL FIRE · FRONT ARMOR", "target": "front_armor_plate", "target_name": "Front Armor Plate"},
-	"flood_surge": {"name": "Flood Surge", "arrival_step": 1, "route": "rising waterline", "targets": ["lower_hull", "cargo", "sustain"], "counter": "Water Condenser, Side Armor Skirt, Field Workshop, or Seal Compartment", "signature": "SURGE CREST", "response": "CONDENSER · ARMOR · WORKSHOP · SEAL", "target": "water_condenser", "target_name": "Water Condenser"},
-	"civic_guardian": {"name": "Civic Guardian", "arrival_step": 3, "route": "archive gate", "targets": ["cargo", "signal", "crew", "armor"], "counter": "Shell Cannon, protected cargo, or redundant signal and crew systems", "signature": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY", "target": "archive_crate", "target_name": "Archive Crate"}
+	"road_raiders": {"name": "Road Raider", "arrival_step": 2, "route": "road flank", "targets": ["cargo", "exterior"], "counter": "shell cannon or repeater gun", "ready": "Repeater Gun", "signature": "HARPOON VOLLEY", "response": "SHELL OR REPEATER FIRE", "target": "coal_cell", "target_name": "Coal Cell"},
+	"climbers": {"name": "Climber", "arrival_step": 3, "route": "fortress flank", "targets": ["signal", "exterior", "crew"], "counter": "wall lamp or repeater gun", "ready": "Wall Lamp", "signature": "GRAPNEL RUSH", "response": "WALL LIGHT OR REPEATER FIRE", "target": "signal_coil", "target_name": "Signal Coil"},
+	"burrowers": {"name": "Burrower", "arrival_step": 3, "route": "under-road", "targets": ["engine", "workshop", "lower_hull"], "counter": "lower-hull armor, shifted weapons, or a spare engine", "ready": "Side Armor Skirt", "signature": "UNDERCARRIAGE BREACH", "response": "LOWER-HULL ARMOR · SHIFTED GUNS · SPARE ENGINE", "target": "steam_lance_engine", "target_name": "Steam Lance Engine"},
+	"storm_front": {"name": "Storm Front", "arrival_step": 1, "route": "weather line", "targets": ["signal", "exterior", "sustain"], "counter": "signal coverage, adjacent armor, Seal Compartment, or vent heat", "ready": "Signal Mast", "signature": "ARC DISCHARGE", "response": "SIGNAL · ADJACENT ARMOR · SEAL · VENT", "target": "signal_mast", "target_name": "Signal Mast"},
+	"siege_beast": {"name": "Siege Beast", "arrival_step": 4, "route": "direct road", "targets": ["armor", "crew"], "counter": "shell cannon and front armor", "ready": "Front Armor Plate", "signature": "RAM CHARGE", "response": "SHELL FIRE · FRONT ARMOR", "target": "front_armor_plate", "target_name": "Front Armor Plate"},
+	"flood_surge": {"name": "Flood Surge", "arrival_step": 1, "route": "rising waterline", "targets": ["lower_hull", "cargo", "sustain"], "counter": "Water Condenser, Side Armor Skirt, Field Workshop, or Seal Compartment", "ready": "Water Condenser", "signature": "SURGE CREST", "response": "CONDENSER · ARMOR · WORKSHOP · SEAL", "target": "water_condenser", "target_name": "Water Condenser"},
+	"civic_guardian": {"name": "Civic Guardian", "arrival_step": 3, "route": "archive gate", "targets": ["cargo", "signal", "crew", "armor"], "counter": "Shell Cannon, protected cargo, or redundant signal and crew systems", "ready": "Shell Cannon", "signature": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY", "target": "archive_crate", "target_name": "Archive Crate"}
 }
 
 func _expect(condition: bool, message: String) -> void:
@@ -43,8 +43,15 @@ func _view_for(enemy_id: String, arrived: bool, defeated: bool = false) -> Dicti
 		"order": "Read intent, choose a response, then resolve one authoritative beat.",
 		"advance_label": "RESOLVE CONTACT",
 		"inspect_label": "INSPECT CHASSIS",
-		"interventions": [],
-		"counter_readiness": {enemy_id: {"status": "ready", "text": "READY NOW · TEST COUNTER"}},
+		"intervention_heading": "EMERGENCY ORDER · 1 AVAILABLE",
+		"intervention_help": "Choose one order, or preserve it for a later step.",
+		"interventions": [
+			{"label": "Shift power · raise weapon output / add heat", "tooltip": "Trade heat for damage.", "enabled": true},
+			{"label": "Seal target compartment", "tooltip": "Protect one selected module.", "enabled": true},
+			{"label": "Vent heat · reduce heat / expose exterior", "tooltip": "Trade exposure for cooling.", "enabled": true},
+			{"label": "Cut loose cargo · reduce load", "tooltip": "Sacrifice cargo to reduce pressure.", "enabled": true}
+		],
+		"counter_readiness": {enemy_id: {"status": "ready", "text": "READY NOW · %s" % String(case.ready)}},
 		"enemy_definitions": {enemy_id: {"name": case.name, "arrival_step": case.arrival_step, "route": case.route, "target_tags": case.targets, "counter": case.counter}},
 		"target_names": {target_id: target_name},
 		"enemies": [{"id": enemy_id, "arrived": arrived, "defeated": defeated, "target": target_id, "impact": {"damage": 1, "current_durability": 2, "remaining_durability": 1, "target_reason": "%s route matched" % String(case.route), "dependency_changes": [{"name": "Dependent System", "to": "offline"}]}}],
@@ -76,8 +83,8 @@ func _run() -> void:
 		contact.configure(forecast_view)
 		_expect(contact.battle_phase_for() == "FORECAST", "%s should begin with a forecast phase" % case.name)
 		_expect(contact.contact_canvas.presentation_stage_text() == "FORECAST · %s · %d STEP%s OUT" % [String(case.name).to_upper(), int(case.arrival_step), "" if int(case.arrival_step) == 1 else "S"], "%s should expose stable forecast timing" % case.name)
-		_expect(contact.threat_detail.text.contains("APPROACH · %s" % String(case.route).capitalize()) and contact.threat_detail.text.contains("PREFERRED TARGETS · %s" % " / ".join(case.targets)) and contact.threat_detail.text.contains("COUNTER · %s" % case.counter), "%s forecast should name approach, target preference, and authored counter" % case.name)
-		_expect(contact.counter_readiness_panel.visible and contact.counter_readiness_label.text == "READY NOW · TEST COUNTER", "%s forecast should distinguish current counter readiness from general counter advice" % case.name)
+		_expect(contact.threat_detail.text.contains("APPROACH · %s" % String(case.route).capitalize()) and contact.threat_detail.text.contains("PREFERRED TARGETS · %s" % " / ".join(case.targets)) and contact.threat_detail.text.contains("COUNTER · %s" % case.counter) and contact.threat_detail.text.contains("RISK IF IGNORED"), "%s forecast should name approach, target preference, authored counter, and practical consequence" % case.name)
+		_expect(contact.counter_readiness_panel.visible and contact.counter_readiness_label.text == "READY NOW · %s" % String(case.ready), "%s forecast should distinguish current counter readiness from general counter advice" % case.name)
 
 		var impact_view := _view_for(enemy_id, true)
 		contact.configure(impact_view)
@@ -104,7 +111,7 @@ func _run() -> void:
 				_expect(contact.contact_canvas.temporary_impact_vfx_active(), "%s impact should expose the temporary resolved-impact VFX only during the impact beat" % case.name)
 			if enemy_id == "road_raiders" and String(phase_case.phase) in ["WIND-UP", "IMPACT", "CONSEQUENCE"]:
 				await _capture("causality_%s" % String(phase_case.phase).to_lower())
-		_expect(contact.threat_detail.text.contains("INTENT · %s" % case.signature) and contact.threat_detail.text.contains("RESPONSE WINDOW · %s" % case.counter) and contact.threat_detail.text.contains("CASCADE · Dependent System → OFFLINE"), "%s active dossier should retain intent, counter, and dependency consequence together" % case.name)
+		_expect(contact.threat_detail.text.contains("INTENT · %s" % case.signature) and contact.threat_detail.text.contains("RESPONSE WINDOW · %s" % case.counter) and contact.threat_detail.text.contains("RISK IF IGNORED") and contact.threat_detail.text.contains("CASCADE · Dependent System → OFFLINE"), "%s active dossier should retain intent, counter, risk, and dependency consequence together" % case.name)
 		var readable: Dictionary = contact.contact_readability_summary()
 		_expect(String(readable.get("threat", "")) == String(case.name) and String(readable.get("target", "")) == String(case.target_name) and int(readable.get("damage", 0)) == 1 and String(readable.get("counter", "")) == String(case.counter), "%s should expose threat, target, damage, and counter as one presentation summary" % case.name)
 		_expect(int(readable.get("durability_before", 0)) == 2 and int(readable.get("durability_after", 0)) == 1 and String(readable.get("cascade", "")).contains("Dependent System READY→OFFLINE"), "%s should expose exact durability and dependency causality in the same summary" % case.name)
@@ -133,7 +140,7 @@ func _run() -> void:
 	contact.contact_canvas.finish_transition()
 	contact._refresh_battle_phase_label(true)
 	_expect(contact.contact_canvas.high_contrast_enabled and contact.contact_canvas.transition_progress == 1.0 and contact.battle_phase_for() == "CONSEQUENCE" and contact.contact_canvas.presentation_stage_text().begins_with("CONSEQUENCE"), "high contrast should preserve the cue while reduced motion resolves directly to consequence without changing state")
-	_expect(contact.counter_readiness_label.text == "READY NOW · TEST COUNTER", "high contrast should retain the current-fortress counter receipt")
+	_expect(contact.counter_readiness_label.text == "READY NOW · Repeater Gun", "high contrast should retain the current-fortress counter receipt")
 	_expect(not contact.contact_canvas.temporary_impact_vfx_active(), "reduced motion should skip the temporary impact effect while retaining the consequence receipt")
 	_expect(int(impact_probe["count"]) == 2, "reduced motion should collapse the same resolved impact cue to the immediate consequence instead of dropping it")
 

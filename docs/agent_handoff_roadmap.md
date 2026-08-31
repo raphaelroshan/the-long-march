@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.318`
+**Current code baseline:** `0.3.0-alpha.319`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.318`, preserving the complete causal journey while carrying the same fortress actor from the prologue into play, giving each implemented threat family a distinct approach warning, representing every bazaar station through a place-specific attendant, foreshadowing the committed destination during travel, distinguishing successful from blocked refit actions by sound, aligning impact audio with the visible impact beat, placing Mara and Iven inside the decisions they materially change, retaining the chosen specialist through later route planning, verifying Iven's branch through a complete player-facing run, distinguishing cost-free route browsing from selection, restating exact route costs beside the selected node before Commit, and naming the counter the current fortress can actually use during contact.
+**Current merged baseline:** `0.3.0-alpha.319`, preserving the complete causal journey while carrying the same fortress actor from the prologue into play, giving each implemented threat family a distinct approach warning and explicit risk if ignored, representing every bazaar station through a place-specific attendant, foreshadowing the committed destination during travel, distinguishing successful from blocked refit actions by sound, aligning impact audio with the visible impact beat, placing Mara and Iven inside the decisions they materially change, retaining the chosen specialist through later route planning, verifying Iven's branch through a complete player-facing run, distinguishing cost-free route browsing from selection, restating exact route costs beside the selected node before Commit, and naming the counter the current fortress can actually use during contact.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
