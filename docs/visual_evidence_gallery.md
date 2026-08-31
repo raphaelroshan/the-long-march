@@ -2,6 +2,15 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.334` — Station receipt focus
+
+| Receipt | Evidence | SHA-256 |
+|---|---|---|
+| Quartermaster | [Completed trade with Store Review focused](visual_evidence/v0.3.0-alpha.334-station-receipt-focus/02a_quartermaster_trade.png) | `a06d72fc5a8964c703aeadfc2f684609523d3e679a938975eb6441676fa78273` |
+| Signal Broker | [Acquired report with broker landmark focused](visual_evidence/v0.3.0-alpha.334-station-receipt-focus/02b_signal_report.png) | `cfa4ae99207b653038645424b5a997dcef4b2b35a2bc336cd90fc82c1da296aa` |
+
+Both screenshots capture the immediate post-checkpoint state. Focus remains local to the completed transaction instead of jumping to the still-required assignment.
+
 ## `v0.3.0-alpha.333` — Hiring Post lead
 
 ![Iven Pell lead at Ashgate](visual_evidence/v0.3.0-alpha.333-hiring-post/02c_hiring_post.png)

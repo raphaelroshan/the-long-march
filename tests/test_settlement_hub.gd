@@ -73,13 +73,11 @@ func _run() -> void:
 	var side_armor_before: int = game.state.stored_module_count("side_armor_skirt")
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui()
-	hub.station_buttons["quartermaster"].pressed.emit()
-	await process_frame
+	_expect(hub.selected_station_id == "quartermaster" and hub.secondary_action_button.has_focus(), "a completed purchase should keep the Quartermaster receipt open and focus the remaining sale")
 	_expect(game.state.money == 62 and game.state.stored_module_count("side_armor_skirt") == side_armor_before + 1 and game.state.modules == installed_before_trade and hub.detail_body.text.contains("BOUGHT"), "buying fixed stock should place one Side Armor Skirt in storage without changing the live chassis")
 	hub.secondary_action_button.pressed.emit()
 	await _settle_ui()
-	hub.station_buttons["quartermaster"].pressed.emit()
-	await process_frame
+	_expect(hub.selected_station_id == "quartermaster" and hub.primary_action_button.has_focus(), "a completed sale should keep the final Quartermaster receipt open and focus store review")
 	_expect(game.state.money == 76 and game.state.stored_module_count("shell_cannon") == 0 and game.state.modules == installed_before_trade and hub.detail_body.text.contains("SOLD"), "selling should remove only the stored Shell Cannon and add its exact 14-Ashmark price")
 	await _capture("02a_quartermaster_trade")
 
@@ -89,8 +87,7 @@ func _run() -> void:
 	var intel_risk_before := float(game.state.campaign_node_preview("soot_orchard").get("risk", 0.0))
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui()
-	hub.station_buttons["signal_broker"].pressed.emit()
-	await process_frame
+	_expect(hub.selected_station_id == "signal_broker" and hub.station_buttons["signal_broker"].has_focus(), "a completed information purchase should keep its broker receipt visible")
 	_expect(game.state.money == 68 and game.state.acquired_intel_ids == ["ashgate_orchard_weather_report"] and hub.detail_status.text == "REPORT ACQUIRED", "buying the report should spend exactly 8 Ashmarks and leave a visible acquired receipt")
 	_expect(float(game.state.campaign_node_preview("soot_orchard").get("risk", 0.0)) == intel_risk_before and hub.detail_body.text.contains("RELIABLE"), "the purchased report should expose confidence without changing route risk")
 	await _capture("02b_signal_report")
