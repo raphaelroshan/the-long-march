@@ -2,6 +2,17 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.297` — Complete journey acceptance
+
+The current private-alpha baseline has a complete capture from title and First Watch through Ashgate preparation, route commitment, travel, contact, arrival, roadside consequence, Morrowline recovery, Meridian Pass, and Debrief.
+
+| Profile | Evidence | Contract |
+|---|---|---|
+| 1600×900 | [Complete journey sequence](visual_evidence/v0.3.0-alpha.297-complete-review-1600x900/) | Standard text and presentation motion, including separate road-in-motion and contact-ahead beats |
+| 1280×720 | [Complete responsive sequence](visual_evidence/v0.3.0-alpha.297-complete-review-1280x720/) | 110% text, high contrast, reduced motion, and alternate controller guidance |
+
+These runs use the same visible controls as a player and require no debug action. They prove deterministic completion, focus reachability, and supported-layout bounds; they do not claim uncoached comprehension or enjoyment.
+
 ## `v0.3.0-alpha.279` — First Watch journey shell
 
 These PR41 captures document the First Watch onboarding and the moving-fortress premise at the point where the project moved from isolated prototype screens toward a continuous journey.
