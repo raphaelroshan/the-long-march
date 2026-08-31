@@ -304,15 +304,6 @@ func _run_ashgate_journey() -> void:
 		game.settlement_hub_return_button.pressed.emit()
 		await _settle()
 		_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "returning from the signal refit should restore the required Ashgate assignment")
-	if mastery_profile:
-		game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
-		await _settle()
-		_expect(game.settlement_hub.detail_title.text == "MARCHMASTER'S DESK" and game.settlement_hub.primary_action_button.text.contains("QUARRY") and game.settlement_hub.secondary_action_button.text.contains("SIGNAL"), "the Marchmaster's Desk should offer two bounded field experiments")
-		await _capture("05c_mastery_orders")
-		game.settlement_hub.primary_action_button.pressed.emit()
-		await _settle()
-		_expect(game.state.mastery_experiment_id == "ashgate_quarry_adaptation" and game.settlement_hub.context_label.text.contains("FIELD ORDER: QUARRY ADAPTATION"), "selecting Quarry Adaptation should retain its field order before departure")
-		await _capture("05d_quarry_order_selected")
 	game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
 	await _settle()
 	if declined_convoy_profile:
@@ -325,6 +316,15 @@ func _run_ashgate_journey() -> void:
 	if declined_convoy_profile:
 		_expect(game.settlement_hub.context_label.text.contains("Morrowline will have 1 service action"), "the declined assignment receipt should retain its later service consequence")
 		await _capture("05b_declined_convoy_receipt")
+	if mastery_profile:
+		game.settlement_hub.station_buttons["assignment_board"].pressed.emit()
+		await _settle()
+		_expect(game.settlement_hub.detail_title.text == "MARCHMASTER'S ORDERS" and game.settlement_hub.primary_action_button.text.contains("QUARRY") and game.settlement_hub.secondary_action_button.text.contains("SIGNAL"), "the resolved Marchmaster's Orders desk should offer two bounded field experiments")
+		await _capture("05c_mastery_orders")
+		game.settlement_hub.primary_action_button.pressed.emit()
+		await _settle()
+		_expect(game.state.mastery_experiment_id == "ashgate_quarry_adaptation" and game.settlement_hub.context_label.text.contains("FIELD ORDER: QUARRY ADAPTATION"), "selecting Quarry Adaptation should retain its field order before departure")
+		await _capture("05d_quarry_order_selected")
 	game.settlement_hub.station_buttons["departure_gate"].pressed.emit()
 	await _settle()
 	game.settlement_hub.primary_action_button.pressed.emit()

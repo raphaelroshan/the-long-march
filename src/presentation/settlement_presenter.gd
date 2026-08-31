@@ -23,6 +23,18 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 	if contract_status == "offered":
 		assignment_station["primary"] = {"id": "accept_assignment", "label": "ACCEPT ASSIGNMENT", "enabled": assignment_accept_enabled, "tooltip": "Accept the obligation and its stated consequences."}
 		assignment_station["secondary"] = {"id": "decline_assignment", "label": "DECLINE · TRAVEL UNBOUND", "enabled": true, "tooltip": "Decline without spending fuel or time. Morrowline will have only 1 service action." if not is_veyru else "Decline without spending fuel or time."}
+	elif not is_veyru:
+		var experiment := state.mastery_experiment_details()
+		var selected_title := String(experiment.get("title", "No field order"))
+		assignment_station = {
+			"title": "Marchmaster's Orders",
+			"status": String(experiment.get("status", "UNASSIGNED")),
+			"button_status": selected_title.to_upper() if bool(experiment.get("active", false)) else "OPTIONAL",
+			"body": ("Selected: %s\n%s\n\nNo rewards or unlocks; this is a visible replay goal." % [selected_title, String(experiment.get("brief", ""))]) if bool(experiment.get("active", false)) else "The convoy decision is recorded. Choose one optional field experiment: Quarry Adaptation tests route and doctrine; Signal Discipline tests specialist or equipment planning. Each accepts two distinct solutions and grants no permanent reward.",
+			"tone": "safe" if bool(experiment.get("active", false)) else "neutral",
+			"primary": {"id": "select_experiment_quarry", "label": "FIELD ORDER · QUARRY", "enabled": true, "tooltip": "Secure Cinder Quarry with Run Hot speed or Protect Cargo plus lower-hull armor."},
+			"secondary": {"id": "select_experiment_signal", "label": "FIELD ORDER · SIGNAL", "enabled": true, "tooltip": "Secure Signal Causeway with Iven Pell or an operational Wall Lamp."}
+		}
 	var departure_ready := contract_status != "offered"
 	var settlement_context := "%s · Choose an assignment or inspect a bazaar station." % ("LANTERN QUAY FLOOD MARKET" if is_veyru else "ASHGATE RAIL DEPOT")
 	if contract_status == "accepted":
@@ -31,19 +43,21 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		settlement_context = "ASSIGNMENT RECEIPT · Traveling without the convoy. Morrowline will have 1 service action; prepare the fortress, then plan the first road." if not is_veyru else "ASSIGNMENT RECEIPT · Traveling without the local obligation. Prepare the fortress, then plan the first road."
 	var signal_station := {"title": "Signal Broker", "status": "NO LOCAL REPORTS", "button_status": "QUIET", "body": "Lantern keepers compare water levels and archive signals. Exact forecasts still depend on working signal equipment." if is_veyru else "Depot signalers compare blockade sightings and ash fronts. Exact forecasts still depend on working signal equipment.", "tone": "muted"}
 	if not is_veyru:
-		var experiment := state.mastery_experiment_details()
-		var selected_title := String(experiment.get("title", "No field order"))
+		var intel := state.active_settlement_intel_offer()
+		var acquired := bool(intel.get("acquired", false))
+		var price := int(intel.get("price", 0))
 		signal_station = {
-			"title": "Marchmaster's Desk",
-			"status": String(experiment.get("status", "UNASSIGNED")),
-			"button_status": selected_title.to_upper() if bool(experiment.get("active", false)) else "OPTIONAL",
-			"body": ("Selected: %s\n%s\n\nNo rewards or unlocks; this is a visible replay goal." % [selected_title, String(experiment.get("brief", ""))]) if bool(experiment.get("active", false)) else "Choose one optional field experiment. Quarry Adaptation tests route and doctrine; Signal Discipline tests specialist or equipment planning. Each accepts two distinct solutions and grants no permanent reward.",
-			"tone": "safe" if bool(experiment.get("active", false)) else "neutral",
-			"primary": {"id": "select_experiment_quarry", "label": "FIELD ORDER · QUARRY", "enabled": true, "tooltip": "Secure Cinder Quarry with Run Hot speed or Protect Cargo plus lower-hull armor."},
-			"secondary": {"id": "select_experiment_signal", "label": "FIELD ORDER · SIGNAL", "enabled": true, "tooltip": "Secure Signal Causeway with Iven Pell or an operational Wall Lamp."}
+			"title": String(intel.get("name", "Signal Broker")),
+			"status": "REPORT ACQUIRED" if acquired else "%d ASHMARKS" % price,
+			"button_status": "IN LEDGER" if acquired else "BUY REPORT",
+			"body": ("SOURCE · %s · %s\nThe route ledger now identifies the exact Soot Orchard contact and its authored counters. The report changes no fuel, time, pressure, or route risk." % [String(intel.get("source_name", "Unknown source")).to_upper(), String(intel.get("confidence", "unknown")).to_upper()]) if acquired else "A depot reader tracked the weather line through the Soot Orchard. Buy the report to reveal its exact contact and authored counters before Commit. This is information only: risk, fuel, time, and pressure do not change.",
+			"tone": "safe" if acquired else ("warning" if state.money < price else "neutral")
 		}
-		if bool(experiment.get("active", false)):
-			settlement_context += " · FIELD ORDER: %s" % selected_title.to_upper()
+		if not acquired:
+			signal_station["primary"] = {"id": "buy_orchard_intel", "label": "BUY REPORT · %d ASHMARKS" % price, "enabled": state.money >= price, "tooltip": "Add the source and exact Soot Orchard contacts to the route ledger without changing its mechanical risk." if state.money >= price else "Requires %d Ashmarks; only %d remain." % [price, state.money]}
+		var active_experiment := state.mastery_experiment_details()
+		if bool(active_experiment.get("active", false)):
+			settlement_context += " · FIELD ORDER: %s" % String(active_experiment.get("title", "Experiment")).to_upper()
 	return {
 		"location_id": state.current_location,
 		"location_name": location_name,

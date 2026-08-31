@@ -7,7 +7,7 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
 const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru"]
 const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal"]
@@ -27,6 +27,19 @@ const MASTERY_EXPERIMENTS := {
 		"brief": "Secure Signal Causeway with either Iven Pell's forecast or an operational Wall Lamp.",
 		"proof": "Signal Causeway secured",
 		"solutions": ["Recruit Iven Pell after restoring Broken Relay", "Carry and preserve an operational Wall Lamp"]
+	}
+}
+const INTEL_OFFERS := {
+	"ashgate_orchard_weather_report": {
+		"name": "Orchard Weather Report",
+		"region_id": "ashgate_lowlands",
+		"origin_location_id": "ashgate_depot",
+		"subject_node_id": "soot_orchard",
+		"source_id": "ashgate_signal_reader",
+		"source_name": "Ashgate Signal Reader",
+		"confidence": "reliable",
+		"revealed_fields": ["threats", "counter_hints"],
+		"price": 8
 	}
 }
 const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint"}
@@ -237,6 +250,7 @@ var relay_repaired: bool = false
 var workers_rescued: bool = false
 var regional_developments: Array[String] = []
 var mastery_experiment_id: String = ""
+var acquired_intel_ids: Array[String] = []
 
 func _init(world_seed: int = 1107) -> void:
 	seed = world_seed
@@ -273,6 +287,48 @@ func mastery_experiment_details() -> Dictionary:
 	details["proven"] = proven
 	details["status"] = "PROVEN" if proven else ("INCOMPLETE" if run_complete else "ACTIVE")
 	return details
+
+func intel_offer(intel_id: String) -> Dictionary:
+	if intel_id not in INTEL_OFFERS:
+		return {}
+	var offer: Dictionary = Dictionary(INTEL_OFFERS[intel_id]).duplicate(true)
+	offer["id"] = intel_id
+	offer["acquired"] = intel_id in acquired_intel_ids
+	return offer
+
+func active_settlement_intel_offer() -> Dictionary:
+	for intel_id in INTEL_OFFERS:
+		var offer := intel_offer(String(intel_id))
+		if String(offer.get("region_id", "")) == campaign_region_id and String(offer.get("origin_location_id", "")) == current_location:
+			return offer
+	return {}
+
+func purchase_intel(intel_id: String) -> Dictionary:
+	var offer := intel_offer(intel_id)
+	if offer.is_empty():
+		return {"ok": false, "reason": "unknown information offer"}
+	if not campaign_active or phase not in ["refit", "settlement"] or encounter_active:
+		return {"ok": false, "reason": "information can only be purchased while the fortress is at rest"}
+	if campaign_region_id != String(offer.get("region_id", "")) or current_location != String(offer.get("origin_location_id", "")):
+		return {"ok": false, "reason": "this report is not available at the current settlement"}
+	if intel_id in acquired_intel_ids:
+		return {"ok": false, "reason": "this report is already in the route ledger"}
+	var price := int(offer.get("price", 0))
+	if money < price:
+		return {"ok": false, "reason": "requires %d Ashmarks; only %d remain" % [price, money]}
+	money -= price
+	acquired_intel_ids.append(intel_id)
+	acquired_intel_ids.sort()
+	var message := "%s purchased for %d Ashmarks. %s marks its source %s and reveals only the authored contact report." % [String(offer.get("name", "Report")), price, String(offer.get("source_name", "The source")), String(offer.get("confidence", "unknown")).to_upper()]
+	log.append(message)
+	return {"ok": true, "intel": intel_offer(intel_id), "cost": price, "remaining_money": money, "message": message}
+
+func acquired_intel_for_node(node_id: String) -> Dictionary:
+	for intel_id in acquired_intel_ids:
+		var offer := intel_offer(intel_id)
+		if String(offer.get("subject_node_id", "")) == node_id:
+			return offer
+	return {}
 
 func module_shape(module_id: String, rotated: bool = false) -> Vector2i:
 	var definition := module_definition(module_id)
@@ -476,6 +532,7 @@ func start_campaign() -> Dictionary:
 	relay_repaired = false
 	workers_rescued = false
 	mastery_experiment_id = ""
+	acquired_intel_ids.clear()
 	journey_node = "ashgate_depot"
 	journey_destination = ""
 	journey_route = ""
@@ -506,6 +563,7 @@ func start_tutorial() -> Dictionary:
 	settlement_trust = 0
 	specialist_id = ""
 	mastery_experiment_id = ""
+	acquired_intel_ids.clear()
 	journey_node = "ashgate_depot"
 	journey_destination = ""
 	journey_route = ""
@@ -587,6 +645,7 @@ func start_flooded_veyru() -> Dictionary:
 	relay_repaired = false
 	workers_rescued = false
 	mastery_experiment_id = ""
+	acquired_intel_ids.clear()
 	journey_node = "lantern_quay"
 	journey_destination = ""
 	journey_route = ""
@@ -685,9 +744,10 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount)
 	var predicted_heat := maxi(0, total_heat() + (2 if doctrine == "run_hot" else 0))
 	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
+	var acquired_intel := acquired_intel_for_node(node_id)
 	var development_reveal := campaign_region_id == "flooded_veyru" and node_id == "drowned_registry" and has_regional_development("veyru_public_archive_signal")
 	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
-	if development_reveal:
+	if development_reveal or not acquired_intel.is_empty():
 		visibility = "known"
 	if campaign_region_id == "flooded_veyru" and node_id == "dry_archive" and String(campaign_decisions.get("archive_broadcast", "")) == "seal_archive":
 		visibility = "forecast"
@@ -752,6 +812,10 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"counter_hints": counter_hints,
 		"ready_counter_names": ready_counter_names,
 		"regional_development": "Public Archive Signal" if development_reveal else "",
+		"intel_id": String(acquired_intel.get("id", "")),
+		"intel_source": String(acquired_intel.get("source_name", "")),
+		"intel_confidence": String(acquired_intel.get("confidence", "")),
+		"intel_revealed_fields": acquired_intel.get("revealed_fields", []).duplicate(),
 		"closed": campaign_node_closed(node_id),
 		"locked_reason": campaign_node_lock_reason(node_id)
 	}
@@ -782,6 +846,8 @@ func campaign_route_comparison(doctrine: String = "protect_cargo") -> Array[Dict
 			"threats": preview.get("threats", []).duplicate(),
 			"route_effect": String(preview.get("route_effect", "")),
 			"regional_development": String(preview.get("regional_development", "")),
+			"intel_source": String(preview.get("intel_source", "")),
+			"intel_confidence": String(preview.get("intel_confidence", "")),
 			"next_stops": next_names,
 			"settlement_follows": settlement_follows
 		})
@@ -1866,7 +1932,8 @@ func summary() -> Dictionary:
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued,
 		"regional_developments": regional_developments.duplicate(),
-		"mastery_experiment_id": mastery_experiment_id
+		"mastery_experiment_id": mastery_experiment_id,
+		"acquired_intel_ids": acquired_intel_ids.duplicate()
 	}
 
 func serialize() -> Dictionary:
@@ -1936,6 +2003,7 @@ func serialize() -> Dictionary:
 		"workers_rescued": workers_rescued,
 		"mastery_experiment_id": mastery_experiment_id,
 		"regional_developments": regional_developments.duplicate(),
+		"acquired_intel_ids": acquired_intel_ids.duplicate(),
 		"modules": _serialized_modules(),
 		"stored_modules": _serialized_stored_modules(),
 		"log": log.duplicate()
@@ -2141,6 +2209,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_veyru_medicine_carrier_id := String(data.get("veyru_medicine_carrier_id", ""))
 	var restored_mastery_experiment_id := String(data.get("mastery_experiment_id", ""))
 	var raw_regional_developments: Variant = data.get("regional_developments", [])
+	var raw_acquired_intel_ids: Variant = data.get("acquired_intel_ids", [])
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
 	if restored_campaign_region_id not in VALID_CAMPAIGN_REGIONS:
 		return {"ok": false, "reason": "checkpoint contains an unknown campaign region"}
@@ -2159,6 +2228,20 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "checkpoint contains a duplicate regional development"}
 		restored_regional_developments.append(development_id)
 	restored_regional_developments.sort()
+	if not raw_acquired_intel_ids is Array or raw_acquired_intel_ids.size() > INTEL_OFFERS.size():
+		return {"ok": false, "reason": "checkpoint acquired intel list is malformed"}
+	var restored_acquired_intel_ids: Array[String] = []
+	for raw_id in raw_acquired_intel_ids:
+		var intel_id := String(raw_id)
+		if intel_id not in INTEL_OFFERS:
+			return {"ok": false, "reason": "checkpoint contains an unknown acquired intel record"}
+		if intel_id in restored_acquired_intel_ids:
+			return {"ok": false, "reason": "checkpoint contains a duplicate acquired intel record"}
+		var intel_region := String(Dictionary(INTEL_OFFERS[intel_id]).get("region_id", ""))
+		if intel_region != restored_campaign_region_id:
+			return {"ok": false, "reason": "acquired intel conflicts with the campaign region"}
+		restored_acquired_intel_ids.append(intel_id)
+	restored_acquired_intel_ids.sort()
 	if restored_current_location not in JOURNEY_NODES or restored_journey_node not in JOURNEY_NODES:
 		return {"ok": false, "reason": "checkpoint contains an unknown journey location"}
 	if not restored_journey_destination.is_empty() and restored_journey_destination not in JOURNEY_NODES:
@@ -2309,6 +2392,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
 	mastery_experiment_id = restored_mastery_experiment_id
 	regional_developments = restored_regional_developments
+	acquired_intel_ids = restored_acquired_intel_ids
 	modules = restored_modules_result.get("modules", []).duplicate(true)
 	stored_modules = restored_stored_modules_result.get("modules", []).duplicate(true)
 	if not data.has("stored_modules"):

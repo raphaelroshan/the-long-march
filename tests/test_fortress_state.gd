@@ -35,6 +35,7 @@ func _init() -> void:
 	_test_flooded_veyru_region_state()
 	_test_flooded_veyru_threats_and_contract()
 	_test_veyru_public_archive_signal()
+	_test_authored_intel_purchase()
 	_test_complete_flooded_veyru_campaign()
 	_test_complete_five_encounter_campaign()
 	_test_alternate_five_encounter_campaign()
@@ -1125,6 +1126,43 @@ func _test_veyru_public_archive_signal() -> void:
 	_expect(state.earned_regional_development() == "veyru_public_archive_signal", "surviving after the public archive broadcast should earn its named regional development")
 	state.campaign_decisions["archive_broadcast"] = "seal_archive"
 	_expect(state.earned_regional_development().is_empty(), "sealing the archive should not silently earn the public signal development")
+
+func _test_authored_intel_purchase() -> void:
+	var state := LongMarchState.new(1107)
+	state.start_campaign()
+	var before := state.campaign_node_preview("soot_orchard")
+	var money_before := state.money
+	_expect(String(before.get("visibility", "")) == "forecast" and Array(before.get("threats", [])).is_empty(), "Soot Orchard should begin with uncertain exact contacts when the fortress has no live forecast")
+	var purchase := state.purchase_intel("ashgate_orchard_weather_report")
+	var after := state.campaign_node_preview("soot_orchard")
+	_expect(bool(purchase.get("ok", false)) and state.money == money_before - 8 and state.acquired_intel_ids == ["ashgate_orchard_weather_report"], "the Ashgate report should atomically spend its exact price and enter the route ledger")
+	_expect(String(after.get("visibility", "")) == "known" and after.get("threats", []) == ["Storm Front"] and not Array(after.get("counter_hints", [])).is_empty(), "the purchased report should reveal the authored Orchard contact and counter guidance")
+	_expect(String(after.get("intel_source", "")) == "Ashgate Signal Reader" and String(after.get("intel_confidence", "")) == "reliable", "purchased route intelligence should retain its source and confidence")
+	var comparison_source := ""
+	for route in state.campaign_route_comparison():
+		if String(route.get("id", "")) == "soot_orchard":
+			comparison_source = "%s · %s" % [String(route.get("intel_source", "")), String(route.get("intel_confidence", ""))]
+	_expect(comparison_source == "Ashgate Signal Reader · reliable", "the route comparison should preserve purchased intel attribution")
+	_expect(float(after.get("risk", 0.0)) == float(before.get("risk", 0.0)) and int(after.get("encounter_pressure", 0)) == int(before.get("encounter_pressure", 0)) and int(after.get("fuel", 0)) == int(before.get("fuel", 0)) and int(after.get("days", 0)) == int(before.get("days", 0)), "purchased information should not grant the live forecasting risk or difficulty discount")
+	var duplicate_money := state.money
+	_expect(not bool(state.purchase_intel("ashgate_orchard_weather_report").get("ok", false)) and state.money == duplicate_money, "a duplicate report purchase should fail without charging twice")
+	var restored := LongMarchState.new(0)
+	_expect(bool(restored.load_serialized(state.serialize()).get("ok", false)) and restored.acquired_intel_ids == ["ashgate_orchard_weather_report"] and String(restored.campaign_node_preview("soot_orchard").get("intel_source", "")) == "Ashgate Signal Reader", "purchased intel and its route effect should survive save/load")
+	var legacy_payload := state.serialize()
+	legacy_payload["save_version"] = 8
+	legacy_payload.erase("acquired_intel_ids")
+	var legacy_restore := LongMarchState.new(0)
+	_expect(bool(legacy_restore.load_serialized(legacy_payload).get("ok", false)) and legacy_restore.acquired_intel_ids.is_empty(), "schema-8 saves should migrate without inventing a purchase")
+	var invalid_payload := state.serialize()
+	invalid_payload["acquired_intel_ids"] = ["invented_report"]
+	_expect(not bool(LongMarchState.new(0).load_serialized(invalid_payload).get("ok", false)), "unknown acquired intel records should be rejected before state restoration")
+	var duplicate_payload := state.serialize()
+	duplicate_payload["acquired_intel_ids"] = ["ashgate_orchard_weather_report", "ashgate_orchard_weather_report"]
+	_expect(not bool(LongMarchState.new(0).load_serialized(duplicate_payload).get("ok", false)), "duplicate acquired intel records should be rejected")
+	var poor_state := LongMarchState.new(1107)
+	poor_state.start_campaign()
+	poor_state.money = 7
+	_expect(not bool(poor_state.purchase_intel("ashgate_orchard_weather_report").get("ok", false)) and poor_state.money == 7 and poor_state.acquired_intel_ids.is_empty(), "an unaffordable report should leave money and the route ledger unchanged")
 
 func _test_complete_flooded_veyru_campaign() -> void:
 	var state := LongMarchState.new(2204)

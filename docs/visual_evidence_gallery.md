@@ -2,6 +2,15 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.331` — Authored route intel
+
+| State | Evidence | SHA-256 |
+|---|---|---|
+| Purchased report | [Signal Broker ledger receipt](visual_evidence/v0.3.0-alpha.331-authored-route-intel/02b_signal_report.png) | `2fa39de1d91501ef56363408aa584db3a8bc0867f0b5be88ae6c60f212264c07` |
+| Selected informed road | [Sourced Soot Orchard dossier](visual_evidence/v0.3.0-alpha.331-authored-route-intel/03b_route_selected.png) | `a3357c1c76c6d19758556179cbba8fa9af5ea7ee497160d3528ea50b89a65236` |
+
+The broker states the exact price and records the source and confidence. The route dossier reveals the authored Storm Front contact and counter guidance while retaining the same fuel, time, pressure, risk, and encounter-difficulty calculations as the unpurchased forecast.
+
 ## `v0.3.0-alpha.303` — Threat silhouettes
 
 [Seven threat-family captures](visual_evidence/v0.3.0-alpha.303-threat-silhouettes/) show distinct physical actors and approach lanes for Road Raiders, Climbers, Burrowers, Storm Fronts, the Siege Beast, Flood Surges, and the Civic Guardian. Text remains authoritative for intent, target, counter, damage, and dependency consequence.

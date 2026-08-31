@@ -2242,6 +2242,16 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_set_event("The quartermaster opens the fortress stores. Review carried modules, fuel, and current capacity.")
 			_refresh_ui()
 			_focus_control.call_deferred(module_option)
+		"buy_orchard_intel":
+			var result := state.purchase_intel("ashgate_orchard_weather_report")
+			if bool(result.get("ok", false)):
+				last_journey_receipt = "SIGNAL BROKER · ORCHARD WEATHER REPORT · −%d ASHMARKS · %d REMAIN" % [int(result.get("cost", 0)), int(result.get("remaining_money", state.money))]
+				_set_event(String(result.get("message", "Information report purchased.")))
+				_journal_event("intel_purchased", {"id": "ashgate_orchard_weather_report", "cost": int(result.get("cost", 0))})
+				_checkpoint("intel_purchased")
+			else:
+				_set_event("Information purchase blocked: %s." % String(result.get("reason", "unknown")))
+			_refresh_ui()
 		"select_experiment_quarry":
 			_on_mastery_experiment_selected("ashgate_quarry_adaptation")
 		"select_experiment_signal":
@@ -3792,7 +3802,12 @@ func _refresh_campaign_controls() -> void:
 	for route in state.campaign_route_comparison(_selected_id(doctrine_option)):
 		var visibility := String(route.get("visibility", "unscouted"))
 		var development_name := String(route.get("regional_development", ""))
-		var confidence_text := "%s · %s" % [visibility.to_upper(), development_name.to_upper()] if not development_name.is_empty() else visibility.to_upper()
+		var intel_source := String(route.get("intel_source", ""))
+		var confidence_text := visibility.to_upper()
+		if not development_name.is_empty():
+			confidence_text += " · %s" % development_name.to_upper()
+		elif not intel_source.is_empty():
+			confidence_text += " · %s · %s" % [intel_source.to_upper(), String(route.get("intel_confidence", "unknown")).to_upper()]
 		var risk_text := "RISK UNKNOWN" if visibility == "unscouted" else "%s %.0f%% RISK" % [String(route.get("risk_band", "high")).to_upper(), float(route.get("risk", 0.0)) * 100.0]
 		var fuel_text := "%d FUEL" % int(route.get("fuel", 0))
 		if int(route.get("fuel_discount", 0)) > 0:
@@ -3848,6 +3863,9 @@ func _refresh_campaign_controls() -> void:
 		if visibility == "known":
 			var counters: Array = selected_preview.get("counter_hints", [])
 			campaign_commit_intel_label.text = "KNOWN CONTACTS · %s%s" % [", ".join(selected_preview.get("threats", [])), "\nPREPARE · %s" % " or ".join(counters) if not counters.is_empty() else ""]
+			var intel_source := String(selected_preview.get("intel_source", ""))
+			if not intel_source.is_empty():
+				campaign_commit_intel_label.text += "\nSOURCE · %s · %s" % [intel_source.to_upper(), String(selected_preview.get("intel_confidence", "unknown")).to_upper()]
 			var ready_counters: Array = selected_preview.get("ready_counter_names", [])
 			campaign_commit_intel_label.text += "\nREADY NOW · %s" % (", ".join(ready_counters) if not ready_counters.is_empty() else "NO LISTED MODULE COUNTER")
 			campaign_commit_intel_label.add_theme_color_override("font_color", Color("#9fddbd"))
