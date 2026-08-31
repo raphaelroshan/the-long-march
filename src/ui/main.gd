@@ -3124,6 +3124,14 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 	})
 
 func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
+	if event_id == "salvage_choice":
+		var choices: Array = event.get("choices", [])
+		return {
+			"motif": "soot_orchard_choice",
+			"show_card": false,
+			"heading": "BURNING ORCHARD · FUEL OR PEOPLE",
+			"detail": "Fuel cache: %s. Workers: %s." % [String(choices[0].get("effect", "recover fuel and lose trust")) if choices.size() > 0 else "recover fuel and lose trust", String(choices[1].get("effect", "spend time and shelter capacity to rescue workers")) if choices.size() > 1 else "spend time and shelter capacity to rescue workers"]
+		}
 	if event_id == "boiler_heartbeat":
 		var choices: Array = event.get("choices", [])
 		return {

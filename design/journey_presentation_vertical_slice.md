@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-`0.3.0-alpha.336` implements the first complete presentation chain from bazaar to planning, road, a true pre-contact interruption, contact, arrival, and later roadside decisions. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. Each resolved step briefly moves threats and braces the fortress; Reduced Motion renders the same final state immediately. The first Rill Crossing road can stop at the authored Lift Chain interruption while the fortress remains at Ashgate and the configured Road Raider contact waits at step zero. Resolution then opens that same contact; it does not reroll or bypass it. Purchasable information and bounded marketplace inventory are implemented; bespoke final art and per-enemy attack animation remain follow-up slices.
+`0.3.0-alpha.337` implements the first complete presentation chain from bazaar to planning, road, a true pre-contact interruption, contact, arrival, and later roadside decisions. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. Each resolved step briefly moves threats and braces the fortress; Reduced Motion renders the same final state immediately. The first Rill Crossing road can stop at the authored Lift Chain interruption while the fortress remains at Ashgate and the configured Road Raider contact waits at step zero. The Soot Orchard decision now has a distinct burning-orchard, fuel-cache, firebreak, and stranded-worker tableau instead of the generic ruin symbol. Purchasable information and bounded marketplace inventory are implemented; final art and bespoke per-enemy attack animation remain follow-up slices.
 
 ## Purpose
 
@@ -635,7 +635,7 @@ This is the necessary simulation seam. Do not begin polished animation before it
 
 ### Slice 7 — Visualize one hazard and scenario
 
-**Status:** A generalized code-native roadside tableau and the first deterministic pre-contact interruption are complete in `0.3.0-alpha.336`; bespoke Soot Orchard art remains.
+**Status:** A generalized code-native roadside tableau, the first deterministic pre-contact interruption, and a bespoke Soot Orchard choice tableau are complete in `0.3.0-alpha.337`. Moving the Orchard decision ahead of its arrival receipt remains a later state-machine slice.
 
 - Implement Storm Front takeover, exposure highlights, and the Soot Orchard tableau.
 - Resolve the existing orchard choice in place and resume the march or arrive cleanly.
