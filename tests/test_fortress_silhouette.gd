@@ -32,6 +32,10 @@ func _init() -> void:
 	_expect(String(veyru.get("place_treatment", "")) == "rain_waterworks" and bool(veyru.get("overheated", false)), "Veyru and overheat should remain explicit presentation inputs rather than inferred from title copy")
 	_expect(String(FortressSilhouette.mode_treatment("travel").get("motion", "")) == "marching" and String(FortressSilhouette.mode_treatment("contact").get("stance", "")) == "combat", "travel and contact should expose visibly different movement and stance treatments")
 	_expect(String(FortressSilhouette.mode_treatment("debrief").get("stance", "")) == "scarred", "the returning fortress should retain a dedicated debrief treatment")
+	var active_rest := FortressSilhouette.rest_activity_signature()
+	var reduced_rest := FortressSilhouette.rest_activity_signature({"reduced_motion": true})
+	_expect(String(active_rest.get("motion", "")) == "restrained_service" and int(active_rest.get("crew_count", 0)) == 3, "the resting fortress should expose restrained crew-scale service activity")
+	_expect(String(reduced_rest.get("motion", "")) == "static_service" and Array(reduced_rest.get("features", [])).has("pressure_valve"), "reduced motion should preserve readable service features without ambient movement")
 	_expect(FortressSilhouette.TEMP_DAMAGE_SMOKE != null and String(FortressSilhouette.TEMP_DAMAGE_SMOKE.resource_path).ends_with("smoke_03.png"), "damaged fortress states should use the documented temporary smoke asset")
 	if failures.is_empty():
 		print("PASS: The Long March fortress silhouette")

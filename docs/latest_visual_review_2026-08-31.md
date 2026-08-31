@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.303`
+**Build:** `0.3.0-alpha.304`
 
 **Engine:** Godot 4.4.1
 
@@ -14,6 +14,7 @@
 - [Temporary travel atmosphere](visual_evidence/v0.3.0-alpha.301-temporary-travel-atmosphere/)
 - [Destination-specific arrival tableaux](visual_evidence/v0.3.0-alpha.302-arrival-identity/)
 - [Threat silhouettes and approach lanes](visual_evidence/v0.3.0-alpha.303-threat-silhouettes/)
+- [Inhabited fortress at rest](visual_evidence/v0.3.0-alpha.304-inhabited-rest/)
 
 ## Findings
 
@@ -33,6 +34,8 @@ Alpha.302 removes the generic arrival wall. The resolved destination ID now sele
 
 Alpha.303 replaces the contact-stage debug symbols with distinct threat actors: a harpoon rig, grapnel climber, emerging Burrower, storm mass, armored Siege Beast, flood crest, and civic construct. Their road, upper-flank, under-road, weather, waterline, direct-charge, and archive-lane marks reinforce the already-authoritative intent and target labels.
 
+Alpha.304 makes the resting fortress read as a working settlement rather than a paused vehicle. Three crew-scale workers, a service crane and hoist, a parts cart, breathing pressure valve, and restrained lamp movement establish scale and maintenance activity in both starting bazaars. Reduced Motion freezes ambient movement while retaining every service landmark.
+
 ## Next work
 
-Use the exact alpha.303 cohort for consented, uncoached sessions. Prioritize repeated failures in threat recognition, place recognition, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact alpha.304 cohort for consented, uncoached sessions. Prioritize repeated failures in threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
