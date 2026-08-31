@@ -52,7 +52,7 @@ func _view_for(enemy_id: String, arrived: bool, defeated: bool = false) -> Dicti
 			{"label": "Cut loose cargo · reduce load", "tooltip": "Sacrifice cargo to reduce pressure.", "enabled": true}
 		],
 		"counter_readiness": {enemy_id: {"status": "ready", "text": "READY NOW · %s" % String(case.ready)}},
-		"response_postures": {enemy_id: {"status": "ready", "heading": "PREPARED RESPONSE" if not arrived else "DEFENSE ANSWERING", "text": "%s is ready · 2 damage on Advance from %s. Advance to resolve it automatically, or inspect the target before spending one of the 4 emergency orders available below." % [String(case.ready), String(case.ready)]}},
+		"response_postures": {enemy_id: {"status": "ready", "heading": "PREPARED RESPONSE" if not arrived else "DEFENSE ANSWERING", "text": "%s · 2 damage on Advance from %s. Advance to use it automatically, or Inspect before spending one of the 4 emergency orders available below." % [String(case.ready), String(case.ready)]}},
 		"enemy_definitions": {enemy_id: {"name": case.name, "arrival_step": case.arrival_step, "route": case.route, "target_tags": case.targets, "counter": case.counter}},
 		"target_names": {target_id: target_name},
 		"enemies": [{"id": enemy_id, "arrived": arrived, "defeated": defeated, "target": target_id, "defense": {"damage": 2, "sources": [case.ready], "impact_buffer": 0, "buffer_source": ""}, "impact": {"damage": 1, "current_durability": 2, "remaining_durability": 1, "target_reason": "%s route matched" % String(case.route), "dependency_changes": [{"name": "Dependent System", "to": "offline"}]}}],
@@ -76,17 +76,20 @@ func _run() -> void:
 		impact_probe["cue"] = cue_id
 	)
 	_expect(contact.advance_button.has_meta("long_march_audio_manual_press") and contact.intervention_buttons.all(func(button: Button) -> bool: return button.has_meta("long_march_audio_manual_press")), "contact commands should defer audio to their authoritative encounter checkpoints")
+	_expect(contact.intervention_grid.columns == 2 and contact.intervention_buttons.size() == 4, "contact emergency orders should use a compact two-by-two command grid")
 	for enemy_id in THREAT_CASES:
 		var case: Dictionary = THREAT_CASES[enemy_id]
 		var visual_signature: Dictionary = contact.contact_canvas.threat_visual_signature(enemy_id)
 		_expect(String(visual_signature.get("enemy_id", "")) == enemy_id and not String(visual_signature.get("form", "")).is_empty() and not String(visual_signature.get("lane", "")).is_empty(), "%s should expose a stable threat silhouette and approach lane" % case.name)
 		var forecast_view := _view_for(enemy_id, false)
 		contact.configure(forecast_view)
+		_expect(contact.intervention_buttons[0].text == "Shift power · raise weapon output / add heat", "%s fixture should retain its fallback action label when no compact label is supplied" % case.name)
+		_expect(contact.intervention_buttons[0].get_node_or_null(contact.intervention_buttons[0].focus_neighbor_right) == contact.intervention_buttons[1] and contact.intervention_buttons[0].get_node_or_null(contact.intervention_buttons[0].focus_neighbor_bottom) == contact.intervention_buttons[2], "%s emergency orders should follow the visible two-column controller grid" % case.name)
 		_expect(contact.battle_phase_for() == "FORECAST", "%s should begin with a forecast phase" % case.name)
 		_expect(contact.contact_canvas.presentation_stage_text() == "FORECAST · %s · %d STEP%s OUT" % [String(case.name).to_upper(), int(case.arrival_step), "" if int(case.arrival_step) == 1 else "S"], "%s should expose stable forecast timing" % case.name)
 		_expect(contact.threat_detail.text.contains("APPROACH · %s" % String(case.route).capitalize()) and contact.threat_detail.text.contains("PREFERRED TARGETS · %s" % " / ".join(case.targets)) and contact.threat_detail.text.contains("COUNTER · %s" % case.counter) and contact.threat_detail.text.contains("RISK IF IGNORED"), "%s forecast should name approach, target preference, authored counter, and practical consequence" % case.name)
 		_expect(contact.counter_readiness_panel.visible and contact.counter_readiness_label.text == "READY NOW · %s" % String(case.ready), "%s forecast should distinguish current counter readiness from general counter advice" % case.name)
-		_expect(contact.response_posture_panel.visible and contact.response_posture_label.text.begins_with("PREPARED RESPONSE") and contact.response_posture_label.text.contains("2 damage on Advance") and contact.response_posture_label.text.contains("resolve it automatically"), "%s forecast should convert readiness into a concrete player response" % case.name)
+		_expect(contact.response_posture_panel.visible and contact.response_posture_label.text.begins_with("PREPARED RESPONSE") and contact.response_posture_label.text.contains("2 damage on Advance") and contact.response_posture_label.text.contains("use it automatically"), "%s forecast should convert readiness into a concrete player response" % case.name)
 
 		var impact_view := _view_for(enemy_id, true)
 		contact.configure(impact_view)
@@ -165,7 +168,7 @@ func _run() -> void:
 
 	var available_view := _view_for("civic_guardian", true)
 	available_view["counter_readiness"]["civic_guardian"] = {"status": "available", "text": "AVAILABLE · Front Armor Plate · NO DIRECT EFFECT ON TARGET"}
-	available_view["response_postures"]["civic_guardian"] = {"status": "uncertain", "heading": "COUNTER AVAILABLE", "text": "Front Armor Plate is operational, but no direct attack or impact buffer applies to this target. Inspect its position before spending one of the 4 emergency orders available below."}
+	available_view["response_postures"]["civic_guardian"] = {"status": "uncertain", "heading": "COUNTER AVAILABLE", "text": "Front Armor Plate is operational but has no projected effect on this target. Inspect placement before spending one of the 4 emergency orders available below."}
 	contact.configure(available_view)
 	_expect(contact.counter_readiness_label.text.contains("NO DIRECT EFFECT ON TARGET") and contact.response_posture_label.text.begins_with("COUNTER AVAILABLE"), "a positional counter without a current effect should use the caution state in both contact receipts")
 	await _capture("09_counter_available")

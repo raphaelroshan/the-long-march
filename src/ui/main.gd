@@ -2816,6 +2816,7 @@ func _refresh_road_contact(snapshot: Dictionary, combat_view: Dictionary) -> voi
 		action_views.append({
 			"id": intervention_id,
 			"label": button.text,
+			"short_label": intervention_id.replace("_", " ").to_upper(),
 			"tooltip": String(intervention_preview_texts.get(intervention_id, button.tooltip_text)),
 			"enabled": not button.disabled
 		})

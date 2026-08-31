@@ -278,3 +278,11 @@ SHA-256: `61cc37c96c3f5a36935886b652be190ba31b36df594097908ee4f198a100c65a`
 The Civic Guardian is targeting the Archive Crate while the operational Front Armor Plate is not adjacent and contributes no attack. Both readiness receipts therefore say `AVAILABLE` and explain that the current target receives no direct effect, preventing a false promise of protection.
 
 SHA-256: `958613f1bd13cc0d5e5bce97c8a417660553ef08406d59dd5810c382a2ca1f42`
+
+## `v0.3.0-alpha.323` — Compact contact command grid
+
+![All four emergency orders visible](visual_evidence/v0.3.0-alpha.323-contact-command-grid/08_road_contact.png)
+
+The richer threat dossier no longer pushes emergency orders out of the initial viewport. Concise two-column controls keep all four choices visible at 1600×900; their exact benefits and costs remain in the existing focus/hover help above the grid.
+
+SHA-256: `ea2440e3bf4158588ddd322543447c72a61401687f37a494f7801fa8c32e7694`

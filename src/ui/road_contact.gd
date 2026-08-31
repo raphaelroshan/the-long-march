@@ -39,6 +39,7 @@ var advance_button: Button
 var inspect_button: Button
 var intervention_heading: Label
 var intervention_help: Label
+var intervention_grid: GridContainer
 var intervention_buttons: Array[Button] = []
 var high_contrast_enabled: bool = false
 var reduced_motion: bool = false
@@ -196,7 +197,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	var stack := VBoxContainer.new()
 	stack.custom_minimum_size = Vector2(300, 0)
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stack.add_theme_constant_override("separation", 7)
+	stack.add_theme_constant_override("separation", 5)
 	scroll.add_child(stack)
 	var kicker := Label.new()
 	kicker.text = "CONTACT DOSSIER"
@@ -243,13 +244,13 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	stack.add_child(warning_label)
 	advance_button = Button.new()
 	advance_button.text = "ADVANCE CONTACT"
-	advance_button.custom_minimum_size = Vector2(0, 58)
+	advance_button.custom_minimum_size = Vector2(0, 52)
 	advance_button.set_meta("long_march_audio_manual_press", true)
 	advance_button.pressed.connect(func() -> void: advance_requested.emit())
 	stack.add_child(advance_button)
 	inspect_button = Button.new()
 	inspect_button.text = "INSPECT CHASSIS"
-	inspect_button.custom_minimum_size = Vector2(0, 42)
+	inspect_button.custom_minimum_size = Vector2(0, 38)
 	inspect_button.pressed.connect(func() -> void: inspect_requested.emit())
 	stack.add_child(inspect_button)
 	intervention_heading = Label.new()
@@ -262,9 +263,16 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	intervention_help.add_theme_font_size_override("font_size", 10)
 	intervention_help.add_theme_color_override("font_color", Color("#aab6ba"))
 	stack.add_child(intervention_help)
+	intervention_grid = GridContainer.new()
+	intervention_grid.columns = 2
+	intervention_grid.add_theme_constant_override("h_separation", 6)
+	intervention_grid.add_theme_constant_override("v_separation", 6)
+	stack.add_child(intervention_grid)
 	for intervention_id in ["shift_power", "seal_compartment", "vent_heat", "cut_loose_cargo"]:
 		var button := Button.new()
 		button.text = intervention_id.replace("_", " ").capitalize()
+		button.custom_minimum_size = Vector2(0, 42)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.set_meta("intervention_id", intervention_id)
 		button.set_meta("long_march_audio_manual_press", true)
 		button.pressed.connect(_emit_intervention.bind(intervention_id))
@@ -273,7 +281,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 		button.focus_exited.connect(_restore_action_help)
 		button.mouse_exited.connect(_restore_action_help)
 		intervention_buttons.append(button)
-		stack.add_child(button)
+		intervention_grid.add_child(button)
 
 func configure(view: Dictionary) -> void:
 	current_view = view.duplicate(true)
@@ -304,7 +312,7 @@ func configure(view: Dictionary) -> void:
 			continue
 		var action: Dictionary = actions[index]
 		button.visible = true
-		button.text = String(action.get("label", "Emergency order"))
+		button.text = String(action.get("short_label", action.get("label", "Emergency order")))
 		button.tooltip_text = String(action.get("tooltip", ""))
 		button.disabled = not bool(action.get("enabled", false))
 	intervention_heading.text = String(view.get("intervention_heading", "EMERGENCY ORDER"))
@@ -507,6 +515,29 @@ func _configure_focus() -> void:
 		current.focus_neighbor_bottom = current.get_path_to(next)
 		current.focus_previous = current.get_path_to(previous)
 		current.focus_next = current.get_path_to(next)
+	var enabled_actions: Array[Button] = []
+	for button in intervention_buttons:
+		if button.visible and not button.disabled:
+			enabled_actions.append(button)
+	if enabled_actions.is_empty():
+		return
+	advance_button.focus_neighbor_bottom = advance_button.get_path_to(inspect_button)
+	inspect_button.focus_neighbor_top = inspect_button.get_path_to(advance_button)
+	inspect_button.focus_neighbor_bottom = inspect_button.get_path_to(enabled_actions[0])
+	for button in enabled_actions:
+		var grid_index := intervention_buttons.find(button)
+		var same_row_index := grid_index + 1 if grid_index % 2 == 0 else grid_index - 1
+		if same_row_index >= 0 and same_row_index < intervention_buttons.size():
+			var same_row := intervention_buttons[same_row_index]
+			if same_row.visible and not same_row.disabled:
+				button.focus_neighbor_right = button.get_path_to(same_row) if grid_index % 2 == 0 else NodePath()
+				button.focus_neighbor_left = button.get_path_to(same_row) if grid_index % 2 == 1 else NodePath()
+		var above_index := grid_index - 2
+		var below_index := grid_index + 2
+		var above: Control = intervention_buttons[above_index] if above_index >= 0 and intervention_buttons[above_index].visible and not intervention_buttons[above_index].disabled else inspect_button
+		var below: Control = intervention_buttons[below_index] if below_index < intervention_buttons.size() and intervention_buttons[below_index].visible and not intervention_buttons[below_index].disabled else advance_button
+		button.focus_neighbor_top = button.get_path_to(above)
+		button.focus_neighbor_bottom = button.get_path_to(below)
 
 func focus_default() -> void:
 	advance_button.grab_focus()
