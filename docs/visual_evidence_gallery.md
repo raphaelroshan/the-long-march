@@ -182,3 +182,14 @@ All three use the existing one-order roadside interaction and exact authoritativ
 | Read the Road | [Shared fortress departure stance](visual_evidence/v0.3.0-alpha.307-tutorial-fortress-continuity/03_road_ahead.png) | `18c4ce15869597127808991d8698dc344dbe94f3ea4755a47c2d4adbbb11b84b` |
 
 The prologue now teaches with the same visual object used throughout the playable slice. These images verify continuity and layout, not final illustration quality or uncoached comprehension.
+
+## `v0.3.0-alpha.309` — Bazaar attendant identity
+
+| Station state | Evidence | SHA-256 |
+|---|---|---|
+| Ashgate assignment | [Convoy runner](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/01_ashgate_depot.png) | `c898e1c0dc7b2c912333d0fa49a2a9ce6fce64b81d384377b06d2087388125c0` |
+| Ashgate workshop | [Rail-side engineer](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/02_ashgate_workshop.png) | `7d33a64ea18f49c2e522bbfae95257f66ebc74f95eb5629095c3e61b7b50bf5d` |
+| Lantern Quay assignment | [Medicine courier](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/02_lantern_quay.png) | `19f4c3d71e10466a1dcd226a6508a1b12ffd987ab81af076c208f72ddc6a6b2e` |
+| Lantern Quay signals | [Lantern reader](visual_evidence/v0.3.0-alpha.309-bazaar-attendants/02b_lantern_signal.png) | `cf2df3e38f2962c76de2602e56fc37b205d861940cd5a91202a27a424684b0c9` |
+
+The compact portraits make the selected service feel staffed while retaining the exact action, status, and consequence text. They verify visual differentiation and responsive fit, not final character art or human recall.

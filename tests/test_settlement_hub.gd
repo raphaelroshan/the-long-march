@@ -41,6 +41,8 @@ func _run() -> void:
 	_expect(hub.place_identity_label.text.contains("LOWLAND RAILHEAD") and hub.pressure_label.text.contains("BLOCKADE") and hub.route_meaning_label.text.contains("Rill Crossing") and hub.route_meaning_label.text.contains("Soot Orchard"), "Ashgate should state its place, active blockade pressure, and the meaning of both opening roads")
 	_expect(hub.bazaar_canvas.route_signature() == "RILL CROSSING · SOOT ORCHARD", "Ashgate's center stage should carry a visible two-road departure sign")
 	_expect(hub.bazaar_canvas.selected_station_signature() == "ASSIGNMENTS · FORTRESS SERVICE LINK", "the selected bazaar station should have a visible service link back to the fortress")
+	_expect(hub.attendant_label.text == "ATTENDANT · CONVOY RUNNER" and hub.attendant_portrait.presentation_signature() == "ASHGATE_DEPOT · ASSIGNMENT_BOARD · CONVOY RUNNER", "the selected assignment should be represented by a stable bazaar attendant rather than only a menu button")
+	_expect(hub.attendant_role_for("lantern_quay", "signal_broker") == "LANTERN READER" and hub.attendant_role_for("lantern_quay", "hiring_post") == "DIVER CAPTAIN", "Lantern Quay should retain region-specific station attendants")
 	_expect(not hub.reduced_motion_enabled and not hub.bazaar_canvas.reduced_motion, "the inhabited bazaar should begin with restrained ambient service movement")
 	_expect(hub.station_buttons["assignment_board"].has_focus(), "the unresolved opening assignment should receive default focus")
 	var canvas_rect: Rect2 = hub.bazaar_canvas.get_global_rect()
@@ -52,7 +54,9 @@ func _run() -> void:
 	hub.station_buttons["workshop"].pressed.emit()
 	await process_frame
 	_expect(hub.selected_station_id == "workshop" and hub.primary_action_button.text == "ENTER WORKSHOP", "selecting a bazaar station should open its named detail action")
+	_expect(hub.attendant_label.text == "ATTENDANT · RAIL-SIDE ENGINEER" and hub.attendant_portrait.presentation_signature().contains("WORKSHOP"), "station selection should carry its attendant and prop into the detail dock")
 	_expect(hub.detail_body.text.contains("rail-side repair bay") and hub.detail_body.text.contains("movement chain"), "Ashgate's workshop should frame refit around the depot's immediate operational priority")
+	await _capture("02_ashgate_workshop")
 	_expect(game.state.serialize() == state_before_browse, "browsing bazaar stations should not mutate deterministic run state")
 	hub.primary_action_button.pressed.emit()
 	await _settle_ui()
@@ -98,6 +102,7 @@ func _run() -> void:
 	game.journey_planner.return_button.pressed.emit()
 	await _settle_ui(2)
 	_expect(hub.high_contrast_enabled and hub.bazaar_canvas.high_contrast_enabled, "the settlement presentation should inherit the stage's high-contrast setting")
+	_expect(hub.attendant_portrait.high_contrast_enabled, "the selected attendant should inherit the same high-contrast treatment as the bazaar")
 	_expect(hub.reduced_motion_enabled and hub.bazaar_canvas.reduced_motion, "the settlement's service activity should honor reduced motion without removing the resting tableau")
 	game.set_reduced_motion(false)
 
