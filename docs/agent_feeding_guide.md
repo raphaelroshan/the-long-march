@@ -4,11 +4,11 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.297`; Feeds A through AT and automated quality layers L1 through L10 are complete, including tutorial, full journey handoff, responsive presentation, road-contact causality, settlement identity, presentation boundaries, controlled content, failure-forward texture, replayable mastery, and private-alpha hardening. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) are now the next evidence-gathering step rather than a claim that the game is commercially finished.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.298`; Feeds A through AT and automated quality layers L1 through L11 are complete, including tutorial, full journey handoff, responsive presentation, road-contact causality, settlement identity, presentation boundaries, controlled content, failure-forward texture, replayable mastery, private-alpha hardening, and the presentation-clarity pass. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) are now the next evidence-gathering step rather than a claim that the game is commercially finished.
 
 ### Active Feed 0 — failure-forward consequence
 
-**Status:** Automated implementation complete in `0.3.0-alpha.297`; next work is evidence-led human calibration.
+**Status:** Automated implementation complete in `0.3.0-alpha.298`; next work is evidence-led human calibration.
 
 ```text
 Choose one existing declined or failed promise and make it produce a small, deterministic later route, settlement, shortage, refuge, or service consequence. The consequence must be visible before commitment, survive save/load, affect more than flavor text, and preserve a viable path to every current ending. Add focused state/UI tests and evidence without adding a faction meter or broad narrative system.

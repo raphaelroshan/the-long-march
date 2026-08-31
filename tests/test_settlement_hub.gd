@@ -40,6 +40,7 @@ func _run() -> void:
 	_expect(hub.context_label.text.contains("ASHGATE RAIL DEPOT") and hub.bazaar_canvas.presentation_signature().contains("BLACK RAILS"), "Ashgate's starting bazaar should identify its rail-depot setting without relying only on the location title")
 	_expect(hub.place_identity_label.text.contains("LOWLAND RAILHEAD") and hub.pressure_label.text.contains("BLOCKADE") and hub.route_meaning_label.text.contains("Rill Crossing") and hub.route_meaning_label.text.contains("Soot Orchard"), "Ashgate should state its place, active blockade pressure, and the meaning of both opening roads")
 	_expect(hub.bazaar_canvas.route_signature() == "RILL CROSSING · SOOT ORCHARD", "Ashgate's center stage should carry a visible two-road departure sign")
+	_expect(hub.bazaar_canvas.selected_station_signature() == "ASSIGNMENTS · FORTRESS SERVICE LINK", "the selected bazaar station should have a visible service link back to the fortress")
 	_expect(hub.station_buttons["assignment_board"].has_focus(), "the unresolved opening assignment should receive default focus")
 	var canvas_rect: Rect2 = hub.bazaar_canvas.get_global_rect()
 	_expect(hub.value_labels["hull"].global_position.x < canvas_rect.position.x and hub.detail_title.global_position.x > canvas_rect.end.x, "the 1280x720 hub should keep values left, the fortress stage centered, and details right")
@@ -84,6 +85,7 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(not hub.visible and not game.main_columns.visible and game.journey_planner.visible and game.campaign_map.visible, "planning a journey should open the dedicated regional map without moving the fortress")
 	_expect(game.journey_planner.receipt_label.visible and game.journey_planner.receipt_label.text.begins_with("LAST RECEIPT"), "route planning should carry the last committed settlement decision into the next beat")
+	_expect(game.journey_planner.route_stage_label.text == "INSPECT ROAD · SELECT · THEN COMMIT", "the route map should explain its reversible decision order before a road is selected")
 	_expect(game.state.current_location == "ashgate_depot" and game.state.phase == "refit" and game.selected_campaign_node_id.is_empty(), "opening the map should not spend fuel, time, or commit a destination")
 	_expect(game.journey_planner.return_button.visible, "route planning should retain a visible return to the settlement bazaar")
 	var planner_map_rect: Rect2 = game.campaign_map.get_global_rect()
@@ -101,6 +103,7 @@ func _run() -> void:
 	await _settle_ui(2)
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await _settle_ui(2)
+	_expect(game.journey_planner.route_stage_label.text == "ROUTE SELECTED · REVIEW COSTS → COMMIT", "route selection should visibly distinguish review from commitment")
 	game.campaign_commit_button.pressed.emit()
 	await _settle_ui()
 	var journey = game.journey_transition
@@ -112,10 +115,13 @@ func _run() -> void:
 	var march_rect: Rect2 = journey.march_canvas.get_global_rect()
 	_expect(journey.day_label.global_position.x < march_rect.position.x and journey.destination_label.global_position.x > march_rect.end.x, "the road view should retain the left-values, centered-fortress, right-details hierarchy")
 	_expect(journey.continue_button.has_focus() and journey.continue_button.text == "SKIP MARCH · ENTER CONTACT" and journey.presentation_beat() == "departed", "the road view should begin with an immediately skippable departure beat")
+	_expect(journey.march_canvas.beat_visual_signature() == "GATE RECEDING", "departure should begin with a distinct receding-settlement visual")
 	journey._process(0.4)
 	_expect(journey.presentation_beat() == "road_in_motion" and journey.status_label.text == "ROAD IN MOTION", "the road view should establish a short distinct motion beat without changing game state")
+	_expect(journey.march_canvas.beat_visual_signature() == "LANDMARK PASSING", "the road-in-motion beat should replace the gate with a passing regional landmark")
 	journey._process(0.7)
 	_expect(journey.presentation_beat() == "contact_ahead" and journey.continue_button.text == "ENTER CONTACT" and journey.status_label.text.contains("CONTACT AHEAD") and journey.next_label.text.contains("Road Raider"), "the short march should settle on the known contact and its explicit entry action")
+	_expect(journey.march_canvas.beat_visual_signature() == "CONTACT ON HORIZON" and journey.march_canvas.contact_name.contains("Road Raider"), "the final travel beat should put the named contact on the horizon")
 	var committed_day_receipt: String = journey.day_label.text
 	var committed_fuel_receipt: String = journey.fuel_label.text
 	_expect(game.save_run(true), "the departure handoff should save after costs are committed")

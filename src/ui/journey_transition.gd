@@ -223,6 +223,7 @@ func configure(view: Dictionary) -> void:
 	heat_label.text = String(view.get("heat_receipt", "—"))
 	march_canvas.region_id = String(view.get("region_id", "ashgate_lowlands"))
 	march_canvas.destination_name = destination
+	march_canvas.contact_name = String(view.get("contact_name", "contact ahead"))
 	march_canvas.fortress_view = view.get("fortress", {}).duplicate(true)
 	march_canvas.high_contrast_enabled = high_contrast_enabled
 	march_canvas.reduced_motion = reduced_motion
@@ -232,6 +233,9 @@ func configure(view: Dictionary) -> void:
 
 func _set_presentation_beat(index: int) -> void:
 	presentation_beat_index = clampi(index, 0, 2)
+	if march_canvas != null:
+		march_canvas.presentation_beat_index = presentation_beat_index
+		march_canvas.queue_redraw()
 	for sequence_index in range(sequence_labels.size()):
 		var color := Color("#69777c")
 		if sequence_index < presentation_beat_index:
@@ -282,10 +286,15 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 class MarchCanvas extends Control:
 	var region_id: String = "ashgate_lowlands"
 	var destination_name: String = ""
+	var contact_name: String = "contact ahead"
 	var high_contrast_enabled: bool = false
 	var reduced_motion: bool = false
 	var travel_offset: float = 0.0
+	var presentation_beat_index: int = 0
 	var fortress_view: Dictionary = {}
+
+	func beat_visual_signature() -> String:
+		return ["GATE RECEDING", "LANDMARK PASSING", "CONTACT ON HORIZON"][clampi(presentation_beat_index, 0, 2)]
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -299,14 +308,17 @@ class MarchCanvas extends Control:
 	func _draw() -> void:
 		var flooded := region_id == "flooded_veyru"
 		var sky := Color("#071014") if high_contrast_enabled else (Color("#19333a") if flooded else Color("#293136"))
-		var horizon := Color("#284e55") if flooded else Color("#5a5146")
+		var far_horizon := Color("#1f4249") if flooded else Color("#47463f")
+		var horizon := Color("#284e55") if flooded else Color("#625849")
 		var ground := Color("#10262a") if flooded else Color("#30271f")
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
-		draw_circle(Vector2(size.x * 0.78, size.y * 0.20), 58.0, Color(0.91, 0.72, 0.42, 0.16))
+		draw_circle(Vector2(size.x * 0.78, size.y * 0.18), 64.0, Color(0.91, 0.72, 0.42, 0.18))
+		_draw_far_silhouette(far_horizon)
 		for ridge_index in range(5):
 			var ridge_y := size.y * (0.30 + ridge_index * 0.035)
 			draw_line(Vector2(0, ridge_y), Vector2(size.x, ridge_y - 30 + ridge_index * 8), horizon.darkened(float(ridge_index) * 0.08), 28.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.58), Vector2(size.x, size.y * 0.42)), ground, true)
+		_draw_road_edge(flooded)
 		for marker_index in range(-1, 9):
 			var marker_x := fmod(float(marker_index * 96) - travel_offset, size.x + 96.0)
 			if marker_x < -30.0:
@@ -317,8 +329,58 @@ class MarchCanvas extends Control:
 		for road_index in range(9):
 			var road_x := fmod(float(road_index * 96) - travel_offset * 1.7, size.x + 96.0)
 			draw_line(Vector2(road_x, size.y * 0.82), Vector2(road_x + 46, size.y * 0.82), Color("#8b704d"), 5.0)
+		_draw_beat_landmark(flooded)
 		_draw_fortress()
-		draw_string(ThemeDB.fallback_font, Vector2(size.x * 0.5 - 120, size.y - 22), "CONTACT BEFORE %s" % destination_name.to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 240, 12, Color("#d7c08b"))
+		_draw_contact_horizon()
+		var caption := "%s  ·  CONTACT BEFORE %s" % [beat_visual_signature(), destination_name.to_upper()]
+		draw_string(ThemeDB.fallback_font, Vector2(size.x * 0.5 - 210, size.y - 22), caption, HORIZONTAL_ALIGNMENT_CENTER, 420, 12, Color("#e1c98f"))
+
+	func _draw_far_silhouette(color: Color) -> void:
+		for tower_index in range(6):
+			var x := fmod(float(tower_index) * 168.0 - travel_offset * 0.12, size.x + 180.0) - 40.0
+			var height := 24.0 + float((tower_index + 1) % 3) * 16.0
+			draw_rect(Rect2(Vector2(x, size.y * 0.29 - height), Vector2(28.0, height)), color.darkened(0.18), true)
+			draw_line(Vector2(x + 14.0, size.y * 0.29 - height), Vector2(x + 14.0, size.y * 0.29 - height - 18.0), color, 3.0)
+
+	func _draw_road_edge(flooded: bool) -> void:
+		var edge_color := Color("#66a6a3") if flooded else Color("#806443")
+		draw_line(Vector2(0, size.y * 0.64), Vector2(size.x, size.y * 0.62), edge_color.darkened(0.22), 5.0)
+		draw_line(Vector2(0, size.y * 0.92), Vector2(size.x, size.y * 0.92), edge_color.darkened(0.34), 4.0)
+		if flooded:
+			for wave_index in range(6):
+				var wave_x := fmod(float(wave_index) * 142.0 - travel_offset * 0.9, size.x + 142.0)
+				draw_arc(Vector2(wave_x, size.y * 0.72), 24.0, PI, TAU, 12, Color(0.39, 0.70, 0.72, 0.42), 3.0)
+
+	func _draw_beat_landmark(flooded: bool) -> void:
+		var accent := Color("#9fddd4") if flooded else Color("#d3aa68")
+		match presentation_beat_index:
+			0:
+				var gate_x := 56.0 - travel_offset * 0.28
+				draw_line(Vector2(gate_x, size.y * 0.57), Vector2(gate_x, size.y * 0.22), accent.darkened(0.32), 11.0)
+				draw_line(Vector2(gate_x, size.y * 0.24), Vector2(gate_x + 96.0, size.y * 0.24), accent.darkened(0.16), 8.0)
+				draw_string(ThemeDB.fallback_font, Vector2(gate_x + 7.0, size.y * 0.21), "DEPARTURE GATE", HORIZONTAL_ALIGNMENT_LEFT, 130.0, 10, accent)
+			1:
+				var landmark_x := fmod(size.x * 0.82 - travel_offset * 0.55, size.x + 220.0)
+				if flooded:
+					draw_circle(Vector2(landmark_x, size.y * 0.48), 44.0, accent.darkened(0.42), false, 9.0)
+					draw_line(Vector2(landmark_x - 62.0, size.y * 0.53), Vector2(landmark_x + 62.0, size.y * 0.53), accent.darkened(0.18), 7.0)
+				else:
+					draw_line(Vector2(landmark_x, size.y * 0.57), Vector2(landmark_x, size.y * 0.28), accent.darkened(0.28), 8.0)
+					draw_line(Vector2(landmark_x - 45.0, size.y * 0.34), Vector2(landmark_x + 38.0, size.y * 0.34), accent.darkened(0.14), 6.0)
+			2:
+				for plume_index in range(3):
+					var plume := Color(0.16, 0.12, 0.10, 0.34 - float(plume_index) * 0.06)
+					draw_circle(Vector2(size.x * 0.92 + float(plume_index) * 15.0, size.y * 0.48 - float(plume_index) * 18.0), 14.0 + float(plume_index) * 5.0, plume)
+
+	func _draw_contact_horizon() -> void:
+		if presentation_beat_index < 2:
+			return
+		var marker := Vector2(size.x * 0.90, size.y * 0.57)
+		var danger := Color.WHITE if high_contrast_enabled else Color("#ef8375")
+		draw_circle(marker, 12.0, danger.darkened(0.28))
+		draw_arc(marker, 22.0, 0, TAU, 20, danger, 3.0)
+		draw_line(marker + Vector2(-42.0, -42.0), marker + Vector2(0, -18.0), danger, 2.0)
+		draw_string(ThemeDB.fallback_font, marker + Vector2(-120.0, -51.0), contact_name.to_upper(), HORIZONTAL_ALIGNMENT_RIGHT, 112.0, 10, danger)
 
 	func _draw_fortress() -> void:
 		var view := fortress_view.duplicate(true)

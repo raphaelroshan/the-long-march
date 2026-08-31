@@ -14,6 +14,7 @@ var pause_button: Button
 var headline_label: Label
 var region_label: Label
 var outcome_label: Label
+var causal_banner: Label
 var timeline_labels: Array[RichTextLabel] = []
 var journey_label: RichTextLabel
 var commitments_label: RichTextLabel
@@ -135,8 +136,15 @@ func _build_ui() -> void:
 	headline_label.add_theme_font_size_override("font_size", 34)
 	headline_label.add_theme_color_override("font_color", Color("#f0d29d"))
 	result_stack.add_child(headline_label)
+	causal_banner = Label.new()
+	causal_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	causal_banner.autowrap_mode = TextServer.AUTOWRAP_OFF
+	causal_banner.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	causal_banner.add_theme_font_size_override("font_size", 11)
+	causal_banner.add_theme_color_override("font_color", Color("#d7dfd9"))
+	result_stack.add_child(causal_banner)
 	fortress_canvas = DebriefFortressCanvas.new()
-	fortress_canvas.custom_minimum_size = Vector2(500, 250)
+	fortress_canvas.custom_minimum_size = Vector2(500, 224)
 	fortress_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	center.add_child(fortress_canvas)
 	condition_label = RichTextLabel.new()
@@ -236,6 +244,9 @@ func configure(view: Dictionary) -> void:
 	headline_label.text = String(view.get("headline", "MARCH COMPLETE")).to_upper()
 	var tone := String(view.get("tone", "stable"))
 	headline_label.add_theme_color_override("font_color", Color("#9fddbd") if tone == "stable" else (Color("#e8c58e") if tone == "scarred" else Color("#ef8375")))
+	causal_banner.text = debrief_causal_banner(String(view.get("consequence", "")), tone)
+	causal_banner.tooltip_text = causal_banner.text
+	causal_banner.add_theme_color_override("font_color", Color("#b9ead1") if tone == "stable" else (Color("#f0d29d") if tone == "scarred" else Color("#ff9d8f")))
 	var timeline: Array = view.get("timeline", [])
 	for index in range(timeline_labels.size()):
 		var step := timeline_labels[index]
@@ -253,6 +264,18 @@ func configure(view: Dictionary) -> void:
 	experiment_label.text = String(view.get("experiment", "Try a different route or layout."))
 	march_on_button.text = String(view.get("march_on_label", "MARCH ON"))
 	fortress_canvas.configure(view)
+
+func debrief_causal_banner(consequence: String, tone: String) -> String:
+	var marker := "CAUSE →"
+	var cause := consequence
+	if marker in consequence:
+		cause = consequence.substr(consequence.find(marker) + marker.length()).strip_edges()
+	if cause.is_empty():
+		cause = "No decisive chain was recorded."
+	cause = cause.replace("the road remained contested", "road contested")
+	cause = cause.replace("the decisive threshold was missed", "decisive threshold missed")
+	var result_word := "HELD" if tone == "stable" else ("SURVIVED" if tone == "scarred" else "STOPPED")
+	return "%s · %s" % [result_word, cause]
 
 func focus_default() -> void:
 	inspect_button.grab_focus()
@@ -292,4 +315,16 @@ class DebriefFortressCanvas extends Control:
 		view["mode"] = "debrief"
 		view["high_contrast"] = high_contrast_enabled
 		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.18, size.y * 0.17), Vector2(size.x * 0.64, size.y * 0.58)), view)
+		_draw_condition_frame()
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), "THE SAME FORTRESS RETURNS · DAMAGE REMAINS", HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#e2cc98"))
+
+	func _draw_condition_frame() -> void:
+		var damaged_count := int(current_view.get("damaged_count", 0))
+		var offline_count := int(current_view.get("offline_count", 0))
+		if damaged_count <= 0 and offline_count <= 0:
+			return
+		var color := Color("#ff8d7e") if offline_count > 0 else Color("#efbd73")
+		var frame := Rect2(Vector2(size.x * 0.13, size.y * 0.10), Vector2(size.x * 0.74, size.y * 0.66))
+		draw_rect(frame, color, false, 3.0)
+		var label := "%d DAMAGED · %d OFFLINE" % [damaged_count, offline_count]
+		draw_string(ThemeDB.fallback_font, frame.position + Vector2(8.0, -7.0), label, HORIZONTAL_ALIGNMENT_LEFT, 190.0, 11, color)

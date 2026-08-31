@@ -30,6 +30,8 @@ func _init() -> void:
 	var veyru := FortressSilhouette.visual_signature({"region_id": "flooded_veyru", "mode": "contact", "heat": 7, "heat_limit": 6})
 	_expect(String(ashgate.get("place_treatment", "")) == "dust_industry" and not bool(ashgate.get("overheated", true)), "Ashgate should retain an industrial dust treatment without declaring heat at the safe limit")
 	_expect(String(veyru.get("place_treatment", "")) == "rain_waterworks" and bool(veyru.get("overheated", false)), "Veyru and overheat should remain explicit presentation inputs rather than inferred from title copy")
+	_expect(String(FortressSilhouette.mode_treatment("travel").get("motion", "")) == "marching" and String(FortressSilhouette.mode_treatment("contact").get("stance", "")) == "combat", "travel and contact should expose visibly different movement and stance treatments")
+	_expect(String(FortressSilhouette.mode_treatment("debrief").get("stance", "")) == "scarred", "the returning fortress should retain a dedicated debrief treatment")
 	if failures.is_empty():
 		print("PASS: The Long March fortress silhouette")
 		quit(0)

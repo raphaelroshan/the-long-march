@@ -92,6 +92,8 @@ func _run() -> void:
 			else:
 				_expect(stage_text.begins_with("IMPACT ·") and stage_text.contains(phase_case.contains), "%s impact should repeat authoritative damage; received '%s'" % [case.name, stage_text])
 		_expect(contact.threat_detail.text.contains("INTENT · %s" % case.signature) and contact.threat_detail.text.contains("RESPONSE WINDOW · %s" % case.counter) and contact.threat_detail.text.contains("CASCADE · Dependent System → OFFLINE"), "%s active dossier should retain intent, counter, and dependency consequence together" % case.name)
+		var readable: Dictionary = contact.contact_readability_summary()
+		_expect(String(readable.get("threat", "")) == String(case.name) and String(readable.get("target", "")) == String(case.target_name) and int(readable.get("damage", 0)) == 1 and String(readable.get("counter", "")) == String(case.counter), "%s should expose threat, target, damage, and counter as one presentation summary" % case.name)
 		contact.contact_canvas.transition_progress = 0.50
 		contact._refresh_battle_phase_label(true)
 		await _capture("%02d_%s_response" % [THREAT_CASES.keys().find(enemy_id) + 1, enemy_id])

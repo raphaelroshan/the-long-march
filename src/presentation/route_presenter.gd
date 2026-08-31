@@ -41,6 +41,7 @@ static func build_transition(state: LongMarchState, origin_id: String, destinati
 		"origin_name": origin_name,
 		"destination_id": destination_id,
 		"destination_name": destination_name,
+		"contact_name": contact_text,
 		"status": "%s CONTACT AHEAD" % visibility.to_upper(),
 		"promise": String(context.get("promise", "")),
 		"phase": "COMMITMENT · COSTS APPLIED · ARRIVAL PENDING",

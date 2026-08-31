@@ -366,6 +366,22 @@ func _configure_threat(view: Dictionary) -> void:
 		threat_status.text = "%d STEP%s OUT · %s" % [chosen_distance, "" if chosen_distance == 1 else "S", String(definition.get("flank", "road approach")).to_upper()]
 		threat_detail.text = "APPROACH · %s\nPREFERRED TARGETS · %s\nCOUNTER · %s" % [String(definition.get("route", "road approach")).capitalize(), " / ".join(definition.get("target_tags", [])), String(definition.get("counter", "No listed system counter"))]
 
+func contact_readability_summary() -> Dictionary:
+	var enemy := contact_canvas._nearest_enemy() if contact_canvas != null else {}
+	if enemy.is_empty():
+		return {"phase": "settle", "threat": "road open", "target": "", "damage": 0}
+	var definitions: Dictionary = current_view.get("enemy_definitions", {})
+	var enemy_id := String(enemy.get("id", "threat"))
+	var definition: Dictionary = definitions.get(enemy_id, {})
+	var impact: Dictionary = enemy.get("impact", {})
+	return {
+		"phase": battle_phase_for().to_lower(),
+		"threat": String(definition.get("name", enemy_id.replace("_", " ").capitalize())),
+		"target": _target_name(String(enemy.get("target", "")), current_view),
+		"damage": int(impact.get("damage", 0)),
+		"counter": String(definition.get("counter", ""))
+	}
+
 func _target_name(target_id: String, view: Dictionary) -> String:
 	return String(view.get("target_names", {}).get(target_id, target_id.replace("_", " ").capitalize()))
 
@@ -460,6 +476,7 @@ class ContactCanvas extends Control:
 		var ground := Color("#0d2427") if flooded else Color("#30271f")
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.80, size.y * 0.18), 52.0, Color(0.95, 0.75, 0.43, 0.15))
+		_draw_contact_pressure()
 		for ridge in range(4):
 			var y := size.y * (0.32 + ridge * 0.045)
 			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#395358") if flooded else Color("#655b4d"), 24.0)
@@ -486,9 +503,26 @@ class ContactCanvas extends Control:
 		view["mode"] = "contact"
 		view["impact"] = impact_strength
 		view["high_contrast"] = high_contrast_enabled
-		var rendered := FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.19, size.y * 0.28), Vector2(size.x * 0.56, size.y * 0.46)), view)
+		var rendered := FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.12, size.y * 0.25), Vector2(size.x * 0.64, size.y * 0.50)), view)
 		fortress_anchors = Dictionary(rendered.get("anchors", {})).duplicate()
 		return rendered.get("body", Rect2())
+
+	func _draw_contact_pressure() -> void:
+		var enemy := _nearest_enemy()
+		if enemy.is_empty():
+			return
+		var arrived := bool(enemy.get("arrived", false))
+		var lane_color := Color(0.72, 0.25, 0.19, 0.12 if arrived else 0.05)
+		var lane := PackedVector2Array([
+			Vector2(size.x * 0.58, size.y * 0.18),
+			Vector2(size.x, size.y * 0.12),
+			Vector2(size.x, size.y * 0.74),
+			Vector2(size.x * 0.58, size.y * 0.68)
+		])
+		draw_colored_polygon(lane, lane_color)
+		for line_index in range(3):
+			var y := size.y * (0.29 + float(line_index) * 0.12)
+			draw_line(Vector2(size.x * 0.68, y), Vector2(size.x * 0.96, y - 14.0), Color(0.88, 0.40, 0.30, 0.14), 2.0)
 
 	func presentation_stage_text() -> String:
 		var enemy := _nearest_enemy()
@@ -609,38 +643,52 @@ class ContactCanvas extends Control:
 			if enemy_id in ["burrowers", "flood_surge"]:
 				y = fortress_rect.end.y + 68.0
 			x = minf(size.x - 38.0, x)
-			_draw_enemy_symbol(enemy_id, Vector2(x, y), arrived)
+			_draw_enemy_symbol(enemy_id, Vector2(x, y), arrived, 1.30 if arrived else 1.08)
 			if arrived and not String(enemy.get("target", "")).is_empty():
 				var line_color := Color("#ff8275")
 				line_color.a = 0.4 + transition_progress * 0.6
 				draw_dashed_line(Vector2(x - 16.0, y), target_anchor, line_color, 2.0, 7.0)
+				_draw_intent_arrow(Vector2(x - 16.0, y), target_anchor, line_color)
+				var pulse_radius := 15.0 + sin(transition_progress * PI) * 8.0
+				draw_arc(target_anchor, pulse_radius, 0, TAU, 24, line_color, 3.0)
+				var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
+				draw_string(ThemeDB.fallback_font, target_anchor + Vector2(-70.0, -23.0), target_name, HORIZONTAL_ALIGNMENT_CENTER, 140.0, 10, Color("#fff0df"))
 			var name := String(definition.get("name", enemy_id.replace("_", " ").capitalize())).to_upper()
 			draw_string(ThemeDB.fallback_font, Vector2(x - 72.0, y - 30.0), name, HORIZONTAL_ALIGNMENT_CENTER, 144, 10, Color("#f1d1b2"))
 			visible_index += 1
 
-	func _draw_enemy_symbol(enemy_id: String, position: Vector2, arrived: bool) -> void:
+	func _draw_intent_arrow(from: Vector2, to: Vector2, color: Color) -> void:
+		var direction := (to - from).normalized()
+		if direction == Vector2.ZERO:
+			return
+		var perpendicular := Vector2(-direction.y, direction.x)
+		var tip := to - direction * 10.0
+		draw_colored_polygon(PackedVector2Array([tip, tip - direction * 13.0 + perpendicular * 7.0, tip - direction * 13.0 - perpendicular * 7.0]), color)
+
+	func _draw_enemy_symbol(enemy_id: String, position: Vector2, arrived: bool, scale_amount: float = 1.0) -> void:
 		var color := Color("#ff7f70") if arrived else Color("#d8a16e")
 		if enemy_id == "storm_front":
 			for offset in [Vector2(-18, 0), Vector2(0, -8), Vector2(19, 1)]:
-				draw_circle(position + offset, 17.0, color.darkened(0.25))
-			draw_polyline(PackedVector2Array([position + Vector2(-4, 12), position + Vector2(-12, 35), position + Vector2(3, 26), position + Vector2(-2, 47)]), color, 4.0)
+				draw_circle(position + offset * scale_amount, 17.0 * scale_amount, color.darkened(0.25))
+			draw_polyline(PackedVector2Array([position + Vector2(-4, 12) * scale_amount, position + Vector2(-12, 35) * scale_amount, position + Vector2(3, 26) * scale_amount, position + Vector2(-2, 47) * scale_amount]), color, 4.0 * scale_amount)
 		elif enemy_id == "flood_surge":
-			draw_arc(position, 28.0, PI, TAU, 18, color, 7.0)
-			draw_arc(position + Vector2(25, 6), 22.0, PI, TAU, 18, color.darkened(0.18), 6.0)
+			draw_arc(position, 28.0 * scale_amount, PI, TAU, 18, color, 7.0 * scale_amount)
+			draw_arc(position + Vector2(25, 6) * scale_amount, 22.0 * scale_amount, PI, TAU, 18, color.darkened(0.18), 6.0 * scale_amount)
 		elif enemy_id == "burrowers":
 			for radius in [10.0, 20.0, 30.0]:
-				draw_arc(position, radius, PI, TAU, 14, color, 3.0)
+				draw_arc(position, radius * scale_amount, PI, TAU, 14, color, 3.0 * scale_amount)
 		elif enemy_id == "climbers":
-			draw_circle(position, 15.0, color)
+			draw_circle(position, 15.0 * scale_amount, color)
 			for angle in [0.2, 1.0, 2.1, 2.9]:
-				draw_line(position, position + Vector2(cos(angle), sin(angle)) * 30.0, color, 4.0)
+				draw_line(position, position + Vector2(cos(angle), sin(angle)) * 30.0 * scale_amount, color, 4.0 * scale_amount)
 		elif enemy_id in ["siege_beast", "civic_guardian"]:
-			draw_circle(position, 25.0, color.darkened(0.25))
-			draw_rect(Rect2(position - Vector2(24, 12), Vector2(48, 28)), color, true)
-			draw_line(position + Vector2(-18, 15), position + Vector2(-25, 35), color, 7.0)
-			draw_line(position + Vector2(18, 15), position + Vector2(25, 35), color, 7.0)
+			draw_circle(position, 25.0 * scale_amount, color.darkened(0.25))
+			draw_rect(Rect2(position - Vector2(24, 12) * scale_amount, Vector2(48, 28) * scale_amount), color, true)
+			draw_line(position + Vector2(-18, 15) * scale_amount, position + Vector2(-25, 35) * scale_amount, color, 7.0 * scale_amount)
+			draw_line(position + Vector2(18, 15) * scale_amount, position + Vector2(25, 35) * scale_amount, color, 7.0 * scale_amount)
 		else:
-			draw_rect(Rect2(position - Vector2(27, 14), Vector2(54, 27)), color.darkened(0.18), true)
-			draw_circle(position + Vector2(-17, 17), 9.0, color)
-			draw_circle(position + Vector2(18, 17), 9.0, color)
-			draw_line(position + Vector2(-22, -14), position + Vector2(19, -27), color, 5.0)
+			draw_rect(Rect2(position - Vector2(27, 14) * scale_amount, Vector2(54, 27) * scale_amount), color.darkened(0.18), true)
+			draw_rect(Rect2(position + Vector2(-8, -26) * scale_amount, Vector2(25, 13) * scale_amount), color.darkened(0.34), true)
+			draw_circle(position + Vector2(-17, 17) * scale_amount, 9.0 * scale_amount, color)
+			draw_circle(position + Vector2(18, 17) * scale_amount, 9.0 * scale_amount, color)
+			draw_line(position + Vector2(-22, -14) * scale_amount, position + Vector2(19, -27) * scale_amount, color, 5.0 * scale_amount)

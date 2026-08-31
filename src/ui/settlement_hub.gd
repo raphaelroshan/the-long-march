@@ -414,12 +414,54 @@ class BazaarCanvas extends Control:
 			draw_line(Vector2(0, ridge_y), Vector2(size.x, ridge_y - 14 + index * 3), haze.darkened(float(index) * 0.035), 18.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.58), Vector2(size.x, size.y * 0.42)), ground, true)
 		_draw_place_features(flooded)
+		_draw_bazaar_activity(flooded)
+		_draw_station_connections()
 		_draw_stall(Rect2(Vector2(6, 20), Vector2(190, 128)), "workshop")
 		_draw_stall(Rect2(Vector2(size.x - 196, 20), Vector2(190, 128)), "signal_broker")
 		_draw_stall(Rect2(Vector2(0, size.y - 205), Vector2(190, 145)), "quartermaster")
 		_draw_stall(Rect2(Vector2(size.x - 196, size.y - 260), Vector2(190, 198)), "assignment_board")
 		_draw_fortress()
 		draw_string(ThemeDB.fallback_font, Vector2(size.x * 0.5 - 90, size.y * 0.77), "FORTRESS AT REST", HORIZONTAL_ALIGNMENT_CENTER, 180, 12, Color("#cdbb95"))
+
+	func selected_station_signature() -> String:
+		return "%s · FORTRESS SERVICE LINK" % String(STATION_NAMES.get(selected_station_id, selected_station_id)).to_upper()
+
+	func _draw_station_connections() -> void:
+		var fortress_center := Vector2(size.x * 0.50, size.y * 0.52)
+		var targets := {
+			"workshop": Vector2(101.0, 148.0),
+			"signal_broker": Vector2(size.x - 101.0, 148.0),
+			"quartermaster": Vector2(101.0, size.y - 205.0),
+			"hiring_post": Vector2(size.x - 101.0, size.y - 260.0),
+			"assignment_board": Vector2(size.x - 101.0, size.y - 160.0),
+			"departure_gate": Vector2(size.x * 0.50, size.y - 74.0)
+		}
+		var target: Vector2 = targets.get(selected_station_id, fortress_center)
+		var route_color := Color.WHITE if high_contrast_enabled else Color("#d4b06e")
+		var faint := route_color
+		faint.a = 0.22
+		draw_dashed_line(fortress_center, target, faint, 3.0, 9.0)
+		draw_circle(target, 9.0, Color(0.94, 0.77, 0.48, 0.12))
+		draw_arc(target, 12.0, 0, TAU, 20, route_color, 2.0)
+
+	func _draw_bazaar_activity(flooded: bool) -> void:
+		var lamp_color := Color("#a8ece4") if flooded else Color("#ffd27d")
+		for lamp_ratio in [0.12, 0.34, 0.66, 0.88]:
+			var lamp := Vector2(size.x * lamp_ratio, size.y * 0.49)
+			draw_line(lamp - Vector2(0, 34), lamp, Color("#756348"), 3.0)
+			draw_circle(lamp, 4.5, lamp_color)
+			draw_circle(lamp, 12.0, Color(lamp_color.r, lamp_color.g, lamp_color.b, 0.08))
+		for person_ratio in [0.20, 0.31, 0.69, 0.80]:
+			var person := Vector2(size.x * person_ratio, size.y * 0.70)
+			draw_circle(person - Vector2(0, 13), 4.0, Color("#cab58a"))
+			draw_line(person - Vector2(0, 8), person + Vector2(0, 10), Color("#766653"), 4.0)
+			draw_line(person + Vector2(0, 1), person + Vector2(-6, 13), Color("#766653"), 3.0)
+			draw_line(person + Vector2(0, 1), person + Vector2(6, 13), Color("#766653"), 3.0)
+		for crate_index in range(3):
+			var crate := Rect2(Vector2(size.x * 0.06 + float(crate_index) * 25.0, size.y * 0.52 - float(crate_index % 2) * 14.0), Vector2(22.0, 20.0))
+			draw_rect(crate, Color("#694d35"), true)
+			draw_rect(crate, Color("#ad8553"), false, 2.0)
+			draw_line(crate.position, crate.end, Color("#ad8553"), 1.0)
 
 	func _draw_place_features(flooded: bool) -> void:
 		if flooded:
@@ -476,12 +518,32 @@ class BazaarCanvas extends Control:
 			border = Color.WHITE if high_contrast_enabled else Color("#f0cf96")
 		draw_rect(rect, fill.darkened(0.30) if high_contrast_enabled else fill, true)
 		draw_rect(rect, border, false, 3.0 if selected else 2.0)
+		var canopy := PackedVector2Array([
+			rect.position + Vector2(-5.0, 2.0),
+			rect.position + Vector2(rect.size.x * 0.5, -18.0),
+			rect.position + Vector2(rect.size.x + 5.0, 2.0)
+		])
+		draw_polyline(canopy, border, 5.0 if selected else 3.0)
 		draw_line(rect.position + Vector2(0, 22), rect.position + Vector2(rect.size.x, 22), border, 2.0)
-		for post_x in [rect.position.x + 18, rect.end.x - 18]:
+		for raw_post_x in [rect.position.x + 18, rect.end.x - 18]:
+			var post_x: float = float(raw_post_x)
 			draw_line(Vector2(post_x, rect.position.y), Vector2(post_x, rect.end.y), border.darkened(0.25), 5.0)
+		var icon_rect := Rect2(rect.get_center() - Vector2(19.0, 10.0), Vector2(38.0, 38.0))
+		FortressSilhouette.draw_family_mark(self, icon_rect, _station_family(station_id), border.lightened(0.18))
+		if selected:
+			draw_circle(rect.position + Vector2(rect.size.x * 0.5, 9.0), 5.0, Color("#ffe2a0"))
+
+	func _station_family(station_id: String) -> String:
+		match station_id:
+			"workshop": return "workshop"
+			"quartermaster": return "cargo"
+			"signal_broker": return "signal"
+			"hiring_post": return "crew_room"
+			"assignment_board": return "armor"
+			_: return "engine"
 
 	func _draw_fortress() -> void:
 		var view := fortress_view.duplicate(true)
 		view["mode"] = "rest"
 		view["high_contrast"] = high_contrast_enabled
-		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.25, size.y * 0.27), Vector2(size.x * 0.50, size.y * 0.45)), view)
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.22, size.y * 0.23), Vector2(size.x * 0.56, size.y * 0.50)), view)

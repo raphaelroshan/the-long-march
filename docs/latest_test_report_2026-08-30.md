@@ -4,12 +4,12 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.297` |
+| Build | `0.3.0-alpha.298` presentation candidate |
 | Engine | Godot 4.4.1 stable |
 | Automated source verification | PASS: versions, content, framework, offline boundary, save/migration, backup recovery, simulation, presentation, audio, controller, accessibility, performance, both chapter flows, and candidate contract |
 | Performance sample | PASS: 1,800 read-only planning inspections and 60 same-seed encounter replays within conservative 12-second budgets |
 | Local packaged export | BLOCKED AS DESIGNED: this workstation does not have matching 4.4.1 export templates; the export script removed the stale target and returned prerequisite exit code 3 |
-| CI packaged candidate | PASS: Windows and macOS export, packaged headless launch, checksummed manifest verification, and retained cohort artifacts |
+| CI packaged candidate | PASS on PR #67: Windows export, packaged headless launch, checksummed manifest verification, and retained cohort artifact |
 
 ## Current evidence
 
@@ -19,11 +19,11 @@ The latest gameplay evidence is split by the implemented quality layers:
 - [`v0.3.0-alpha.296-l9-replayable-mastery/`](visual_evidence/v0.3.0-alpha.296-l9-replayable-mastery/) — optional field orders, route reminder, Cinder Quarry proof, and Debrief evaluation.
 - Earlier L1–L7 directories retain complete handoff, responsive, rhythm, contact-causality, settlement-identity, and controlled-route evidence.
 
-The complete current-build journey is now captured at [`1600×900`](visual_evidence/v0.3.0-alpha.297-complete-review-1600x900/) and the responsive [`1280×720`](visual_evidence/v0.3.0-alpha.297-complete-review-1280x720/) profile.
+The alpha.298 presentation changes are captured at [`1600×900`](visual_evidence/v0.3.0-alpha.298-presentation-clarity-1600x900/) and the responsive [`1280×720`](visual_evidence/v0.3.0-alpha.298-presentation-clarity-1280x720/) profile. The earlier alpha.297 directories remain the complete pre-change journey baseline.
 
 ## Hardening result
 
-The automated L1–L10 roadmap is complete. A candidate cannot be uploaded unless its source tests pass, its exported executable launches without startup errors, its runtime source remains offline-only, and its manifest verifies exact files, source revision, platform, Godot toolchain, and completed gates.
+The automated L1–L11 roadmap is complete. Alpha.298 adds presentation clarity without changing authoritative state. A candidate cannot be uploaded unless its source tests pass, its exported executable launches without startup errors, its runtime source remains offline-only, and its manifest verifies exact files, source revision, platform, Godot toolchain, and completed gates.
 
 This is still a private-alpha candidate. The repository does not claim final art, final audio, signing/notarization, storefront integration, broad hardware performance, or human-validated pacing and enjoyment.
 
