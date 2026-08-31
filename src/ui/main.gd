@@ -2478,6 +2478,12 @@ func _focus_chassis_for_combat() -> void:
 		road_contact.visible = false
 	var active_target_id := _active_combat_target_id()
 	if not active_target_id.is_empty():
+		var active_enemy_id := ""
+		for enemy in state.encounter_enemies:
+			if bool(enemy.get("arrived", false)) and not bool(enemy.get("defeated", false)) and String(enemy.get("target", "")) == active_target_id:
+				active_enemy_id = String(enemy.get("id", ""))
+				break
+		_journal_event("contact_target_inspected", {"leg": state.journey_leg, "step": state.encounter_step, "enemy": active_enemy_id, "target": active_target_id})
 		for instance in state.modules:
 			if String(instance.get("id", "")) == active_target_id:
 				fortress_panel.cursor_cell = Vector2i(instance.get("position", Vector2i.ZERO))
@@ -3306,6 +3312,12 @@ func _on_advance_encounter_pressed() -> void:
 		"money": state.money,
 		"pressure": state.campaign_pressure
 	}
+	var targets_before := {}
+	for enemy in state.encounter_enemies:
+		var enemy_id := String(enemy.get("id", ""))
+		var target_id := String(enemy.get("target", ""))
+		if not enemy_id.is_empty() and not target_id.is_empty():
+			targets_before[enemy_id] = target_id
 	contact_fortress_before = _fortress_presentation_snapshot()
 	var result := state.advance_encounter(1.0)
 	var encounter_resolved := bool(result.get("resolved", false))
@@ -3327,6 +3339,11 @@ func _on_advance_encounter_pressed() -> void:
 	else:
 		_set_event("Journey battle step %d resolved. Inspect the target before intervening." % int(result.get("step", 0)))
 		_journal_event("encounter_step", {"leg": state.journey_leg, "step": state.encounter_step, "hull": state.hull_condition})
+		for enemy in state.encounter_enemies:
+			var enemy_id := String(enemy.get("id", ""))
+			var target_id := String(enemy.get("target", ""))
+			if not bool(enemy.get("defeated", false)) and not target_id.is_empty() and String(targets_before.get(enemy_id, "")) != target_id:
+				_journal_event("contact_target_locked", {"leg": state.journey_leg, "step": state.encounter_step, "enemy": enemy_id, "target": target_id})
 		if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "damage" and _most_damaged_installed_module().is_empty():
 			_set_event("The target remains protected for now. Advance once more and watch the damage report.")
 	if bool(result.get("ok", false)):
@@ -3422,7 +3439,7 @@ func _use_intervention(intervention_id: String, target_module: String = "") -> v
 		_set_event("Intervention blocked: %s." % result.reason)
 	else:
 		_set_event("Intervention used: %s." % String(result.get("effect", intervention_id.replace("_", " ").capitalize())))
-		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg})
+		_journal_event("intervention_used", {"intervention": intervention_id, "target": target_module, "leg": state.journey_leg, "step": state.encounter_step})
 		_checkpoint("intervention_used")
 		if tutorial_mode and tutorial_director != null and tutorial_director.lesson_id == "respond":
 			_tutorial_advance("damage", "ORDER ISSUED · Read the receipt before advancing; it names the protection, redirect, or power change.")
