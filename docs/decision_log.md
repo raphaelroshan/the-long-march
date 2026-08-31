@@ -1144,3 +1144,7 @@ The road-contact canvas now emits one presentation-only impact request when an a
 ## 2026-09-01 — Specialists appear where their decisions happen
 
 Iven Pell's existing recruitment action now lives in the active Broken Relay journey planner instead of the hidden legacy planning column. His portrait, signal role, belief, exact mechanical effects, availability, and action share one card; when recruitment is legal, that action receives the planner's default focus. Mara Flint now appears beside the forge throughout her meeting, one-core choice, and fourth-road callback. This was chosen over a separate character menu because specialists should be understood through the route and facility decisions they change, without adding dialogue trees or relationship state.
+
+## 2026-09-01 — Recruited specialists remain part of route planning
+
+After recruitment, the specialist card now changes from an offer into an assigned-crew status instead of disappearing. Iven's recruitment leaves a visible receipt naming the spent Ashmarks and active forecast benefits; later planners show either Iven's signal contribution or Mara's repair contribution without another action button. This was chosen over a separate roster screen because the immediate planning question is which capability the current fortress carries onto the next road.

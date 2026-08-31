@@ -23,6 +23,41 @@ static func build_planner(state: LongMarchState, snapshot: Dictionary, context: 
 	var experiment := state.mastery_experiment_details()
 	var recruitment := state.iven_recruitment_status()
 	var show_iven_offer := state.current_location == "broken_relay" and state.phase == "map" and state.specialist_id.is_empty() and state.campaign_event_pending.is_empty()
+	var specialist_card := {
+		"visible": show_iven_offer,
+		"show_action": show_iven_offer,
+		"id": "iven_pell",
+		"name": "Iven Pell",
+		"role": "Signal Officer · Relay Keeper",
+		"belief": "Information is shared infrastructure; a warning only matters if the next settlement can hear it.",
+		"effect": "REVEAL CONTACTS · RISK UP TO -8pt · ENCOUNTER PRESSURE -1 · ANTI-STORM DAMAGE +2",
+		"available": bool(recruitment.get("available", false)),
+		"status": "READY TO JOIN" if bool(recruitment.get("available", false)) else "OFFER LOCKED"
+	}
+	if state.specialist_id == "iven_pell":
+		specialist_card = {
+			"visible": true,
+			"show_action": false,
+			"id": "iven_pell",
+			"name": "Iven Pell",
+			"role": "Signal Officer · Relay Keeper",
+			"belief": "Information is shared infrastructure; a warning only matters if the next settlement can hear it.",
+			"effect": "ACTIVE · EXACT IMMEDIATE CONTACTS · LOWER ROUTE RISK · STORM COUNTER",
+			"available": true,
+			"status": "ASSIGNED TO FORTRESS"
+		}
+	elif state.specialist_id == "mara_flint":
+		specialist_card = {
+			"visible": true,
+			"show_action": false,
+			"id": "mara_flint",
+			"name": "Mara Flint",
+			"role": "Forge Master · Field Workshop",
+			"belief": "Repair before sacrifice; keep a damaged system or shelter useful for one more road.",
+			"effect": "ACTIVE · FIELD REPAIRS +1 · MORROWLINE MODULE REPAIRS +1",
+			"available": true,
+			"status": "ASSIGNED TO FORTRESS"
+		}
 	if bool(experiment.get("active", false)):
 		order += "  FIELD ORDER · %s · %s" % [String(experiment.get("title", "Experiment")).to_upper(), String(experiment.get("proof", "Complete the stated objective."))]
 	return {
@@ -33,16 +68,7 @@ static func build_planner(state: LongMarchState, snapshot: Dictionary, context: 
 		"route_selected": bool(context.get("route_selected", false)),
 		"can_return": bool(context.get("can_return", false)),
 		"return_label": String(context.get("return_label", "RETURN")),
-		"specialist_offer": {
-			"visible": show_iven_offer,
-			"id": "iven_pell",
-			"name": "Iven Pell",
-			"role": "Signal Officer · Relay Keeper",
-			"belief": "Information is shared infrastructure; a warning only matters if the next settlement can hear it.",
-			"effect": "REVEAL CONTACTS · RISK UP TO -8pt · ENCOUNTER PRESSURE -1 · ANTI-STORM DAMAGE +2",
-			"available": bool(recruitment.get("available", false)),
-			"status": "READY TO JOIN" if bool(recruitment.get("available", false)) else "OFFER LOCKED"
-		},
+		"specialist_card": specialist_card,
 		"values": {
 			"day": str(snapshot.get("day", state.day)),
 			"fuel": str(snapshot.get("fuel", state.fuel)),

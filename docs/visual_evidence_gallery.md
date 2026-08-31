@@ -212,3 +212,12 @@ The short travel beat now uses the destination ID already present in the route r
 | Mara at the open forge | [Morrowline recruitment decision](visual_evidence/v0.3.0-alpha.313-specialist-identity/04_mara_meeting.png) | `702d6a0f0ab5109302da54ce07ad9e9780e6143f148b193d7f467f081f395745` |
 
 Iven's card is part of the live route planner and remains legible in both locked and ready states. Mara's silhouette, apron, hammer, and forge persist across her authored chain. The captures verify identity, placement, and focus—not final character illustration or human recall.
+
+## `v0.3.0-alpha.314` — Specialist continuity
+
+| Assigned specialist | Evidence | SHA-256 |
+|---|---|---|
+| Iven Pell | [Signal officer retained after recruitment](visual_evidence/v0.3.0-alpha.314-specialist-continuity/03_iven_assigned.png) | `c7e5b9c53d7e0806840254e7f1078d02392e88a0de7f4e3dfc4f4452556b2eab` |
+| Mara Flint | [Forge master retained at route planning](visual_evidence/v0.3.0-alpha.314-specialist-continuity/04_mara_assigned.png) | `056db9840e59dc0023e1acef1860d8f3860d7b424629bfee0d672030e0b3ff6d` |
+
+The same compact card now persists after recruitment, changes to `ASSIGNED TO FORTRESS`, and names the active route or repair contribution. Iven's screenshot also preserves the recruitment receipt; neither state adds a second action or hidden character system.

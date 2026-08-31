@@ -264,18 +264,20 @@ func configure(view: Dictionary) -> void:
 	order_label.text = String(view.get("order", "Inspect a reachable road. Selection is reversible; Commit begins travel."))
 	receipt_label.text = String(view.get("receipt", ""))
 	receipt_label.get_parent().visible = not receipt_label.text.is_empty()
-	var specialist_offer: Dictionary = view.get("specialist_offer", {})
-	specialist_panel.visible = bool(specialist_offer.get("visible", false))
+	var specialist_card: Dictionary = view.get("specialist_card", {})
+	specialist_panel.visible = bool(specialist_card.get("visible", false))
 	if specialist_panel.visible:
-		specialist_name_label.text = String(specialist_offer.get("name", "SPECIALIST")).to_upper()
-		specialist_role_label.text = "%s · %s" % [String(specialist_offer.get("role", "ROAD SPECIALIST")).to_upper(), String(specialist_offer.get("status", "OFFER")).to_upper()]
-		specialist_belief_label.text = String(specialist_offer.get("belief", "A specialist offers to join the march."))
-		specialist_effect_label.text = String(specialist_offer.get("effect", "Review the practical effect before recruiting."))
-		specialist_portrait.specialist_id = String(specialist_offer.get("id", ""))
-		specialist_portrait.available = bool(specialist_offer.get("available", false))
+		specialist_name_label.text = String(specialist_card.get("name", "SPECIALIST")).to_upper()
+		specialist_role_label.text = "%s · %s" % [String(specialist_card.get("role", "ROAD SPECIALIST")).to_upper(), String(specialist_card.get("status", "OFFER")).to_upper()]
+		specialist_belief_label.text = String(specialist_card.get("belief", "A specialist offers to join the march."))
+		specialist_effect_label.text = String(specialist_card.get("effect", "Review the practical effect before recruiting."))
+		specialist_portrait.specialist_id = String(specialist_card.get("id", ""))
+		specialist_portrait.status_id = "assigned" if String(specialist_card.get("status", "")) == "ASSIGNED TO FORTRESS" else ("ready" if bool(specialist_card.get("available", false)) else "locked")
 		specialist_portrait.high_contrast_enabled = high_contrast_enabled
 		specialist_portrait.tooltip_text = "%s · %s" % [specialist_name_label.text.capitalize(), specialist_role_label.text.capitalize()]
 		specialist_portrait.queue_redraw()
+	if specialist_action != null:
+		specialist_action.visible = bool(specialist_card.get("show_action", false))
 	var values: Dictionary = view.get("values", {})
 	for value_id in value_labels:
 		value_labels[value_id].text = String(values.get(value_id, "—"))
@@ -322,7 +324,7 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 
 class SpecialistPortrait extends Control:
 	var specialist_id: String = ""
-	var available: bool = false
+	var status_id: String = "locked"
 	var high_contrast_enabled: bool = false
 
 	func _draw() -> void:
@@ -332,9 +334,13 @@ class SpecialistPortrait extends Control:
 		draw_rect(Rect2(Vector2.ONE, size - Vector2(2, 2)), border, false, 2.0)
 		var center := Vector2(size.x * 0.43, size.y * 0.42)
 		var skin := Color.WHITE if high_contrast_enabled else Color("#d9bd82")
-		var coat := Color("#315c61") if available else Color("#39494c")
+		var active := status_id in ["ready", "assigned"]
+		var coat := Color("#315c61") if active else Color("#39494c")
 		draw_circle(center - Vector2(0, 15), 8.0, skin)
-		draw_line(center - Vector2(7, 22), center + Vector2(8, -22), Color("#273337"), 5.0)
+		if specialist_id == "mara_flint":
+			draw_line(center - Vector2(7, 22), center + Vector2(8, -22), Color("#542e25"), 6.0)
+		else:
+			draw_line(center - Vector2(7, 22), center + Vector2(8, -22), Color("#273337"), 5.0)
 		var shoulders := PackedVector2Array([
 			center + Vector2(-16, 0),
 			center + Vector2(15, 0),
@@ -343,12 +349,17 @@ class SpecialistPortrait extends Control:
 		])
 		draw_colored_polygon(shoulders, coat)
 		draw_polyline(PackedVector2Array([shoulders[0], shoulders[1], shoulders[2], shoulders[3], shoulders[0]]), border, 2.0)
-		var mast := center + Vector2(22, -2)
-		draw_line(mast + Vector2(0, 27), mast + Vector2(0, -16), border, 3.0)
-		for radius in [8.0, 14.0]:
-			draw_arc(mast + Vector2(0, -14), radius, -1.15, 1.15, 12, Color(border.r, border.g, border.b, 0.75), 2.0)
-		var lamp := Color("#fff1c9") if available or high_contrast_enabled else Color("#75878a")
+		var prop_anchor := center + Vector2(22, -2)
+		if specialist_id == "mara_flint":
+			draw_line(prop_anchor + Vector2(-4, 24), prop_anchor + Vector2(14, -2), border, 4.0)
+			draw_line(prop_anchor + Vector2(8, -8), prop_anchor + Vector2(22, 4), border, 6.0)
+		else:
+			draw_line(prop_anchor + Vector2(0, 27), prop_anchor + Vector2(0, -16), border, 3.0)
+			for radius in [8.0, 14.0]:
+				draw_arc(prop_anchor + Vector2(0, -14), radius, -1.15, 1.15, 12, Color(border.r, border.g, border.b, 0.75), 2.0)
+		var lamp := Color("#fff1c9") if active or high_contrast_enabled else Color("#75878a")
 		draw_circle(Vector2(size.x - 12, 12), 4.0, lamp)
 
 	func presentation_signature() -> String:
-		return "%s · SIGNAL OFFICER · %s" % [specialist_id.to_upper(), "READY" if available else "LOCKED"]
+		var role := "FORGE MASTER" if specialist_id == "mara_flint" else "SIGNAL OFFICER"
+		return "%s · %s · %s" % [specialist_id.to_upper(), role, status_id.to_upper()]

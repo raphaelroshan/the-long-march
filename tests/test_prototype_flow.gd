@@ -710,6 +710,16 @@ func _run() -> void:
 	await process_frame
 	_expect(not game.recruit_iven_button.disabled and game.recruit_iven_button.has_focus() and game.journey_planner.specialist_portrait.presentation_signature() == "IVEN_PELL · SIGNAL OFFICER · READY", "a restored relay should make the named Iven offer the planner's default actionable focus")
 	await _capture("02_iven_offer_ready")
+	var state_before_iven: Dictionary = game.state.serialize()
+	var receipt_before_iven: String = game.last_journey_receipt
+	game.recruit_iven_button.pressed.emit()
+	await process_frame
+	_expect(game.state.specialist_id == "iven_pell" and game.journey_planner.specialist_panel.visible and not game.recruit_iven_button.visible, "recruiting Iven should replace the offer with a persistent assigned-specialist card")
+	_expect(game.journey_planner.specialist_portrait.presentation_signature() == "IVEN_PELL · SIGNAL OFFICER · ASSIGNED" and game.journey_planner.specialist_effect_label.text.begins_with("ACTIVE"), "the assigned Iven card should retain his identity and active mechanical role")
+	_expect(game.journey_planner.receipt_label.text.contains("SPECIALIST · Iven Pell joins") and game.journey_planner.receipt_label.text.contains("12 Ashmarks spent"), "Iven's recruitment should leave a visible cost-and-consequence receipt in the planner")
+	await _capture("03_iven_assigned")
+	_expect(bool(game.state.load_serialized(state_before_iven).get("ok", false)), "the specialist presentation test should restore the pre-recruitment route state")
+	game.last_journey_receipt = receipt_before_iven
 	game.state.relay_repaired = false
 	game._refresh_ui()
 	_expect(game.campaign_map.status_for("morrowline_camp") == "available", "resolving the relay decision should activate Morrowline")
@@ -775,6 +785,8 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(game.get_viewport().gui_get_focus_owner() in game.campaign_node_buttons and game.selected_campaign_node_id.is_empty(), "Review Next Roads should move focus to route selection without choosing a road for the player")
+	_expect(game.journey_planner.specialist_panel.visible and not game.recruit_iven_button.visible and game.journey_planner.specialist_name_label.text == "MARA FLINT" and game.journey_planner.specialist_portrait.presentation_signature() == "MARA_FLINT · FORGE MASTER · ASSIGNED", "route planning after Morrowline should retain Mara as the fortress's active repair specialist without exposing another recruit action")
+	await _capture("04_mara_assigned")
 	var focused_route_rect: Rect2 = game.get_viewport().gui_get_focus_owner().get_global_rect()
 	var recovery_route_viewport_rect: Rect2 = game.journey_planner.map_host.get_global_rect()
 	_expect(focused_route_rect.position.y >= recovery_route_viewport_rect.position.y and focused_route_rect.end.y <= recovery_route_viewport_rect.end.y, "the recovery handoff should keep its focused route fully inside the dedicated map")

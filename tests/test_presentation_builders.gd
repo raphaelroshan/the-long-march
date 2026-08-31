@@ -33,7 +33,7 @@ func _init() -> void:
 
 	var planner := RoutePresenter.build_planner(state, snapshot, {"order": "Choose a road.", "receipt": "LAST RECEIPT", "route_selected": false, "can_return": true, "return_label": "RETURN TO ASHGATE DEPOT BAZAAR"})
 	_expect(planner.get("region_name") == "Ashgate Lowlands" and planner.get("values", {}).get("fuel") == str(state.fuel) and planner.get("return_label") == "RETURN TO ASHGATE DEPOT BAZAAR", "route presenter should preserve region, readiness values, and return contract")
-	_expect(not bool(planner.get("specialist_offer", {}).get("visible", true)), "the route presenter should hide Iven's offer away from the Broken Relay")
+	_expect(not bool(planner.get("specialist_card", {}).get("visible", true)), "the route presenter should hide Iven's offer away from the Broken Relay")
 	var offered_markers := RoutePresenter.build_assignment_markers(state)
 	_expect(offered_markers.get("morrowline_camp", {}).get("status") == "offer", "the route presenter should mark the unresolved Ashgate assignment destination as an offer")
 	_expect_pure(state, before, "route planner presenter")
@@ -52,8 +52,19 @@ func _init() -> void:
 	state.campaign_event_pending = ""
 	var iven_before := state.serialize()
 	var iven_planner := RoutePresenter.build_planner(state, state.summary(), {"order": "Choose a road."})
-	_expect(bool(iven_planner.get("specialist_offer", {}).get("visible", false)) and String(iven_planner.get("specialist_offer", {}).get("name", "")) == "Iven Pell" and String(iven_planner.get("specialist_offer", {}).get("effect", "")).contains("ANTI-STORM DAMAGE +2"), "the Broken Relay planner should expose Iven as a named mechanical offer")
+	_expect(bool(iven_planner.get("specialist_card", {}).get("visible", false)) and String(iven_planner.get("specialist_card", {}).get("name", "")) == "Iven Pell" and String(iven_planner.get("specialist_card", {}).get("effect", "")).contains("ANTI-STORM DAMAGE +2"), "the Broken Relay planner should expose Iven as a named mechanical offer")
 	_expect_pure(state, iven_before, "Iven offer presenter")
+	state.specialist_id = "iven_pell"
+	var assigned_iven_before := state.serialize()
+	var assigned_iven_planner := RoutePresenter.build_planner(state, state.summary(), {"order": "Choose a road."})
+	_expect(bool(assigned_iven_planner.get("specialist_card", {}).get("visible", false)) and not bool(assigned_iven_planner.get("specialist_card", {}).get("show_action", true)) and String(assigned_iven_planner.get("specialist_card", {}).get("status", "")) == "ASSIGNED TO FORTRESS", "an assigned Iven should remain visible in later route planning without another recruit action")
+	_expect_pure(state, assigned_iven_before, "assigned Iven presenter")
+	state.specialist_id = "mara_flint"
+	var assigned_mara_before := state.serialize()
+	var assigned_mara_planner := RoutePresenter.build_planner(state, state.summary(), {"order": "Choose a road."})
+	_expect(String(assigned_mara_planner.get("specialist_card", {}).get("name", "")) == "Mara Flint" and String(assigned_mara_planner.get("specialist_card", {}).get("effect", "")).contains("FIELD REPAIRS +1"), "an assigned Mara should carry her repair role into route planning")
+	_expect_pure(state, assigned_mara_before, "assigned Mara presenter")
+	state.specialist_id = ""
 	state.current_location = "ashgate_depot"
 
 	var preview := state.campaign_node_preview("rill_crossing", "protect_cargo")

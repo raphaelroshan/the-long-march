@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.313` and later
+**Applies to:** `0.3.0-alpha.314` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -40,6 +40,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **Result-aware refit audio — complete in alpha.311** | Make physical editing outcomes legible without duplicate button sounds | Add distinct placement, rotation, removal, and blocked-action cues after the corresponding command result. |
 | **Phase-aligned impact audio — complete in alpha.312** | Make a resolved hit land with the visible contact sequence | Trigger one material impact cue when the presentation reaches Impact, or immediately at Consequence under Reduced Motion. |
 | **Named specialist identity — complete in alpha.313** | Make specialist choices feel like decisions about people, not detached bonus buttons | Put Iven's offer in the active Broken Relay planner and show Mara beside the forge throughout her authored decision chain. |
+| **Specialist continuity — complete in alpha.314** | Keep a recruited specialist present after the choice resolves | Retain an assigned Iven or Mara card in route planning and leave an explicit Iven recruitment receipt. |
 
 ## Acceptance tests for every AI task
 
@@ -49,7 +50,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, and named specialist identity are complete in `0.3.0-alpha.313`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, and specialist continuity are complete in `0.3.0-alpha.314`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 
