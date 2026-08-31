@@ -20,8 +20,10 @@ static func build(state: LongMarchState, snapshot: Dictionary, combat_view: Dict
 		var enemy_id := String(enemy.get("id", ""))
 		if not enemy_id.is_empty() and not counter_readiness.has(enemy_id):
 			var readiness := build_counter_readiness(state, enemy_id)
+			var defense := Dictionary(enemy.get("defense", {}))
+			readiness = refine_counter_readiness(enemy, readiness, defense)
 			counter_readiness[enemy_id] = readiness
-			response_postures[enemy_id] = build_response_posture(enemy, readiness, interventions, intervention_heading, Dictionary(enemy.get("defense", {})))
+			response_postures[enemy_id] = build_response_posture(enemy, readiness, interventions, intervention_heading, defense)
 	return {
 		"region_id": state.campaign_region_id,
 		"location_name": String(LongMarchState.JOURNEY_NODES.get(state.journey_node, {}).get("name", state.journey_node)),
@@ -68,7 +70,9 @@ static func build_response_posture(enemy: Dictionary, readiness: Dictionary, int
 		}
 	var arrived := bool(enemy.get("arrived", false))
 	var readiness_status := String(readiness.get("status", "missing"))
-	var counter_name := String(readiness.get("text", "")).trim_prefix("READY NOW · ").trim_prefix("COUNTER OFFLINE · ")
+	var counter_name := ", ".join(Array(readiness.get("names", [])))
+	if counter_name.is_empty():
+		counter_name = "No listed module counter"
 	var order_choices := "the emergency order available below" if enabled_orders == 1 else "one of the %d emergency orders available below" % enabled_orders
 	var order_comparison := "the emergency order available below" if enabled_orders == 1 else "the %d emergency orders available below" % enabled_orders
 	if readiness_status == "ready":
@@ -98,11 +102,27 @@ static func build_response_posture(enemy: Dictionary, readiness: Dictionary, int
 			"heading": "COUNTER LOST",
 			"text": "%s is installed but cannot answer. Inspect the target and compare %s before accepting the warned hit." % [counter_name, order_comparison]
 		}
+	if readiness_status == "available":
+		return {
+			"status": "uncertain",
+			"heading": "COUNTER AVAILABLE",
+			"text": "%s is operational, but no direct attack or impact buffer applies to this target. Inspect its position before spending %s." % [counter_name, order_choices]
+		}
 	return {
 		"status": "missing",
 		"heading": "IMPROVISED RESPONSE",
 		"text": "No listed module counter is operational. Inspect the target and compare %s before advancing." % order_comparison
 	}
+
+static func refine_counter_readiness(enemy: Dictionary, readiness: Dictionary, defense: Dictionary) -> Dictionary:
+	var result := readiness.duplicate(true)
+	if String(result.get("status", "missing")) != "ready" or not bool(enemy.get("arrived", false)):
+		return result
+	if int(defense.get("damage", 0)) > 0 or int(defense.get("impact_buffer", 0)) > 0:
+		return result
+	result["status"] = "available"
+	result["text"] = "AVAILABLE · %s · NO DIRECT EFFECT ON TARGET" % ", ".join(Array(result.get("names", [])))
+	return result
 
 static func build_counter_readiness(state: LongMarchState, enemy_id: String) -> Dictionary:
 	var definition: Dictionary = LongMarchState.ENCOUNTER_ENEMIES.get(enemy_id, {})
@@ -123,7 +143,7 @@ static func build_counter_readiness(state: LongMarchState, enemy_id: String) -> 
 	if enemy_id == "storm_front" and state.specialist_id == "iven_pell":
 		ready.append("Iven Pell")
 	if not ready.is_empty():
-		return {"status": "ready", "text": "READY NOW · %s" % ", ".join(ready)}
+		return {"status": "ready", "text": "READY NOW · %s" % ", ".join(ready), "names": ready}
 	if not offline.is_empty():
-		return {"status": "offline", "text": "COUNTER OFFLINE · %s" % ", ".join(offline)}
-	return {"status": "missing", "text": "NO LISTED MODULE COUNTER READY"}
+		return {"status": "offline", "text": "COUNTER OFFLINE · %s" % ", ".join(offline), "names": offline}
+	return {"status": "missing", "text": "NO LISTED MODULE COUNTER READY", "names": []}

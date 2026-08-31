@@ -162,6 +162,13 @@ func _run() -> void:
 	contact.configure(settle_view)
 	_expect(contact.battle_phase_label.text == "SETTLE" and contact.contact_canvas.presentation_stage_text() == "SETTLE · ROAD OPEN · ADVANCE TO ARRIVAL", "a cleared encounter should name the settling beat before the arrival handoff")
 	await _capture("08_road_open_settle")
+
+	var available_view := _view_for("civic_guardian", true)
+	available_view["counter_readiness"]["civic_guardian"] = {"status": "available", "text": "AVAILABLE · Front Armor Plate · NO DIRECT EFFECT ON TARGET"}
+	available_view["response_postures"]["civic_guardian"] = {"status": "uncertain", "heading": "COUNTER AVAILABLE", "text": "Front Armor Plate is operational, but no direct attack or impact buffer applies to this target. Inspect its position before spending one of the 4 emergency orders available below."}
+	contact.configure(available_view)
+	_expect(contact.counter_readiness_label.text.contains("NO DIRECT EFFECT ON TARGET") and contact.response_posture_label.text.begins_with("COUNTER AVAILABLE"), "a positional counter without a current effect should use the caution state in both contact receipts")
+	await _capture("09_counter_available")
 	contact.queue_free()
 	if failures.is_empty():
 		print("PASS: The Long March road-contact presentation")

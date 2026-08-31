@@ -1166,3 +1166,7 @@ The contact dossier now interprets its live counter receipt as one of four respo
 ## 2026-09-01 — “Ready” must name its projected effect
 
 Encounter summaries now expose a read-only defense preview derived from the same automatic-attack and impact-mitigation calculations used by resolution. The contact response names exact next-beat damage and authored sources, plus any adjacent armor absorption. If a counter module is operational but its placement provides no direct effect against the current target, the UI says `COUNTER AVAILABLE` and asks the player to inspect the layout instead of promising that the counter is already answering.
+
+## 2026-09-01 — Counter status follows the assigned target
+
+Once a threat has arrived and selected a target, the compact counter badge now checks the authoritative defense projection before claiming `READY NOW`. An operational counter with no outgoing damage and no impact buffer is shown as `AVAILABLE · NO DIRECT EFFECT ON TARGET`; forecast-stage readiness remains unchanged until target geometry is known. This keeps the short status and detailed response posture consistent without moving positioning rules into presentation code.
