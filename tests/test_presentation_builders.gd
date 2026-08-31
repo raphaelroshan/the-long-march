@@ -101,23 +101,23 @@ func _init() -> void:
 	var offline_raider_counter := ContactPresenter.build_counter_readiness(offline_counter_state, "road_raiders")
 	_expect(String(offline_raider_counter.get("status", "")) == "offline" and String(offline_raider_counter.get("text", "")).contains("Repeater Gun"), "an installed counter with unmet dependencies should be reported as offline rather than ready")
 	var offline_posture := ContactPresenter.build_response_posture({"arrived": true}, offline_raider_counter, [{"enabled": true}, {"enabled": true}], "ENCOUNTER ORDER · 1 AVAILABLE")
-	_expect(String(offline_posture.get("heading", "")) == "COUNTER LOST" and String(offline_posture.get("text", "")).contains("Repeater Gun is installed but cannot answer") and String(offline_posture.get("text", "")).contains("2 emergency orders available below"), "an offline counter should direct the player to inspect and compare the remaining orders")
+	_expect(String(offline_posture.get("heading", "")) == "COUNTER LOST" and String(offline_posture.get("text", "")).contains("Repeater Gun is offline") and String(offline_posture.get("text", "")).contains("2 emergency orders available below"), "an offline counter should direct the player to inspect and compare the remaining orders")
 	var iven_counter_state := LongMarchState.new(1107)
 	iven_counter_state.specialist_id = "iven_pell"
 	var iven_storm_counter := ContactPresenter.build_counter_readiness(iven_counter_state, "storm_front")
 	_expect(String(iven_storm_counter.get("status", "")) == "ready" and String(iven_storm_counter.get("text", "")).contains("Iven Pell"), "Iven's anti-storm contribution should appear as a ready live-contact answer")
 	var ready_posture := ContactPresenter.build_response_posture({"arrived": false}, iven_storm_counter, [{"enabled": true}], "ENCOUNTER ORDER · 1 AVAILABLE", {"damage": 2, "sources": ["Iven Pell"], "impact_buffer": 0})
-	_expect(String(ready_posture.get("heading", "")) == "PREPARED RESPONSE" and String(ready_posture.get("text", "")).contains("2 damage on Advance from Iven Pell") and String(ready_posture.get("text", "")).contains("resolve it automatically"), "a live counter should explain the exact automatic effect of advancing without spending the order")
+	_expect(String(ready_posture.get("heading", "")) == "PREPARED RESPONSE" and String(ready_posture.get("text", "")).contains("2 damage on Advance from Iven Pell") and String(ready_posture.get("text", "")).contains("use it automatically"), "a live counter should explain the exact automatic effect of advancing without spending the order")
 	var armor_posture := ContactPresenter.build_response_posture({"arrived": true}, {"status": "ready", "text": "READY NOW · Front Armor Plate"}, [{"enabled": true}], "ENCOUNTER ORDER · 1 AVAILABLE", {"damage": 0, "sources": [], "impact_buffer": 1, "buffer_source": "Front Armor Plate"})
 	_expect(String(armor_posture.get("heading", "")) == "DEFENSE ANSWERING" and String(armor_posture.get("text", "")).contains("absorbs 1 incoming damage"), "an effective armor counter should explain its exact impact buffer")
 	var positional_posture := ContactPresenter.build_response_posture({"arrived": true}, {"status": "ready", "text": "READY NOW · Front Armor Plate"}, [{"enabled": true}], "ENCOUNTER ORDER · 1 AVAILABLE", {"damage": 0, "sources": [], "impact_buffer": 0})
-	_expect(String(positional_posture.get("heading", "")) == "COUNTER AVAILABLE" and String(positional_posture.get("text", "")).contains("no direct attack or impact buffer is projected"), "an operational counter should not be described as answering the current target when its positional effect is absent")
+	_expect(String(positional_posture.get("heading", "")) == "COUNTER AVAILABLE" and String(positional_posture.get("text", "")).contains("no projected effect on this target"), "an operational counter should not be described as answering the current target when its positional effect is absent")
 	var refined_positional := ContactPresenter.refine_counter_readiness({"arrived": true}, {"status": "ready", "text": "READY NOW · Front Armor Plate", "names": ["Front Armor Plate"]}, {"damage": 0, "sources": [], "impact_buffer": 0})
 	_expect(String(refined_positional.get("status", "")) == "available" and String(refined_positional.get("text", "")).contains("NO DIRECT EFFECT ON TARGET"), "an arrived contact should downgrade a merely installed positional counter from ready-now to available")
 	var refined_forecast := ContactPresenter.refine_counter_readiness({"arrived": false}, {"status": "ready", "text": "READY NOW · Front Armor Plate", "names": ["Front Armor Plate"]}, {"damage": 0, "sources": [], "impact_buffer": 0})
 	_expect(String(refined_forecast.get("status", "")) == "ready", "a forecast should retain counter readiness before target geometry is known")
 	var spent_posture := ContactPresenter.build_response_posture({"arrived": true}, iven_storm_counter, [], "ENCOUNTER ORDER · SPENT")
-	_expect(String(spent_posture.get("heading", "")) == "ORDER SPENT" and String(spent_posture.get("text", "")).contains("dependency changes"), "a spent order should point back to the predicted consequence and next authoritative beat")
+	_expect(String(spent_posture.get("heading", "")) == "ORDER SPENT" and String(spent_posture.get("text", "")).contains("predicted hit and cascade"), "a spent order should point back to the predicted consequence and next authoritative beat")
 
 	state.phase = "settlement"
 	state.current_location = "morrowline_camp"

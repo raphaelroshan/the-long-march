@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.322`
+**Build:** `0.3.0-alpha.323`
 
 **Engine:** Godot 4.4.1
 
@@ -29,6 +29,7 @@
 - [Contact response posture](visual_evidence/v0.3.0-alpha.320-response-posture/)
 - [Exact defense effect](visual_evidence/v0.3.0-alpha.321-defense-effect/)
 - [Target-effective counter state](visual_evidence/v0.3.0-alpha.322-effective-counter/)
+- [Compact contact command grid](visual_evidence/v0.3.0-alpha.323-contact-command-grid/)
 
 ## Findings
 
@@ -77,6 +78,8 @@ Alpha.320 turns that diagnosis into an immediate decision prompt. The contact do
 Alpha.321 replaces the remaining vague word “ready” with the next authoritative effect when one exists. The response posture names exact automatic damage and its sources, or exact adjacent-armor absorption; an operational counter with no direct projected effect is labeled `COUNTER AVAILABLE` and directs the player to inspect placement instead of promising protection that the current geometry does not provide.
 
 Alpha.322 aligns the compact readiness badge with that detailed posture after target assignment. A positional system that is installed and operational but neither attacks this threat nor buffers its current target now reads `AVAILABLE · … · NO DIRECT EFFECT ON TARGET` rather than the contradictory `READY NOW`.
+
+Alpha.323 restores the emergency-order set to the visible contact surface after the richer dossier additions. Four concise controls occupy a two-by-two grid, while focus and hover retain the exact effect and cost copy. At 1600×900, every order is visible without scrolling and the primary Advance/Inspect hierarchy remains intact.
 
 ## Next work
 

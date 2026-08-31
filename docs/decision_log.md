@@ -1170,3 +1170,7 @@ Encounter summaries now expose a read-only defense preview derived from the same
 ## 2026-09-01 — Counter status follows the assigned target
 
 Once a threat has arrived and selected a target, the compact counter badge now checks the authoritative defense projection before claiming `READY NOW`. An operational counter with no outgoing damage and no impact buffer is shown as `AVAILABLE · NO DIRECT EFFECT ON TARGET`; forecast-stage readiness remains unchanged until target geometry is known. This keeps the short status and detailed response posture consistent without moving positioning rules into presentation code.
+
+## 2026-09-01 — Emergency orders stay on the contact surface
+
+The road-contact dock now presents Shift Power, Seal Compartment, Vent Heat, and Cut Loose Cargo in a two-by-two grid with concise action names. Exact live effects remain in focus and hover help, so compact controls do not hide costs. Vertical and horizontal focus neighbors follow the visual grid. This was chosen over making the dossier collapsible because threat intent and consequence should remain continuously visible while the player compares responses.

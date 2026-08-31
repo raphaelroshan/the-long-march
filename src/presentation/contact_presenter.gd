@@ -66,7 +66,7 @@ static func build_response_posture(enemy: Dictionary, readiness: Dictionary, int
 		return {
 			"status": "spent",
 			"heading": "ORDER SPENT",
-			"text": "Inspect the predicted hit and dependency changes, then advance to resolve the next beat."
+			"text": "Inspect the predicted hit and cascade, then Advance."
 		}
 	var arrived := bool(enemy.get("arrived", false))
 	var readiness_status := String(readiness.get("status", "missing"))
@@ -89,29 +89,29 @@ static func build_response_posture(enemy: Dictionary, readiness: Dictionary, int
 			return {
 				"status": "uncertain",
 				"heading": "COUNTER AVAILABLE",
-				"text": "%s is operational, but no direct attack or impact buffer is projected for this target. Inspect the layout before spending %s." % [counter_name, order_choices]
+				"text": "%s is operational but has no projected effect on this target. Inspect placement before spending %s." % [counter_name, order_choices]
 			}
 		return {
 			"status": "ready",
 			"heading": "DEFENSE ANSWERING" if arrived else "PREPARED RESPONSE",
-			"text": "%s is ready · %s. Advance to resolve it automatically, or inspect the target before spending %s." % [counter_name, effect_text, order_choices]
+			"text": "%s · %s. Advance to use it automatically, or Inspect before spending %s." % [counter_name, effect_text, order_choices]
 		}
 	if readiness_status == "offline":
 		return {
 			"status": "offline",
 			"heading": "COUNTER LOST",
-			"text": "%s is installed but cannot answer. Inspect the target and compare %s before accepting the warned hit." % [counter_name, order_comparison]
+			"text": "%s is offline. Inspect the target and compare %s before accepting the warned hit." % [counter_name, order_comparison]
 		}
 	if readiness_status == "available":
 		return {
 			"status": "uncertain",
 			"heading": "COUNTER AVAILABLE",
-			"text": "%s is operational, but no direct attack or impact buffer applies to this target. Inspect its position before spending %s." % [counter_name, order_choices]
+			"text": "%s is operational but has no projected effect on this target. Inspect placement before spending %s." % [counter_name, order_choices]
 		}
 	return {
 		"status": "missing",
 		"heading": "IMPROVISED RESPONSE",
-		"text": "No listed module counter is operational. Inspect the target and compare %s before advancing." % order_comparison
+		"text": "No listed counter is operational. Inspect the target and compare %s before Advance." % order_comparison
 	}
 
 static func refine_counter_readiness(enemy: Dictionary, readiness: Dictionary, defense: Dictionary) -> Dictionary:
