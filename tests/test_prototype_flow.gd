@@ -773,6 +773,8 @@ func _run() -> void:
 	game.state._recalculate()
 	game._refresh_ui()
 	_expect(not game.recovery_panel.repair_button.disabled and game.recovery_panel.repair_button.text.contains("REVIEW FIELD WORKSHOP") and game.recovery_panel.repair_button.text.contains("1/3") and game.recovery_panel.repair_button.text.contains("NO COST · PRESS AGAIN TO REPAIR"), "repair should offer a clearly reversible inspection handoff to the most damaged system when the current selection is already full")
+	_expect(game.recovery_panel.repair_priority_label.text.contains("FIELD WORKSHOP") and game.recovery_panel.repair_priority_label.text.contains("1/3") and game.recovery_panel.repair_effect_label.text.contains("Repairs the weakest damaged system") and game.recovery_panel.repair_effect_label.text.contains("RISK IF LOST"), "the recovery dock should explain which damaged system matters and the downstream capability at risk")
+	_expect(String(game.recovery_panel.recovery_canvas.current_view.get("repair_priority_view", {}).get("module_id", "")) == "field_workshop", "the fortress tableau and service action should point at the same damaged system")
 	var actions_before_repair_selection: int = game.state.settlement_actions_remaining
 	game.recovery_panel.repair_button.pressed.emit()
 	await process_frame

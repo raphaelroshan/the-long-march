@@ -225,6 +225,7 @@ func _complete_first_watch() -> void:
 	_expect(game.journey_arrival.destination_label.text == "MUSTER ROAD RECOVERY SIDING" and game.journey_arrival.continue_button.text == "ENTER RECOVERY SIDING", "First Watch arrival should name the training recovery handoff")
 	_expect(game.journey_arrival.report_label.text.contains("Muster Yard records the drill") and not game.journey_arrival.report_label.text.contains("Morrowline"), "First Watch arrival should use a training receipt instead of a live campaign payout")
 	_expect(game.journey_arrival.beat_label.text.contains("CONSEQUENCES APPLIED") and game.journey_arrival.next_label.text.contains("restore the affected system"), "First Watch arrival should separate the consequence receipt from its next order")
+	_expect(game.journey_arrival.recovery_priority_label.text.contains("REPAIR PRIORITY") and game.journey_arrival.recovery_priority_label.text.contains("WHY IT MATTERS"), "First Watch arrival should carry the exact damage consequence into the recovery handoff")
 	_expect_three_column_contract(game.journey_arrival, game.journey_arrival.receipt_labels["hull"], game.journey_arrival.arrival_canvas, game.journey_arrival.continue_button, "First Watch arrival")
 	await _capture("03_first_watch_arrival")
 	game.journey_arrival.continue_button.pressed.emit()

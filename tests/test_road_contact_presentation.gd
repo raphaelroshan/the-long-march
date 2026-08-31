@@ -91,9 +91,12 @@ func _run() -> void:
 				_expect(stage_text == phase_case.text, "%s %s cue should be stable; received '%s'" % [case.name, phase_case.phase, stage_text])
 			else:
 				_expect(stage_text.begins_with("IMPACT ·") and stage_text.contains(phase_case.contains), "%s impact should repeat authoritative damage; received '%s'" % [case.name, stage_text])
+			if enemy_id == "road_raiders" and String(phase_case.phase) in ["WIND-UP", "IMPACT", "CONSEQUENCE"]:
+				await _capture("causality_%s" % String(phase_case.phase).to_lower())
 		_expect(contact.threat_detail.text.contains("INTENT · %s" % case.signature) and contact.threat_detail.text.contains("RESPONSE WINDOW · %s" % case.counter) and contact.threat_detail.text.contains("CASCADE · Dependent System → OFFLINE"), "%s active dossier should retain intent, counter, and dependency consequence together" % case.name)
 		var readable: Dictionary = contact.contact_readability_summary()
 		_expect(String(readable.get("threat", "")) == String(case.name) and String(readable.get("target", "")) == String(case.target_name) and int(readable.get("damage", 0)) == 1 and String(readable.get("counter", "")) == String(case.counter), "%s should expose threat, target, damage, and counter as one presentation summary" % case.name)
+		_expect(int(readable.get("durability_before", 0)) == 2 and int(readable.get("durability_after", 0)) == 1 and String(readable.get("cascade", "")).contains("Dependent System READY→OFFLINE"), "%s should expose exact durability and dependency causality in the same summary" % case.name)
 		contact.contact_canvas.transition_progress = 0.50
 		contact._refresh_battle_phase_label(true)
 		await _capture("%02d_%s_response" % [THREAT_CASES.keys().find(enemy_id) + 1, enemy_id])

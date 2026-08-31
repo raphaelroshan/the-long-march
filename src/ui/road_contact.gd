@@ -379,8 +379,17 @@ func contact_readability_summary() -> Dictionary:
 		"threat": String(definition.get("name", enemy_id.replace("_", " ").capitalize())),
 		"target": _target_name(String(enemy.get("target", "")), current_view),
 		"damage": int(impact.get("damage", 0)),
-		"counter": String(definition.get("counter", ""))
+		"counter": String(definition.get("counter", "")),
+		"durability_before": int(impact.get("current_durability", 0)),
+		"durability_after": int(impact.get("remaining_durability", 0)),
+		"cascade": _dependency_cascade_text(impact)
 	}
+
+func _dependency_cascade_text(impact: Dictionary) -> String:
+	var changes: Array[String] = []
+	for change in impact.get("dependency_changes", []):
+		changes.append("%s %s→%s" % [String(change.get("name", "System")), String(change.get("from", "ready")).to_upper(), String(change.get("to", "offline")).to_upper()])
+	return ", ".join(changes) if not changes.is_empty() else "No dependency state changed"
 
 func _target_name(target_id: String, view: Dictionary) -> String:
 	return String(view.get("target_names", {}).get(target_id, target_id.replace("_", " ").capitalize()))
@@ -487,6 +496,7 @@ class ContactCanvas extends Control:
 		var fortress_rect := _draw_fortress()
 		_draw_contacts(fortress_rect)
 		_draw_resolution_banner()
+		_draw_causal_receipt()
 		var caption := "FORTRESS AT CONTACT · DESTINATION PENDING"
 		draw_string(ThemeDB.fallback_font, Vector2(0, size.y - 14), caption, HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, Color("#d7c08b"))
 
@@ -559,6 +569,48 @@ class ContactCanvas extends Control:
 		draw_rect(banner, Color("#461f1c") if urgent else Color("#142328"), true)
 		draw_rect(banner, Color.WHITE if high_contrast_enabled else (Color("#ef8375") if urgent else Color("#6e918f")), false, 2.0)
 		draw_string(ThemeDB.fallback_font, banner.position + Vector2(8, 22), text, HORIZONTAL_ALIGNMENT_CENTER, banner.size.x - 16, 11, Color("#fff0df"))
+
+	func _draw_causal_receipt() -> void:
+		var enemy := _nearest_enemy()
+		if enemy.is_empty() or not bool(enemy.get("arrived", false)):
+			return
+		var enemy_id := String(enemy.get("id", "threat"))
+		var definitions: Dictionary = current_view.get("enemy_definitions", {})
+		var definition: Dictionary = definitions.get(enemy_id, {})
+		var threat_name := String(definition.get("name", enemy_id.replace("_", " ").capitalize())).to_upper()
+		var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
+		var impact: Dictionary = enemy.get("impact", {})
+		var phase := ""
+		if report_changed and step_to > step_from:
+			if transition_progress < 0.28:
+				phase = "TARGET"
+			elif transition_progress < 0.43:
+				phase = "WIND-UP"
+			elif transition_progress < 0.58:
+				phase = "RESPONSE"
+			elif transition_progress < 0.78:
+				phase = "IMPACT"
+			else:
+				phase = "CONSEQUENCE"
+		else:
+			phase = "RESPONSE"
+		var headline := "THREAT → TARGET · %s → %s" % [threat_name, target_name]
+		var detail := "COUNTER · %s" % _response_cue(enemy_id)
+		if phase == "WIND-UP":
+			detail = "WIND-UP · %s · TARGET REMAINS %s" % [_attack_signature(enemy_id), target_name]
+		elif phase == "IMPACT":
+			detail = "IMPACT · %s %d→%d · %d DAMAGE" % [target_name, int(impact.get("current_durability", 0)), int(impact.get("remaining_durability", 0)), int(impact.get("damage", 0))]
+		elif phase == "CONSEQUENCE":
+			var cascades: Array[String] = []
+			for change in impact.get("dependency_changes", []):
+				cascades.append("%s %s→%s" % [String(change.get("name", "System")).to_upper(), String(change.get("from", "ready")).to_upper(), String(change.get("to", "offline")).to_upper()])
+			detail = "CASCADE · %s" % (", ".join(cascades) if not cascades.is_empty() else "NO DEPENDENCY STATE CHANGED")
+		var receipt := Rect2(Vector2(18, size.y - 92), Vector2(size.x - 36, 62))
+		var urgent := phase in ["WIND-UP", "IMPACT", "CONSEQUENCE"]
+		draw_rect(receipt, Color("#321d1b") if urgent else Color("#102428"), true)
+		draw_rect(receipt, Color.WHITE if high_contrast_enabled else (Color("#db7568") if urgent else Color("#668f8c")), false, 2.0)
+		draw_string(ThemeDB.fallback_font, receipt.position + Vector2(10, 22), headline, HORIZONTAL_ALIGNMENT_LEFT, receipt.size.x - 20, 10, Color("#f3dec2"))
+		draw_string(ThemeDB.fallback_font, receipt.position + Vector2(10, 45), detail, HORIZONTAL_ALIGNMENT_LEFT, receipt.size.x - 20, 10, Color("#fff0df"))
 
 	func _nearest_enemy() -> Dictionary:
 		var chosen: Dictionary = {}
@@ -651,6 +703,8 @@ class ContactCanvas extends Control:
 				_draw_intent_arrow(Vector2(x - 16.0, y), target_anchor, line_color)
 				var pulse_radius := 15.0 + sin(transition_progress * PI) * 8.0
 				draw_arc(target_anchor, pulse_radius, 0, TAU, 24, line_color, 3.0)
+				if report_changed and transition_progress >= 0.58 and transition_progress < 0.78:
+					_draw_impact_burst(target_anchor, line_color)
 				var target_name := String(current_view.get("target_names", {}).get(String(enemy.get("target", "hull")), String(enemy.get("target", "hull")).replace("_", " ").capitalize())).to_upper()
 				draw_string(ThemeDB.fallback_font, target_anchor + Vector2(-70.0, -23.0), target_name, HORIZONTAL_ALIGNMENT_CENTER, 140.0, 10, Color("#fff0df"))
 			var name := String(definition.get("name", enemy_id.replace("_", " ").capitalize())).to_upper()
@@ -664,6 +718,13 @@ class ContactCanvas extends Control:
 		var perpendicular := Vector2(-direction.y, direction.x)
 		var tip := to - direction * 10.0
 		draw_colored_polygon(PackedVector2Array([tip, tip - direction * 13.0 + perpendicular * 7.0, tip - direction * 13.0 - perpendicular * 7.0]), color)
+
+	func _draw_impact_burst(center: Vector2, color: Color) -> void:
+		var strength := sin(clampf((transition_progress - 0.58) / 0.20, 0.0, 1.0) * PI)
+		draw_circle(center, 12.0 + strength * 8.0, Color(color.r, color.g, color.b, 0.22 + strength * 0.28))
+		for spoke in range(10):
+			var direction := Vector2.from_angle(TAU * float(spoke) / 10.0)
+			draw_line(center + direction * 15.0, center + direction * (25.0 + strength * 13.0), color, 2.0 + strength * 2.0)
 
 	func _draw_enemy_symbol(enemy_id: String, position: Vector2, arrived: bool, scale_amount: float = 1.0) -> void:
 		var color := Color("#ff7f70") if arrived else Color("#d8a16e")
