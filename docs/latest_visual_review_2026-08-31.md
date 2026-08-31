@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.314`
+**Build:** `0.3.0-alpha.316`
 
 **Engine:** Godot 4.4.1
 
@@ -22,6 +22,7 @@
 - [Route-specific travel landmarks](visual_evidence/v0.3.0-alpha.310-route-landmarks/)
 - [Named specialist identity](visual_evidence/v0.3.0-alpha.313-specialist-identity/)
 - [Assigned specialist continuity](visual_evidence/v0.3.0-alpha.314-specialist-continuity/)
+- [Route browse-state clarity](visual_evidence/v0.3.0-alpha.316-route-browse-state/)
 
 ## Findings
 
@@ -56,6 +57,8 @@ Alpha.310 makes the short march foreshadow its committed destination. Rill Cross
 Alpha.313 places the two implemented specialists inside the decisions they change. Iven Pell's locked or ready offer now occupies the active Broken Relay route planner, with his signal role, belief, exact effects, and recruitment action together; the control is no longer stranded in the hidden legacy column. Mara Flint now stands beside the open forge through her meeting, one-core commitment, and later promise check. These are code-native identity marks, not final portraits, and they add no dialogue tree or relationship state.
 
 Alpha.314 keeps that identity after recruitment. The same route-planner card becomes an assigned crew card for Iven or Mara, removes the obsolete recruit action, and states the active mechanical contribution. Iven's recruitment also leaves a cost-and-consequence receipt above the card, so the result is visible before the next route is chosen.
+
+Alpha.316 corrects the remaining route-planner state mismatch. Merely focusing a road now leaves the dock titled `ROAD DOSSIER` and the center stage states `BROWSE ROAD · NO COST`; only activating a node changes those labels to `SELECTED ROAD` and commitment review. The authoritative selection and Commit boundary are unchanged.
 
 ## Next work
 

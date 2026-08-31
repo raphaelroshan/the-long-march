@@ -221,3 +221,11 @@ Iven's card is part of the live route planner and remains legible in both locked
 | Mara Flint | [Forge master retained at route planning](visual_evidence/v0.3.0-alpha.314-specialist-continuity/04_mara_assigned.png) | `056db9840e59dc0023e1acef1860d8f3860d7b424629bfee0d672030e0b3ff6d` |
 
 The same compact card now persists after recruitment, changes to `ASSIGNED TO FORTRESS`, and names the active route or repair contribution. Iven's screenshot also preserves the recruitment receipt; neither state adds a second action or hidden character system.
+
+## `v0.3.0-alpha.316` — Route browse-state clarity
+
+![Cost-free route browsing](visual_evidence/v0.3.0-alpha.316-route-browse-state/03_route_browse.png)
+
+The planner's focused Rill Crossing dossier is explicitly labeled as cost-free browsing. The node remains `KNOWN`, the action remains disabled until selection, and the dock does not claim that a road has already been selected.
+
+SHA-256: `ce6c654848e5d3680733c977071a93190c99f9627333c34bbbe87f703db18d5e`

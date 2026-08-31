@@ -1152,3 +1152,7 @@ After recruitment, the specialist card now changes from an offer into an assigne
 ## 2026-09-01 — Specialist paths require a complete UI-driven release profile
 
 The verification suite now completes an Iven run through the same controls available to a player. The profile removes the Field Workshop, installs a stored Wall Lamp within mass and mount limits, restores the Broken Relay, recruits Iven, confirms Mara's occupied-berth exclusion, travels through Signal Causeway, and retains Iven in Debrief. This was chosen over setting `specialist_id` directly because the important risk lies in the handoffs between refit, event eligibility, recruitment, route visibility, recovery, and terminal reporting.
+
+## 2026-09-01 — Route focus is browsing, not selection
+
+The journey planner now labels its right dock `ROAD DOSSIER` while map focus previews a road and explicitly states that browsing has no cost. The dock becomes `SELECTED ROAD` only after the player activates a node, while Commit remains a separate action. This was chosen because controller focus must not look like an irreversible choice, especially when the map automatically focuses the first legal road.
