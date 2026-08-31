@@ -281,12 +281,15 @@ class ScenarioCanvas extends Control:
 
 	func _draw() -> void:
 		var flooded := region_id == "flooded_veyru"
-		draw_rect(Rect2(Vector2.ZERO, size), Color("#071013") if high_contrast_enabled else (Color("#17373f") if flooded else Color("#333a3c")), true)
-		draw_circle(Vector2(size.x * 0.78, size.y * 0.17), 58.0, Color(0.96, 0.76, 0.44, 0.18))
+		var orchard := event_id == "salvage_choice"
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#071013") if high_contrast_enabled else (Color("#3a2927") if orchard else (Color("#17373f") if flooded else Color("#333a3c"))), true)
+		draw_circle(Vector2(size.x * 0.78, size.y * 0.17), 58.0, Color(0.95, 0.42, 0.22, 0.24) if orchard else Color(0.96, 0.76, 0.44, 0.18))
 		for ridge in range(4):
 			var y := size.y * (0.31 + ridge * 0.05)
-			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#39575d") if flooded else Color("#665c4e"), 26.0)
-		draw_rect(Rect2(Vector2(0, size.y * 0.65), Vector2(size.x, size.y * 0.35)), Color("#10282c") if flooded else Color("#31271e"), true)
+			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#4d352f") if orchard else (Color("#39575d") if flooded else Color("#665c4e")), 26.0)
+		draw_rect(Rect2(Vector2(0, size.y * 0.65), Vector2(size.x, size.y * 0.35)), Color("#211713") if orchard else (Color("#10282c") if flooded else Color("#31271e")), true)
+		if orchard:
+			_draw_orchard_horizon()
 		_draw_tableau_frame()
 		_draw_fortress()
 		var subject_center := Vector2(size.x * 0.75, size.y * 0.61)
@@ -329,7 +332,7 @@ class ScenarioCanvas extends Control:
 		elif event_id == "the_last_dry_room":
 			_draw_dry_room_choice(center)
 		elif event_id == "salvage_choice":
-			_draw_ruin(center)
+			_draw_soot_orchard_choice(center)
 		elif event_id in ["lost_signal", "archive_broadcast"]:
 			_draw_signal(center)
 		elif event_id == "toll_decision":
@@ -347,11 +350,51 @@ class ScenarioCanvas extends Control:
 		else:
 			_draw_road_machine(center)
 
-	func _draw_ruin(center: Vector2) -> void:
-		draw_rect(Rect2(center - Vector2(88, 90), Vector2(176, 90)), Color("#4a4035"), true)
-		for x in [-58.0, -15.0, 32.0, 70.0]:
-			draw_line(center + Vector2(x, -88), center + Vector2(x - 18, -133), Color("#242624"), 8.0)
-			draw_circle(center + Vector2(x - 20, -140), 16.0, Color(0.85, 0.31, 0.16, 0.65))
+	func _draw_orchard_horizon() -> void:
+		var trunk_color := Color("#17191a") if high_contrast_enabled else Color("#282321")
+		var ember_color := Color("#ffb064") if high_contrast_enabled else Color("#cf6040")
+		for tree_index in range(8):
+			var x := size.x * 0.57 + float(tree_index) * size.x * 0.055
+			var base_y := size.y * (0.48 + float(tree_index % 2) * 0.025)
+			draw_line(Vector2(x, base_y), Vector2(x - 5.0, base_y - 74.0), trunk_color, 7.0)
+			draw_line(Vector2(x - 3.0, base_y - 48.0), Vector2(x - 22.0, base_y - 66.0), trunk_color, 5.0)
+			if tree_index in [1, 4, 6]:
+				draw_circle(Vector2(x + 8.0, base_y - 23.0), 7.0, Color(ember_color, 0.72))
+
+	func _draw_soot_orchard_choice(center: Vector2) -> void:
+		var fire_color := Color("#ffbc6e") if high_contrast_enabled else Color("#df6b43")
+		var fuel_color := Color("#d9bd82")
+		var rescue_color := Color("#9fd2c2")
+		var firebreak_x := center.x
+		draw_line(Vector2(firebreak_x, center.y - 145.0), Vector2(firebreak_x, center.y + 66.0), Color("#b7976a"), 4.0)
+		for flame_index in range(5):
+			var flame_x := center.x - 94.0 + float(flame_index) * 45.0
+			var flame_base := center.y - 28.0 - float(flame_index % 2) * 16.0
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(flame_x - 12.0, flame_base),
+				Vector2(flame_x - 3.0, flame_base - 31.0),
+				Vector2(flame_x + 3.0, flame_base - 14.0),
+				Vector2(flame_x + 13.0, flame_base)
+			]), Color(fire_color, 0.82))
+		var fuel_cache := Rect2(center + Vector2(-112.0, 12.0), Vector2(82.0, 48.0))
+		draw_rect(fuel_cache, Color("#5c4733"), true)
+		draw_rect(fuel_cache, fuel_color, false, 4.0)
+		for barrel_index in range(3):
+			var barrel_center := fuel_cache.position + Vector2(16.0 + float(barrel_index) * 25.0, 23.0)
+			draw_circle(barrel_center, 9.0, fuel_color, false, 3.0)
+		for worker_index in range(3):
+			var worker := center + Vector2(42.0 + float(worker_index) * 30.0, 18.0 + float(worker_index % 2) * 8.0)
+			draw_circle(worker, 8.0, Color("#e8d7ae"))
+			draw_line(worker + Vector2(0, 8), worker + Vector2(0, 32), rescue_color, 6.0)
+			draw_line(worker + Vector2(-10, 18), worker + Vector2(10, 18), rescue_color, 4.0)
+		draw_line(center + Vector2(-16.0, 88.0), center + Vector2(-101.0, 88.0), fuel_color, 4.0)
+		draw_line(center + Vector2(-88.0, 77.0), center + Vector2(-101.0, 88.0), fuel_color, 4.0)
+		draw_line(center + Vector2(-88.0, 99.0), center + Vector2(-101.0, 88.0), fuel_color, 4.0)
+		draw_line(center + Vector2(16.0, 88.0), center + Vector2(101.0, 88.0), rescue_color, 4.0)
+		draw_line(center + Vector2(88.0, 77.0), center + Vector2(101.0, 88.0), rescue_color, 4.0)
+		draw_line(center + Vector2(88.0, 99.0), center + Vector2(101.0, 88.0), rescue_color, 4.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-139.0, 120.0), "RECOVER · +2 FUEL", HORIZONTAL_ALIGNMENT_CENTER, 124.0, 10, fuel_color)
+		draw_string(ThemeDB.fallback_font, center + Vector2(18.0, 120.0), "RESCUE · +1 DAY", HORIZONTAL_ALIGNMENT_CENTER, 124.0, 10, rescue_color)
 
 	func _draw_boiler_choice(center: Vector2) -> void:
 		var boiler_center := center + Vector2(0, -48)
@@ -523,6 +566,8 @@ class ScenarioCanvas extends Control:
 			return "OLD DRAIN · ONE DAY OR TWO WATER"
 		if motif == "dry_room_choice":
 			return "ONE DRY ROOM · FAMILIES OR PARTS"
+		if motif == "soot_orchard_choice":
+			return "BURNING ORCHARD · FUEL OR PEOPLE"
 		return "ROADSIDE OCCURRENCE"
 
 	func character_signature() -> String:

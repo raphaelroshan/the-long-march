@@ -195,6 +195,14 @@ func _run() -> void:
 	game.roadside_event.button_for("brace_lift_chain").pressed.emit()
 	await _settle_ui()
 	_expect(game.main_columns.visible and game.combat_panel.visible and game.road_contact.visible and game.road_contact.advance_button.has_focus(), "resolving the road interruption should reveal the fortress contact without advancing a combat step")
+	var orchard_event := {
+		"choices": [
+			{"effect": "Fuel +2 · Trust -1"},
+			{"effect": "Trust +2 · Day +1 · Pressure +1"}
+		]
+	}
+	var orchard_story: Dictionary = game._roadside_event_story("salvage_choice", orchard_event)
+	_expect(String(orchard_story.get("motif", "")) == "soot_orchard_choice" and String(orchard_story.get("heading", "")) == "BURNING ORCHARD · FUEL OR PEOPLE" and String(orchard_story.get("detail", "")).contains("Fuel +2") and String(orchard_story.get("detail", "")).contains("Day +1"), "the live event presenter should translate the Orchard choice into its authored fuel-versus-workers tableau")
 
 	game.queue_free()
 	await process_frame

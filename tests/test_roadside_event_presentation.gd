@@ -73,6 +73,23 @@ func _run() -> void:
 	_expect(event_view.tableau.presentation_signature() == "LOADED LIFT · BRACE OR CARRY" and not event_view.story_panel.visible and event_view.choice_buttons[1].text.contains("Ammunition Lift -1 durability"), "the lift occurrence should stage its loaded dependency and keep its brace-or-carry cost in the primary choices")
 	_expect(event_view.context_label.text == "ROAD INTERRUPTION · CONTACT WAITING" and event_view.location_label.text.contains("ASHGATE DEPOT → RILL CROSSING") and event_view.guidance_label.text.contains("cannot be bypassed"), "the pre-contact lift tableau should preserve its road position and mandatory handoff in visible copy")
 	await _capture("02_lift_chain")
+	var orchard_view: Dictionary = common.duplicate(true)
+	orchard_view.merge({
+		"event_id": "salvage_choice",
+		"title": "The Orchard Burns",
+		"body": "Fuel lies under the burning orchard, but workers are still trapped beyond the firebreak.",
+		"story": {"motif": "soot_orchard_choice", "show_card": false, "heading": "BURNING ORCHARD · FUEL OR PEOPLE", "detail": "Fuel cache: Fuel +2 · Trust -1. Workers: Trust +2 · Day +1 · Pressure +1."},
+		"choices": [
+			{"id": "take_fuel", "label": "Recover the fuel", "effect": "Fuel +2 · Trust -1", "enabled": true, "reason": ""},
+			{"id": "rescue_workers", "label": "Carry the stranded workers", "effect": "Trust +2 · Day +1 · Pressure +1", "enabled": true, "reason": ""}
+		]
+	})
+	orchard_view["location_name"] = "The Soot Orchard"
+	event_view.configure(orchard_view)
+	await _settle_ui()
+	_expect(event_view.tableau.presentation_signature() == "BURNING ORCHARD · FUEL OR PEOPLE" and event_view.tableau.decision_signature().contains("FORTRESS HALTED"), "the Soot Orchard should replace the generic ruin with a stable fuel-versus-workers visual decision")
+	_expect(not event_view.story_panel.visible and event_view.choice_buttons[0].text.contains("Fuel +2") and event_view.choice_buttons[1].text.contains("Day +1"), "the orchard tableau should keep both exact consequences in its primary choices")
+	await _capture("03_soot_orchard")
 	var miller_view: Dictionary = common.duplicate(true)
 	miller_view.merge({
 		"event_id": "the_miller_with_a_broken_wheel",
@@ -87,7 +104,7 @@ func _run() -> void:
 	event_view.configure(miller_view)
 	await _settle_ui()
 	_expect(event_view.tableau.presentation_signature() == "BROKEN WHEEL · HELP OR KEEP MOVING" and not event_view.story_panel.visible and event_view.choice_buttons[0].text.contains("Workshop -1 durability"), "the miller occurrence should stage the broken wagon and keep its help-or-leave cost in the primary choices")
-	await _capture("03_miller_wheel")
+	await _capture("04_miller_wheel")
 	var choice_view: Dictionary = common.duplicate(true)
 	choice_view.merge({
 		"event_id": "mara_workbench_choice",
@@ -114,7 +131,7 @@ func _run() -> void:
 	event_view.configure(meeting_view)
 	await _settle_ui()
 	_expect(event_view.tableau.presentation_signature() == "MARA FLINT · OPEN FORGE · JOIN OR REMAIN" and event_view.tableau.character_signature() == "MARA FLINT · FORGE MASTER · REPAIR BEFORE SACRIFICE", "Mara's first offer should identify the named forge master and her practical belief beside the open forge")
-	await _capture("04_mara_meeting")
+	await _capture("05_mara_meeting")
 	event_view.configure(choice_view)
 	event_view.focus_default()
 	await _settle_ui()

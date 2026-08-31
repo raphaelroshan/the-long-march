@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.336` pre-contact interruption candidate |
+| Build | `0.3.0-alpha.337` Soot Orchard tableau candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -44,6 +44,7 @@
 | Structured outcome facts | PASS: local exports retain the visible result explanation, replay guidance, every installed system's durability/state, and surviving threats; session and cohort reports present them without grading the tester's answer |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 | Pre-contact interruption | PASS: the first eligible Rill road pauses at The Lift Chain Sings after travel and before contact; origin, destination, exact costs, focus, save/load, Skip, Reduced Motion, core combat blocking, and post-choice contact handoff are deterministic. |
+| Soot Orchard identity | PASS: the live event presenter and roadside canvas expose a stable burning-orchard motif, fuel cache, stranded workers, firebreak, and exact fuel-versus-rescue consequences at 1280×720. |
 
 ## Evidence
 
@@ -100,9 +101,11 @@
 - [`Pre-contact road interruption report`](pre_contact_road_interruption_report.md)
 - [`Pre-contact road interruption evidence`](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1600x900/)
 - [`Responsive pre-contact road interruption evidence`](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1280x720/)
+- [`Soot Orchard tableau report`](soot_orchard_tableau_report.md)
+- [`Soot Orchard visual evidence`](visual_evidence/v0.3.0-alpha.337-soot-orchard-tableau/01_soot_orchard.png)
 
 ## Result
 
-The updated strategy remains intact. Alpha.336 adds a real gameplay beat between the march presentation and contact: a machine-specific road interruption that changes the physical fortress or future route posture while the already configured enemy contact waits.
+The updated strategy remains intact. Alpha.337 replaces the Soot Orchard's generic ruin with an authored operational scene whose fuel and rescue subjects match the exact existing decision.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

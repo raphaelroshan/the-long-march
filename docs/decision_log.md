@@ -1226,3 +1226,7 @@ The march transition now carries any purchased source and confidence directly fr
 ## 2026-09-01 — A skipped march beat cannot skip a road decision
 
 The opening Rill Crossing road now schedules **The Lift Chain Sings** after route costs and contact composition are committed but before encounter step one. It appears only when an operational Ammunition Lift and weapon make the problem physically meaningful. The fortress remains at Ashgate, the Road Raider contact stays configured at step zero, and both combat advancement and emergency orders reject input until the event resolves. Save/load restores the road handoff and then the same pending choice. This was chosen over a decorative random popup because the road event must be part of the authoritative journey sequence, not optional presentation or a second combat simulation.
+
+## 2026-09-01 — Scenario art must show the competing obligations
+
+The Soot Orchard no longer uses the generic ruin mark. Its tableau shows burning tree rows and a firebreak between a fuel cache and stranded workers, with separate recover and rescue directions. Exact effects remain in the action buttons. This was chosen so the center stage communicates the decision's physical subjects at a glance while text remains authoritative for resource changes and eligibility.

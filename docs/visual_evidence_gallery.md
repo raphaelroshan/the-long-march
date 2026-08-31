@@ -2,6 +2,14 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.337` — Soot Orchard decision tableau
+
+![The Soot Orchard fuel-versus-workers decision](visual_evidence/v0.3.0-alpha.337-soot-orchard-tableau/01_soot_orchard.png)
+
+The event scene now identifies the burning orchard through blackened rows, fire pockets, a central firebreak, a recoverable fuel cache, and three stranded workers. Separate visual directions reinforce the exact fuel-versus-time-and-trust choice without replacing the authoritative buttons.
+
+SHA-256: `82bee4b68e05318f826adbde4b165c7ee20d7734a874760f2cbacdeb0f1c2aed`
+
 ## `v0.3.0-alpha.336` — Pre-contact road interruption
 
 | Profile | Evidence | SHA-256 |
