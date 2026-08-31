@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.331`
+**Current code baseline:** `0.3.0-alpha.332`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.331`, preserving the complete causal journey and private-alpha evidence workflow while adding the first atomic bazaar information purchase: Ashgate's Signal Broker sells a sourced, confidence-labelled Soot Orchard report that survives save/load, reveals only authored contact and counter fields, and changes no route risk, pressure, fuel, time, or encounter difficulty. Optional mastery orders remain available at the assignment desk after its required contract decision.
+**Current merged baseline:** `0.3.0-alpha.332`, preserving the complete causal journey and private-alpha evidence workflow while completing the first bounded Ashgate market: the Signal Broker sells sourced route intel, and the Quartermaster previews and executes one fixed-stock purchase plus one stored-only sale with exact money, storage, footprint, mass, power, and dependency consequences. Transactions are atomic, persistent, and cannot dismantle the live fortress.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 

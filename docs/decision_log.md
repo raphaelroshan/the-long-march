@@ -1202,3 +1202,11 @@ The cohort report now shows all three written responses for each session in comm
 ## 2026-09-01 — Compare causal answers with structured facts, never an automatic grade
 
 Feedback exports now include the same result explanation and replay guidance shown by the terminal Debrief, plus every installed system's durability and operating state and any surviving final threats. Session and cohort reports place these facts beside the tester's words. The tooling deliberately does not decide whether the answer agrees with the state; that comparison remains a human observation because phrasing, partial understanding, and alternative valid explanations cannot be reduced to a string match.
+
+## 2026-09-01 — Purchased information reveals facts, not safety
+
+Ashgate's first Signal Broker offer upgrades only the Soot Orchard's authored contact and counter fields and carries a named source and confidence. It does not inherit Iven Pell or Signal Coil reductions to route risk or encounter pressure. This keeps buying knowledge distinct from carrying and protecting an operational forecasting capability.
+
+## 2026-09-01 — The first market is fixed, explicit, and storage-only
+
+Ashgate's Quartermaster begins with one buy offer and one sale offer rather than a generated shop. Buying a spare Side Armor Skirt adds it to storage and leaves installation to the Workshop. Selling removes only a stored Shell Cannon and never searches or dismantles the live chassis. Both previews state exact money and storage deltas plus the module's physical and dependency implications. This was chosen to prove meaningful trade boundaries without introducing hidden refresh randomness, a parallel inventory interface, or low-value loot churn.
