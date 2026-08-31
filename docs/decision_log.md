@@ -1132,3 +1132,7 @@ The selected bazaar station now shows a compact attendant portrait with a role a
 ## 2026-09-01 — The road foreshadows the destination
 
 The road-in-motion beat now selects a stable landmark profile from the committed destination ID. Crossings, orchards, relays, blockades, camps, lower cuts, cisterns, quarries, passes, pumps, tramworks, gantries, and archive approaches therefore enter view before contact instead of sharing one generic roadside structure. First Watch retains a separate muster-road profile. This was chosen over a longer cinematic or route-specific simulation because the existing one-second, immediately skippable handoff already has the correct pacing and authoritative boundary; it needed place memory, not another gameplay phase.
+
+## 2026-09-01 — Refit audio follows command results
+
+Chassis placement, movement, rotation, and removal now receive distinct temporary mechanical cues only after their authoritative operation succeeds. Rejected placement, rotation, removal, and road-locked refit attempts emit one restrained warning while preserving the exact written blocker. Button-owned generic clicks are suppressed for rotation and removal so a single action cannot produce competing feedback. This was chosen over hover sounds or continuous workshop ambience because early learning depends on distinguishing accepted from rejected physical edits, while silence and visual-only play must remain complete options.

@@ -21,7 +21,7 @@ func _run() -> void:
 	_expect(audio.players.size() == 3, "interface audio should keep a small overlap-safe player pool")
 	_expect(audio.focus_stream != null and audio.focus_stream.data.size() > 0 and audio.focus_stream.mix_rate == InterfaceAudio.MIX_RATE, "focus feedback should be a generated deterministic PCM cue")
 	_expect(audio.confirm_stream != null and audio.notice_stream != null and audio.warning_stream != null, "the controller should provide distinct confirmation, notice, and warning cues")
-	_expect(audio.SEMANTIC_STREAMS.size() == 17 and String(audio.SEMANTIC_STREAMS["route_commit"].resource_path).ends_with("confirmation_001.ogg") and String(audio.SEMANTIC_STREAMS["debrief"].resource_path).ends_with("bookOpen.ogg"), "the journey should load distinct licensed temporary cues for commitment, threat approach, and Debrief")
+	_expect(audio.SEMANTIC_STREAMS.size() == 21 and String(audio.SEMANTIC_STREAMS["route_commit"].resource_path).ends_with("confirmation_001.ogg") and String(audio.SEMANTIC_STREAMS["debrief"].resource_path).ends_with("bookOpen.ogg"), "the journey should load distinct licensed temporary cues for commitment, threat approach, refit results, and Debrief")
 	var main_view := MainView.new()
 	var threat_arrivals := {"road_raiders": 2, "climbers": 3, "burrowers": 3, "storm_front": 1, "siege_beast": 4, "flood_surge": 1, "civic_guardian": 3}
 	for threat_id in threat_arrivals:
@@ -57,6 +57,9 @@ func _run() -> void:
 	_expect(audio.play_checkpoint_cue("settlement_service") and audio.last_semantic_cue_kind == "service" and audio.last_semantic_asset_path.ends_with("metalPot1.ogg"), "a completed recovery service should play a distinct material cue")
 	_expect(audio.play_checkpoint_cue("encounter_advanced", "threat_burrowers") and audio.last_semantic_cue_kind == "threat_burrowers" and audio.last_semantic_asset_path.ends_with("creak3.ogg"), "a threat warning should replace the generic contact step with its family cue")
 	_expect(audio.play_checkpoint_cue("encounter_advanced", "unknown_threat") and audio.last_semantic_cue_kind == "contact_step", "an unknown or non-warning contact step should retain the bounded generic mechanism cue")
+	_expect(audio.play_checkpoint_cue("module_installed", "module_place") and audio.last_semantic_cue_kind == "module_place" and audio.last_semantic_asset_path.ends_with("metalLatch.ogg"), "a successful installation checkpoint should use the physical placement cue")
+	_expect(audio.play_checkpoint_cue("module_rotated", "module_rotate") and audio.last_semantic_cue_kind == "module_rotate", "a successful rotation checkpoint should use its own handling cue")
+	_expect(audio.play_checkpoint_cue("module_stored", "module_remove") and audio.last_semantic_cue_kind == "module_remove", "a successful removal checkpoint should use its own disengagement cue")
 	var cue_before_unknown := audio.last_semantic_cue_kind
 	_expect(not audio.play_checkpoint_cue("module_moved") and audio.last_semantic_cue_kind == cue_before_unknown, "checkpoints without a semantic mapping should leave the normal save notice in control")
 	audio.set_volume_percent(0)

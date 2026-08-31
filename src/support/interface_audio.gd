@@ -21,7 +21,11 @@ const SEMANTIC_STREAMS := {
 	"threat_storm_front": preload("res://assets/temporary/kenney/interface-sounds/Audio/error_005.ogg"),
 	"threat_siege_beast": preload("res://assets/temporary/kenney/interface-sounds/Audio/bong_001.ogg"),
 	"threat_flood_surge": preload("res://assets/temporary/kenney/interface-sounds/Audio/drop_004.ogg"),
-	"threat_civic_guardian": preload("res://assets/temporary/kenney/interface-sounds/Audio/glitch_004.ogg")
+	"threat_civic_guardian": preload("res://assets/temporary/kenney/interface-sounds/Audio/glitch_004.ogg"),
+	"module_place": preload("res://assets/temporary/kenney/rpg-audio/Audio/metalLatch.ogg"),
+	"module_rotate": preload("res://assets/temporary/kenney/rpg-audio/Audio/beltHandle1.ogg"),
+	"module_remove": preload("res://assets/temporary/kenney/rpg-audio/Audio/doorClose_2.ogg"),
+	"module_invalid": preload("res://assets/temporary/kenney/interface-sounds/Audio/error_004.ogg")
 }
 const CHECKPOINT_CUES := {
 	"route_started": "route_commit",
@@ -106,7 +110,7 @@ func play_semantic(cue_id: String) -> bool:
 	return true
 
 func play_checkpoint_cue(reason: String, contextual_cue_id: String = "") -> bool:
-	if reason == "encounter_advanced" and SEMANTIC_STREAMS.has(contextual_cue_id):
+	if not contextual_cue_id.is_empty() and SEMANTIC_STREAMS.has(contextual_cue_id):
 		return play_semantic(contextual_cue_id)
 	var cue_id := String(CHECKPOINT_CUES.get(reason, ""))
 	return not cue_id.is_empty() and play_semantic(cue_id)

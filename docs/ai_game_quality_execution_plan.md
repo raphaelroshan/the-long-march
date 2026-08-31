@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.310` and later
+**Applies to:** `0.3.0-alpha.311` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -37,6 +37,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **Threat-family audio identity — complete in alpha.308** | Make approaching contacts recognizable without watching a generic click | Route one restrained family cue at the readable warning step for all seven implemented threats, preserving the generic mechanism cue for other combat steps. |
 | **Bazaar attendant identity — complete in alpha.309** | Make settlement services feel staffed rather than purely menu-driven | Give each of the six stable stations a compact attendant portrait, role, and prop that changes between Ashgate Depot and Lantern Quay. |
 | **Route-specific travel landmarks — complete in alpha.310** | Make the in-between road foreshadow the chosen destination | Replace the generic passing object with stable crossing, orchard, relay, blockade, camp, lower-cut, cistern, quarry, pass, pump, tram, gantry, and archive motifs. |
+| **Result-aware refit audio — complete in alpha.311** | Make physical editing outcomes legible without duplicate button sounds | Add distinct placement, rotation, removal, and blocked-action cues after the corresponding command result. |
 
 ## Acceptance tests for every AI task
 
@@ -46,7 +47,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, and bazaar attendant identity are complete in `0.3.0-alpha.310`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, and result-aware refit audio are complete in `0.3.0-alpha.311`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 
