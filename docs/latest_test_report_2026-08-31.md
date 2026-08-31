@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.328` causal-feedback-prompt candidate |
+| Build | `0.3.0-alpha.329` cohort-written-evidence candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -35,6 +35,7 @@
 | Contact session summary | PASS: generated observer sheets show event-derived counts and the ordered lock/inspection/order trail, flag mismatched aggregates, and support older exports without claiming comprehension |
 | Playtest cohort summary | PASS: multiple local exports produce a gate-status table, mixed-build and duplicate-run warnings, navigation totals, and blank human-evidence fields without claiming the five-session gate passed |
 | Causal replay feedback | PASS: the 720p local-notes modal keeps three prompts inside a scrolling question area, exports the causal/replay answer, preserves controller order, and renders it in the observer sheet |
+| Cohort written evidence | PASS: cohort reports retain each session's three written answers and line breaks in argument order, mark missing legacy answers, and explicitly avoid scoring, correction, or classification |
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 
 ## Evidence
@@ -63,6 +64,7 @@
 - [`Contact session summary report`](contact_session_summary_report.md)
 - [`Playtest cohort summary report`](playtest_cohort_summary_report.md)
 - [`Causal feedback prompt report`](causal_feedback_prompt_report.md)
+- [`Cohort written evidence report`](cohort_written_evidence_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -81,6 +83,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.328 asks the tester to state the perceived cause and one next-run change, giving human observers direct evidence of the causal model the Debrief actually communicated.
+The updated strategy remains intact without changing authoritative game state. Alpha.329 places the tester's direct words beside automatic cohort facts so repeated-failure decisions can be traced to evidence rather than paraphrase.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

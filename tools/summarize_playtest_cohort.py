@@ -33,6 +33,13 @@ def _duration_minutes(payload: dict[str, Any]) -> int:
     return max(0, round((max(timestamps) - min(timestamps)) / 60)) if timestamps else 0
 
 
+def _quoted_answer(answers: dict[str, Any], key: str) -> list[str]:
+    text = str(answers.get(key, "")).strip().replace("\r\n", "\n").replace("\r", "\n")
+    if not text:
+        return ["> Not recorded."]
+    return [f"> {line}" if line else ">" for line in text.split("\n")]
+
+
 def build_cohort_report(
     payloads: Sequence[dict[str, Any]],
     required_sessions: int = 5,
@@ -56,6 +63,7 @@ def build_cohort_report(
     order_sessions = 0
     mismatch_sessions = 0
     run_codes: list[str] = []
+    written_evidence: list[str] = []
 
     for index, payload in enumerate(payloads, start=1):
         final_state = payload.get("final_state", {})
@@ -80,6 +88,25 @@ def build_cohort_report(
         run_code = str(final_state.get("run_code", "unknown")) if isinstance(final_state, dict) else "unknown"
         if run_code != "unknown":
             run_codes.append(run_code)
+        normalized_answers = answers if isinstance(answers, dict) else {}
+        written_evidence.extend(
+            [
+                f"### Session {index}",
+                "",
+                "**Clear or satisfying**",
+                "",
+                *_quoted_answer(normalized_answers, "clear_or_satisfying"),
+                "",
+                "**Confusing or frustrating**",
+                "",
+                *_quoted_answer(normalized_answers, "confusing_or_frustrating"),
+                "",
+                "**Perceived cause and next-run change**",
+                "",
+                *_quoted_answer(normalized_answers, "causal_replay"),
+                "",
+            ]
+        )
         rows.append(
             "| %d | `%s` | `%s` | %s | %s | %dm | %s | %d / %d / %d / %d | %s |"
             % (
@@ -139,6 +166,11 @@ def build_cohort_report(
         "",
         "These totals describe recorded navigation only. They do not establish comprehension, preference, emotion, or causality.",
         "",
+        "## Tester-written evidence",
+        "",
+        "Responses are shown in session order with line breaks preserved. They are not scored, classified, corrected, or treated as observer findings.",
+        "",
+        *written_evidence,
         "## Validate the human sessions",
         "",
         "| Session | Consent + unique tester | Uncoached | First comprehension failure | Severity | Direct quote or observation |",

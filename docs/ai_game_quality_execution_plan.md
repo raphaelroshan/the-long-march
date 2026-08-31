@@ -1,6 +1,6 @@
 # The Long March — AI Game-Quality Execution Plan
 
-**Applies to:** `0.3.0-alpha.328` and later
+**Applies to:** `0.3.0-alpha.329` and later
 
 **Purpose:** Advance the moving-fortress journey from a strong systems prototype to a game-quality private-alpha slice. Automated verification, deterministic replay, scripted full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional later validation and must not block implementation.
 
@@ -55,6 +55,7 @@ The fortress is the protagonist. Every journey decision should explain what the 
 | **Review-ready contact session sheet — complete in alpha.326** | Turn local events into usable observer evidence | Add exact contact counts, chronological target/order rows, older-export fallback, and metric-integrity warnings to the generated Markdown sheet without inferring comprehension. |
 | **Five-session cohort synthesis — complete in alpha.327** | Keep the human evidence gate operational and honest | Combine local exports into an ordered cohort table, flag mixed builds, duplicate run identities, missing inspections, and metric mismatches, and leave consent and repeated-failure classification for the observer. Include both summarizers in exact release cohorts. |
 | **Causal replay feedback — complete in alpha.328** | Test whether the Debrief taught the intended causal model | Add a dedicated local response asking what caused the result and what the tester would change next run; keep all three note fields usable in a contained 720p scrolling form and include the answer in generated observer sheets. |
+| **Verbatim cohort answers — complete in alpha.329** | Keep direct tester evidence beside automatic cohort facts | Render clear/satisfying, confusing/frustrating, and causal replay answers per session with line breaks preserved; label missing legacy answers and prohibit automatic scoring or classification. |
 
 ## Acceptance tests for every AI task
 
@@ -64,7 +65,7 @@ A task is incomplete if a transition hides the current commitment, if a threat�
 
 ## Recommended next prompt
 
-> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, specialist continuity, the Iven full-flow profile, route browse-state clarity, selected-road cost receipt, live counter readiness, threat-risk preview, contact response posture, exact defense-effect preview, target-effective counter labeling, the compact contact command grid, target-lock focus safety, local contact-comprehension metrics, review-ready contact session sheets, five-session cohort synthesis, and causal replay feedback are complete in `0.3.0-alpha.328`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
+> The automated roadmap, battle/recovery follow-up, temporary sensory feedback, route-specific travel landmarks, arrival identity, threat silhouettes, inhabited resting fortress, route-map visual grammar, roadside occurrence identity, tutorial fortress continuity, threat-family audio identity, bazaar attendant identity, result-aware refit audio, phase-aligned impact audio, named specialist identity, specialist continuity, the Iven full-flow profile, route browse-state clarity, selected-road cost receipt, live counter readiness, threat-risk preview, contact response posture, exact defense-effect preview, target-effective counter labeling, the compact contact command grid, target-lock focus safety, local contact-comprehension metrics, review-ready contact session sheets, five-session cohort synthesis, causal replay feedback, and verbatim cohort answers are complete in `0.3.0-alpha.329`. The next work is evidence-led calibration from consented private-alpha sessions using `docs/private_alpha_session_sheet.md`. Fix observed comprehension, pacing, audio, or balance failures before adding another region or progression layer.
 
 ## Definition of game-quality readiness
 
