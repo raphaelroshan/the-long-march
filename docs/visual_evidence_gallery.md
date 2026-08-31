@@ -2,6 +2,12 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.301` — Temporary travel atmosphere
+
+[Departure, full-march, and contact-approach captures](visual_evidence/v0.3.0-alpha.301-temporary-travel-atmosphere/) show the new beat-specific pace, temporary tinted road atmosphere, and static contact brace. The route receipt and named contact remain authoritative; the effects do not drive simulation.
+
+The dust/mist frames are CC0 testing placeholders. Tiny Town remains intentionally unused.
+
 ## `v0.3.0-alpha.300` — Temporary sensory feedback
 
 [Impact, consequence, and recovery captures](visual_evidence/v0.3.0-alpha.300-temporary-sensory-feedback/) show the restrained temporary spark and damage-smoke treatment. Audio routing is documented separately in [`audio_cue_map.md`](audio_cue_map.md), because screenshots cannot establish sound quality.

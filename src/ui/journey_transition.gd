@@ -228,6 +228,7 @@ func configure(view: Dictionary) -> void:
 	march_canvas.fortress_view = view.get("fortress", {}).duplicate(true)
 	march_canvas.high_contrast_enabled = high_contrast_enabled
 	march_canvas.reduced_motion = reduced_motion
+	march_canvas.travel_offset = 0.0
 	march_canvas.queue_redraw()
 	_set_presentation_beat(2 if reduced_motion else 0)
 
@@ -285,6 +286,9 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 		pause_button.text = "PAUSE · ESC / %s" % cancel_label
 
 class MarchCanvas extends Control:
+	const TEMP_TRAVEL_DUST_A: Texture2D = preload("res://assets/temporary/kenney/particle-pack/smoke_01.png")
+	const TEMP_TRAVEL_DUST_B: Texture2D = preload("res://assets/temporary/kenney/particle-pack/smoke_02.png")
+
 	var region_id: String = "ashgate_lowlands"
 	var destination_name: String = ""
 	var contact_name: String = "contact ahead"
@@ -297,14 +301,31 @@ class MarchCanvas extends Control:
 	func beat_visual_signature() -> String:
 		return ["GATE RECEDING", "LANDMARK PASSING", "CONTACT ON HORIZON"][clampi(presentation_beat_index, 0, 2)]
 
+	func motion_signature() -> Dictionary:
+		match clampi(presentation_beat_index, 0, 2):
+			0:
+				return {"pace": "gathering", "speed_scale": 0.32, "fortress_mode": "departing", "temporary_vfx": false}
+			1:
+				return {"pace": "full_march", "speed_scale": 1.0, "fortress_mode": "travel", "temporary_vfx": not reduced_motion}
+			_:
+				return {"pace": "contact_brace", "speed_scale": 0.0, "fortress_mode": "contact", "temporary_vfx": false}
+
+	func temporary_travel_vfx_active() -> bool:
+		return bool(motion_signature().get("temporary_vfx", false))
+
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		clip_contents = true
 		set_process(true)
 
 	func _process(delta: float) -> void:
-		if not reduced_motion:
-			travel_offset = fmod(travel_offset + delta * 74.0, 96.0)
-			queue_redraw()
+		if reduced_motion:
+			return
+		var speed_scale := float(motion_signature().get("speed_scale", 0.0))
+		if speed_scale <= 0.0:
+			return
+		travel_offset = fmod(travel_offset + delta * 74.0 * speed_scale, 96.0)
+		queue_redraw()
 
 	func _draw() -> void:
 		var flooded := region_id == "flooded_veyru"
@@ -331,6 +352,7 @@ class MarchCanvas extends Control:
 			var road_x := fmod(float(road_index * 96) - travel_offset * 1.7, size.x + 96.0)
 			draw_line(Vector2(road_x, size.y * 0.82), Vector2(road_x + 46, size.y * 0.82), Color("#8b704d"), 5.0)
 		_draw_beat_landmark(flooded)
+		_draw_travel_atmosphere(flooded)
 		_draw_fortress()
 		_draw_contact_horizon()
 		var caption := "%s  ·  CONTACT BEFORE %s" % [beat_visual_signature(), destination_name.to_upper()]
@@ -383,9 +405,29 @@ class MarchCanvas extends Control:
 		draw_line(marker + Vector2(-42.0, -42.0), marker + Vector2(0, -18.0), danger, 2.0)
 		draw_string(ThemeDB.fallback_font, marker + Vector2(-120.0, -51.0), contact_name.to_upper(), HORIZONTAL_ALIGNMENT_RIGHT, 112.0, 10, danger)
 
+	func _draw_travel_atmosphere(flooded: bool) -> void:
+		if not temporary_travel_vfx_active():
+			return
+		var base_position := Vector2(size.x * 0.28, size.y * 0.73)
+		var dust_tint := Color(0.30, 0.48, 0.48, 0.16) if flooded else Color(0.64, 0.45, 0.25, 0.20)
+		if high_contrast_enabled:
+			dust_tint.a = 0.13
+		for puff_index in range(3):
+			var cycle := fmod(travel_offset * 1.55 + float(puff_index) * 37.0, 118.0)
+			var texture := TEMP_TRAVEL_DUST_A if int(floor(cycle / 24.0)) % 2 == 0 else TEMP_TRAVEL_DUST_B
+			var puff_size := 62.0 + float(puff_index) * 17.0
+			var puff_position := base_position + Vector2(-cycle - float(puff_index) * 18.0, float(puff_index % 2) * 12.0)
+			draw_texture_rect(texture, Rect2(puff_position, Vector2(puff_size, puff_size * 0.58)), false, dust_tint)
+		for streak_index in range(4):
+			var streak_x := fmod(float(streak_index) * 137.0 - travel_offset * 2.25, size.x + 150.0)
+			var streak_y := size.y * (0.68 + float(streak_index % 3) * 0.07)
+			draw_line(Vector2(streak_x, streak_y), Vector2(streak_x + 54.0, streak_y - 2.0), dust_tint.lightened(0.18), 2.0)
+
 	func _draw_fortress() -> void:
 		var view := fortress_view.duplicate(true)
-		view["mode"] = "travel"
-		view["travel_phase"] = travel_offset if not reduced_motion else 0.0
+		var signature := motion_signature()
+		view["mode"] = String(signature.get("fortress_mode", "travel"))
+		view["travel_phase"] = travel_offset if not reduced_motion and presentation_beat_index < 2 else 0.0
 		view["high_contrast"] = high_contrast_enabled
-		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.22, size.y * 0.25), Vector2(size.x * 0.56, size.y * 0.48)), view)
+		var bob := sin(travel_offset * 0.09) * 3.0 if temporary_travel_vfx_active() else 0.0
+		FortressSilhouette.draw(self, Rect2(Vector2(size.x * 0.22, size.y * 0.25 + bob), Vector2(size.x * 0.56, size.y * 0.48)), view)

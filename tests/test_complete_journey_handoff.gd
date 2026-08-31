@@ -296,6 +296,7 @@ func _run_ashgate_journey() -> void:
 	_expect_three_column_contract(game.journey_transition, game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button, "Ashgate departure")
 	if responsive_profile:
 		_expect(game.journey_transition.high_contrast_enabled and game.journey_transition.reduced_motion and game.journey_transition.presentation_beat() == "contact_ahead" and game.journey_transition.continue_button.text == "ENTER CONTACT" and game.journey_transition.pause_button.text.contains("A"), "the live departure should preserve contrast, skip motion, expose contact, and retain alternate controller guidance")
+		_expect(not game.journey_transition.march_canvas.temporary_travel_vfx_active() and float(game.journey_transition.march_canvas.motion_signature().get("speed_scale", 1.0)) == 0.0, "reduced motion should land on the static contact brace without temporary march effects")
 	await _capture("07_departure")
 	if not responsive_profile and not capture_dir.is_empty():
 		game.journey_transition._process(0.4)

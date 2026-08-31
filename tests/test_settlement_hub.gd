@@ -116,12 +116,17 @@ func _run() -> void:
 	_expect(journey.day_label.global_position.x < march_rect.position.x and journey.destination_label.global_position.x > march_rect.end.x, "the road view should retain the left-values, centered-fortress, right-details hierarchy")
 	_expect(journey.continue_button.has_focus() and journey.continue_button.text == "SKIP MARCH · ENTER CONTACT" and journey.presentation_beat() == "departed", "the road view should begin with an immediately skippable departure beat")
 	_expect(journey.march_canvas.beat_visual_signature() == "GATE RECEDING", "departure should begin with a distinct receding-settlement visual")
+	_expect(String(journey.march_canvas.motion_signature().get("pace", "")) == "gathering" and not journey.march_canvas.temporary_travel_vfx_active(), "departure should gather momentum without showing full-march dust")
 	journey._process(0.4)
 	_expect(journey.presentation_beat() == "road_in_motion" and journey.status_label.text == "ROAD IN MOTION", "the road view should establish a short distinct motion beat without changing game state")
 	_expect(journey.march_canvas.beat_visual_signature() == "LANDMARK PASSING", "the road-in-motion beat should replace the gate with a passing regional landmark")
+	var travel_offset_before: float = journey.march_canvas.travel_offset
+	journey.march_canvas._process(0.2)
+	_expect(journey.march_canvas.travel_offset > travel_offset_before and journey.march_canvas.temporary_travel_vfx_active() and String(journey.march_canvas.motion_signature().get("fortress_mode", "")) == "travel", "the full-march beat should move the layered road and enable temporary travel atmosphere without changing route state")
 	journey._process(0.7)
 	_expect(journey.presentation_beat() == "contact_ahead" and journey.continue_button.text == "ENTER CONTACT" and journey.status_label.text.contains("CONTACT AHEAD") and journey.next_label.text.contains("Road Raider"), "the short march should settle on the known contact and its explicit entry action")
 	_expect(journey.march_canvas.beat_visual_signature() == "CONTACT ON HORIZON" and journey.march_canvas.contact_name.contains("Road Raider"), "the final travel beat should put the named contact on the horizon")
+	_expect(not journey.march_canvas.temporary_travel_vfx_active() and String(journey.march_canvas.motion_signature().get("pace", "")) == "contact_brace", "contact reveal should stop full-march dust and brace the fortress before encounter entry")
 	var committed_day_receipt: String = journey.day_label.text
 	var committed_fuel_receipt: String = journey.fuel_label.text
 	_expect(game.save_run(true), "the departure handoff should save after costs are committed")
