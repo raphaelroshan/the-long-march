@@ -2197,7 +2197,8 @@ func _save_from_pause() -> bool:
 func _on_checkpoint_reached(reason: String) -> void:
 	if game_view == null:
 		return
-	var semantic_cue_played := interface_audio.play_checkpoint_cue(reason)
+	var contextual_cue_id := String(game_view.call("checkpoint_audio_cue", reason)) if game_view.has_method("checkpoint_audio_cue") else ""
+	var semantic_cue_played := interface_audio.play_checkpoint_cue(reason, contextual_cue_id)
 	if not _active_stage_is_tutorial():
 		_record_campaign_progress()
 	if not autosave_enabled:

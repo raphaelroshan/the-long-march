@@ -4,13 +4,13 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.307` tutorial-fortress-continuity candidate |
+| Build | `0.3.0-alpha.308` threat-audio-identity candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
 | Responsive coverage | PASS: 1280×720 and 1600×900; the compact profile uses 110% text, high contrast, reduced motion, and alternate controller labels |
 | Performance sample | PASS: 1,800 read-only planning inspections and 60 same-seed encounter replays within the 12-second budgets |
-| Temporary asset integration | PASS: ten semantic audio cues, muted-state suppression, checkpoint ownership, impact-window VFX, and reduced-motion suppression |
+| Temporary asset integration | PASS: ten journey cues plus seven threat-family warnings, muted-state suppression, deterministic warning-step routing, checkpoint ownership, impact-window VFX, and reduced-motion suppression |
 | Travel staging | PASS: gathering departure, full-march parallax and temporary atmosphere, static contact brace, canvas clipping, and reduced-motion bypass |
 | Arrival identity | PASS: authoritative destination IDs, regional motif selection, tutorial siding, final thresholds, Veyru destinations, and save/resume preservation |
 | Threat identity | PASS: stable form, lane, and scale profiles for all seven implemented threat families |
@@ -26,6 +26,7 @@
 - [`L1 follow-up report`](l1_followup_battle_recovery_causality_report.md)
 - [`Temporary sensory feedback report`](temporary_sensory_feedback_report.md)
 - [`Audio cue map`](audio_cue_map.md)
+- [`Threat-family audio identity report`](threat_audio_identity_report.md)
 - [`Temporary travel atmosphere report`](temporary_travel_atmosphere_report.md)
 - [`Destination arrival identity report`](destination_arrival_identity_report.md)
 - [`Threat silhouette report`](threat_silhouette_report.md)
@@ -40,6 +41,6 @@
 
 ## Result
 
-The updated strategy remains intact without changing authoritative game state. Alpha.307 introduces the same shared fortress silhouette, module families, dependency language, and departure stance that the player encounters in the actual tutorial and campaign.
+The updated strategy remains intact without changing authoritative game state. Alpha.308 gives every implemented threat family one distinct warning cue at the last readable step before contact while retaining the generic mechanism cue for ordinary battle progression.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
