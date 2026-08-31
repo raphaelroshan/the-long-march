@@ -196,6 +196,7 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         "",
         f"- Clear or satisfying: {answers.get('clear_or_satisfying', '') or '__________'}",
         f"- Confusing or frustrating: {answers.get('confusing_or_frustrating', '') or '__________'}",
+        f"- Result cause and next-run change: {answers.get('causal_replay', '') or '__________'}",
         "- Most memorable place, person, or machine state: __________",
         "- Predicted outcome versus actual outcome: __________",
         "- One change for the next march: __________",

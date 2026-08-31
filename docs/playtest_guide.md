@@ -45,7 +45,7 @@ Use **March Record** when resuming a checkpoint or asking a tester to explain th
 
 The prototype keeps a small playtest journal on the local machine. It records game events such as route choice, encounter steps, interventions, settlement services, and the final result. It does not record names, typed text outside the feedback form, machine identifiers, or network information.
 
-Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the exact build version, the tester's two written answers, replay score, final state, and local event journal. The receipt shows the filename and enables **Copy Report Path** for mouse, keyboard, or controller use. Copying places only the local path on the clipboard; the tester still chooses whether and where to share that file.
+Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the exact build version, the tester's three written answers—including their perceived cause and next-run change—replay score, final state, and local event journal. The receipt shows the filename and enables **Copy Report Path** for mouse, keyboard, or controller use. Copying places only the local path on the clipboard; the tester still chooses whether and where to share that file.
 
 Before handing the build to a new tester, use **Settings → Reset Playtest Data** from the title. Confirm that the guided first-run title returns. Previously exported feedback reports remain in the user-data folder and must be managed separately by the test owner.
 

@@ -1190,3 +1190,7 @@ The local feedback summarizer now derives contact counts from the raw event trai
 ## 2026-09-01 — Five exports do not automatically pass the human gate
 
 The cohort summarizer reports collection progress and cross-session navigation facts, but labels five exports only as ready for human synthesis. It flags mixed builds, repeated run identities, aggregate mismatches, and sessions with locks but no inspections while leaving consent, participant uniqueness, coaching status, severity, and interpretation blank for the observer. Both local summarizers are included and checksummed in release cohorts so the evidence workflow travels with the build.
+
+## 2026-09-01 — Ask testers for the causal model, not only sentiment
+
+The opt-in local notes form retains its clear/satisfying and confusing/frustrating prompts, then asks what caused the current result and what the tester would change next run. At an unfinished paused run, the wording instead asks for the current plan and alternative. The question area scrolls inside a fixed 720p-safe modal so the privacy statement, replay score, and save actions remain visible. This answer is evidence of the tester's explanation, not proof that the game communicated the objectively correct cause.

@@ -453,6 +453,16 @@ func _run_ashgate_journey() -> void:
 	_expect(game.get_global_rect().encloses(game.debrief_panel.inspect_button.get_global_rect()), "the first Debrief action should remain visible at 1600x900")
 	_expect_three_column_contract(game.debrief_panel, game.debrief_panel.timeline_labels[0], game.debrief_panel.fortress_canvas, game.debrief_panel.inspect_button, "terminal Debrief")
 	await _capture("13_debrief")
+	game.debrief_panel.notes_button.pressed.emit()
+	await _settle()
+	var feedback_panel := game.feedback_overlay.find_child("FeedbackPanel", true, false) as PanelContainer
+	_expect(game.feedback_overlay.visible and feedback_panel != null and _rect_encloses(game.feedback_overlay.get_global_rect(), feedback_panel.get_global_rect()), "the playtest notes modal should remain inside the viewport after adding the causal replay prompt")
+	_expect(game.feedback_causal_text != null and game.feedback_causal_text.visible and game.feedback_causal_label.text.contains("what would you change next run"), "the terminal feedback form should ask for the perceived cause and one concrete replay change")
+	game.feedback_causal_text.grab_focus()
+	await _settle()
+	_expect(game.feedback_questions_scroll.get_global_rect().encloses(game.feedback_causal_text.get_global_rect()), "the causal replay field should scroll fully into view for keyboard and controller users")
+	await _capture("14_playtest_notes")
+	game._hide_feedback()
 
 
 func _init() -> void:
