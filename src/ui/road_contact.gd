@@ -5,13 +5,13 @@ const FortressSilhouette = preload("res://src/ui/fortress_silhouette.gd")
 const TEMP_IMPACT_SPARK: Texture2D = preload("res://assets/temporary/kenney/particle-pack/spark_03.png")
 
 const THREAT_PRESENTATION_PROFILES := {
-	"road_raiders": {"wind_up": "HARPOON VOLLEY", "response": "SHELL OR REPEATER FIRE"},
-	"climbers": {"wind_up": "GRAPNEL RUSH", "response": "WALL LIGHT OR REPEATER FIRE"},
-	"burrowers": {"wind_up": "UNDERCARRIAGE BREACH", "response": "LOWER-HULL ARMOR · SHIFTED GUNS · SPARE ENGINE"},
-	"storm_front": {"wind_up": "ARC DISCHARGE", "response": "SIGNAL · ADJACENT ARMOR · SEAL · VENT"},
-	"siege_beast": {"wind_up": "RAM CHARGE", "response": "SHELL FIRE · FRONT ARMOR"},
-	"flood_surge": {"wind_up": "SURGE CREST", "response": "CONDENSER · ARMOR · WORKSHOP · SEAL"},
-	"civic_guardian": {"wind_up": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY"}
+	"road_raiders": {"wind_up": "HARPOON VOLLEY", "response": "SHELL OR REPEATER FIRE", "risk": "Cargo or an exposed system takes repeated damage."},
+	"climbers": {"wind_up": "GRAPNEL RUSH", "response": "WALL LIGHT OR REPEATER FIRE", "risk": "Signal, exterior, or crew systems can be disabled before they answer."},
+	"burrowers": {"wind_up": "UNDERCARRIAGE BREACH", "response": "LOWER-HULL ARMOR · SHIFTED GUNS · SPARE ENGINE", "risk": "A lower-hull breach can disable movement or field repair."},
+	"storm_front": {"wind_up": "ARC DISCHARGE", "response": "SIGNAL · ADJACENT ARMOR · SEAL · VENT", "risk": "Heat rises while exposed signal or sustain systems fail."},
+	"siege_beast": {"wind_up": "RAM CHARGE", "response": "SHELL FIRE · FRONT ARMOR", "risk": "A direct hit can break armor or crew capacity before final resolution."},
+	"flood_surge": {"wind_up": "SURGE CREST", "response": "CONDENSER · ARMOR · WORKSHOP · SEAL", "risk": "Lower systems take damage while hull pressure compounds."},
+	"civic_guardian": {"wind_up": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY", "risk": "Cargo, signal, crew, or armor can be disabled at the archive gate."}
 }
 
 signal pause_requested
@@ -367,22 +367,23 @@ func _configure_threat(view: Dictionary) -> void:
 		return
 	var definition: Dictionary = definitions.get(String(chosen.get("id", "")), {})
 	var enemy_name := String(definition.get("name", String(chosen.get("id", "threat")).replace("_", " ").capitalize()))
+	var profile: Dictionary = THREAT_PRESENTATION_PROFILES.get(String(chosen.get("id", "")), {})
+	var risk_text := String(profile.get("risk", "The targeted system may be damaged or disabled."))
 	_configure_counter_readiness(String(chosen.get("id", "")), view)
 	threat_heading.text = enemy_name.to_upper()
 	if bool(chosen.get("arrived", false)):
 		var impact: Dictionary = chosen.get("impact", {})
 		var target_name := _target_name(String(chosen.get("target", "hull")), view)
 		threat_status.text = "ACTIVE CONTACT · TARGETING %s" % target_name.to_upper()
-		var profile: Dictionary = THREAT_PRESENTATION_PROFILES.get(String(chosen.get("id", "")), {})
 		var damage := int(impact.get("damage", 0))
 		var durability_line := "%d→%d durability" % [int(impact.get("current_durability", 0)), int(impact.get("remaining_durability", 0))]
 		var cascade_lines: Array[String] = []
 		for change in impact.get("dependency_changes", []):
 			cascade_lines.append("%s → %s" % [String(change.get("name", "System")), String(change.get("to", "offline")).to_upper()])
-		threat_detail.text = "INTENT · %s → %s\nWHY · %s\nRESPONSE WINDOW · %s\nNEXT · %d damage · %s%s" % [String(profile.get("wind_up", "CONTACT STRIKE")), target_name.to_upper(), String(impact.get("target_reason", "target route matched")).capitalize(), String(definition.get("counter", "No listed system counter")), damage, durability_line, "\nCASCADE · %s" % ", ".join(cascade_lines) if not cascade_lines.is_empty() else ""]
+		threat_detail.text = "INTENT · %s → %s\nWHY · %s\nRESPONSE WINDOW · %s\nRISK IF IGNORED · %s\nNEXT · %d damage · %s%s" % [String(profile.get("wind_up", "CONTACT STRIKE")), target_name.to_upper(), String(impact.get("target_reason", "target route matched")).capitalize(), String(definition.get("counter", "No listed system counter")), risk_text, damage, durability_line, "\nCASCADE · %s" % ", ".join(cascade_lines) if not cascade_lines.is_empty() else ""]
 	else:
 		threat_status.text = "%d STEP%s OUT · %s" % [chosen_distance, "" if chosen_distance == 1 else "S", String(definition.get("flank", "road approach")).to_upper()]
-		threat_detail.text = "APPROACH · %s\nPREFERRED TARGETS · %s\nCOUNTER · %s" % [String(definition.get("route", "road approach")).capitalize(), " / ".join(definition.get("target_tags", [])), String(definition.get("counter", "No listed system counter"))]
+		threat_detail.text = "APPROACH · %s\nPREFERRED TARGETS · %s\nCOUNTER · %s\nRISK IF IGNORED · %s" % [String(definition.get("route", "road approach")).capitalize(), " / ".join(definition.get("target_tags", [])), String(definition.get("counter", "No listed system counter")), risk_text]
 
 func _configure_counter_readiness(enemy_id: String, view: Dictionary) -> void:
 	var readiness: Dictionary = Dictionary(view.get("counter_readiness", {})).get(enemy_id, {})

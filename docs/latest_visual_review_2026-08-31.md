@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.318`
+**Build:** `0.3.0-alpha.319`
 
 **Engine:** Godot 4.4.1
 
@@ -25,6 +25,7 @@
 - [Route browse-state clarity](visual_evidence/v0.3.0-alpha.316-route-browse-state/)
 - [Selected-road cost receipt](visual_evidence/v0.3.0-alpha.317-route-cost-receipt/)
 - [Live counter readiness](visual_evidence/v0.3.0-alpha.318-live-counter-readiness/)
+- [Threat risk preview](visual_evidence/v0.3.0-alpha.319-threat-risk-preview/)
 
 ## Findings
 
@@ -65,6 +66,8 @@ Alpha.316 corrects the remaining route-planner state mismatch. Merely focusing a
 Alpha.317 makes the selected state carry its own exact receipt in the map center. The highlighted destination now repeats projected day, fuel, pressure, risk, and heat values before Commit, while the browse state explicitly says that no road is selected. The values come from the existing authoritative route preview and do not spend resources.
 
 Alpha.318 separates authored threat advice from the fortress's present answer. The live contact dossier now names an operational counter, identifies an installed but offline counter, or states that no listed module counter is ready. This is derived from current dependency state and specialist assignment; it does not change encounter resolution.
+
+Alpha.319 completes the pre-impact question by adding a short `RISK IF IGNORED` line for every implemented threat family. Target preference, general counter, practical consequence, and current readiness now remain together in the live dossier instead of requiring the player to infer the stakes from later damage.
 
 ## Next work
 
