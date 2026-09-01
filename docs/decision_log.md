@@ -1250,3 +1250,7 @@ The release workflow now gives only its tag-gated publish job write access. That
 ## 2026-09-01 — Release pages must explain the test without repository context
 
 Automated prereleases now prepend stable, tested guidance to GitHub's generated change list. The preamble distinguishes standalone builds from observer cohorts, provides the exact verified-session command, points to both integrity layers, links the producing workflow, and states that the build remains private alpha. This was chosen over relying on filenames or generated commit notes because a tester should know what to download and how to verify it before reading development history.
+
+## 2026-09-01 — The repository landing page is for players first
+
+The README now leads with the moving-fortress premise, current private-alpha download, playable loop, chapter table, controls, local privacy, source verification, and explicit scope boundary. Detailed implementation history remains in the roadmap and reports. A small contract limits README length and bullet count and rejects obsolete prototype wording. This was chosen over preserving the exhaustive feature list because public readers need to understand the game and reach a build before they need subsystem history.
