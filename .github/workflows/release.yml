@@ -83,6 +83,7 @@ jobs:
             --file observer_brief=docs/playtest_guide.md \
             --file session_sheet=docs/private_alpha_session_sheet.md \
             --file session_preparer=tools/prepare_playtest_session.py \
+            --file report_output=tools/report_output.py \
             --file session_summarizer=tools/summarize_playtest_feedback.py \
             --file cohort_summarizer=tools/summarize_playtest_cohort.py \
             --file scope_and_limitations=docs/internal_test_release.md \
@@ -100,6 +101,7 @@ jobs:
             docs/playtest_guide.md
             docs/private_alpha_session_sheet.md
             tools/prepare_playtest_session.py
+            tools/report_output.py
             tools/summarize_playtest_feedback.py
             tools/summarize_playtest_cohort.py
             tools/verify_release_manifest.py

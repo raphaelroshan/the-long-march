@@ -33,6 +33,7 @@ def main() -> int:
         "test_release_publication_contract.py",
         "test_release_notes.py",
         "test_readme_contract.py",
+        "test_report_output.py",
     ):
         require(verify, marker, "verification gate", errors)
 
@@ -46,11 +47,16 @@ def main() -> int:
     require(workflows, "tools/verify_release_manifest.py", "manifest verification", errors)
     require(workflows, "session_summarizer=tools/summarize_playtest_feedback.py", "session summarizer in exact cohort", errors)
     require(workflows, "session_preparer=tools/prepare_playtest_session.py", "session preflight in exact cohort", errors)
+    require(workflows, "report_output=tools/report_output.py", "safe report writer in exact cohort", errors)
     require(workflows, "cohort_summarizer=tools/summarize_playtest_cohort.py", "cohort summarizer in exact cohort", errors)
     if workflows.count("session_preparer=tools/prepare_playtest_session.py") != 2:
         errors.append("both CI and tagged release manifests must checksum the session preflight")
     if workflows.count("tools/prepare_playtest_session.py") < 4:
         errors.append("both CI and tagged release artifacts must upload the session preflight")
+    if workflows.count("report_output=tools/report_output.py") != 2:
+        errors.append("both CI and tagged release manifests must checksum the safe report writer")
+    if workflows.count("tools/report_output.py") < 4:
+        errors.append("both CI and tagged release artifacts must upload the safe report writer")
 
     release_doc = (root / "docs/internal_test_release.md").read_text(encoding="utf-8")
     for statement in (
