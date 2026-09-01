@@ -419,3 +419,12 @@ Complete the existing packaging, offline, save migration, backup recovery, contr
 ## Prompt 16 — Campaign review
 
 > Review the full facility, map, settlement, faction, and character package against `design/fortress_facilities_and_mechanics.md`, `design/map_regions_and_settlements.md`, and `design/characters_factions_and_campaign.md`. Reject hidden costs, universal best layouts, unforecastable threats, and content that does not create a physical or route decision.
+
+
+## Early Access breadth contract
+
+Before adding broader content, read [`early_access_requirements.md`](early_access_requirements.md). Ashgate Lowlands and Flooded Veyru are the quality anchors, not the complete Early Access game. After the current journey, presentation, settlement, consequence, replay, and hardening gates, issue one complete region slice at a time: a distinct route promise, settlement identity, three or more route decisions, two threat/event families, one recovery carry-over, one failure-forward development, save coverage, complete-flow fixture, and visual evidence. Continue until the Early Access floor of four regions, twenty to twenty-four encounters, three fortress chassis/templates, eighteen to twenty-four modules, six to eight specialists, ten to twelve threat families, fourteen to eighteen routes, eight to ten settlements, twenty to twenty-four events, four to six regional developments, and six or more composable endings is met.
+
+Do not make human testing a prerequisite. Use deterministic replay, complete-journey launches, responsive layout checks, controller/scaling/reduced-motion checks, save boundaries, screenshots, package validation, and known-limitations notes as the active gates. New regions must create real operational questions rather than merely adding a background or repeating the existing encounter table.
+
+The recommended feeds are **LM-EA-1** anchor completion, **LM-EA-2** third region, **LM-EA-3** fourth region and alternate chassis, **LM-EA-4** module/specialist/threat breadth, **LM-EA-5** events, regional memory, replay, and endings, and **LM-EA-6** release hardening.
