@@ -67,6 +67,7 @@ func _run() -> void:
 				await _settle()
 
 	_expect(game.state.phase == "road_event" and game.state.road_arrival_event_active(), "clearing the Storm Front should enter the serialized road-event phase")
+	_expect(game.journal.events.any(func(entry: Dictionary) -> bool: return String(entry.get("event", "")) == "road_event_reached"), "the local playtest journal should record that the road scenario blocked arrival")
 	_expect(game.state.current_location == "ashgate_depot" and game.state.campaign_target_node == "soot_orchard" and game.state.campaign_encounters_completed == 0, "the fortress should remain at its origin and leave the Orchard unsecured while the decision waits")
 	_expect(game.roadside_event.visible and not game.journey_arrival.visible and game.roadside_event.context_label.text == "ROAD SCENARIO · ARRIVAL PENDING", "the Orchard decision should replace the arrival receipt until one response is chosen")
 	_expect(game.roadside_event.location_label.text.contains("ASHGATE DEPOT → THE SOOT ORCHARD") and game.roadside_event.tableau.presentation_signature() == "BURNING ORCHARD · FUEL OR PEOPLE", "the road scenario should retain both route endpoints and the authored Orchard tableau")
@@ -82,6 +83,10 @@ func _run() -> void:
 	await _settle()
 	_expect(game.state.phase == "map" and game.state.current_location == "soot_orchard" and game.state.campaign_target_node.is_empty(), "resolving the Orchard scenario should atomically complete arrival")
 	_expect(game.state.campaign_encounters_completed == 1 and game.state.fuel == fuel_before + 2 and String(game.state.campaign_decisions.get("salvage_choice", "")) == "take_fuel", "arrival should preserve the selected fuel consequence and secure exactly one encounter")
+	var journal_event_ids: Array[String] = []
+	for entry in game.journal.events:
+		journal_event_ids.append(String(Dictionary(entry).get("event", "")))
+	_expect(journal_event_ids.find("road_event_reached") < journal_event_ids.find("road_event_resolved") and journal_event_ids.find("road_event_resolved") < journal_event_ids.find("road_arrival_completed"), "the journal should preserve scenario reached, decision resolved, then arrival order")
 	_expect(game.journey_arrival.visible and not game.roadside_event.visible and game.journey_arrival.continue_button.has_focus(), "the completed scenario should hand focus to the arrival receipt rather than directly opening the map")
 	_expect(game.journey_arrival.destination_label.text == "THE SOOT ORCHARD" and game.journey_arrival.report_label.text.contains("Road decision") and game.journey_arrival.report_label.text.contains("recovers 2 fuel"), "the arrival receipt should name the destination and carry the just-applied road consequence")
 	_expect(game.get_global_rect().encloses(game.journey_arrival.continue_button.get_global_rect()), "the Orchard arrival action should remain fully visible at 1280×720")

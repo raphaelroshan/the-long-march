@@ -13,7 +13,7 @@ from tools.summarize_playtest_feedback import build_session_sheet, load_feedback
 
 def main() -> int:
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "build_version": "0.3.0-alpha.test",
         "answers": {
             "clear_or_satisfying": "The target lock explained the hit.",
@@ -46,6 +46,10 @@ def main() -> int:
             "contact_targets_locked": 1,
             "contact_target_inspections": 1,
             "emergency_orders_used": 1,
+            "journey_commitments": 1,
+            "road_events_reached": 1,
+            "road_events_resolved": 1,
+            "road_arrivals_completed": 1,
         },
         "session": {
             "started_at_unix": 1000,
@@ -59,6 +63,9 @@ def main() -> int:
                 {"timestamp_unix": 1240, "event": "intervention_used", "properties": {"intervention": "seal_compartment", "target": "coal_cell", "leg": 1, "step": 2}},
                 {"timestamp_unix": 1360, "event": "settlement_service", "properties": {"service": "refuel"}},
                 {"timestamp_unix": 1420, "event": "campaign_event_resolved", "properties": {"event": "mara_workbench_choice", "choice": "rebuild_weakest"}},
+                {"timestamp_unix": 1430, "event": "road_event_reached", "properties": {"event": "salvage_choice", "origin": "ashgate_depot", "destination": "soot_orchard"}},
+                {"timestamp_unix": 1440, "event": "road_event_resolved", "properties": {"event": "salvage_choice", "choice": "take_fuel", "origin": "ashgate_depot", "destination": "soot_orchard"}},
+                {"timestamp_unix": 1450, "event": "road_arrival_completed", "properties": {"origin": "ashgate_depot", "destination": "soot_orchard", "outcome": "route_secured"}},
             ],
         },
     }
@@ -69,7 +76,7 @@ def main() -> int:
         sheet = build_session_sheet(loaded, path.name)
         assert "Build: `0.3.0-alpha.test`" in sheet
         assert "Run: `ASH-1107`" in sheet
-        assert "Recorded duration: 7 minutes" in sheet
+        assert "Recorded duration: 8 minutes" in sheet
         assert "First recorded player action: Module Moved" in sheet
         assert "Rill Crossing / Protect Cargo" in sheet
         assert "Seal Compartment / Coal Cell" in sheet
@@ -83,6 +90,12 @@ def main() -> int:
         assert "Result cause and next-run change: The engine failed; I would protect it before Meridian." in sheet
         assert "Contact navigation: steps 1 / target locks 1 / target inspections 1 / emergency orders 1" in sheet
         assert "Metric check: exported counts match the event trail." in sheet
+        assert "Journey continuity: commitments 1 / road scenarios reached 1 / resolved 1 / arrivals 1" in sheet
+        assert "Journey metric check: exported counts match the event trail." in sheet
+        assert "Road scenario reached: Salvage Choice · arrival pending" in sheet
+        assert "Road scenario resolved: Salvage Choice · Take Fuel" in sheet
+        assert "Arrival completed: Soot Orchard · Route Secured" in sheet
+        assert "They establish game-state progression, not whether the tester understood it." in sheet
         assert "Target locked: Road Raiders → Coal Cell" in sheet
         assert "Target inspected: Coal Cell" in sheet
         assert "Emergency order: Seal Compartment → Coal Cell" in sheet
@@ -95,6 +108,7 @@ def main() -> int:
         del payload["session_metrics"]
         older_sheet = build_session_sheet(payload, path.name)
         assert "older export has no complete metric block" in older_sheet
+        assert "older export has no complete journey metric block" in older_sheet
         del payload["final_state"]["outcome_facts"]
         oldest_sheet = build_session_sheet(payload, path.name)
         assert "Structured outcome facts: not recorded in this export." in oldest_sheet

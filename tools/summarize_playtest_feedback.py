@@ -28,6 +28,14 @@ CONTACT_EVENTS = {
     "intervention_used",
 }
 
+JOURNEY_EVENTS = {
+    "campaign_node_started",
+    "route_started",
+    "road_event_reached",
+    "road_event_resolved",
+    "road_arrival_completed",
+}
+
 
 def load_feedback(path: Path) -> dict[str, Any]:
     try:
@@ -142,6 +150,26 @@ def contact_metrics(payload: dict[str, Any], events: list[Any]) -> tuple[dict[st
     return derived, "match" if comparable == derived else "mismatch"
 
 
+def journey_metrics(payload: dict[str, Any], events: list[Any]) -> tuple[dict[str, int], str]:
+    event_ids = [str(entry.get("event", "")) for entry in events if isinstance(entry, dict)]
+    derived = {
+        "journey_commitments": event_ids.count("campaign_node_started") + event_ids.count("route_started"),
+        "road_events_reached": event_ids.count("road_event_reached"),
+        "road_events_resolved": event_ids.count("road_event_resolved"),
+        "road_arrivals_completed": event_ids.count("road_arrival_completed"),
+    }
+    exported = payload.get("session_metrics", {})
+    if not isinstance(exported, dict) or not all(key in exported for key in derived):
+        return derived, "missing"
+    comparable: dict[str, int] = {}
+    for key in derived:
+        try:
+            comparable[key] = int(exported.get(key, derived[key]))
+        except (TypeError, ValueError):
+            return derived, "mismatch"
+    return derived, "match" if comparable == derived else "mismatch"
+
+
 def _contact_timeline(events: list[Any]) -> list[str]:
     rows: list[str] = []
     for entry in events:
@@ -171,6 +199,52 @@ def _contact_timeline(events: list[Any]) -> list[str]:
     return rows
 
 
+def _journey_timeline(events: list[Any], started_at: int) -> list[str]:
+    rows: list[str] = []
+    for entry in events:
+        if not isinstance(entry, dict):
+            continue
+        event_id = str(entry.get("event", ""))
+        if event_id not in JOURNEY_EVENTS:
+            continue
+        properties = entry.get("properties", {})
+        if not isinstance(properties, dict):
+            properties = {}
+        try:
+            timestamp = int(entry.get("timestamp_unix", started_at))
+        except (TypeError, ValueError):
+            timestamp = started_at
+        elapsed_seconds = max(0, timestamp - started_at)
+        elapsed = "+%dm%02ds" % (elapsed_seconds // 60, elapsed_seconds % 60)
+        origin = _display_value(properties.get("origin"))
+        destination = _display_value(properties.get("destination") or properties.get("node"))
+        if event_id in ("campaign_node_started", "route_started"):
+            route = properties.get("route") or properties.get("node") or "unknown road"
+            detail = "Committed: %s" % _display_value(route)
+            doctrine = _display_value(properties.get("doctrine"))
+            if doctrine != "—":
+                detail += " · %s" % doctrine
+        elif event_id == "road_event_reached":
+            blocked = _display_value(properties.get("blocks") or "arrival")
+            detail = "Road scenario reached: %s · %s pending" % (
+                _display_value(properties.get("event")),
+                blocked.lower(),
+            )
+        elif event_id == "road_event_resolved":
+            detail = "Road scenario resolved: %s · %s" % (
+                _display_value(properties.get("event")),
+                _display_value(properties.get("choice")),
+            )
+        else:
+            detail = "Arrival completed: %s" % destination
+            outcome = _display_value(properties.get("outcome"))
+            if outcome != "—":
+                detail += " · %s" % outcome
+        route_text = "%s → %s" % (origin, destination) if origin != "—" or destination != "—" else "—"
+        rows.append(f"| {elapsed} | {route_text} | {detail} |")
+    return rows
+
+
 def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.json") -> str:
     answers: dict[str, Any] = payload["answers"]
     final_state: dict[str, Any] = payload["final_state"]
@@ -178,6 +252,12 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
     events: list[Any] = session.get("events", [])
     timestamps = [int(entry.get("timestamp_unix", 0)) for entry in events if isinstance(entry, dict) and int(entry.get("timestamp_unix", 0)) > 0]
     elapsed_minutes = max(0, round((max(timestamps) - min(timestamps)) / 60)) if timestamps else 0
+    try:
+        session_started_at = int(session.get("started_at_unix", 0))
+    except (TypeError, ValueError):
+        session_started_at = 0
+    if session_started_at <= 0 and timestamps:
+        session_started_at = min(timestamps)
     first_action = "not recorded"
     for entry in events:
         if isinstance(entry, dict) and str(entry.get("event", "")) in PLAYER_ACTIONS:
@@ -188,13 +268,20 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
     path = final_state.get("campaign_path", [])
     path_text = " → ".join(str(node).replace("_", " ").title() for node in path) if isinstance(path, list) and path else "not completed"
     metrics, metrics_status = contact_metrics(payload, events)
+    journey, journey_status = journey_metrics(payload, events)
     contact_timeline = _contact_timeline(events)
+    journey_timeline = _journey_timeline(events, session_started_at)
     outcome_lines = outcome_fact_lines(final_state)
     metric_check = {
         "match": "- Metric check: exported counts match the event trail.",
         "mismatch": "- Metric check: exported counts differ from the event trail; use the chronological trail below.",
         "missing": "- Metric check: this older export has no complete metric block; counts were derived from its event trail.",
     }[metrics_status]
+    journey_check = {
+        "match": "- Journey metric check: exported counts match the event trail.",
+        "mismatch": "- Journey metric check: exported counts differ from the event trail; use the chronological trail below.",
+        "missing": "- Journey metric check: this older export has no complete journey metric block; counts were derived from its event trail.",
+    }[journey_status]
     lines = [
         "# The Long March — Private Alpha Session",
         "",
@@ -223,6 +310,8 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         f"- Replay score: {answers.get('replay_score', '?')}/5",
         f"- Contact navigation: steps {metrics['encounter_steps']} / target locks {metrics['contact_targets_locked']} / target inspections {metrics['contact_target_inspections']} / emergency orders {metrics['emergency_orders_used']}",
         metric_check,
+        f"- Journey continuity: commitments {journey['journey_commitments']} / road scenarios reached {journey['road_events_reached']} / resolved {journey['road_events_resolved']} / arrivals {journey['road_arrivals_completed']}",
+        journey_check,
         "",
         "### Recorded outcome facts",
         "",
@@ -238,6 +327,14 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         "|---:|---:|---|",
         *(contact_timeline if contact_timeline else ["| — | — | No contact navigation recorded. |"]),
         "",
+        "### Journey continuity trail",
+        "",
+        "These rows show committed transitions in order. They establish game-state progression, not whether the tester understood it.",
+        "",
+        "| Elapsed | Route | Recorded transition |",
+        "|---:|---|---|",
+        *(journey_timeline if journey_timeline else ["| — | — | No journey transition recorded. |"]),
+        "",
         "## Observe without coaching",
         "",
         "| Moment | Record what happened, not an interpretation |",
@@ -246,6 +343,7 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         "| Placement | Count invalid attempts. What dependency did they expect? |",
         "| Route choice | Ask what they predict will cost fuel/time and what might attack. |",
         "| Contact | Before Advance, ask which system will be targeted and why. |",
+        "| Road scenario | Before choosing, ask where the fortress is, whether it has arrived, and what remains blocked. |",
         "| Intervention | Record whether they noticed the one-order limit and expected consequence. |",
         "| Recovery | Ask why they chose repair, fuel, hull, or no service. |",
         "| Authored event | After leaving it, ask what was traded and what may matter later. |",
@@ -280,6 +378,8 @@ def build_session_sheet(payload: dict[str, Any], source_name: str = "feedback.js
         "- [ ] Recovery before service (110% Standard)",
         "- [ ] Recovery receipt after service (110% Standard)",
         "- [ ] Authored event before choice (100% Standard)",
+        "- [ ] Road scenario before arrival (100% Standard)",
+        "- [ ] Arrival receipt after scenario (100% Standard)",
         "- [ ] Later callback or terminal record (100% Standard)",
         "- [ ] Terminal Debrief (110% High Contrast)",
         "",

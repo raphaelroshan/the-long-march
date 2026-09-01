@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-`0.3.0-alpha.338` implements the first complete presentation chain from bazaar to planning, road, a true pre-contact interruption, contact, a post-contact road scenario, and arrival. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. The first Rill Crossing road can stop at the authored Lift Chain interruption before contact. On the Soot Orchard route, clearing the Storm Front now opens the fuel-versus-workers scenario while the fortress remains at its origin; only the selected consequence completes arrival and moves the map marker. Skip, Reduced Motion, and save/load preserve both boundaries. Final art and bespoke per-enemy attack animation remain follow-up slices.
+`0.3.0-alpha.339` implements the first complete presentation chain from bazaar to planning, road, a true pre-contact interruption, contact, a post-contact road scenario, and arrival. Every road encounter uses a full-frame side-on fortress contact with stable operational values, visible enemy approach lanes, authoritative target intent, predicted damage, dependency cascades, and the existing deterministic commands. The first Rill Crossing road can stop at the authored Lift Chain interruption before contact. On the Soot Orchard route, clearing the Storm Front now opens the fuel-versus-workers scenario while the fortress remains at its origin; only the selected consequence completes arrival and moves the map marker. Skip, Reduced Motion, save/load, and local-only journey evidence preserve both boundaries. Final art and bespoke per-enemy attack animation remain follow-up slices.
 
 ## Purpose
 
@@ -635,7 +635,7 @@ This is the necessary simulation seam. Do not begin polished animation before it
 
 ### Slice 7 — Visualize one hazard and scenario
 
-**Status:** The generalized roadside tableau, first pre-contact interruption, bespoke Soot Orchard art, and contact → scenario → arrival handoff are complete in `0.3.0-alpha.338`. Human comparison of the hostile Rill route and scenario-driven Orchard route remains.
+**Status:** The generalized roadside tableau, first pre-contact interruption, bespoke Soot Orchard art, contact → scenario → arrival handoff, and ordered local evidence trail are complete in `0.3.0-alpha.339`. Human comparison of the hostile Rill route and scenario-driven Orchard route remains.
 
 - Implement Storm Front takeover, exposure highlights, and the Soot Orchard tableau.
 - Resolve the existing orchard choice in place and resume the march or arrive cleanly.

@@ -26,7 +26,7 @@ Record observable behavior and direct quotes for:
 - outcome explanation from the terminal Debrief;
 - one concrete replay change.
 
-The game already records committed routes, interventions, services, event choices, final state, build version, a replay score, the tester's written account of the result cause and next-run change, and structured outcome facts for installed systems and surviving threats in a local-only feedback export. It does not record cursor movement, hesitation, incorrect predictions, spoken explanations, or emotion. Those require an observer note and must never be inferred from completion alone.
+The game already records committed routes, interventions, services, event choices, final state, build version, a replay score, the tester's written account of the result cause and next-run change, structured outcome facts for installed systems and surviving threats, and the ordered commitment → road scenario → resolution → arrival trail in a local-only feedback export. It does not record cursor movement, hesitation, incorrect predictions, spoken explanations, or emotion. Those require an observer note and must never be inferred from completion alone.
 
 ## Generate a session sheet from an export
 
@@ -36,7 +36,7 @@ After the tester chooses **Record Playtest Notes → Save Notes Locally**, copy 
 python3 tools/summarize_playtest_feedback.py /absolute/path/to/the_long_march_feedback_....json --output session-01.md
 ```
 
-The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate the metric block. It does not modify the source export, send data anywhere, or infer comprehension from interaction counts.
+The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. Its journey section lists route commitments, road scenarios reached and resolved, and completed arrivals in chronological order. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate either metric block. It does not modify the source export, send data anywhere, or infer comprehension from interaction counts.
 
 After collecting the intended five exports, generate a cohort review in the same argument order used for the session numbers:
 
@@ -59,6 +59,8 @@ Capture only with tester consent.
 | Recovery before service | 1280×720 | 110% | Standard | finite actions and all before/after previews |
 | Recovery after service | 1280×720 | 110% | Standard | exact transaction receipt and remaining action |
 | Authored event | 1280×720 | 100% | Standard | physical conflict and both practical costs |
+| Road scenario before arrival | 1280×720 | 100% | Standard | origin, destination, arrival-pending state, and both choices |
+| Arrival after scenario | 1280×720 | 100% | Standard | secured destination, applied road decision, and next action |
 | Event callback or record | 1280×720 | 100% | Standard | earlier promise and later held/failed result |
 | Terminal Debrief | 1280×720 | 110% | High | causal outcome and one concrete replay experiment |
 
@@ -74,4 +76,4 @@ Do not prioritize fixes from a single preference. After five sessions, group obs
 
 Keep exported reports and completed sheets outside Git unless every participant explicitly agreed to repository storage and all personal information has been removed.
 
-The exported JSON includes a `session_metrics` block with counts for encounter steps, contact targets locked, deliberate target inspections, and emergency orders used. Treat these as navigation evidence, not intent: compare the event order and observer notes before concluding that a player understood or ignored a target.
+The exported JSON includes a `session_metrics` block with counts for encounter steps, contact targets locked, deliberate target inspections, emergency orders used, route commitments, road scenarios reached and resolved, and completed arrivals. Treat these as navigation evidence, not intent: compare both chronological trails and observer notes before concluding that a player understood a target or transition. A scenario reached without a later arrival may be confusion, an intentional stop, a crash, or the agreed session boundary.

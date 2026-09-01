@@ -9,7 +9,7 @@ from pathlib import Path
 from statistics import mean
 from typing import Any
 
-from summarize_playtest_feedback import contact_metrics, load_feedback, outcome_fact_lines
+from summarize_playtest_feedback import contact_metrics, journey_metrics, load_feedback, outcome_fact_lines
 
 
 def _cell(value: Any) -> str:
@@ -40,6 +40,25 @@ def _quoted_answer(answers: dict[str, Any], key: str) -> list[str]:
     return [f"> {line}" if line else ">" for line in text.split("\n")]
 
 
+def _journey_end_state(events: list[Any]) -> tuple[bool, bool]:
+    journey_open = False
+    road_event_open = False
+    for entry in events:
+        if not isinstance(entry, dict):
+            continue
+        event_id = str(entry.get("event", ""))
+        if event_id in ("campaign_node_started", "route_started"):
+            journey_open = True
+        elif event_id == "road_event_reached":
+            road_event_open = True
+        elif event_id == "road_event_resolved":
+            road_event_open = False
+        elif event_id == "road_arrival_completed":
+            journey_open = False
+            road_event_open = False
+    return journey_open, road_event_open
+
+
 def build_cohort_report(
     payloads: Sequence[dict[str, Any]],
     required_sessions: int = 5,
@@ -58,10 +77,19 @@ def build_cohort_report(
         "contact_target_inspections": 0,
         "emergency_orders_used": 0,
     }
+    total_journey_metrics = {
+        "journey_commitments": 0,
+        "road_events_reached": 0,
+        "road_events_resolved": 0,
+        "road_arrivals_completed": 0,
+    }
     replay_scores: list[int] = []
     no_inspection_sessions = 0
     order_sessions = 0
     mismatch_sessions = 0
+    journey_mismatch_sessions = 0
+    incomplete_journey_sessions = 0
+    unresolved_road_event_sessions = 0
     run_codes: list[str] = []
     written_evidence: list[str] = []
 
@@ -71,14 +99,24 @@ def build_cohort_report(
         session = payload.get("session", {})
         events = session.get("events", []) if isinstance(session, dict) else []
         metrics, metrics_status = contact_metrics(payload, events)
+        journey, journey_status = journey_metrics(payload, events)
         for key in total_metrics:
             total_metrics[key] += metrics[key]
+        for key in total_journey_metrics:
+            total_journey_metrics[key] += journey[key]
         if metrics["contact_targets_locked"] > 0 and metrics["contact_target_inspections"] == 0:
             no_inspection_sessions += 1
         if metrics["emergency_orders_used"] > 0:
             order_sessions += 1
         if metrics_status == "mismatch":
             mismatch_sessions += 1
+        if journey_status == "mismatch":
+            journey_mismatch_sessions += 1
+        journey_open, road_event_open = _journey_end_state(events)
+        if journey_open:
+            incomplete_journey_sessions += 1
+        if road_event_open:
+            unresolved_road_event_sessions += 1
         try:
             replay_score = int(answers.get("replay_score", 0)) if isinstance(answers, dict) else 0
         except (TypeError, ValueError):
@@ -113,7 +151,7 @@ def build_cohort_report(
             ]
         )
         rows.append(
-            "| %d | `%s` | `%s` | %s | %s | %dm | %s | %d / %d / %d / %d | %s |"
+            "| %d | `%s` | `%s` | %s | %s | %dm | %s | %d / %d / %d / %d | %d / %d / %d / %d | %s / %s |"
             % (
                 index,
                 str(payload.get("build_version", "unknown")),
@@ -126,7 +164,12 @@ def build_cohort_report(
                 metrics["contact_targets_locked"],
                 metrics["contact_target_inspections"],
                 metrics["emergency_orders_used"],
+                journey["journey_commitments"],
+                journey["road_events_reached"],
+                journey["road_events_resolved"],
+                journey["road_arrivals_completed"],
                 metrics_status,
+                journey_status,
             )
         )
 
@@ -154,8 +197,8 @@ def build_cohort_report(
         "",
         "## Automatic session evidence",
         "",
-        "| Session | Build | Run | Chapter | Result | Recorded | Replay | Steps / locks / inspections / orders | Metric check |",
-        "|---:|---|---|---|---|---:|---:|---|---|",
+        "| Session | Build | Run | Chapter | Result | Recorded | Replay | Contact: steps / locks / inspections / orders | Journey: commits / scenarios / resolutions / arrivals | Metric checks |",
+        "|---:|---|---|---|---|---:|---:|---|---|---|",
         *rows,
         "",
         "## Cohort navigation totals",
@@ -170,6 +213,18 @@ def build_cohort_report(
         f"- Mean replay score: {average_replay}",
         "",
         "These totals describe recorded navigation only. They do not establish comprehension, preference, emotion, or causality.",
+        "",
+        "## Cohort journey-continuity totals",
+        "",
+        f"- Journey commitments: {total_journey_metrics['journey_commitments']}",
+        f"- Road scenarios reached: {total_journey_metrics['road_events_reached']}",
+        f"- Road scenarios resolved: {total_journey_metrics['road_events_resolved']}",
+        f"- Road arrivals completed: {total_journey_metrics['road_arrivals_completed']}",
+        f"- Sessions ending after a route commitment but before arrival was recorded: {incomplete_journey_sessions}",
+        f"- Sessions ending with a reached but unresolved road scenario: {unresolved_road_event_sessions}",
+        f"- Sessions whose journey metric block disagrees with the raw event trail: {journey_mismatch_sessions}",
+        "",
+        "These counts identify where an exported session ended in the state sequence. Observer notes are still required to distinguish confusion, an intentional stop, a crash, or an agreed session boundary.",
         "",
         "## Tester-written evidence",
         "",
