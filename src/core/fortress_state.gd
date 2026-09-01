@@ -1874,8 +1874,9 @@ func operational(module_id: String) -> bool:
 	return false
 
 func _recalculate() -> void:
+	var was_overheated := heat > BASE_HEAT_LIMIT
 	heat = maxi(0, total_heat() + heat_surge - heat_relief)
-	if heat > BASE_HEAT_LIMIT:
+	if heat > BASE_HEAT_LIMIT and not was_overheated:
 		log.append("Heat warning: the fortress is above its safe operating limit.")
 
 func route_preview(route_id: String, doctrine: String = "protect_cargo") -> Dictionary:
@@ -2264,7 +2265,7 @@ func _validated_module_records(value: Variant, installed: bool) -> Dictionary:
 		return {"ok": false, "reason": "fortress module record exceeds chassis mass capacity"}
 	return {"ok": true, "modules": restored}
 
-func _validated_encounter_records(value: Variant, installed_modules: Array) -> Dictionary:
+func _validated_encounter_records(value: Variant, installed_modules: Array, targets_may_be_historical: bool = false) -> Dictionary:
 	if not value is Array:
 		return {"ok": false, "reason": "encounter contact record is malformed"}
 	var installed_ids: Dictionary = {}
@@ -2290,7 +2291,7 @@ func _validated_encounter_records(value: Variant, installed_modules: Array) -> D
 		if bool(enemy.get("defeated", false)) != (health == 0):
 			return {"ok": false, "reason": "encounter contact record conflicts with threat health"}
 		var target_id := String(enemy.get("target", ""))
-		if not target_id.is_empty() and target_id != "hull" and not installed_ids.has(target_id):
+		if not targets_may_be_historical and not target_id.is_empty() and target_id != "hull" and not installed_ids.has(target_id):
 			return {"ok": false, "reason": "encounter contact record targets a missing system"}
 		restored.append(enemy)
 	return {"ok": true, "enemies": restored}
@@ -2311,7 +2312,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		restored_stored_modules_result = _validated_module_records(data.get("stored_modules", []), false)
 		if not bool(restored_stored_modules_result.get("ok", false)):
 			return restored_stored_modules_result
-	var restored_encounter_result := _validated_encounter_records(data.get("encounter_enemies", []), restored_modules_result.get("modules", []))
+	var targets_may_be_historical := not bool(data.get("encounter_active", encounter_active)) and float(data.get("encounter_progress", encounter_progress)) >= 1.0
+	var restored_encounter_result := _validated_encounter_records(data.get("encounter_enemies", []), restored_modules_result.get("modules", []), targets_may_be_historical)
 	if not bool(restored_encounter_result.get("ok", false)):
 		return restored_encounter_result
 	var restored_phase := String(data.get("phase", phase))

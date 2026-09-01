@@ -3,6 +3,8 @@ extends SceneTree
 var game: Control
 var failures: Array[String] = []
 var capture_dir := ""
+var responsive_profile := false
+var viewport_size := Vector2i(1600, 900)
 
 
 func _expect(condition: bool, message: String) -> void:
@@ -13,6 +15,30 @@ func _expect(condition: bool, message: String) -> void:
 func _settle_ui() -> void:
 	for _frame in range(4):
 		await process_frame
+
+
+func _apply_large_text(node: Node) -> void:
+	if node is Control:
+		var control := node as Control
+		if control.theme != null:
+			control.theme.default_font_size = roundi(float(control.theme.default_font_size) * 1.1)
+		if control.has_theme_font_size_override("font_size"):
+			control.add_theme_font_size_override("font_size", roundi(float(control.get_theme_font_size("font_size")) * 1.1))
+		if control.has_theme_font_size_override("normal_font_size"):
+			control.add_theme_font_size_override("normal_font_size", roundi(float(control.get_theme_font_size("normal_font_size")) * 1.1))
+	for child in node.get_children():
+		_apply_large_text(child)
+
+
+func _expect_visible_inside(surface: Control, controls: Array, label: String) -> void:
+	if not responsive_profile:
+		return
+	var surface_rect := surface.get_global_rect()
+	for control in controls:
+		if control == null or not control.is_visible_in_tree():
+			_expect(false, "%s should keep every required control visible" % label)
+			continue
+		_expect(surface_rect.encloses(control.get_global_rect()), "%s should keep %s inside %dx%d" % [label, control.name, viewport_size.x, viewport_size.y])
 
 func _capture(name: String) -> void:
 	if capture_dir.is_empty():
@@ -41,10 +67,13 @@ func _press_route(node_id: String) -> void:
 	game.campaign_commit_button.pressed.emit()
 	await process_frame
 	_expect(game.journey_transition.visible and game.journey_transition.detail_label.text.contains("resolve the contact before"), "committing a Veyru route should preserve its in-between road presentation")
-	_expect(game.journey_transition.promise_label.text.contains("sealed medicines") and game.journey_transition.phase_label.text.contains("COSTS APPLIED") and game.journey_transition.presentation_beat() == "departed" and game.journey_transition.next_label.text.contains("Skip the march beat"), "the Veyru departure order should carry its medicine promise, committed phase, and skippable march handoff")
+	_expect(game.journey_transition.promise_label.text.contains("sealed medicines") and game.journey_transition.phase_label.text.contains("COSTS APPLIED") and game.journey_transition.presentation_beat() == ("contact_ahead" if responsive_profile else "departed"), "the Veyru departure order should carry its medicine promise, committed phase, and motion preference")
+	_expect_visible_inside(game.journey_transition, [game.journey_transition.day_label, game.journey_transition.march_canvas, game.journey_transition.continue_button], "Veyru departure")
 	if node_id == "pump_gallery":
 		game.journey_transition._process(0.4)
-		_expect(game.journey_transition.march_canvas.beat_visual_signature() == "GALLERY WHEEL PASSING" and String(game.journey_transition.march_canvas.route_visual_signature().get("destination_id", "")) == "pump_gallery", "the first Veyru road should carry its pump machinery into the travel beat")
+		_expect(String(game.journey_transition.march_canvas.route_visual_signature().get("destination_id", "")) == "pump_gallery", "the first Veyru road should retain its Pump Gallery destination")
+		if not responsive_profile:
+			_expect(game.journey_transition.march_canvas.beat_visual_signature() == "GALLERY WHEEL PASSING", "the animated Veyru road should carry its pump machinery into the travel beat")
 		await _capture("03_pump_gallery_travel")
 	game.journey_transition.continue_button.pressed.emit()
 	await process_frame
@@ -86,6 +115,12 @@ func _finish_battle() -> void:
 
 func _run() -> void:
 	capture_dir = OS.get_environment("LONG_MARCH_CAPTURE_DIR")
+	var width_text := OS.get_environment("LONG_MARCH_VIEWPORT_WIDTH")
+	var height_text := OS.get_environment("LONG_MARCH_VIEWPORT_HEIGHT")
+	if width_text.is_valid_int() and height_text.is_valid_int():
+		viewport_size = Vector2i(int(width_text), int(height_text))
+	responsive_profile = OS.get_environment("LONG_MARCH_RESPONSIVE_PROFILE") == "1"
+	root.size = viewport_size
 	for relative_path in ["user://the_long_march_prototype.save", "user://the_long_march_prototype.backup.save", "user://the_long_march_onboarding_v1.complete", "user://the_long_march_playtest_journal.json"]:
 		var path := ProjectSettings.globalize_path(relative_path)
 		if FileAccess.file_exists(path):
@@ -96,12 +131,19 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	await process_frame
+	if responsive_profile:
+		game.set_high_contrast(true)
+		game.set_reduced_motion(true)
+		game.set_controller_layout("east_confirm")
+		_apply_large_text(game)
+		await _settle_ui()
 
 	_expect(game.state.campaign_region_id == "flooded_veyru" and game.state.current_location == "lantern_quay", "the Veyru UI flow should begin at Lantern Quay")
 	_expect(game.settlement_hub.context_label.text.contains("LANTERN QUAY FLOOD MARKET") and game.settlement_hub.bazaar_canvas.presentation_signature().contains("FLOOD DOCK"), "Lantern Quay's starting bazaar should identify its raised flood-market setting")
 	_expect(game.settlement_hub.place_identity_label.text.contains("FLOODLINE MARKET") and game.settlement_hub.pressure_label.text.contains("RISING WATER") and game.settlement_hub.route_meaning_label.text.contains("Pump Gallery") and game.settlement_hub.route_meaning_label.text.contains("Sunken Tramworks"), "Lantern Quay should state its place, active water pressure, and the meaning of both opening roads")
 	_expect(game.settlement_hub.bazaar_canvas.route_signature() == "PUMP GALLERY · SUNKEN TRAMWORKS", "Lantern Quay's center stage should carry a visible two-road departure sign")
 	_expect(game.settlement_hub.attendant_label.text == "ATTENDANT · MEDICINE COURIER" and game.settlement_hub.attendant_portrait.presentation_signature() == "LANTERN_QUAY · ASSIGNMENT_BOARD · MEDICINE COURIER", "Lantern Quay's initial assignment should have a place-specific human representative")
+	_expect_visible_inside(game.settlement_hub, [game.settlement_hub.bazaar_canvas, game.settlement_hub.primary_action_button, game.settlement_hub.station_buttons["departure_gate"]], "Lantern Quay")
 	await _capture("02_lantern_quay")
 	game.settlement_hub.station_buttons["signal_broker"].pressed.emit()
 	await process_frame
@@ -123,9 +165,11 @@ func _run() -> void:
 	var opening_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(opening_focus in game.campaign_node_buttons and game.journey_planner.map_host.get_global_rect().encloses(opening_focus.get_global_rect()), "opening the Veyru route table should focus a visible opening road")
 	_expect(game.campaign_map.assignment_marker_for("dry_archive") == "accepted" and game.campaign_map.marker_labels["dry_archive"].text == "ACCEPTED", "the Veyru route map should carry the medicine obligation onto the Dry Archive destination")
+	_expect_visible_inside(game.journey_planner, [game.journey_planner.map_host, opening_focus, game.campaign_commit_button], "Veyru route planner")
 
 	await _press_route("pump_gallery")
 	_expect(game.state.phase == "battle" and game.combat_panel.visible and _combat_names_include("Flood Surge") and not _combat_names_include("Climber"), "Pump Gallery should show Flood Surge alone in the combat UI")
+	_expect_visible_inside(game.road_contact, [game.road_contact.contact_canvas, game.advance_encounter_button, game.road_contact.intervention_buttons[0]], "Veyru contact")
 	await _finish_battle()
 	_expect(game.state.campaign_event_pending == "drain_pumps" and game.campaign_event_title.text == "THE GALLERY STILL TURNS", "Pump Gallery should hand off to the authored drain decision")
 	_expect(game.roadside_event.story_label.text.contains("ONE DAY AGAINST TWO WATER") and game.roadside_event.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER", "the Pump Gallery should frame its delay as a visible choice against the flood clock")
@@ -144,6 +188,7 @@ func _run() -> void:
 	var camp_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(game.recovery_panel.visible and camp_focus in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button, game.recovery_panel.routes_button] and camp_focus.is_visible_in_tree(), "arrival at Evacuation Camp should focus a visible recovery or road-review action")
 	_expect(game.recovery_panel.local_stake_label.text.contains("medicine carrier") and game.recovery_panel.route_outlook_label.text.contains("Archive Causeway") and game.recovery_panel.route_outlook_label.text.contains("Drowned Registry") and game.recovery_panel.route_outlook_label.text.contains("Pilgrim Gantry"), "Evacuation Camp recovery should carry the medicine stake into three distinct outbound road meanings")
+	_expect_visible_inside(game.recovery_panel, [game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, camp_focus], "Evacuation Camp recovery")
 	game.state.fuel = 1
 	game._refresh_ui()
 	_expect(not game.recovery_panel.refuel_button.disabled and game.recovery_panel.refuel_button.text.contains("+1 EMERGENCY FUEL") and game.recovery_panel.refuel_button.text.contains("FREE"), "Evacuation Camp should expose its free low-fuel safeguard")
@@ -170,6 +215,7 @@ func _run() -> void:
 	var decision_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(decision_focus in game.roadside_event.choice_buttons, "the final commitment should focus its roadside choice set")
 	_expect(game.get_global_rect().encloses(game.roadside_event.choice_buttons[1].get_global_rect()), "the final commitment should keep both roadside choices visible")
+	_expect_visible_inside(game.roadside_event, [game.roadside_event.tableau, game.roadside_event.choice_buttons[0], game.roadside_event.choice_buttons[1]], "Veyru final commitment")
 	await _press_event("seal_archive")
 	_expect(game.state.campaign_available_nodes() == ["dry_archive"] and game.campaign_map.status_for("dry_archive") == "available", "resolving the archive commitment should open the final node")
 
@@ -178,8 +224,11 @@ func _run() -> void:
 	await _finish_battle()
 	_expect(game.state.phase == "results" and game.state.final_result == "archive_kept", "the UI-driven Veyru route should reach Archive Kept")
 	_expect(game.debrief_panel.visible and game.debrief_panel.headline_label.text == "DECISIVE" and game.debrief_panel.outcome_label.text.contains("ARCHIVE KEPT") and game.debrief_panel.commitments_label.text.contains("Parts Crate") and game.debrief_panel.commitments_label.text.contains("Pump Gallery — drained the lower roads") and game._result_record_text().contains("Rising water:") and game._result_record_text().contains("Dry Archive — sealed the signal"), "the Veyru debrief should name its result, water, carrier, pump decision, and final commitment")
+	_expect_visible_inside(game.debrief_panel, [game.debrief_panel.fortress_canvas, game.debrief_panel.inspect_button, game.debrief_panel.notes_button], "Veyru Debrief")
 
 	if failures.is_empty():
+		if responsive_profile:
+			print("PASS: The Long March responsive Veyru profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March Flooded Veyru UI flow")
 		quit(0)
 	else:
