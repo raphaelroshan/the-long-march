@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.342` tester-facing release guidance candidate |
+| Build | `0.3.0-alpha.343` player-first repository landing candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -50,6 +50,7 @@
 | Session preflight | PASS: one command verifies every cohort digest, writes exact artifact provenance into a fresh observer sheet outside the retained cohort, and rejects altered artifacts, invalid session numbers, in-cohort output, and accidental overwrite. |
 | Prerelease publication | PASS: owner-created version tags wait for both platform cohorts, reverify both manifests, exercise both session preflights, validate all archives, publish standalone/cohort assets plus `SHA256SUMS.txt`, and safely refresh assets on rerun. |
 | Release guidance | PASS: every new prerelease leads with concise standalone/cohort download choices, the verified-session command, checksum instructions, private-alpha scope, and workflow evidence before the generated change list. |
+| Public landing page | PASS: the README leads with the playable release, fortress loop, current journeys, controls, privacy, honest scope, and authoritative design/testing links while remaining bounded against a feature-inventory regression. |
 
 ## Evidence
 
@@ -114,9 +115,10 @@
 - [`Private-alpha session preflight report`](private_alpha_session_preflight_report.md)
 - [`Automated prerelease publication report`](automated_prerelease_publication_report.md)
 - [`Tester-facing release guidance report`](tester_facing_release_guidance_report.md)
+- [`Player-first README report`](player_first_readme_report.md)
 
 ## Result
 
-The updated strategy remains intact. Alpha.342 makes that verified prerelease understandable to a tester without requiring repository context.
+The updated strategy remains intact. Alpha.343 makes the repository itself understandable to a prospective tester without burying the playable build beneath implementation history.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
