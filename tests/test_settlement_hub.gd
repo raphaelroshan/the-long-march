@@ -192,9 +192,21 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(not journey.visible and game.roadside_event.visible and not game.road_contact.visible and game.state.pre_contact_occurrence_active(), "continuing from the first road should reveal its authored interruption before contact")
 	_expect(game.roadside_event.context_label.text == "ROAD INTERRUPTION · CONTACT WAITING" and game.roadside_event.location_label.text.contains("ASHGATE DEPOT → RILL CROSSING"), "the first interruption should preserve the road's origin, destination, and pending-contact state")
+	var reached_index := -1
+	for index in range(game.journal.events.size()):
+		if String(Dictionary(game.journal.events[index]).get("event", "")) == "road_event_reached":
+			reached_index = index
+			break
+	_expect(reached_index >= 0 and String(Dictionary(game.journal.events[reached_index]).get("properties", {}).get("blocks", "")) == "contact", "the local journal should record that the Lift Chain interruption blocks contact rather than arrival")
 	game.roadside_event.button_for("brace_lift_chain").pressed.emit()
 	await _settle_ui()
 	_expect(game.main_columns.visible and game.combat_panel.visible and game.road_contact.visible and game.road_contact.advance_button.has_focus(), "resolving the road interruption should reveal the fortress contact without advancing a combat step")
+	var resolved_index := -1
+	for index in range(game.journal.events.size()):
+		if String(Dictionary(game.journal.events[index]).get("event", "")) == "road_event_resolved":
+			resolved_index = index
+			break
+	_expect(resolved_index > reached_index and String(Dictionary(game.journal.events[resolved_index]).get("properties", {}).get("next", "")) == "contact", "the local journal should preserve interruption reached then resolved before contact")
 	var orchard_event := {
 		"choices": [
 			{"effect": "Fuel +2 · Trust -1"},

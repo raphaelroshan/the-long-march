@@ -13,15 +13,19 @@ from summarize_playtest_cohort import build_cohort_report
 def _payload(build: str, run_code: str, inspected: bool, replay_score: int) -> dict:
     events = [
         {"timestamp_unix": 1000, "event": "run_started", "properties": {}},
+        {"timestamp_unix": 1010, "event": "campaign_node_started", "properties": {"origin": "ashgate_depot", "node": "soot_orchard", "doctrine": "protect_cargo"}},
         {"timestamp_unix": 1060, "event": "encounter_step", "properties": {"leg": 1, "step": 1}},
         {"timestamp_unix": 1070, "event": "contact_target_locked", "properties": {"leg": 1, "step": 1, "enemy": "road_raiders", "target": "coal_cell"}},
         {"timestamp_unix": 1120, "event": "intervention_used", "properties": {"leg": 1, "step": 1, "intervention": "seal_compartment"}},
+        {"timestamp_unix": 1200, "event": "road_event_reached", "properties": {"event": "salvage_choice", "origin": "ashgate_depot", "destination": "soot_orchard"}},
+        {"timestamp_unix": 1220, "event": "road_event_resolved", "properties": {"event": "salvage_choice", "choice": "take_fuel", "origin": "ashgate_depot", "destination": "soot_orchard"}},
+        {"timestamp_unix": 1230, "event": "road_arrival_completed", "properties": {"origin": "ashgate_depot", "destination": "soot_orchard"}},
         {"timestamp_unix": 1420, "event": "run_completed", "properties": {}},
     ]
     if inspected:
         events.insert(3, {"timestamp_unix": 1080, "event": "contact_target_inspected", "properties": {"leg": 1, "step": 1, "target": "coal_cell"}})
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "build_version": build,
         "answers": {
             "clear_or_satisfying": "The target warning connected to the hit.",
@@ -49,6 +53,10 @@ def _payload(build: str, run_code: str, inspected: bool, replay_score: int) -> d
             "contact_targets_locked": 1,
             "contact_target_inspections": 1 if inspected else 0,
             "emergency_orders_used": 1,
+            "journey_commitments": 1,
+            "road_events_reached": 1,
+            "road_events_resolved": 1,
+            "road_arrivals_completed": 1,
         },
         "session": {"started_at_unix": 1000, "events": events},
     }
@@ -63,6 +71,12 @@ def main() -> int:
     assert "Sessions with a target lock but no recorded inspection: 1" in report
     assert "Sessions with at least one emergency order: 2" in report
     assert "Mean replay score: 3.0/5" in report
+    assert "Journey commitments: 2" in report
+    assert "Road scenarios reached: 2" in report
+    assert "Road scenarios resolved: 2" in report
+    assert "Road arrivals completed: 2" in report
+    assert "before arrival was recorded: 0" in report
+    assert "reached but unresolved road scenario: 0" in report
     assert "not proof of unique participants" in report
     assert "do not establish comprehension" in report
     assert "Input filenames are omitted" in report
@@ -85,8 +99,24 @@ def main() -> int:
 
     mismatched = copy.deepcopy(first)
     mismatched["session_metrics"]["contact_target_inspections"] = 8
+    mismatched["session_metrics"]["road_arrivals_completed"] = 8
     mismatch_report = build_cohort_report([mismatched])
     assert "disagrees with the raw event trail: 1" in mismatch_report
+    assert "journey metric block disagrees with the raw event trail: 1" in mismatch_report
+
+    interrupted = copy.deepcopy(first)
+    interrupted["session"]["events"] = [entry for entry in interrupted["session"]["events"] if entry["event"] != "road_arrival_completed"]
+    interrupted["session"]["events"].insert(1, {"timestamp_unix": 1005, "event": "road_arrival_completed", "properties": {"origin": "earlier_stop", "destination": "ashgate_depot"}})
+    interrupted["session_metrics"]["road_arrivals_completed"] = 1
+    interrupted_report = build_cohort_report([interrupted])
+    assert "before arrival was recorded: 1" in interrupted_report
+    assert "reached but unresolved road scenario: 0" in interrupted_report
+
+    unresolved = copy.deepcopy(interrupted)
+    unresolved["session"]["events"] = [entry for entry in unresolved["session"]["events"] if entry["event"] != "road_event_resolved"]
+    unresolved["session_metrics"]["road_events_resolved"] = 0
+    unresolved_report = build_cohort_report([unresolved])
+    assert "reached but unresolved road scenario: 1" in unresolved_report
 
     legacy = copy.deepcopy(first)
     legacy["answers"].pop("causal_replay")

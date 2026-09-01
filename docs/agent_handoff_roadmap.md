@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.338`
+**Current code baseline:** `0.3.0-alpha.339`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.338`, preserving the complete causal journey and private-alpha evidence workflow while making the Soot Orchard a true in-between road scenario. The Storm Front contact resolves first; the fortress then remains at its origin until the fuel-versus-workers decision resolves, after which one atomic transition grants the route reward, records the path, moves the current marker, and opens the arrival receipt.
+**Current merged baseline:** `0.3.0-alpha.339`, preserving the complete causal journey and private-alpha evidence workflow while making the Soot Orchard a true in-between road scenario. The local-only evidence trail now records route commitment, road-scenario arrival blocking, scenario resolution, and completed arrival as separate ordered transitions without treating those interactions as proof of comprehension.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -954,6 +954,8 @@ The project should now optimize for **continuity of place, clarity of commitment
 **Objective:** Validate the existing First Watch and quick path with five consented, uncoached human sessions before adding major campaign breadth.
 
 Use `docs/private_alpha_session_sheet.md` and one exact artifact cohort. Test both First Watch and the quick path across the documented input and display combinations. Record only observed behavior. Do not infer comprehension from completion, and do not replace human evidence with automated screenshots.
+
+**Evidence support:** `0.3.0-alpha.339` records the ordered local-only route commitment → road scenario reached → scenario resolved → arrival completed trail and renders it in per-session and cohort reports. It identifies where an export ended but deliberately does not infer why.
 
 Triage findings through three questions: did the player know what to do, did they know why it mattered, and did they understand what happened? Fix repeated high-severity confusion before adding more explanatory text. Prioritize unclear current-order handoffs, route commitment, combat target interpretation, recovery choice, settlement service purpose, and final Debrief comprehension.
 

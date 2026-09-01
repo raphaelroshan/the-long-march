@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Local-only playtest journal. Nothing in this class performs network I/O.
 
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
 const DEFAULT_JOURNAL_PATH := "user://the_long_march_playtest_journal.json"
 
 var journal_path: String
@@ -83,7 +83,11 @@ func session_metrics() -> Dictionary:
 		"encounter_steps": 0,
 		"contact_targets_locked": 0,
 		"contact_target_inspections": 0,
-		"emergency_orders_used": 0
+		"emergency_orders_used": 0,
+		"journey_commitments": 0,
+		"road_events_reached": 0,
+		"road_events_resolved": 0,
+		"road_arrivals_completed": 0
 	}
 	for raw_entry in events:
 		var event_id := String(Dictionary(raw_entry).get("event", ""))
@@ -96,6 +100,14 @@ func session_metrics() -> Dictionary:
 				metrics["contact_target_inspections"] = int(metrics["contact_target_inspections"]) + 1
 			"intervention_used":
 				metrics["emergency_orders_used"] = int(metrics["emergency_orders_used"]) + 1
+			"campaign_node_started", "route_started":
+				metrics["journey_commitments"] = int(metrics["journey_commitments"]) + 1
+			"road_event_reached":
+				metrics["road_events_reached"] = int(metrics["road_events_reached"]) + 1
+			"road_event_resolved":
+				metrics["road_events_resolved"] = int(metrics["road_events_resolved"]) + 1
+			"road_arrival_completed":
+				metrics["road_arrivals_completed"] = int(metrics["road_arrivals_completed"]) + 1
 	return metrics
 
 func _available_feedback_path(timestamp: int) -> String:

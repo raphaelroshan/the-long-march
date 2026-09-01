@@ -2404,7 +2404,15 @@ func _on_campaign_route_committed(node_id: String) -> void:
 		last_journey_receipt = "ROUTE COMMITTED · %s · Day +%d · Fuel −%d · Pressure +%d" % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), state.day - day_before, fuel_before - state.fuel, state.campaign_pressure - pressure_before]
 		journey_departure_snapshot = {"origin_id": origin_id, "destination_id": node_id, "day": day_before, "fuel": fuel_before, "hull": state.hull_condition, "money": state.money, "pressure": pressure_before, "doctrine": doctrine}
 		_set_event("Departed for %s. Forecast: %s." % [String(LongMarchState.CAMPAIGN_NODES[node_id].name), ", ".join(result.get("forecast", {}).get("threats", []))])
-		_journal_event("campaign_node_started", {"node": node_id, "doctrine": doctrine, "pressure": state.campaign_pressure})
+		_journal_event("campaign_node_started", {
+			"origin": origin_id,
+			"node": node_id,
+			"doctrine": doctrine,
+			"day_cost": state.day - day_before,
+			"fuel_cost": fuel_before - state.fuel,
+			"pressure_gain": state.campaign_pressure - pressure_before,
+			"pressure": state.campaign_pressure
+		})
 		_checkpoint("route_started")
 	else:
 		_set_event("Route blocked: %s." % String(result.get("reason", "unknown")))
@@ -2468,6 +2476,13 @@ func _on_journey_transition_continued() -> void:
 	if state.pre_contact_occurrence_active():
 		var event := state.campaign_event_details()
 		_set_event("Road interruption: %s. Resolve it before entering the committed contact." % String(event.get("title", "A decision on the road")))
+		_journal_event("road_event_reached", {
+			"event": state.campaign_event_pending,
+			"origin": state.current_location,
+			"destination": state.campaign_target_node,
+			"leg": state.journey_leg,
+			"blocks": "contact"
+		})
 	else:
 		_set_event("Road contact engaged. Read the incoming threats before advancing the encounter.")
 	_refresh_ui()
@@ -2523,6 +2538,8 @@ func _on_campaign_event_pressed(index: int) -> void:
 		return
 	var was_pre_contact := state.pre_contact_occurrence_active()
 	var arrival_before := journey_departure_snapshot.duplicate(true)
+	var event_origin := state.current_location
+	var event_destination := state.campaign_target_node
 	var result := state.resolve_campaign_event(choice_id)
 	if bool(result.get("ok", false)):
 		var result_message := String(result.get("message", "Decision recorded: %s." % choice_id.replace("_", " ").capitalize()))
@@ -2536,8 +2553,21 @@ func _on_campaign_event_pressed(index: int) -> void:
 			last_journey_receipt = "DECISION · %s" % result_message
 		_set_event(result_message)
 		_journal_event("campaign_event_resolved", {"event": String(result.get("event", "")), "choice": choice_id})
+		if was_pre_contact or bool(result.get("arrival_ready", false)):
+			_journal_event("road_event_resolved", {
+				"event": String(result.get("event", "")),
+				"choice": choice_id,
+				"origin": event_origin,
+				"destination": event_destination,
+				"next": "contact" if was_pre_contact else "arrival"
+			})
 		if bool(result.get("arrival_ready", false)):
-			_journal_event("road_arrival_completed", {"node": state.current_location, "choice": choice_id})
+			_journal_event("road_arrival_completed", {
+				"origin": event_origin,
+				"destination": state.current_location,
+				"choice": choice_id,
+				"outcome": String(result.get("outcome", "route_secured"))
+			})
 		_checkpoint("road_event_resolved" if bool(result.get("arrival_ready", false)) else "event_resolved")
 	else:
 		_set_event("Decision blocked: %s." % String(result.get("reason", "unknown")))
@@ -3492,6 +3522,14 @@ func _on_advance_encounter_pressed() -> void:
 			journey_arrival_view = {}
 			last_journey_receipt = "CONTACT CLEARED · %s · ARRIVAL PENDING" % String(LongMarchState.JOURNEY_NODES.get(state.campaign_target_node, {}).get("name", state.campaign_target_node))
 			_set_event("Contact cleared. Resolve the road scenario before the fortress can arrive.")
+			_journal_event("road_event_reached", {
+				"event": state.campaign_event_pending,
+				"origin": state.current_location,
+				"destination": state.campaign_target_node,
+				"leg": state.journey_leg,
+				"contact_outcome": state.encounter_outcome,
+				"blocks": "arrival"
+			})
 		else:
 			journey_arrival_active = true
 			journey_arrival_view = _build_journey_arrival_view(result, before)
@@ -3499,6 +3537,11 @@ func _on_advance_encounter_pressed() -> void:
 			var secured_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
 			last_journey_receipt = "ROAD · %s · %s" % [secured_name, String(result.get("outcome", "resolved")).replace("_", " ").capitalize()]
 			_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
+			_journal_event("road_arrival_completed", {
+				"origin": String(before.get("origin_id", "")),
+				"destination": String(journey_arrival_view.get("destination_id", state.current_location)),
+				"outcome": String(result.get("outcome", "resolved"))
+			})
 		if tutorial_mode:
 			_tutorial_advance("repair", "ROAD SECURED · The fortress survived the contact and reached its recovery siding.")
 		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})
