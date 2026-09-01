@@ -1242,3 +1242,7 @@ The local playtest journal now records route commitment, a road scenario blockin
 ## 2026-09-01 — Observer notes start from verified provenance
 
 Each private-alpha session can now begin with one bundled command that verifies the entire retained cohort and creates a fresh observer sheet containing the exact build, cohort, platform, commits, toolchain, executable digest, manifest digest, and verification gates. The tool writes outside the cohort and refuses to overwrite a prior sheet. This was chosen over asking observers to copy identifiers by hand because a valid human comparison depends on exact artifact identity, while the notes themselves must remain human-owned, local, and recoverable.
+
+## 2026-09-01 — Version tags publish only after both cohorts are proven
+
+The release workflow now gives only its tag-gated publish job write access. That job waits for Windows and macOS candidates, downloads and reverifies both manifests, exercises both bundled session-preflight tools, assembles standalone and full-cohort assets, validates their archives, and publishes a common checksum list. Reruns replace assets on the same prerelease instead of creating duplicates. This was chosen over manual repackaging because release identity should be reproducible while the owner retains control of the version tag that authorizes publication.

@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.340`
+**Current code baseline:** `0.3.0-alpha.341`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.340`, preserving the complete causal journey and private-alpha evidence workflow while making each observer session start from a fully verified cohort. The bundled preflight tool records exact provenance in a fresh sheet outside the artifact and refuses altered cohorts or accidental note overwrite.
+**Current merged baseline:** `0.3.0-alpha.341`, preserving the complete causal journey and private-alpha evidence workflow while making owner-created version tags publish verified prereleases automatically. Both platform cohorts are reverified after download, their preflight tools are exercised, standalone and complete-cohort assets are assembled, and a shared checksum list is published only after every gate succeeds.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -955,7 +955,7 @@ The project should now optimize for **continuity of place, clarity of commitment
 
 Use `docs/private_alpha_session_sheet.md` and one exact artifact cohort. Test both First Watch and the quick path across the documented input and display combinations. Record only observed behavior. Do not infer comprehension from completion, and do not replace human evidence with automated screenshots.
 
-**Evidence support:** `0.3.0-alpha.340` verifies the retained cohort before each observer sheet is created, and `0.3.0-alpha.339` records the ordered local-only route commitment → road scenario reached → scenario resolved → arrival completed trail. The tools identify artifact identity and where an export ended but deliberately do not infer why.
+**Evidence support:** `0.3.0-alpha.341` publishes each owner-tagged cohort through the same verified workflow, `0.3.0-alpha.340` verifies the retained cohort before each observer sheet is created, and `0.3.0-alpha.339` records the ordered local-only journey trail. The tools establish artifact and state identity but deliberately do not infer comprehension.
 
 Triage findings through three questions: did the player know what to do, did they know why it mattered, and did they understand what happened? Fix repeated high-severity confusion before adding more explanatory text. Prioritize unclear current-order handoffs, route commitment, combat target interpretation, recovery choice, settlement service purpose, and final Debrief comprehension.
 
