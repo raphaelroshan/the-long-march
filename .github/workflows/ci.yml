@@ -213,3 +213,18 @@ jobs:
             tools/verify_release_manifest.py
           if-no-files-found: error
           retention-days: 30
+
+  verify-package:
+    name: Verify downloaded release candidate
+    runs-on: ubuntu-latest
+    needs: package
+    steps:
+      - name: Download exact release candidate
+        uses: actions/download-artifact@v7
+        with:
+          name: release-candidate-${{ github.run_number }}
+          path: staging/candidate
+      - name: Verify downloaded cohort and complete evidence workflow
+        run: |
+          python staging/candidate/tools/verify_release_manifest.py staging/candidate/artifacts/release_manifest.json
+          python staging/candidate/tools/smoke_playtest_evidence.py staging/candidate/artifacts/release_manifest.json --output "$RUNNER_TEMP/pr-evidence-smoke"

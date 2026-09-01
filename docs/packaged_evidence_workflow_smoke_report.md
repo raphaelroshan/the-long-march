@@ -1,6 +1,6 @@
 # Packaged Evidence Workflow Smoke
 
-**Build:** `0.3.0-alpha.348`
+**Build:** `0.3.0-alpha.349`
 
 ## Purpose
 
@@ -17,11 +17,11 @@ The release pipeline previously verified each downloaded platform cohort and gen
 - produces a one-packet cohort report that must remain `INCOMPLETE (1/5 verified packets)`; and
 - refuses existing or in-cohort output and removes partial output after a failed run.
 
-Both CI and tagged-release manifests checksum the harness. The publisher invokes the bundled copy from each downloaded Windows and macOS cohort before release assets are assembled.
+Both CI and tagged-release manifests checksum the harness. Pull-request CI downloads its exact packaged Windows candidate and invokes the bundled copy before merge. The publisher repeats that proof from each downloaded Windows and macOS cohort before release assets are assembled.
 
 ## Verification
 
-The focused test covers successful creation, artifact identity, false human-owned claims, overwrite refusal, and cohort isolation. The harness also completed against both downloaded `0.3.0-alpha.347` cohorts, proving the existing package layout supports the complete chain before the new release contract is applied to alpha.348.
+The focused test covers successful creation, artifact identity, false human-owned claims, overwrite refusal, and cohort isolation. The harness also completed against both downloaded `0.3.0-alpha.347` cohorts and the public `0.3.0-alpha.348` macOS cohort. Alpha.349 adds the same downloaded-artifact proof to every pull request so packaging regressions fail before a release tag exists.
 
 ## Boundary
 

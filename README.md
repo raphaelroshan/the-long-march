@@ -74,7 +74,7 @@ bash scripts/export_playtest.sh windows
 bash scripts/export_playtest.sh macos
 ```
 
-Generated builds go to `build/` and are ignored by Git. Owner-created `v*` tags run the guarded Windows/macOS build, smoke, manifest, preflight, archive, checksum, and prerelease pipeline.
+Generated builds go to `build/` and are ignored by Git. Pull requests re-download and verify their exact packaged Windows cohort. Owner-created `v*` tags run the guarded Windows/macOS build, launch smoke, manifest verification, complete local-evidence smoke, archive, checksum, and prerelease pipeline.
 
 ## Run an observed playtest
 
