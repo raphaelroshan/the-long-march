@@ -26,7 +26,7 @@ def render_notes(tag: str, workflow_url: str) -> str:
             f"- Windows observer cohort: `{windows_cohort}`",
             f"- macOS observer cohort: `{macos_cohort}`",
             "",
-            "Standalone builds are the quickest way to play. Observer cohorts also contain the exact manifest, source snapshot, playtest guide, session template, local summary tools, session preflight, and provenance-checked packet finalizer.",
+            "Standalone builds are the quickest way to play. Observer cohorts also contain the exact manifest, source snapshot, playtest guide, session template, local summary tools, session preflight, provenance-checked packet finalizer, and verified packet cohort review.",
             "",
             "## Run a verified session",
             "",

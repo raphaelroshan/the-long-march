@@ -9,8 +9,12 @@ from pathlib import Path
 from statistics import mean
 from typing import Any
 
-from summarize_playtest_feedback import contact_metrics, journey_metrics, load_feedback, outcome_fact_lines
-from report_output import write_new_report
+try:
+    from .summarize_playtest_feedback import contact_metrics, journey_metrics, load_feedback, outcome_fact_lines
+    from .report_output import write_new_report
+except ImportError:
+    from summarize_playtest_feedback import contact_metrics, journey_metrics, load_feedback, outcome_fact_lines
+    from report_output import write_new_report
 
 
 def _cell(value: Any) -> str:
@@ -63,11 +67,17 @@ def _journey_end_state(events: list[Any]) -> tuple[bool, bool]:
 def build_cohort_report(
     payloads: Sequence[dict[str, Any]],
     required_sessions: int = 5,
+    session_labels: Sequence[str] | None = None,
 ) -> str:
     if not payloads:
         raise ValueError("at least one feedback export is required")
     if required_sessions < 1:
         raise ValueError("required_sessions must be at least 1")
+    labels = [str(index) for index in range(1, len(payloads) + 1)] if session_labels is None else [str(label).strip() for label in session_labels]
+    if len(labels) != len(payloads) or any(not label for label in labels):
+        raise ValueError("session labels must provide one non-empty label per feedback export")
+    if len(set(labels)) != len(labels):
+        raise ValueError("session labels must be unique")
 
     builds = sorted({str(payload.get("build_version", "unknown")) for payload in payloads})
     gate_state = "READY FOR HUMAN SYNTHESIS" if len(payloads) >= required_sessions else "INCOMPLETE"
@@ -95,6 +105,7 @@ def build_cohort_report(
     written_evidence: list[str] = []
 
     for index, payload in enumerate(payloads, start=1):
+        session_label = labels[index - 1]
         final_state = payload.get("final_state", {})
         answers = payload.get("answers", {})
         session = payload.get("session", {})
@@ -131,7 +142,7 @@ def build_cohort_report(
         normalized_final_state = final_state if isinstance(final_state, dict) else {}
         written_evidence.extend(
             [
-                f"### Session {index}",
+                f"### Session {session_label}",
                 "",
                 "**Recorded game outcome**",
                 "",
@@ -152,9 +163,9 @@ def build_cohort_report(
             ]
         )
         rows.append(
-            "| %d | `%s` | `%s` | %s | %s | %dm | %s | %d / %d / %d / %d | %d / %d / %d / %d | %s / %s |"
+            "| %s | `%s` | `%s` | %s | %s | %dm | %s | %d / %d / %d / %d | %d / %d / %d / %d | %s / %s |"
             % (
-                index,
+                session_label,
                 str(payload.get("build_version", "unknown")),
                 run_code,
                 _cell(final_state.get("campaign_region", "unknown")) if isinstance(final_state, dict) else "Unknown",
@@ -181,10 +192,8 @@ def build_cohort_report(
         if len(builds) > 1
         else f"- Build consistency: one build (`{builds[0]}`)."
     )
-    human_rows = [
-        f"| {index} | [ ] | [ ] | __________ | __________ | __________ |"
-        for index in range(1, max(required_sessions, len(payloads)) + 1)
-    ]
+    human_labels = labels + [f"pending {index}" for index in range(1, max(0, required_sessions - len(labels)) + 1)]
+    human_rows = [f"| {label} | [ ] | [ ] | __________ | __________ | __________ |" for label in human_labels]
     lines = [
         "# The Long March — Private Alpha Cohort Review",
         "",

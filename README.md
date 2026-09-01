@@ -84,7 +84,7 @@ From an extracted cohort, create a fresh observer sheet outside the retained art
 python tools/prepare_playtest_session.py artifacts/release_manifest.json --session 1 --output ../long-march-session-01.md
 ```
 
-The command verifies the complete cohort before recording its exact build, platform, commits, toolchain, and digests. It refuses altered cohorts and existing observer files. After a session, `tools/finalize_playtest_session.py` can bind that sheet to the matching local feedback export in a new checksummed packet without modifying either original. Generated packets, session summaries, and cohort summaries all use create-only output. Human notes, consent, direct quotes, and issue severity remain human-owned; automated interaction counts are never treated as proof of comprehension.
+The command verifies the complete cohort before recording its exact build, platform, commits, toolchain, and digests. It refuses altered cohorts and existing observer files. After a session, `tools/finalize_playtest_session.py` can bind that sheet to the matching local feedback export in a new checksummed packet without modifying either original; `tools/summarize_playtest_packets.py` verifies those packets before cohort review. Generated packets and reports use create-only output. Human notes, consent, direct quotes, and issue severity remain human-owned; automated interaction counts are never treated as proof of comprehension.
 
 ## Design and development references
 

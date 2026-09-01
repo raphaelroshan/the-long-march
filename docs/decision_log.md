@@ -1262,3 +1262,7 @@ The per-session and cohort summarizers now open their output files in exclusive 
 ## 2026-09-01 — Session evidence is paired by hashes, not filenames
 
 The session finalizer reverifies the retained cohort, checks the generated observer sheet's embedded artifact identity, requires the feedback export's build to match, and creates a new local directory containing byte-identical source copies, a separate automatic summary, and a SHA-256 packet manifest. Original filenames and machine paths are omitted. Consent, participant uniqueness, uncoached conditions, and comprehension remain explicit false claims until a human reviewer confirms them. This was chosen over filename conventions or a merged prose report because either can silently pair the wrong build, obscure later edits, or blur observations with generated evidence.
+
+## 2026-09-01 — Cohort synthesis starts from verified packets
+
+The primary cohort tool now reverifies every session packet, sorts by its embedded session number, and rejects duplicate session numbers or repeated feedback hashes before creating a report. It exposes packet provenance and exported game facts but does not copy or summarize the observer's prose. The loose-export summarizer remains for older evidence with a clear limitation. This was chosen over silently accepting filenames because a five-row report is not useful if one run was counted twice or paired notes were lost.

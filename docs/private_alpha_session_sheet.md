@@ -47,13 +47,13 @@ python3 tools/finalize_playtest_session.py verify /path/session-01-packet
 
 Creation reverifies the retained cohort, requires the observer's embedded build and artifact digests to match it, requires the feedback build to match, then copies both inputs byte-for-byte alongside the automatic summary and a checksummed packet manifest. It never alters either source and refuses an existing packet directory. Packet validity proves artifact identity and later tamper detection only; consent, participant uniqueness, uncoached conditions, comprehension, and severity remain human confirmations.
 
-After collecting the intended five exports, generate a cohort review in the same argument order used for the session numbers:
+After collecting the intended session packets, generate a cohort review from those verified directories:
 
 ```bash
-python3 tools/summarize_playtest_cohort.py /path/session-01.json /path/session-02.json /path/session-03.json /path/session-04.json /path/session-05.json --output cohort-review.md
+python3 tools/summarize_playtest_packets.py /path/session-01-packet /path/session-02-packet /path/session-03-packet /path/session-04-packet /path/session-05-packet --output cohort-review.md
 ```
 
-The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. It places each tester's three written answers beside the exported game-result explanation, system condition, and surviving-threat facts without scoring agreement. It also refuses to replace an existing cohort review. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
+The packet cohort tool reverifies every packet, orders rows by the embedded session number, and rejects duplicate session numbers or repeated feedback exports before creating a report. It deliberately does not copy or summarize observer prose. The review reports whether five packets are present, but does not call the human gate passed; it places each tester's exported answers beside game-result facts without scoring agreement and refuses an existing output. Confirm consent, unique participants, uncoached conditions, and repeated observed failures from each paired `observer.md` before changing the roadmap. `tools/summarize_playtest_cohort.py` remains available for older loose exports, but it cannot prove which observer sheet belongs to each file.
 
 ## Required capture matrix
 
