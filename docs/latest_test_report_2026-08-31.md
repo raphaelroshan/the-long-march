@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.341` automated prerelease publication candidate |
+| Build | `0.3.0-alpha.342` tester-facing release guidance candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -49,6 +49,7 @@
 | Journey-continuity evidence | PASS: local exports and observer reports preserve route commitment, road scenario reached, scenario resolved, and arrival completed as ordered events; legacy exports remain readable and all counts are labeled navigation evidence rather than comprehension. |
 | Session preflight | PASS: one command verifies every cohort digest, writes exact artifact provenance into a fresh observer sheet outside the retained cohort, and rejects altered artifacts, invalid session numbers, in-cohort output, and accidental overwrite. |
 | Prerelease publication | PASS: owner-created version tags wait for both platform cohorts, reverify both manifests, exercise both session preflights, validate all archives, publish standalone/cohort assets plus `SHA256SUMS.txt`, and safely refresh assets on rerun. |
+| Release guidance | PASS: every new prerelease leads with concise standalone/cohort download choices, the verified-session command, checksum instructions, private-alpha scope, and workflow evidence before the generated change list. |
 
 ## Evidence
 
@@ -112,9 +113,10 @@
 - [`Journey-continuity evidence report`](journey_continuity_evidence_report.md)
 - [`Private-alpha session preflight report`](private_alpha_session_preflight_report.md)
 - [`Automated prerelease publication report`](automated_prerelease_publication_report.md)
+- [`Tester-facing release guidance report`](tester_facing_release_guidance_report.md)
 
 ## Result
 
-The updated strategy remains intact. Alpha.341 turns an owner-created version tag into a verified, checksummed GitHub prerelease without bypassing the human evidence gate.
+The updated strategy remains intact. Alpha.342 makes that verified prerelease understandable to a tester without requiring repository context.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

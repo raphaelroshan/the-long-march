@@ -18,6 +18,8 @@ def main() -> int:
         "Windows cohort archive": "Windows-Cohort.zip",
         "macOS cohort archive": "macOS-Cohort.zip",
         "asset integrity list": "SHA256SUMS.txt",
+        "tester-facing release notes": "tools/render_release_notes.py",
+        "generated change list": "--notes \"$notes\" --title",
         "idempotent asset replacement": "gh release upload \"$tag\" release/* --clobber",
         "verified tag publication": "gh release create \"$tag\" release/* --verify-tag --prerelease",
     }

@@ -1246,3 +1246,7 @@ Each private-alpha session can now begin with one bundled command that verifies 
 ## 2026-09-01 — Version tags publish only after both cohorts are proven
 
 The release workflow now gives only its tag-gated publish job write access. That job waits for Windows and macOS candidates, downloads and reverifies both manifests, exercises both bundled session-preflight tools, assembles standalone and full-cohort assets, validates their archives, and publishes a common checksum list. Reruns replace assets on the same prerelease instead of creating duplicates. This was chosen over manual repackaging because release identity should be reproducible while the owner retains control of the version tag that authorizes publication.
+
+## 2026-09-01 — Release pages must explain the test without repository context
+
+Automated prereleases now prepend stable, tested guidance to GitHub's generated change list. The preamble distinguishes standalone builds from observer cohorts, provides the exact verified-session command, points to both integrity layers, links the producing workflow, and states that the build remains private alpha. This was chosen over relying on filenames or generated commit notes because a tester should know what to download and how to verify it before reading development history.

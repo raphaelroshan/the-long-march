@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.341`; Feeds A through AT and the automated quality layers are complete, including the full road sequence, local journey-continuity evidence, exact cohort manifests, non-destructive observer-session preflight, and verified tag-to-prerelease publication. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) are now the next evidence-gathering step rather than a claim that the game is commercially finished.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.342`; Feeds A through AT and the automated quality layers are complete, including the full road sequence, local journey-continuity evidence, exact cohort manifests, non-destructive observer-session preflight, verified tag-to-prerelease publication, and tester-facing release guidance. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) are now the next evidence-gathering step rather than a claim that the game is commercially finished.
 
 ### Active Feed 0 — failure-forward consequence
 
