@@ -99,3 +99,11 @@ The command verifies the complete cohort before recording its exact build, platf
 ## Scope boundary
 
 The repository does not yet contain the full continent campaign, final character or fortress art, final music and combat audio, a complete cargo economy, storefront SDKs, signing/notarization, or commercial packaging. New breadth is intentionally gated on repeated findings from consented, uncoached playtests of the existing journeys.
+
+
+## Early Access breadth contract
+
+The skeletal-but-playable Early Access target is defined in [`docs/early_access_requirements.md`](docs/early_access_requirements.md). It preserves Ashgate Lowlands and Flooded Veyru as quality anchors while requiring four complete regions, broader fortress/module/threat coverage, distinct settlement and route identities, failure-forward regional developments, multiple viable loadout plans, and release-safe persistence before Early Access claims are made.
+
+- [Early Access requirements](docs/early_access_requirements.md) — skeletal-but-playable campaign breadth floor, quality gates, and agent-executable expansion order.
+- [Early Access decision record](docs/early_access_decision.md) — breadth-versus-final-art and complexity-versus-comprehension trade-offs.
