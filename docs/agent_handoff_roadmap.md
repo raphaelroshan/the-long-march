@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.349`
+**Current code baseline:** `0.3.0-alpha.350`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.349`, preserving the complete causal journey while making pull requests and both published platform cohorts prove observer preflight, packet creation, packet verification, and cohort synthesis from their downloaded artifacts.
-**Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
+**Current merged baseline:** `0.3.0-alpha.350`, locking Ashgate and Flooded Veyru as the Early Access quality anchors with four complete command-only plans, exact checkpoint replay across both chapters, and responsive Veyru presentation coverage.
+**Next build target:** **LM-EA-2** — implement a third, thinner but complete region under the region contract in [`early_access_requirements.md`](early_access_requirements.md). Human sessions remain useful calibration, not a blocker for the Early Access breadth plan.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -1082,4 +1082,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-The next evidence task is **Long Road 9: five consented, uncoached private-alpha sessions** using the published cohort and `docs/private_alpha_session_sheet.md`. Record where players hesitate, what they predict before route commitment or impact, what they recall after arrival, and whether the Debrief creates a concrete replay plan. Implement only repeated, high-severity comprehension, pacing, comfort, audio, or balance fixes before adding another region or progression layer.
+The next implementation task is **LM-EA-2: one third-region vertical slice** under the Early Access region contract. It needs a distinct route promise, settlement identity, three route decisions, two threat/event families, a recovery choice with later consequences, one failure-forward development, a complete no-debug fixture, boundary save coverage, responsive evidence, and an honest limitations update. Five consented, uncoached private-alpha sessions remain useful parallel calibration work; do not describe automated anchor coverage as human comprehension evidence.

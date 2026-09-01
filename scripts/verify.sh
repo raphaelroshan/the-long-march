@@ -49,6 +49,7 @@ python3 tests/test_smoke_playtest.py
 python3 tests/test_private_alpha_contract.py
 run_checked "" "$GODOT_BIN" --headless --path . --import
 run_checked "PASS: The Long March fortress-state tests" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_state.gd
+run_checked "PASS: The Long March Early Access anchor runs" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_anchor_runs.gd
 run_checked "PASS: The Long March local playtest journal" "$GODOT_BIN" --headless --path . --script res://tests/test_playtest_journal.gd
 run_checked "PASS: The Long March campaign progress" "$GODOT_BIN" --headless --path . --script res://tests/test_campaign_progress.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
@@ -73,3 +74,5 @@ run_checked "PASS: The Long March responsive journey profile 1280x720" env LONG_
 run_checked "PASS: The Long March responsive journey profile 1600x900" env LONG_MARCH_VIEWPORT_WIDTH=1600 LONG_MARCH_VIEWPORT_HEIGHT=900 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_complete_journey_handoff.gd
 run_checked "PASS: The Long March complete prototype flow" "$GODOT_BIN" --headless --path . --script res://tests/test_prototype_flow.gd
 run_checked "PASS: The Long March Flooded Veyru UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_veyru_flow.gd
+run_checked "PASS: The Long March responsive Veyru profile 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_veyru_flow.gd
+run_checked "PASS: The Long March responsive Veyru profile 1600x900" env LONG_MARCH_VIEWPORT_WIDTH=1600 LONG_MARCH_VIEWPORT_HEIGHT=900 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_veyru_flow.gd

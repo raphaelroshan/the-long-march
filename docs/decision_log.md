@@ -1278,3 +1278,15 @@ The tag publisher now runs observer preflight, synthetic feedback pairing, packe
 ## 2026-09-01 — Artifact-bound evidence smoke starts before merge
 
 Pull-request CI now downloads the exact Windows candidate produced by the package job and runs its bundled verifier and evidence-workflow smoke from the extracted artifact. The tagged release still repeats the test for both Windows and macOS. This was chosen over waiting for a version tag to discover an omitted tool or package-layout error, while preserving the tagged workflow as the final cross-platform publication gate.
+
+## 2026-09-02 — Quality anchors are command sequences, not privileged fixtures
+
+LM-EA-1 proves Ashgate and Flooded Veyru with four complete plans that use the same public state commands available to the interface. The fixture does not set fuel, hull, phase, location, pressure, encounter results, or endings directly. Each plan starts from a fresh seeded state and round-trips every settlement, committed route, resolved contact, pending/resolved event, recovery, and terminal boundary. This was chosen over snapshotting a pre-completed run because an anchor must expose broken transitions, balance dead ends, and persistence drift.
+
+## 2026-09-02 — Completed contact targets are historical records
+
+An active contact still rejects a save whose target names a missing installed system. Once a contact is complete, its target record is history: a legal settlement refit may store that system before the next checkpoint. Save validation now preserves such completed records instead of rejecting the whole run. This keeps hostile active-state tampering blocked while allowing the debrief and contact history to describe a system the fortress no longer carries.
+
+## 2026-09-02 — Heat warnings are edge-triggered state changes
+
+Recalculation records a heat warning only when the fortress crosses from a safe state to above its limit. Loading an already-overheated checkpoint no longer appends a duplicate warning. This makes save/load byte-stable and keeps the log a record of player-visible changes rather than a side effect of deserialization.

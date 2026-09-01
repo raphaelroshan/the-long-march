@@ -75,11 +75,16 @@ Every new chapter, region, settlement, module, specialist, threat, event, or rou
 
 ## Recommended order
 
-**LM-EA-1:** lock the Ashgate and Flooded Veyru quality anchors and prove complete no-debug chapters with the current temporary asset kit only where it improves feel testing.  
-**LM-EA-2:** add a third region with five to six encounters, a distinctive settlement, three routes, and one failure-forward development.  
-**LM-EA-3:** add a fourth region and one alternate fortress chassis/template.  
-**LM-EA-4:** add two module families, two specialists, and two threat families that create new dependency questions.  
-**LM-EA-5:** add event/meeting breadth, regional memory, replay goals, and composable endings.  
+**LM-EA-1:** complete in `0.3.0-alpha.350`. Ashgate and Flooded Veyru now have four command-only full-run plans, 64 exact save/load boundary checks, responsive Veyru coverage, and explicit regression protection for completed-contact history after a legal refit. See [`lm_ea_1_anchor_lock_report.md`](lm_ea_1_anchor_lock_report.md).
+
+**LM-EA-2:** add a third region with five to six encounters, a distinctive settlement, three routes, and one failure-forward development.
+
+**LM-EA-3:** add a fourth region and one alternate fortress chassis/template.
+
+**LM-EA-4:** add two module families, two specialists, and two threat families that create new dependency questions.
+
+**LM-EA-5:** add event/meeting breadth, regional memory, replay goals, and composable endings.
+
 **LM-EA-6:** harden campaign persistence, migration, controller/accessibility, package lifecycle, performance, audio, and Early Access release documentation.
 
 ## Non-negotiable boundaries

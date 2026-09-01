@@ -4,11 +4,12 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.349` pre-merge cohort-verification candidate |
-| Engine | Godot 4.4.1 stable |
+| Build | `0.3.0-alpha.350` LM-EA-1 anchor-lock candidate |
+| Engine | Godot 4.7.2 stable (local verification); CI remains pinned by the release manifest |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
-| Responsive coverage | PASS: 1280×720 and 1600×900; the compact profile uses 110% text, high contrast, reduced motion, and alternate controller labels |
+| Responsive coverage | PASS: Ashgate and Flooded Veyru at 1280×720 and 1600×900; compact profiles use 110% text, high contrast, reduced motion, and alternate controller labels |
+| Early Access anchor runs | PASS: two materially different Ashgate plans and two materially different Veyru plans complete without UI/debug state mutation; 64 settlement, route, contact, event, recovery, and result checkpoints serialize and restore exactly |
 | Performance sample | PASS: 1,800 read-only planning inspections and 60 same-seed encounter replays within the 12-second budgets |
 | Temporary asset integration | PASS: ten journey cues, seven threat-family warnings, four result-aware refit cues, phase-aligned impact audio, muted-state suppression, deterministic routing, checkpoint ownership, impact-window VFX, and reduced-motion suppression |
 | Travel staging | PASS: gathering departure, full-march parallax and temporary atmosphere, static contact brace, canvas clipping, and reduced-motion bypass |
@@ -129,6 +130,6 @@
 
 ## Result
 
-The updated strategy remains intact. Alpha.349 moves exact downloaded-cohort verification before merge while retaining both-platform verification at tagged publication, without manufacturing human evidence.
+LM-EA-1 is complete. Alpha.350 locks both existing chapters as quality anchors with four complete command-only plans, exact checkpoint replay, responsive Veyru coverage, and fixes for two save-state fidelity defects discovered by the new acceptance fixture.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
