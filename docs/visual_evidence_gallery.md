@@ -2,6 +2,15 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## `v0.3.0-alpha.338` — Soot Orchard decision before arrival
+
+| State | Evidence | SHA-256 |
+|---|---|---|
+| Contact cleared; destination unsecured | [Orchard road scenario](visual_evidence/v0.3.0-alpha.338-orchard-road-event/01_orchard_before_arrival.png) | `dcbe28e286d3399e2a8fadc733e4c05d2a00cace125962213ba97ff6e4534d39` |
+| Decision applied; arrival complete | [Orchard arrival receipt](visual_evidence/v0.3.0-alpha.338-orchard-road-event/02_orchard_arrival.png) | `fa66e2798eef2f988b72f393e90e68862525e978d6273a5bc667cfe4c8c1122c` |
+
+The first frame keeps the fortress at Ashgate Depot with The Soot Orchard still pending. The second appears only after the fuel decision, moves the fortress to the Orchard, records the secured route, and repeats the choice consequence in the arrival report.
+
 ## `v0.3.0-alpha.337` — Soot Orchard decision tableau
 
 ![The Soot Orchard fuel-versus-workers decision](visual_evidence/v0.3.0-alpha.337-soot-orchard-tableau/01_soot_orchard.png)

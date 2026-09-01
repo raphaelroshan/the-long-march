@@ -2522,18 +2522,30 @@ func _on_campaign_event_pressed(index: int) -> void:
 	if choice_id.is_empty():
 		return
 	var was_pre_contact := state.pre_contact_occurrence_active()
+	var arrival_before := journey_departure_snapshot.duplicate(true)
 	var result := state.resolve_campaign_event(choice_id)
 	if bool(result.get("ok", false)):
 		var result_message := String(result.get("message", "Decision recorded: %s." % choice_id.replace("_", " ").capitalize()))
-		last_journey_receipt = "DECISION · %s" % result_message
+		if bool(result.get("arrival_ready", false)):
+			journey_arrival_active = true
+			journey_arrival_view = _build_journey_arrival_view(result, arrival_before)
+			journey_departure_snapshot = {}
+			var secured_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+			last_journey_receipt = "ROAD · %s · %s · %s" % [secured_name, String(result.get("outcome", "route_secured")).replace("_", " ").capitalize(), result_message]
+		else:
+			last_journey_receipt = "DECISION · %s" % result_message
 		_set_event(result_message)
 		_journal_event("campaign_event_resolved", {"event": String(result.get("event", "")), "choice": choice_id})
-		_checkpoint("event_resolved")
+		if bool(result.get("arrival_ready", false)):
+			_journal_event("road_arrival_completed", {"node": state.current_location, "choice": choice_id})
+		_checkpoint("road_event_resolved" if bool(result.get("arrival_ready", false)) else "event_resolved")
 	else:
 		_set_event("Decision blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 	if bool(result.get("ok", false)):
-		if state.campaign_event_pending.is_empty():
+		if bool(result.get("arrival_ready", false)):
+			journey_arrival.focus_default.call_deferred()
+		elif state.campaign_event_pending.is_empty():
 			encounter_label.text = "DECISION CONSEQUENCE\n%s\nNEXT · %s" % [String(result.get("message", "Decision recorded.")), _current_guidance_action()]
 			if was_pre_contact and state.encounter_active:
 				road_contact.focus_default.call_deferred()
@@ -3087,6 +3099,7 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 		return
 	var event := state.campaign_event_details()
 	var pre_contact := state.pre_contact_occurrence_active() and not journey_transition_active
+	var arrival_pending := state.road_arrival_event_active()
 	var show_event := not event.is_empty() and not journey_arrival_active and (pre_contact or state.phase not in ["battle", "final_battle", "results"])
 	roadside_event.visible = show_event
 	if not show_event:
@@ -3099,19 +3112,19 @@ func _refresh_roadside_event(snapshot: Dictionary) -> void:
 	var event_id := String(event.get("id", state.campaign_event_pending))
 	var occurrence := event_id in LongMarchState.OCCURRENCE_DEFS
 	var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
-	if pre_contact:
+	if pre_contact or arrival_pending:
 		var destination_name := String(LongMarchState.JOURNEY_NODES.get(state.journey_destination, {}).get("name", state.journey_destination))
 		location_name = "%s → %s" % [location_name, destination_name]
 	roadside_event.configure({
 		"event_id": event_id,
 		"region_id": state.campaign_region_id,
-		"context": "ROAD INTERRUPTION · CONTACT WAITING" if pre_contact else ("ROADSIDE OCCURRENCE" if occurrence else "LOCATION DECISION"),
+		"context": "ROAD INTERRUPTION · CONTACT WAITING" if pre_contact else ("ROAD SCENARIO · ARRIVAL PENDING" if arrival_pending else ("ROADSIDE OCCURRENCE" if occurrence else "LOCATION DECISION")),
 		"location_name": location_name,
 		"title": String(event.get("title", "Roadside decision")),
 		"body": String(event.get("body", "The fortress waits for an order.")),
 		"choices": event.get("choices", []),
 		"story": _roadside_event_story(event_id, event),
-		"guidance": "Choose one response. Its listed cost applies now; the committed contact remains next and cannot be bypassed." if pre_contact else "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete.",
+		"guidance": "Choose one response. Its listed cost applies now; the committed contact remains next and cannot be bypassed." if pre_contact else ("Choose one response. Its exact consequence applies before arrival; the destination remains unsecured until this order is complete." if arrival_pending else "Choose one response. Every listed cost or benefit is applied immediately; departure remains blocked until the decision is complete."),
 		"values": {
 			"day": str(snapshot.get("day", state.day)),
 			"fuel": str(snapshot.get("fuel", state.fuel)),
@@ -3220,6 +3233,11 @@ func _build_journey_arrival_view(result: Dictionary, before: Dictionary) -> Dict
 		recent_report.append(report_line)
 	var outcome_copy := outcome.replace("_", " ").capitalize()
 	var summary := "The fortress has withdrawn to %s. Repairs preserve the run, but time, pressure, and Ashmarks have already changed." % destination_name if retreat else "%s is secured. The fortress is at rest; review the road receipt before issuing the next local order." % destination_name
+	var road_decision_message := String(result.get("message", ""))
+	if bool(result.get("arrival_ready", false)) and not road_decision_message.is_empty():
+		if recent_report.size() >= 4:
+			recent_report.pop_front()
+		recent_report.append("Road decision: %s" % road_decision_message)
 	var action_label := "CONTINUE TO MARCH DEBRIEF" if state.phase == "results" else ("ENTER %s" % ("BAZAAR" if state.phase in ["refit", "settlement"] else ("LOCAL DECISION" if not state.campaign_event_pending.is_empty() else "JOURNEY MAP")))
 	var next_decision := "NEXT · Open the Debrief and review what the fortress carried." if state.phase == "results" else ("NEXT · Enter recovery and choose whether to repair, refuel, or preserve both actions." if state.phase in ["refit", "settlement"] else ("NEXT · Resolve the local occurrence before choosing another road." if not state.campaign_event_pending.is_empty() else "NEXT · Return to the route map and choose the next commitment."))
 	if tutorial_mode:
@@ -3407,6 +3425,8 @@ func _encounter_checkpoint_reason(resolved: bool) -> String:
 		return "encounter_advanced"
 	if state.phase == "results":
 		return "run_ended"
+	if state.phase == "road_event":
+		return "road_event_reached"
 	if state.phase == "settlement" or state.encounter_outcome in ["protected_arrival", "damaged_arrival"]:
 		return "recovery_reached"
 	if state.encounter_outcome == "route_secured":
@@ -3467,12 +3487,18 @@ func _on_advance_encounter_pressed() -> void:
 	if not bool(result.get("ok", false)):
 		_set_event("Journey battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif encounter_resolved:
-		journey_arrival_active = true
-		journey_arrival_view = _build_journey_arrival_view(result, before)
-		journey_departure_snapshot = {}
-		var secured_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
-		last_journey_receipt = "ROAD · %s · %s" % [secured_name, String(result.get("outcome", "resolved")).replace("_", " ").capitalize()]
-		_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
+		if state.road_arrival_event_active():
+			journey_arrival_active = false
+			journey_arrival_view = {}
+			last_journey_receipt = "CONTACT CLEARED · %s · ARRIVAL PENDING" % String(LongMarchState.JOURNEY_NODES.get(state.campaign_target_node, {}).get("name", state.campaign_target_node))
+			_set_event("Contact cleared. Resolve the road scenario before the fortress can arrive.")
+		else:
+			journey_arrival_active = true
+			journey_arrival_view = _build_journey_arrival_view(result, before)
+			journey_departure_snapshot = {}
+			var secured_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", state.current_location))
+			last_journey_receipt = "ROAD · %s · %s" % [secured_name, String(result.get("outcome", "resolved")).replace("_", " ").capitalize()]
+			_set_event("Journey battle resolved: %s." % String(result.get("outcome", "unknown")).replace("_", " ").capitalize())
 		if tutorial_mode:
 			_tutorial_advance("repair", "ROAD SECURED · The fortress survived the contact and reached its recovery siding.")
 		_journal_event("encounter_resolved", {"leg": state.journey_leg, "outcome": state.encounter_outcome, "phase": state.phase})

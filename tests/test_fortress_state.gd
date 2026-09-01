@@ -473,6 +473,9 @@ func _test_save_round_trip() -> void:
 	var future_save := state.serialize()
 	future_save["save_version"] = LongMarchState.SAVE_VERSION + 1
 	_expect(not bool(LongMarchState.new(0).load_serialized(future_save).get("ok", false)), "future save versions should be rejected safely")
+	var version_ten_save := state.serialize()
+	version_ten_save["save_version"] = 10
+	_expect(bool(LongMarchState.new(0).load_serialized(version_ten_save).get("ok", false)), "version-ten checkpoints should migrate without inventing a pending road event")
 	var invalid_result_save := state.serialize()
 	invalid_result_save["phase"] = "results"
 	invalid_result_save["final_result"] = "unknown_result"
@@ -638,12 +641,20 @@ func _test_campaign_events_and_closure() -> void:
 	state.start_campaign()
 	state.choose_guard_contract(false)
 	var orchard_result := _campaign_battle(state, "soot_orchard")
-	_expect(bool(orchard_result.get("resolved", false)) and state.campaign_event_pending == "salvage_choice", "the Soot Orchard branch should be viable and open its local decision")
+	_expect(bool(orchard_result.get("resolved", false)) and bool(orchard_result.get("arrival_pending", false)) and state.road_arrival_event_active() and state.campaign_event_pending == "salvage_choice", "the Soot Orchard branch should clear its contact and stop at the road scenario before arrival")
+	_expect(state.current_location == "ashgate_depot" and state.campaign_target_node == "soot_orchard" and state.campaign_encounters_completed == 0 and state.phase == "road_event", "the orchard scenario should preserve the origin, destination, and unsecured encounter count")
+	var orchard_restore := LongMarchState.new(0)
+	_expect(bool(orchard_restore.load_serialized(state.serialize()).get("ok", false)) and orchard_restore.road_arrival_event_active() and orchard_restore.current_location == "ashgate_depot", "the post-contact orchard decision should survive save/load before arrival")
+	var invalid_orchard_checkpoint := state.serialize()
+	invalid_orchard_checkpoint["current_location"] = "soot_orchard"
+	_expect(not bool(LongMarchState.new(0).load_serialized(invalid_orchard_checkpoint).get("ok", false)), "a road-event checkpoint should reject a destination that was already marked current")
 	var orchard := state.campaign_event_details()
 	_expect(not bool(orchard.choices[1].enabled), "rescuing orchard workers should require an operational refuge module")
 	_expect(String(orchard.choices[0].effect) == "Fuel +2 · Trust -1" and String(orchard.choices[1].effect).contains("Pressure +1"), "orchard choices should expose their complete resource trade-offs before selection")
 	var fuel_before := state.fuel
-	_expect(bool(state.resolve_campaign_event("take_fuel").get("ok", false)) and state.fuel == fuel_before + 2, "the orchard fuel choice should grant two fuel")
+	var orchard_choice := state.resolve_campaign_event("take_fuel")
+	_expect(bool(orchard_choice.get("ok", false)) and bool(orchard_choice.get("arrival_ready", false)) and state.fuel == fuel_before + 2, "the orchard fuel choice should grant two fuel and complete the pending arrival")
+	_expect(state.phase == "map" and state.current_location == "soot_orchard" and state.campaign_target_node.is_empty() and state.campaign_encounters_completed == 1 and state.campaign_path.back() == "soot_orchard", "resolving the road scenario should atomically secure Soot Orchard and reopen the map")
 
 	var toll_result := _campaign_battle(state, "red_wheel_toll_bridge", "protect_cargo")
 	_expect(bool(toll_result.get("resolved", false)) and state.campaign_event_pending == "toll_decision", "the Red Wheel branch should be viable and open its toll decision")
@@ -1485,8 +1496,8 @@ func _test_alternate_five_encounter_campaign() -> void:
 	state.choose_mastery_experiment("ashgate_signal_discipline")
 	state.choose_guard_contract(false)
 	var first := _campaign_battle(state, "soot_orchard", "protect_crew")
-	_expect(bool(first.get("resolved", false)) and state.phase == "map", "the Soot Orchard opening should survive as part of a complete route")
-	_expect(bool(state.resolve_campaign_event("take_fuel").get("ok", false)), "the alternate route should convert the orchard into fuel")
+	_expect(bool(first.get("resolved", false)) and state.phase == "road_event" and state.current_location == "ashgate_depot", "the Soot Orchard opening should survive contact and wait on its scenario before arrival")
+	_expect(bool(state.resolve_campaign_event("take_fuel").get("arrival_ready", false)) and state.phase == "map" and state.current_location == "soot_orchard", "the alternate route should convert the orchard into fuel before completing arrival")
 	var second := _campaign_battle(state, "red_wheel_toll_bridge", "protect_cargo")
 	_expect(bool(second.get("resolved", false)) and state.phase == "map", "the Red Wheel branch should survive as part of a complete route")
 	_expect(bool(state.resolve_campaign_event("pay_toll").get("ok", false)), "the alternate route should be able to reduce pressure at the toll")

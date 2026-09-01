@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.337` Soot Orchard tableau candidate |
+| Build | `0.3.0-alpha.338` Orchard road-event handoff candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -45,6 +45,7 @@
 | Route landmarks | PASS: all current destinations plus First Watch have stable travel profiles; Ashgate crossing and Veyru pump travel retain the three-column, skip, and reduced-motion contracts |
 | Pre-contact interruption | PASS: the first eligible Rill road pauses at The Lift Chain Sings after travel and before contact; origin, destination, exact costs, focus, save/load, Skip, Reduced Motion, core combat blocking, and post-choice contact handoff are deterministic. |
 | Soot Orchard identity | PASS: the live event presenter and roadside canvas expose a stable burning-orchard motif, fuel cache, stranded workers, firebreak, and exact fuel-versus-rescue consequences at 1280×720. |
+| Orchard road-event sequencing | PASS: Storm Front contact resolves into a serialized `road_event` phase; origin, target, path, encounter count, and reward remain pending until the choice, then arrival completes atomically and carries the decision into its receipt. |
 
 ## Evidence
 
@@ -103,9 +104,11 @@
 - [`Responsive pre-contact road interruption evidence`](visual_evidence/v0.3.0-alpha.336-pre-contact-road-interruption-1280x720/)
 - [`Soot Orchard tableau report`](soot_orchard_tableau_report.md)
 - [`Soot Orchard visual evidence`](visual_evidence/v0.3.0-alpha.337-soot-orchard-tableau/01_soot_orchard.png)
+- [`Orchard road-event handoff report`](orchard_road_event_handoff_report.md)
+- [`Orchard decision-before-arrival evidence`](visual_evidence/v0.3.0-alpha.338-orchard-road-event/)
 
 ## Result
 
-The updated strategy remains intact. Alpha.337 replaces the Soot Orchard's generic ruin with an authored operational scene whose fuel and rescue subjects match the exact existing decision.
+The updated strategy remains intact. Alpha.338 turns the Soot Orchard into a true road sequence: contact, mandatory scenario, applied consequence, then arrival.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

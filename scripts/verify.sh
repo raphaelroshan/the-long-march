@@ -50,6 +50,7 @@ run_checked "PASS: The Long March presentation builders" "$GODOT_BIN" --headless
 run_checked "PASS: The Long March performance budget" "$GODOT_BIN" --headless --path . --script res://tests/test_performance_budget.gd
 run_checked "PASS: The Long March road-contact presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_road_contact_presentation.gd
 run_checked "PASS: The Long March roadside-event presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_roadside_event_presentation.gd
+run_checked "PASS: The Long March Soot Orchard road-event flow" "$GODOT_BIN" --headless --path . --script res://tests/test_soot_orchard_flow.gd
 run_checked "PASS: The Long March recovery panel" "$GODOT_BIN" --headless --path . --script res://tests/test_recovery_panel.gd
 run_checked "PASS: The Long March controller layout" "$GODOT_BIN" --headless --path . --script res://tests/test_controller_layout.gd
 run_checked "PASS: The Long March settlement hub" "$GODOT_BIN" --headless --path . --script res://tests/test_settlement_hub.gd
