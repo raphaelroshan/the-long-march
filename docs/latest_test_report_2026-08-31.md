@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.346` verified packet cohort candidate |
+| Build | `0.3.0-alpha.347` compact header and contact-action candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -54,6 +54,7 @@
 | Human-report preservation | PASS: per-session and cohort generators create new files exclusively, refuse existing destinations, retain their original contents after a blocked write, and ship the shared safe writer inside each checksummed cohort. |
 | Session evidence packet | PASS: a verified cohort, generated observer sheet, and matching feedback build produce a new checksummed local packet with byte-identical sources, a separate automatic summary, explicit human-owned non-claims, overwrite refusal, and tamper detection. |
 | Verified packet cohort | PASS: packet directories are reverified and sorted by embedded session number; changed packets, duplicate session numbers, and repeated feedback exports fail before a create-only cohort review, while observer prose remains unsummarized. |
+| Compact transient UI | PASS: save receipts avoid active header breadcrumbs and phase badges; all four contact emergency orders remain visible at 1280×720 with 110% text and high contrast. |
 
 ## Evidence
 
@@ -122,9 +123,10 @@
 - [`Create-only playtest report output`](safe_playtest_report_output_report.md)
 - [`Provenance-checked session packet report`](playtest_session_packet_report.md)
 - [`Verified packet cohort report`](verified_packet_cohort_report.md)
+- [`Compact header and command clearance report`](compact_header_command_clearance_report.md)
 
 ## Result
 
-The updated strategy remains intact. Alpha.346 preserves those pairings through cohort synthesis without automating human conclusions.
+The updated strategy remains intact. Alpha.347 removes two visible compact-screen collisions without changing simulation or adding explanatory copy.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

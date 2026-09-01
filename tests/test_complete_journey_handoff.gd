@@ -370,8 +370,21 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.campaign_target_node == "rill_crossing" and game.state.encounter_step == 0, "departure resume should preserve the committed road before contact")
 	await _enter_contact()
 	_expect_three_column_contract(game.road_contact, game.road_contact.value_labels["hull"], game.road_contact.contact_canvas, game.road_contact.advance_button, "road contact")
+	if responsive_profile and app.checkpoint_toast.visible:
+		var contact_toast_rect: Rect2 = app.checkpoint_toast.get_global_rect()
+		var phase_badge_rect: Rect2 = game.road_contact.battle_phase_label.get_global_rect()
+		var phase_text_end: float = game.road_contact.phase_label.get_global_rect().position.x + game.road_contact.phase_label.get_minimum_size().x
+		_expect(contact_toast_rect.end.x <= phase_badge_rect.position.x - app.CHECKPOINT_TOAST_GAP, "the compact save notice should stay left of the contact phase badge")
+		_expect(contact_toast_rect.position.x >= phase_text_end + app.CHECKPOINT_TOAST_GAP, "the compact save notice should not cover the contact breadcrumb · toast %.1f · text end %.1f" % [contact_toast_rect.position.x, phase_text_end])
+	if responsive_profile:
+		for intervention_button in game.road_contact.intervention_buttons:
+			_expect(game.road_contact.get_global_rect().encloses(intervention_button.get_global_rect()), "the compact contact dock should keep every emergency order visible without scrolling")
 	await _capture("08_road_contact")
 	await _resolve_contact("map")
+	if responsive_profile and app.checkpoint_toast.visible:
+		var arrival_toast_rect: Rect2 = app.checkpoint_toast.get_global_rect()
+		var arrival_text_end: float = game.journey_arrival.route_label.get_global_rect().position.x + game.journey_arrival.route_label.get_minimum_size().x
+		_expect(arrival_toast_rect.position.x >= arrival_text_end + app.CHECKPOINT_TOAST_GAP, "the compact save notice should not cover the arrival breadcrumb · toast %.1f · text end %.1f" % [arrival_toast_rect.position.x, arrival_text_end])
 	await _capture("09_arrival_receipt")
 	await _relaunch_and_continue("arrival")
 	_expect(game.state.current_location == "rill_crossing" and not game.state.pre_contact_occurrence_active(), "arrival resume should preserve the secured road after its pre-contact interruption was resolved")

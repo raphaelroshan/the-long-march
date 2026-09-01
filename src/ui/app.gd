@@ -231,6 +231,11 @@ func _ready() -> void:
 	_refresh_title_state()
 	_focus_title_primary()
 
+
+func _process(_delta: float) -> void:
+	if checkpoint_toast != null and checkpoint_toast.visible:
+		_position_checkpoint_toast()
+
 func _build_title_menu() -> void:
 	menu_view = Control.new()
 	menu_view.name = "TitleMenu"
@@ -2241,6 +2246,7 @@ func _show_checkpoint_toast(reason: String, play_audio: bool = true) -> void:
 	_position_checkpoint_toast()
 	checkpoint_toast.modulate = Color.WHITE
 	checkpoint_toast.visible = true
+	call_deferred("_position_checkpoint_toast")
 	if play_audio:
 		interface_audio.play_notice()
 	checkpoint_toast_tween = create_tween()
@@ -2253,9 +2259,21 @@ func _position_checkpoint_toast() -> void:
 	checkpoint_toast.size = Vector2(CHECKPOINT_TOAST_WIDTH, CHECKPOINT_TOAST_HEIGHT)
 	var toast_x := 330.0
 	if game_view != null:
-		var stage_pause_button = game_view.get("pause_button") as Control
-		if stage_pause_button != null and stage_pause_button.is_visible_in_tree():
-			toast_x = minf(toast_x, maxf(24.0, stage_pause_button.get_global_rect().position.x - checkpoint_toast.size.x - CHECKPOINT_TOAST_GAP))
+		var right_obstacle = game_view.get("pause_button") as Control
+		for property_name in ["settlement_hub", "journey_planner", "journey_transition", "road_contact", "journey_arrival", "roadside_event", "recovery_panel", "debrief_panel"]:
+			var surface = game_view.get(property_name) as Control
+			if surface == null or not surface.is_visible_in_tree():
+				continue
+			var surface_pause = surface.get("pause_button") as Control
+			if surface_pause != null and surface_pause.is_visible_in_tree():
+				right_obstacle = surface_pause
+			if property_name == "road_contact":
+				var contact_phase = surface.get("battle_phase_label") as Control
+				if contact_phase != null and contact_phase.is_visible_in_tree():
+					right_obstacle = contact_phase
+			break
+		if right_obstacle != null and right_obstacle.is_visible_in_tree():
+			toast_x = maxf(24.0, right_obstacle.get_global_rect().position.x - checkpoint_toast.size.x - CHECKPOINT_TOAST_GAP)
 	checkpoint_toast.position = Vector2(toast_x, 4)
 
 func _dismiss_checkpoint_toast() -> void:

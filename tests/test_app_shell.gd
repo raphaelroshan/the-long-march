@@ -435,6 +435,7 @@ func _run() -> void:
 	var toast_rect: Rect2 = app.checkpoint_toast.get_global_rect()
 	var stage_pause_rect: Rect2 = app.game_view.journey_planner.pause_button.get_global_rect()
 	_expect(not toast_rect.intersects(stage_pause_rect) and toast_rect.end.x <= stage_pause_rect.position.x - 8.0, "checkpoint notices should retain a visible gap before the persistent Pause control at 110% text")
+	_expect(toast_rect.position.x > 600.0, "checkpoint notices should use the available right side of the stage header instead of covering its breadcrumb")
 	_expect(toast_rect.end.y <= app.game_view.journey_planner.region_label.get_global_rect().position.y, "the compact checkpoint notice should remain above the route and location heading at 110% text")
 	app.game_view.campaign_cancel_button.pressed.emit()
 	await process_frame
