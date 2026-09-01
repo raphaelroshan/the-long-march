@@ -1238,3 +1238,7 @@ The Soot Orchard now uses a serialized `road_event` phase after its Storm Front 
 ## 2026-09-01 — Journey continuity evidence records transitions, not conclusions
 
 The local playtest journal now records route commitment, a road scenario blocking arrival, scenario resolution, and completed arrival as separate ordered events. Per-session and cohort tools derive the same counts from the raw event trail, compare them with exported aggregates, and retain compatibility with older reports. An incomplete sequence is reported only as the point where an export ended; observer notes are still required to distinguish confusion, an intentional stop, a crash, or the agreed session boundary. This was chosen over cursor or dwell-time analytics because the private-alpha question is whether players can explain the state handoff, not whether the tool can guess intent from passive behavior.
+
+## 2026-09-01 — Observer notes start from verified provenance
+
+Each private-alpha session can now begin with one bundled command that verifies the entire retained cohort and creates a fresh observer sheet containing the exact build, cohort, platform, commits, toolchain, executable digest, manifest digest, and verification gates. The tool writes outside the cohort and refuses to overwrite a prior sheet. This was chosen over asking observers to copy identifiers by hand because a valid human comparison depends on exact artifact identity, while the notes themselves must remain human-owned, local, and recoverable.

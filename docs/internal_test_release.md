@@ -4,15 +4,15 @@ This is a **private-alpha candidate**, not a public release or storefront-ready 
 
 ## Exact cohort contract
 
-Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records a stable cohort ID, target platform, player-facing version, exact Godot toolchain, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, verifier, observer brief, session sheet, and scope/limitations document.
+Use one downloaded CI or tagged-release artifact for an entire comparison cohort. Every packaged artifact now includes `artifacts/release_manifest.json`, which records a stable cohort ID, target platform, player-facing version, exact Godot toolchain, workflow and branch commits, workflow run, completed verification stages, and SHA-256 digest of the executable, source snapshot, verifier, observer brief, session sheet, session-preparation tool, and scope/limitations document.
 
-Before the first session, run:
+Before each session, create a fresh observer sheet outside the extracted cohort:
 
 ```bash
-python tools/verify_release_manifest.py artifacts/release_manifest.json
+python tools/prepare_playtest_session.py artifacts/release_manifest.json --session 1 --output ../long-march-session-01.md
 ```
 
-Record `cohort.id`, `cohort.platform`, `source.workflow_commit`, and the executable digest. Run the verifier again before every later session. Windows and macOS packages may share one cohort ID while retaining different platform-specific file hashes. A digest mismatch means the artifact is incomplete, altered, or mixed even when the visible version label is unchanged. Retain the downloaded artifact outside the repository because ordinary CI artifacts expire.
+The command verifies every checksummed file before copying the exact cohort identity, platform, commits, Godot version, executable digest, manifest digest, and uncoached-session checklist into the new sheet. It refuses altered cohorts, output inside the retained cohort, session zero, and overwriting an existing observer file. Windows and macOS packages may share one cohort ID while retaining different platform-specific file hashes. Retain the downloaded artifact outside the repository because ordinary CI artifacts expire.
 
 Rollback means returning to the exact executable named in the retained manifest, not rebuilding the same Git revision with a different engine or export template. The source snapshot is diagnostic evidence; testers should receive only the appropriate packaged build and the observer should use the bundled brief and session sheet.
 

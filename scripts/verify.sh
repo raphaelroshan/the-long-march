@@ -37,6 +37,7 @@ python3 tools/verify_offline_boundary.py --repo .
 python3 tests/test_playtest_summary.py
 python3 tests/test_playtest_cohort_summary.py
 python3 tests/test_release_manifest.py
+python3 tests/test_prepare_playtest_session.py
 python3 tests/test_smoke_playtest.py
 python3 tests/test_private_alpha_contract.py
 run_checked "" "$GODOT_BIN" --headless --path . --import

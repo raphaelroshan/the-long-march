@@ -178,10 +178,11 @@ jobs:
             --verification windows_packaged_smoke \
             --verification offline_boundary \
             --verification performance_budget \
-            --file windows_executable=build/the-long-march-windows.exe \
+            --file desktop_package=build/the-long-march-windows.exe \
             --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             --file observer_brief=docs/playtest_guide.md \
             --file session_sheet=docs/private_alpha_session_sheet.md \
+            --file session_preparer=tools/prepare_playtest_session.py \
             --file session_summarizer=tools/summarize_playtest_feedback.py \
             --file cohort_summarizer=tools/summarize_playtest_cohort.py \
             --file scope_and_limitations=docs/internal_test_release.md \
@@ -198,6 +199,7 @@ jobs:
             docs/internal_test_release.md
             docs/playtest_guide.md
             docs/private_alpha_session_sheet.md
+            tools/prepare_playtest_session.py
             tools/summarize_playtest_feedback.py
             tools/summarize_playtest_cohort.py
             tools/verify_release_manifest.py

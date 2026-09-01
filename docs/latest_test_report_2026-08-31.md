@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.339` journey-continuity evidence candidate |
+| Build | `0.3.0-alpha.340` private-alpha session preflight candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -47,6 +47,7 @@
 | Soot Orchard identity | PASS: the live event presenter and roadside canvas expose a stable burning-orchard motif, fuel cache, stranded workers, firebreak, and exact fuel-versus-rescue consequences at 1280×720. |
 | Orchard road-event sequencing | PASS: Storm Front contact resolves into a serialized `road_event` phase; origin, target, path, encounter count, and reward remain pending until the choice, then arrival completes atomically and carries the decision into its receipt. |
 | Journey-continuity evidence | PASS: local exports and observer reports preserve route commitment, road scenario reached, scenario resolved, and arrival completed as ordered events; legacy exports remain readable and all counts are labeled navigation evidence rather than comprehension. |
+| Session preflight | PASS: one command verifies every cohort digest, writes exact artifact provenance into a fresh observer sheet outside the retained cohort, and rejects altered artifacts, invalid session numbers, in-cohort output, and accidental overwrite. |
 
 ## Evidence
 
@@ -108,9 +109,10 @@
 - [`Orchard road-event handoff report`](orchard_road_event_handoff_report.md)
 - [`Orchard decision-before-arrival evidence`](visual_evidence/v0.3.0-alpha.338-orchard-road-event/)
 - [`Journey-continuity evidence report`](journey_continuity_evidence_report.md)
+- [`Private-alpha session preflight report`](private_alpha_session_preflight_report.md)
 
 ## Result
 
-The updated strategy remains intact. Alpha.339 makes the true road sequence measurable in consented local sessions: commit, contact, mandatory scenario, applied consequence, then arrival.
+The updated strategy remains intact. Alpha.340 makes each consented local session start from verified artifact provenance and a non-destructive observer record.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
