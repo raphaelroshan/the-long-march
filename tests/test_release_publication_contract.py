@@ -15,6 +15,7 @@ def main() -> int:
         "macOS cohort download": "macos-playtest-${{ github.ref_name }}",
         "cohort verification": "tools/verify_release_manifest.py",
         "session preflight": "tools/prepare_playtest_session.py",
+        "complete evidence smoke": "tools/smoke_playtest_evidence.py",
         "Windows cohort archive": "Windows-Cohort.zip",
         "macOS cohort archive": "macOS-Cohort.zip",
         "asset integrity list": "SHA256SUMS.txt",
@@ -26,8 +27,8 @@ def main() -> int:
     errors = [f"missing {label}: {marker}" for label, marker in required.items() if marker not in workflow]
     if workflow.count("tools/verify_release_manifest.py staging/") != 2:
         errors.append("publisher must verify both downloaded platform cohorts")
-    if workflow.count("tools/prepare_playtest_session.py staging/") != 2:
-        errors.append("publisher must exercise preflight against both downloaded platform cohorts")
+    if workflow.count("tools/smoke_playtest_evidence.py staging/") != 2:
+        errors.append("publisher must exercise the complete evidence workflow against both downloaded platform cohorts")
     publish_section = workflow.split("\n  publish:\n", 1)[-1]
     if "pull_request:" in publish_section:
         errors.append("publish job must not introduce a pull-request release trigger")

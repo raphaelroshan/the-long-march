@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.347` compact header and contact-action candidate |
+| Build | `0.3.0-alpha.348` packaged evidence-workflow candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -48,13 +48,14 @@
 | Orchard road-event sequencing | PASS: Storm Front contact resolves into a serialized `road_event` phase; origin, target, path, encounter count, and reward remain pending until the choice, then arrival completes atomically and carries the decision into its receipt. |
 | Journey-continuity evidence | PASS: local exports and observer reports preserve route commitment, road scenario reached, scenario resolved, and arrival completed as ordered events; legacy exports remain readable and all counts are labeled navigation evidence rather than comprehension. |
 | Session preflight | PASS: one command verifies every cohort digest, writes exact artifact provenance into a fresh observer sheet outside the retained cohort, and rejects altered artifacts, invalid session numbers, in-cohort output, and accidental overwrite. |
-| Prerelease publication | PASS: owner-created version tags wait for both platform cohorts, reverify both manifests, exercise both session preflights, validate all archives, publish standalone/cohort assets plus `SHA256SUMS.txt`, and safely refresh assets on rerun. |
+| Prerelease publication | PASS: owner-created version tags wait for both platform cohorts, reverify both manifests, exercise observer preflight through verified packet creation and cohort synthesis on both downloads, validate all archives, publish standalone/cohort assets plus `SHA256SUMS.txt`, and safely refresh assets on rerun. |
 | Release guidance | PASS: every new prerelease leads with concise standalone/cohort download choices, the verified-session command, checksum instructions, private-alpha scope, and workflow evidence before the generated change list. |
 | Public landing page | PASS: the README leads with the playable release, fortress loop, current journeys, controls, privacy, honest scope, and authoritative design/testing links while remaining bounded against a feature-inventory regression. |
 | Human-report preservation | PASS: per-session and cohort generators create new files exclusively, refuse existing destinations, retain their original contents after a blocked write, and ship the shared safe writer inside each checksummed cohort. |
 | Session evidence packet | PASS: a verified cohort, generated observer sheet, and matching feedback build produce a new checksummed local packet with byte-identical sources, a separate automatic summary, explicit human-owned non-claims, overwrite refusal, and tamper detection. |
 | Verified packet cohort | PASS: packet directories are reverified and sorted by embedded session number; changed packets, duplicate session numbers, and repeated feedback exports fail before a create-only cohort review, while observer prose remains unsummarized. |
 | Compact transient UI | PASS: save receipts avoid active header breadcrumbs and phase badges; all four contact emergency orders remain visible at 1280×720 with 110% text and high contrast. |
+| Packaged evidence workflow | PASS: both downloaded alpha.347 cohorts completed manifest verification, observer preflight, synthetic feedback pairing, packet verification, and incomplete cohort synthesis without asserting human-owned claims; tagged alpha.348 publication runs the same smoke before release assembly. |
 
 ## Evidence
 
@@ -124,9 +125,10 @@
 - [`Provenance-checked session packet report`](playtest_session_packet_report.md)
 - [`Verified packet cohort report`](verified_packet_cohort_report.md)
 - [`Compact header and command clearance report`](compact_header_command_clearance_report.md)
+- [`Packaged evidence workflow smoke report`](packaged_evidence_workflow_smoke_report.md)
 
 ## Result
 
-The updated strategy remains intact. Alpha.347 removes two visible compact-screen collisions without changing simulation or adding explanatory copy.
+The updated strategy remains intact. Alpha.348 verifies that the complete evidence workflow shipped to testers actually runs from both downloaded platform cohorts, without manufacturing human evidence.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
