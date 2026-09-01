@@ -91,7 +91,7 @@ bash scripts/export_playtest.sh macos
 
 Generated builds are written to `build/` and are intentionally ignored by Git. Tagged releases also build Windows and macOS playtest artifacts in GitHub Actions.
 
-For comparative sessions, prefer a retained CI or tagged-release artifact over a local rebuild. From the extracted artifact root, run `python tools/verify_release_manifest.py artifacts/release_manifest.json` and keep all five sessions on the same `cohort.id`. Windows and macOS exports from the same source share that ID while retaining platform-specific hashes. The bundled observer brief, session sheet, verifier, and scope/limitations document are all hashed so the build or testing instructions cannot drift unnoticed during a cohort.
+For comparative sessions, prefer a retained CI or tagged-release artifact over a local rebuild. From the extracted artifact root, run `python tools/prepare_playtest_session.py artifacts/release_manifest.json --session 1 --output ../long-march-session-01.md` and keep all five sessions on the same `cohort.id`. The command verifies the cohort, records its exact provenance in a fresh observer sheet, keeps that sheet outside the retained artifact, and refuses to overwrite prior notes. Windows and macOS exports from the same source share the cohort ID while retaining platform-specific hashes. The bundled observer brief, session template, preflight tool, verifier, and scope/limitations document are all hashed so the build or testing instructions cannot drift unnoticed during a cohort.
 
 ## Questions for the first five testers
 
