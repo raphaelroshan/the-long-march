@@ -105,3 +105,52 @@ jobs:
             tools/verify_release_manifest.py
           if-no-files-found: error
           retention-days: 90
+
+  publish:
+    name: Publish verified prerelease
+    needs: release-candidate
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download Windows cohort
+        uses: actions/download-artifact@v7
+        with:
+          name: windows-playtest-${{ github.ref_name }}
+          path: staging/windows
+      - name: Download macOS cohort
+        uses: actions/download-artifact@v7
+        with:
+          name: macos-playtest-${{ github.ref_name }}
+          path: staging/macos
+      - name: Verify downloaded cohorts and session preflight
+        run: |
+          python staging/windows/tools/verify_release_manifest.py staging/windows/artifacts/release_manifest.json
+          python staging/macos/tools/verify_release_manifest.py staging/macos/artifacts/release_manifest.json
+          python staging/windows/tools/prepare_playtest_session.py staging/windows/artifacts/release_manifest.json --session 1 --output "$RUNNER_TEMP/windows-session.md"
+          python staging/macos/tools/prepare_playtest_session.py staging/macos/artifacts/release_manifest.json --session 1 --output "$RUNNER_TEMP/macos-session.md"
+      - name: Assemble public release assets
+        run: |
+          version="$GITHUB_REF_NAME"
+          mkdir -p release
+          cp staging/windows/build/the-long-march-windows.exe "release/The-Long-March-${version}-Windows.exe"
+          cp staging/macos/build/the-long-march-macos.zip "release/The-Long-March-${version}-macOS.zip"
+          (cd staging/windows && zip -qr "$GITHUB_WORKSPACE/release/The-Long-March-${version}-Windows-Cohort.zip" .)
+          (cd staging/macos && zip -qr "$GITHUB_WORKSPACE/release/The-Long-March-${version}-macOS-Cohort.zip" .)
+          unzip -tq "release/The-Long-March-${version}-Windows-Cohort.zip"
+          unzip -tq "release/The-Long-March-${version}-macOS-Cohort.zip"
+          unzip -tq "release/The-Long-March-${version}-macOS.zip"
+          (cd release && sha256sum The-Long-March-* > SHA256SUMS.txt)
+      - name: Create or refresh GitHub prerelease
+        run: |
+          tag="$GITHUB_REF_NAME"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" release/* --clobber
+            gh release edit "$tag" --prerelease --title "The Long March ${tag}"
+          else
+            gh release create "$tag" release/* --verify-tag --prerelease --generate-notes --title "The Long March ${tag}"
+          fi

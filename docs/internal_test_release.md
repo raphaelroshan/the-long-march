@@ -16,7 +16,7 @@ The command verifies every checksummed file before copying the exact cohort iden
 
 Rollback means returning to the exact executable named in the retained manifest, not rebuilding the same Git revision with a different engine or export template. The source snapshot is diagnostic evidence; testers should receive only the appropriate packaged build and the observer should use the bundled brief and session sheet.
 
-The CI candidate is uploaded only after deterministic tests, offline-boundary checks, performance budgets, desktop export, packaged headless launch, and manifest verification pass. These gates prove reproducibility and startup integrity; they do not substitute for the human sessions below.
+The CI candidate is uploaded only after deterministic tests, offline-boundary checks, performance budgets, desktop export, packaged headless launch, and manifest verification pass. An owner-created version tag then waits for both platform jobs, downloads and reverifies both exact cohorts, exercises their bundled session preflight, creates standalone and full-cohort archives, checks each archive, writes `SHA256SUMS.txt`, and creates or refreshes the GitHub prerelease. These gates prove reproducibility and startup integrity; they do not substitute for the human sessions below.
 
 ## Purpose
 
