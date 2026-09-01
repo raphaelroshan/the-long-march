@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.341`
+**Current code baseline:** `0.3.0-alpha.342`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.341`, preserving the complete causal journey and private-alpha evidence workflow while making owner-created version tags publish verified prereleases automatically. Both platform cohorts are reverified after download, their preflight tools are exercised, standalone and complete-cohort assets are assembled, and a shared checksum list is published only after every gate succeeds.
+**Current merged baseline:** `0.3.0-alpha.342`, preserving the complete causal journey and private-alpha evidence workflow while making each automated prerelease self-explanatory. The release page now leads with the private-alpha boundary, exact platform downloads, observer-cohort purpose, verified-session command, checksum path, and workflow evidence before GitHub's generated change list.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -955,7 +955,7 @@ The project should now optimize for **continuity of place, clarity of commitment
 
 Use `docs/private_alpha_session_sheet.md` and one exact artifact cohort. Test both First Watch and the quick path across the documented input and display combinations. Record only observed behavior. Do not infer comprehension from completion, and do not replace human evidence with automated screenshots.
 
-**Evidence support:** `0.3.0-alpha.341` publishes each owner-tagged cohort through the same verified workflow, `0.3.0-alpha.340` verifies the retained cohort before each observer sheet is created, and `0.3.0-alpha.339` records the ordered local-only journey trail. The tools establish artifact and state identity but deliberately do not infer comprehension.
+**Evidence support:** `0.3.0-alpha.342` gives testers usable download and verification instructions on the release itself, `0.3.0-alpha.341` publishes each owner-tagged cohort through the same verified workflow, and the local tools establish artifact and state identity without inferring comprehension.
 
 Triage findings through three questions: did the player know what to do, did they know why it mattered, and did they understand what happened? Fix repeated high-severity confusion before adding more explanatory text. Prioritize unclear current-order handoffs, route commitment, combat target interpretation, recovery choice, settlement service purpose, and final Debrief comprehension.
 

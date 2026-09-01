@@ -117,6 +117,11 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
+      - name: Checkout release metadata
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
       - name: Download Windows cohort
         uses: actions/download-artifact@v7
         with:
@@ -145,6 +150,12 @@ jobs:
           unzip -tq "release/The-Long-March-${version}-macOS-Cohort.zip"
           unzip -tq "release/The-Long-March-${version}-macOS.zip"
           (cd release && sha256sum The-Long-March-* > SHA256SUMS.txt)
+      - name: Prepare tester-facing release notes
+        run: |
+          python tools/render_release_notes.py \
+            --tag "$GITHUB_REF_NAME" \
+            --workflow-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --output "$RUNNER_TEMP/release-notes.md"
       - name: Create or refresh GitHub prerelease
         run: |
           tag="$GITHUB_REF_NAME"
@@ -152,5 +163,6 @@ jobs:
             gh release upload "$tag" release/* --clobber
             gh release edit "$tag" --prerelease --title "The Long March ${tag}"
           else
-            gh release create "$tag" release/* --verify-tag --prerelease --generate-notes --title "The Long March ${tag}"
+            notes="$(cat "$RUNNER_TEMP/release-notes.md")"
+            gh release create "$tag" release/* --verify-tag --prerelease --generate-notes --notes "$notes" --title "The Long March ${tag}"
           fi

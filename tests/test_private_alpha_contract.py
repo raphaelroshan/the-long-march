@@ -31,6 +31,7 @@ def main() -> int:
         "test_complete_journey_handoff.gd",
         "test_prepare_playtest_session.py",
         "test_release_publication_contract.py",
+        "test_release_notes.py",
     ):
         require(verify, marker, "verification gate", errors)
 
