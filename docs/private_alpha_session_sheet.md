@@ -38,6 +38,15 @@ python3 tools/summarize_playtest_feedback.py /absolute/path/to/the_long_march_fe
 
 The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. Its journey section lists route commitments, road scenarios reached and resolved, and completed arrivals in chronological order. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate either metric block. It does not modify the source export, send data anywhere, infer comprehension from interaction counts, or replace an existing output file. Keep the automatic summary separate from the hand-written observer sheet.
 
+When the observer sheet is complete, bind it to the matching export in a new local packet:
+
+```bash
+python3 tools/finalize_playtest_session.py create artifacts/release_manifest.json --observer /path/session-01-observer.md --feedback /path/the_long_march_feedback_....json --output /path/session-01-packet
+python3 tools/finalize_playtest_session.py verify /path/session-01-packet
+```
+
+Creation reverifies the retained cohort, requires the observer's embedded build and artifact digests to match it, requires the feedback build to match, then copies both inputs byte-for-byte alongside the automatic summary and a checksummed packet manifest. It never alters either source and refuses an existing packet directory. Packet validity proves artifact identity and later tamper detection only; consent, participant uniqueness, uncoached conditions, comprehension, and severity remain human confirmations.
+
 After collecting the intended five exports, generate a cohort review in the same argument order used for the session numbers:
 
 ```bash

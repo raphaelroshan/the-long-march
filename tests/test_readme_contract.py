@@ -14,6 +14,7 @@ def main() -> int:
         "macOS download": "**macOS:**",
         "release checksums": "SHA256SUMS.txt",
         "cohort preflight": "tools/prepare_playtest_session.py",
+        "session packet finalizer": "tools/finalize_playtest_session.py",
         "current loop": "settlement bazaar",
         "Ashgate chapter": "**Ashgate Lowlands**",
         "Veyru chapter": "**Flooded Veyru**",

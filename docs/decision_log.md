@@ -1258,3 +1258,7 @@ The README now leads with the moving-fortress premise, current private-alpha dow
 ## 2026-09-01 — Generated evidence never replaces human notes
 
 The per-session and cohort summarizers now open their output files in exclusive create mode and fail clearly when a destination already exists. Their shared writer is included in both checksummed platform cohorts. Observer guidance uses distinct `-automatic` filenames and asks reviewers to keep generated evidence separate from hand-written notes. This was chosen over a force flag because an accidental overwrite can destroy the only record of hesitation, direct quotes, or uncoached behavior that automation cannot reconstruct.
+
+## 2026-09-01 — Session evidence is paired by hashes, not filenames
+
+The session finalizer reverifies the retained cohort, checks the generated observer sheet's embedded artifact identity, requires the feedback export's build to match, and creates a new local directory containing byte-identical source copies, a separate automatic summary, and a SHA-256 packet manifest. Original filenames and machine paths are omitted. Consent, participant uniqueness, uncoached conditions, and comprehension remain explicit false claims until a human reviewer confirms them. This was chosen over filename conventions or a merged prose report because either can silently pair the wrong build, obscure later edits, or blur observations with generated evidence.

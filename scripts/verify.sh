@@ -38,6 +38,7 @@ python3 tests/test_playtest_summary.py
 python3 tests/test_playtest_cohort_summary.py
 python3 tests/test_release_manifest.py
 python3 tests/test_prepare_playtest_session.py
+python3 tests/test_finalize_playtest_session.py
 python3 tests/test_release_publication_contract.py
 python3 tests/test_release_notes.py
 python3 tests/test_readme_contract.py
