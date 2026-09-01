@@ -1270,3 +1270,7 @@ The primary cohort tool now reverifies every session packet, sorts by its embedd
 ## 2026-09-01 — Transient receipts use unoccupied header space
 
 Autosave receipts now reposition against the active screen's Pause control, and against the contact-phase badge during battle, after the destination view has settled. The compact contact dock also uses a tighter but still readable vertical rhythm so its four emergency orders remain visible together at 1280×720 with 110% text. This was chosen over hiding the receipt or removing tactical context because both are useful; the fault was their placement and spacing, not their existence.
+
+## 2026-09-01 — Published cohorts prove the complete evidence chain
+
+The tag publisher now runs observer preflight, synthetic feedback pairing, packet creation, packet verification, and cohort synthesis from each downloaded Windows and macOS cohort before assembling a release. The smoke output stays in temporary runner storage, the generated cohort remains explicitly incomplete, and every human-owned claim remains false. This was chosen over treating checksums or isolated unit fixtures as proof that the tools packaged for testers can import one another and operate together after download.

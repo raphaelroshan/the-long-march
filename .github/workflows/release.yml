@@ -88,6 +88,7 @@ jobs:
             --file session_summarizer=tools/summarize_playtest_feedback.py \
             --file cohort_summarizer=tools/summarize_playtest_cohort.py \
             --file packet_cohort_summarizer=tools/summarize_playtest_packets.py \
+            --file evidence_workflow_smoke=tools/smoke_playtest_evidence.py \
             --file scope_and_limitations=docs/internal_test_release.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Verify exact cohort manifest
@@ -108,6 +109,7 @@ jobs:
             tools/summarize_playtest_feedback.py
             tools/summarize_playtest_cohort.py
             tools/summarize_playtest_packets.py
+            tools/smoke_playtest_evidence.py
             tools/verify_release_manifest.py
           if-no-files-found: error
           retention-days: 90
@@ -138,12 +140,12 @@ jobs:
         with:
           name: macos-playtest-${{ github.ref_name }}
           path: staging/macos
-      - name: Verify downloaded cohorts and session preflight
+      - name: Verify downloaded cohorts and complete evidence workflow
         run: |
           python staging/windows/tools/verify_release_manifest.py staging/windows/artifacts/release_manifest.json
           python staging/macos/tools/verify_release_manifest.py staging/macos/artifacts/release_manifest.json
-          python staging/windows/tools/prepare_playtest_session.py staging/windows/artifacts/release_manifest.json --session 1 --output "$RUNNER_TEMP/windows-session.md"
-          python staging/macos/tools/prepare_playtest_session.py staging/macos/artifacts/release_manifest.json --session 1 --output "$RUNNER_TEMP/macos-session.md"
+          python staging/windows/tools/smoke_playtest_evidence.py staging/windows/artifacts/release_manifest.json --output "$RUNNER_TEMP/windows-evidence-smoke"
+          python staging/macos/tools/smoke_playtest_evidence.py staging/macos/artifacts/release_manifest.json --output "$RUNNER_TEMP/macos-evidence-smoke"
       - name: Assemble public release assets
         run: |
           version="$GITHUB_REF_NAME"
