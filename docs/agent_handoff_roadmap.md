@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.346`
+**Current code baseline:** `0.3.0-alpha.347`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.346`, preserving the complete causal journey and private-alpha evidence workflow while making cohort synthesis consume verified session packets. Changed packets, duplicate session numbers, and repeated exports fail before report creation; observer prose remains paired but human-reviewed.
+**Current merged baseline:** `0.3.0-alpha.347`, preserving the complete causal journey and evidence workflow while clearing transient save receipts from active header context and keeping all four emergency orders visible at the compact 1280×720, 110%-text profile.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -955,7 +955,7 @@ The project should now optimize for **continuity of place, clarity of commitment
 
 Use `docs/private_alpha_session_sheet.md` and one exact artifact cohort. Test both First Watch and the quick path across the documented input and display combinations. Record only observed behavior. Do not infer comprehension from completion, and do not replace human evidence with automated screenshots.
 
-**Evidence support:** `0.3.0-alpha.346` verifies packet integrity and uniqueness before cohort synthesis, `0.3.0-alpha.345` binds each observer sheet to its matching export, and the cohort tools establish artifact and state identity without inferring comprehension.
+**Evidence support:** `0.3.0-alpha.347` adds current compact-screen visual evidence and collision assertions, `0.3.0-alpha.346` verifies packet integrity and uniqueness before cohort synthesis, and the cohort tools establish artifact and state identity without inferring comprehension.
 
 Triage findings through three questions: did the player know what to do, did they know why it mattered, and did they understand what happened? Fix repeated high-severity confusion before adding more explanatory text. Prioritize unclear current-order handoffs, route commitment, combat target interpretation, recovery choice, settlement service purpose, and final Debrief comprehension.
 

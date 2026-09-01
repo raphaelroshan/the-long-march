@@ -197,7 +197,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	var stack := VBoxContainer.new()
 	stack.custom_minimum_size = Vector2(300, 0)
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stack.add_theme_constant_override("separation", 5)
+	stack.add_theme_constant_override("separation", 4)
 	scroll.add_child(stack)
 	var kicker := Label.new()
 	kicker.text = "CONTACT DOSSIER"
@@ -217,12 +217,12 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	stack.add_child(threat_status)
 	threat_detail = Label.new()
 	threat_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	threat_detail.custom_minimum_size = Vector2(0, 88)
+	threat_detail.custom_minimum_size = Vector2(0, 78)
 	threat_detail.add_theme_font_size_override("font_size", 11)
 	threat_detail.add_theme_color_override("font_color", Color("#c8d1d1"))
 	stack.add_child(threat_detail)
 	counter_readiness_panel = PanelContainer.new()
-	counter_readiness_panel.custom_minimum_size = Vector2(0, 42)
+	counter_readiness_panel.custom_minimum_size = Vector2(0, 38)
 	stack.add_child(counter_readiness_panel)
 	counter_readiness_label = Label.new()
 	counter_readiness_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -231,7 +231,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	counter_readiness_label.add_theme_font_size_override("font_size", 10)
 	counter_readiness_panel.add_child(counter_readiness_label)
 	response_posture_panel = PanelContainer.new()
-	response_posture_panel.custom_minimum_size = Vector2(0, 68)
+	response_posture_panel.custom_minimum_size = Vector2(0, 60)
 	stack.add_child(response_posture_panel)
 	response_posture_label = Label.new()
 	response_posture_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -244,13 +244,13 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	stack.add_child(warning_label)
 	advance_button = Button.new()
 	advance_button.text = "ADVANCE CONTACT"
-	advance_button.custom_minimum_size = Vector2(0, 52)
+	advance_button.custom_minimum_size = Vector2(0, 48)
 	advance_button.set_meta("long_march_audio_manual_press", true)
 	advance_button.pressed.connect(func() -> void: advance_requested.emit())
 	stack.add_child(advance_button)
 	inspect_button = Button.new()
 	inspect_button.text = "INSPECT CHASSIS"
-	inspect_button.custom_minimum_size = Vector2(0, 38)
+	inspect_button.custom_minimum_size = Vector2(0, 36)
 	inspect_button.pressed.connect(func() -> void: inspect_requested.emit())
 	stack.add_child(inspect_button)
 	intervention_heading = Label.new()
@@ -260,7 +260,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	stack.add_child(intervention_heading)
 	intervention_help = Label.new()
 	intervention_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intervention_help.add_theme_font_size_override("font_size", 10)
+	intervention_help.add_theme_font_size_override("font_size", 9)
 	intervention_help.add_theme_color_override("font_color", Color("#aab6ba"))
 	stack.add_child(intervention_help)
 	intervention_grid = GridContainer.new()
@@ -271,7 +271,7 @@ func _build_command_dock(parent: HBoxContainer) -> void:
 	for intervention_id in ["shift_power", "seal_compartment", "vent_heat", "cut_loose_cargo"]:
 		var button := Button.new()
 		button.text = intervention_id.replace("_", " ").capitalize()
-		button.custom_minimum_size = Vector2(0, 42)
+		button.custom_minimum_size = Vector2(0, 38)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.set_meta("intervention_id", intervention_id)
 		button.set_meta("long_march_audio_manual_press", true)

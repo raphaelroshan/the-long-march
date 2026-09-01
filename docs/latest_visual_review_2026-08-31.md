@@ -1,6 +1,6 @@
 # The Long March — Latest Visual Review
 
-**Build:** `0.3.0-alpha.324`
+**Build:** `0.3.0-alpha.347`
 
 **Engine:** Godot 4.4.1
 
@@ -31,6 +31,8 @@
 - [Target-effective counter state](visual_evidence/v0.3.0-alpha.322-effective-counter/)
 - [Compact contact command grid](visual_evidence/v0.3.0-alpha.323-contact-command-grid/)
 - [Target-review focus](visual_evidence/v0.3.0-alpha.324-target-review-focus/)
+- [Compact header and command clearance · 1600×900](visual_evidence/v0.3.0-alpha.347-header-command-clearance-1600x900/)
+- [Compact header and command clearance · 1280×720](visual_evidence/v0.3.0-alpha.347-header-command-clearance-1280x720/)
 
 ## Findings
 
@@ -84,6 +86,8 @@ Alpha.323 restores the emergency-order set to the visible contact surface after 
 
 Alpha.324 makes target assignment a deliberate review boundary for keyboard and controller play. Forecast entry still defaults to Advance, but when the first target locks the visible focus moves to Inspect Chassis. Re-entering an already targeted contact also starts on Inspect, reducing accidental double-advance without disabling or delaying the authoritative command.
 
+Alpha.347 corrects two issues found by recapturing the current build at the supported compact profile. The autosave receipt now repositions after the active surface settles and uses the free header lane before Pause—or before the contact phase badge—rather than covering the location breadcrumb. The contact dock's tighter rhythm keeps all four emergency orders visible together at 1280×720 with 110% text while retaining the complete threat, response, and timing explanation.
+
 ## Next work
 
-Use the exact published alpha.319 cohort for current consented sessions; promote a later cohort only after the accumulated changes warrant replacing it. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.
+Use the exact published alpha.347 cohort for current consented sessions after its release checks pass. Prioritize repeated failures in tutorial-to-game continuity, roadside-decision recognition, route-state recognition, assignment relevance, threat recognition, place recognition, fortress personhood, march weight, contact-transition clarity, dependency explanation, recovery choice, pacing, or comfort before adding another region or progression layer.

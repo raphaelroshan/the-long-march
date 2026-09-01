@@ -1266,3 +1266,7 @@ The session finalizer reverifies the retained cohort, checks the generated obser
 ## 2026-09-01 — Cohort synthesis starts from verified packets
 
 The primary cohort tool now reverifies every session packet, sorts by its embedded session number, and rejects duplicate session numbers or repeated feedback hashes before creating a report. It exposes packet provenance and exported game facts but does not copy or summarize the observer's prose. The loose-export summarizer remains for older evidence with a clear limitation. This was chosen over silently accepting filenames because a five-row report is not useful if one run was counted twice or paired notes were lost.
+
+## 2026-09-01 — Transient receipts use unoccupied header space
+
+Autosave receipts now reposition against the active screen's Pause control, and against the contact-phase badge during battle, after the destination view has settled. The compact contact dock also uses a tighter but still readable vertical rhythm so its four emergency orders remain visible together at 1280×720 with 110% text. This was chosen over hiding the receipt or removing tactical context because both are useful; the fault was their placement and spacing, not their existence.

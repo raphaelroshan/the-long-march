@@ -4203,7 +4203,7 @@ func _refresh_ui() -> void:
 	var vent_help := "VENT HEAT · %d heat removed%s." % [int(vent_preview.get("heat_removed", 0)), "; exposed %s" % ", ".join(vent_exposures) if not vent_exposures.is_empty() else "; no current exterior target"]
 	intervention_preview_texts = {"shift_power": shift_help, "seal_compartment": seal_help, "vent_heat": vent_help, "cut_loose_cargo": cut_help}
 	if active_combat_target_id.is_empty() and not hull_under_threat:
-		intervention_overview_text = "NO TARGET ASSIGNED · The order remains available after Advance unless the encounter ends. Review CONTACT NEXT before waiting. Focus or hover an order for exact effects. Seal target: %s." % selected_name
+		intervention_overview_text = "NO TARGET ASSIGNED · The order remains available after Advance. Review CONTACT NEXT. Focus or hover an order for exact effects. Seal target: %s." % selected_name
 	else:
 		intervention_overview_text = "Choose one emergency order. Focus or hover an action for its exact benefit and cost. Seal target: %s." % selected_name
 	if state.encounter_intervention_used:
