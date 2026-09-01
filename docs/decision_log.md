@@ -1274,3 +1274,7 @@ Autosave receipts now reposition against the active screen's Pause control, and 
 ## 2026-09-01 — Published cohorts prove the complete evidence chain
 
 The tag publisher now runs observer preflight, synthetic feedback pairing, packet creation, packet verification, and cohort synthesis from each downloaded Windows and macOS cohort before assembling a release. The smoke output stays in temporary runner storage, the generated cohort remains explicitly incomplete, and every human-owned claim remains false. This was chosen over treating checksums or isolated unit fixtures as proof that the tools packaged for testers can import one another and operate together after download.
+
+## 2026-09-01 — Artifact-bound evidence smoke starts before merge
+
+Pull-request CI now downloads the exact Windows candidate produced by the package job and runs its bundled verifier and evidence-workflow smoke from the extracted artifact. The tagged release still repeats the test for both Windows and macOS. This was chosen over waiting for a version tag to discover an omitted tool or package-layout error, while preserving the tagged workflow as the final cross-platform publication gate.

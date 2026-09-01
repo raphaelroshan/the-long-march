@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.348` packaged evidence-workflow candidate |
+| Build | `0.3.0-alpha.349` pre-merge cohort-verification candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -55,7 +55,7 @@
 | Session evidence packet | PASS: a verified cohort, generated observer sheet, and matching feedback build produce a new checksummed local packet with byte-identical sources, a separate automatic summary, explicit human-owned non-claims, overwrite refusal, and tamper detection. |
 | Verified packet cohort | PASS: packet directories are reverified and sorted by embedded session number; changed packets, duplicate session numbers, and repeated feedback exports fail before a create-only cohort review, while observer prose remains unsummarized. |
 | Compact transient UI | PASS: save receipts avoid active header breadcrumbs and phase badges; all four contact emergency orders remain visible at 1280×720 with 110% text and high contrast. |
-| Packaged evidence workflow | PASS: both downloaded alpha.347 cohorts completed manifest verification, observer preflight, synthetic feedback pairing, packet verification, and incomplete cohort synthesis without asserting human-owned claims; tagged alpha.348 publication runs the same smoke before release assembly. |
+| Packaged evidence workflow | PASS: both downloaded alpha.347 cohorts completed manifest verification, observer preflight, synthetic feedback pairing, packet verification, and incomplete cohort synthesis without asserting human-owned claims; tagged release publication runs the same smoke for both platforms, and pull-request CI now re-downloads and exercises its exact Windows candidate before merge. |
 
 ## Evidence
 
@@ -129,6 +129,6 @@
 
 ## Result
 
-The updated strategy remains intact. Alpha.348 verifies that the complete evidence workflow shipped to testers actually runs from both downloaded platform cohorts, without manufacturing human evidence.
+The updated strategy remains intact. Alpha.349 moves exact downloaded-cohort verification before merge while retaining both-platform verification at tagged publication, without manufacturing human evidence.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.

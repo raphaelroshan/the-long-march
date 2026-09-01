@@ -55,6 +55,9 @@ def main() -> int:
     require(workflows, "cohort_summarizer=tools/summarize_playtest_cohort.py", "cohort summarizer in exact cohort", errors)
     require(workflows, "packet_cohort_summarizer=tools/summarize_playtest_packets.py", "packet cohort summarizer in exact cohort", errors)
     require(workflows, "evidence_workflow_smoke=tools/smoke_playtest_evidence.py", "evidence workflow smoke in exact cohort", errors)
+    require(workflows, "name: Verify downloaded release candidate", "downloaded PR cohort gate", errors)
+    require(workflows, "needs: package", "downloaded PR cohort dependency", errors)
+    require(workflows, "tools/smoke_playtest_evidence.py staging/candidate/", "downloaded PR cohort evidence smoke", errors)
     if workflows.count("session_preparer=tools/prepare_playtest_session.py") != 2:
         errors.append("both CI and tagged release manifests must checksum the session preflight")
     if workflows.count("tools/prepare_playtest_session.py") < 4:
