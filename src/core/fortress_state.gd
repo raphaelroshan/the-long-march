@@ -7,12 +7,12 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 10
+const SAVE_VERSION := 11
 const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru"]
 const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal"]
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost"]
-const VALID_PHASES := ["refit", "map", "battle", "final_battle", "settlement", "results"]
+const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
 const MASTERY_EXPERIMENTS := {
@@ -1213,6 +1213,9 @@ func _schedule_first_pre_contact_occurrence(node_id: String) -> Dictionary:
 func pre_contact_occurrence_active() -> bool:
 	return encounter_active and encounter_step == 0 and phase in ["battle", "final_battle"] and campaign_event_pending in OCCURRENCE_DEFS and occurrence_active_phase.begins_with("pre_contact_")
 
+func road_arrival_event_active() -> bool:
+	return phase == "road_event" and not encounter_active and not campaign_event_pending.is_empty() and not campaign_target_node.is_empty() and current_location != campaign_target_node
+
 func _record_occurrence_resolution(event_id: String, choice_id: String) -> void:
 	_bounded_append(occurrence_history, {"event_id": event_id, "choice_id": choice_id, "phase_id": occurrence_active_phase})
 	var cooldown := int(OCCURRENCE_DEFS.get(event_id, {}).get("cooldown", 0))
@@ -1510,12 +1513,20 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			return {"ok": false, "reason": "that archive commitment is not available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
+	var completes_road_arrival := road_arrival_event_active() and resolved_event == "salvage_choice"
 	campaign_decisions[resolved_event] = choice_id
 	if resolved_event in OCCURRENCE_DEFS:
 		_record_occurrence_resolution(resolved_event, choice_id)
 	log.append(result_message)
 	campaign_event_pending = next_event
-	return {"ok": true, "event": resolved_event, "choice": choice_id, "message": result_message, "summary": summary()}
+	var response := {"ok": true, "event": resolved_event, "choice": choice_id, "message": result_message, "summary": summary()}
+	if completes_road_arrival:
+		var arrival := _complete_campaign_arrival(campaign_target_node)
+		response["arrival_ready"] = true
+		response["outcome"] = String(arrival.get("outcome", encounter_outcome))
+		response["report"] = arrival.get("report", encounter_report.duplicate())
+		response["summary"] = arrival.get("summary", summary())
+	return response
 
 func iven_recruitment_status() -> Dictionary:
 	if not campaign_active or current_location != "broken_relay" or phase != "map":
@@ -2449,6 +2460,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "active Mara follow-up conflicts with workbench state"}
 	if restored_phase not in VALID_PHASES:
 		return {"ok": false, "reason": "checkpoint has an unknown campaign phase"}
+	if restored_phase == "road_event":
+		if restored_campaign_region_id != "ashgate_lowlands" or restored_campaign_event_pending != "salvage_choice" or restored_campaign_target_node != "soot_orchard" or restored_journey_destination != "soot_orchard" or restored_current_location == "soot_orchard":
+			return {"ok": false, "reason": "road-event checkpoint conflicts with its pending arrival"}
+		if restored_encounter_progress < 1.0:
+			return {"ok": false, "reason": "road-event checkpoint contains an unresolved contact"}
 	var restored_battle_phase := restored_phase in ["battle", "final_battle"]
 	if restored_battle_phase != restored_encounter_active:
 		return {"ok": false, "reason": "encounter state conflicts with the campaign phase"}
@@ -3296,7 +3312,7 @@ func _campaign_event_for_node(node_id: String) -> String:
 		return "mara_followup"
 	match node_id:
 		"soot_orchard":
-			return "salvage_choice"
+			return "" if campaign_decisions.has("salvage_choice") else "salvage_choice"
 		"broken_relay":
 			return "lost_signal"
 		"red_wheel_toll_bridge":
@@ -3399,7 +3415,16 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 			_clear_temporary_seals()
 			return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
 		return _campaign_recover_from_failure()
+	if arrived_node == "soot_orchard" and not campaign_decisions.has("salvage_choice"):
+		phase = "road_event"
+		campaign_event_pending = "salvage_choice"
+		encounter_outcome = "road_interruption"
+		_encounter_log("Contact cleared at The Soot Orchard. The fortress holds before the firebreak; choose between the fuel cache and stranded workers before arrival.")
+		_clear_temporary_seals()
+		return {"ok": true, "resolved": true, "outcome": encounter_outcome, "arrival_pending": true, "event": campaign_event_pending, "report": encounter_report.duplicate(), "summary": summary()}
+	return _complete_campaign_arrival(arrived_node)
 
+func _complete_campaign_arrival(arrived_node: String) -> Dictionary:
 	campaign_encounters_completed += 1
 	current_location = arrived_node
 	journey_node = arrived_node

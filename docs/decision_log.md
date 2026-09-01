@@ -1230,3 +1230,7 @@ The opening Rill Crossing road now schedules **The Lift Chain Sings** after rout
 ## 2026-09-01 — Scenario art must show the competing obligations
 
 The Soot Orchard no longer uses the generic ruin mark. Its tableau shows burning tree rows and a firebreak between a fuel cache and stranded workers, with separate recover and rescue directions. Exact effects remain in the action buttons. This was chosen so the center stage communicates the decision's physical subjects at a glance while text remains authoritative for resource changes and eligibility.
+
+## 2026-09-01 — Road scenarios complete before arrival
+
+The Soot Orchard now uses a serialized `road_event` phase after its Storm Front contact and before arrival. During that phase the encounter is complete, but the fortress remains at the origin, the target and route reward remain pending, and the campaign path and encounter count do not advance. Resolving the authored choice performs one atomic arrival transition and opens the normal receipt with the decision consequence included. This explicit phase was chosen over presentation-only ordering because reloads, direct commands, map state, and rewards must all agree that the destination is not secured yet.

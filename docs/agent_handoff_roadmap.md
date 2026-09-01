@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.337`
+**Current code baseline:** `0.3.0-alpha.338`
 **Current playable slices:** Ashgate Lowlands from Ashgate Depot to Meridian Pass; Flooded Veyru from Lantern Quay to the Dry Archive
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current merged baseline:** `0.3.0-alpha.337`, preserving the complete causal journey and private-alpha evidence workflow while giving the Soot Orchard decision its own readable environment. The event now shows blackened rows, active fire pockets, a fuel cache, stranded workers, and separate recover/rescue directions while retaining exact authoritative choice text.
+**Current merged baseline:** `0.3.0-alpha.338`, preserving the complete causal journey and private-alpha evidence workflow while making the Soot Orchard a true in-between road scenario. The Storm Front contact resolves first; the fortress then remains at its origin until the fuel-versus-workers decision resolves, after which one atomic transition grants the route reward, records the path, moves the current marker, and opens the arrival receipt.
 **Next build target:** Run consented, uncoached private-alpha sessions and make evidence-led comprehension, pacing, accessibility, and balance fixes. Do not add another region until observed failures justify the scope.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
