@@ -19,6 +19,7 @@ def main() -> int:
     assert "The-Long-March-v0.3.0-alpha.test-macOS-Cohort.zip" in notes
     assert "prepare_playtest_session.py" in notes
     assert "finalize_playtest_session.py create" in notes
+    assert "verified packet cohort review" in notes
     assert "SHA256SUMS.txt" in notes
     assert "https://example.invalid/actions/runs/12" in notes
     assert notes.endswith("---\n")

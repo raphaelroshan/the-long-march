@@ -87,6 +87,7 @@ jobs:
             --file report_output=tools/report_output.py \
             --file session_summarizer=tools/summarize_playtest_feedback.py \
             --file cohort_summarizer=tools/summarize_playtest_cohort.py \
+            --file packet_cohort_summarizer=tools/summarize_playtest_packets.py \
             --file scope_and_limitations=docs/internal_test_release.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Verify exact cohort manifest
@@ -106,6 +107,7 @@ jobs:
             tools/report_output.py
             tools/summarize_playtest_feedback.py
             tools/summarize_playtest_cohort.py
+            tools/summarize_playtest_packets.py
             tools/verify_release_manifest.py
           if-no-files-found: error
           retention-days: 90

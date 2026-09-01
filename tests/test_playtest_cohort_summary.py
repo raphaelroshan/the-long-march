@@ -91,6 +91,17 @@ def main() -> int:
     assert "Affected systems: Steam Lance Engine 2/4 · Strained · fuel link damaged" in report
     assert "Surviving threats: Siege Beast 2/7" in report
 
+    labeled_report = build_cohort_report([first, second], session_labels=["02", "05"])
+    assert "| 02 | `0.3.0-alpha.327`" in labeled_report
+    assert "### Session 05" in labeled_report
+    assert "| pending 1 | [ ] | [ ]" in labeled_report
+    try:
+        build_cohort_report([first, second], session_labels=["01", "01"])
+    except ValueError as exc:
+        assert "must be unique" in str(exc)
+    else:
+        raise AssertionError("duplicate session labels must be rejected")
+
     complete_report = build_cohort_report([copy.deepcopy(first) for _ in range(5)])
     assert "READY FOR HUMAN SYNTHESIS (5/5 exports)" in complete_report
     assert "one build (`0.3.0-alpha.327`)" in complete_report

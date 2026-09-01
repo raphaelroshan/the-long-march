@@ -12,7 +12,11 @@ from tools.report_output import write_new_report
 
 def main() -> int:
     repository = Path(__file__).resolve().parents[1]
-    for relative in ("tools/summarize_playtest_feedback.py", "tools/summarize_playtest_cohort.py"):
+    for relative in (
+        "tools/summarize_playtest_feedback.py",
+        "tools/summarize_playtest_cohort.py",
+        "tools/summarize_playtest_packets.py",
+    ):
         source = (repository / relative).read_text(encoding="utf-8")
         assert "write_new_report" in source, f"{relative} must use create-only report output"
     with tempfile.TemporaryDirectory() as directory:

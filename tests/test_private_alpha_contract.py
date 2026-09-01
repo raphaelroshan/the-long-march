@@ -31,6 +31,7 @@ def main() -> int:
         "test_complete_journey_handoff.gd",
         "test_prepare_playtest_session.py",
         "test_finalize_playtest_session.py",
+        "test_playtest_packet_cohort.py",
         "test_release_publication_contract.py",
         "test_release_notes.py",
         "test_readme_contract.py",
@@ -51,6 +52,7 @@ def main() -> int:
     require(workflows, "session_finalizer=tools/finalize_playtest_session.py", "session finalizer in exact cohort", errors)
     require(workflows, "report_output=tools/report_output.py", "safe report writer in exact cohort", errors)
     require(workflows, "cohort_summarizer=tools/summarize_playtest_cohort.py", "cohort summarizer in exact cohort", errors)
+    require(workflows, "packet_cohort_summarizer=tools/summarize_playtest_packets.py", "packet cohort summarizer in exact cohort", errors)
     if workflows.count("session_preparer=tools/prepare_playtest_session.py") != 2:
         errors.append("both CI and tagged release manifests must checksum the session preflight")
     if workflows.count("tools/prepare_playtest_session.py") < 4:
@@ -59,6 +61,10 @@ def main() -> int:
         errors.append("both CI and tagged release manifests must checksum the session finalizer")
     if workflows.count("tools/finalize_playtest_session.py") < 4:
         errors.append("both CI and tagged release artifacts must upload the session finalizer")
+    if workflows.count("packet_cohort_summarizer=tools/summarize_playtest_packets.py") != 2:
+        errors.append("both CI and tagged release manifests must checksum the packet cohort summarizer")
+    if workflows.count("tools/summarize_playtest_packets.py") < 4:
+        errors.append("both CI and tagged release artifacts must upload the packet cohort summarizer")
     if workflows.count("report_output=tools/report_output.py") != 2:
         errors.append("both CI and tagged release manifests must checksum the safe report writer")
     if workflows.count("tools/report_output.py") < 4:
