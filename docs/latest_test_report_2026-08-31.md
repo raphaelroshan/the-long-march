@@ -4,7 +4,7 @@
 
 | Field | Result |
 |---|---|
-| Build | `0.3.0-alpha.344` create-only playtest report candidate |
+| Build | `0.3.0-alpha.345` provenance-checked session packet candidate |
 | Engine | Godot 4.4.1 stable |
 | Full repository verification | PASS: version consistency, content, offline boundary, save/migration, simulation, presentation, audio, controller, accessibility, performance, complete journey, route variants, prototype flow, and Flooded Veyru |
 | Focused causality coverage | PASS: forecast, target, wind-up, response, impact, dependency consequence, settle, arrival repair priority, and recovery target |
@@ -52,6 +52,7 @@
 | Release guidance | PASS: every new prerelease leads with concise standalone/cohort download choices, the verified-session command, checksum instructions, private-alpha scope, and workflow evidence before the generated change list. |
 | Public landing page | PASS: the README leads with the playable release, fortress loop, current journeys, controls, privacy, honest scope, and authoritative design/testing links while remaining bounded against a feature-inventory regression. |
 | Human-report preservation | PASS: per-session and cohort generators create new files exclusively, refuse existing destinations, retain their original contents after a blocked write, and ship the shared safe writer inside each checksummed cohort. |
+| Session evidence packet | PASS: a verified cohort, generated observer sheet, and matching feedback build produce a new checksummed local packet with byte-identical sources, a separate automatic summary, explicit human-owned non-claims, overwrite refusal, and tamper detection. |
 
 ## Evidence
 
@@ -118,9 +119,10 @@
 - [`Tester-facing release guidance report`](tester_facing_release_guidance_report.md)
 - [`Player-first README report`](player_first_readme_report.md)
 - [`Create-only playtest report output`](safe_playtest_report_output_report.md)
+- [`Provenance-checked session packet report`](playtest_session_packet_report.md)
 
 ## Result
 
-The updated strategy remains intact. Alpha.344 protects hand-written observer evidence from accidental replacement by generated reports.
+The updated strategy remains intact. Alpha.345 pairs hand-written observations with the matching game export without replacing either or automating human conclusions.
 
 This remains a private-alpha candidate. Automated tests and screenshots do not establish uncoached comprehension, pacing, balance, final art, signing, storefront readiness, or broad hardware support.
