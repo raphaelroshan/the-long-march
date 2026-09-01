@@ -1254,3 +1254,7 @@ Automated prereleases now prepend stable, tested guidance to GitHub's generated 
 ## 2026-09-01 — The repository landing page is for players first
 
 The README now leads with the moving-fortress premise, current private-alpha download, playable loop, chapter table, controls, local privacy, source verification, and explicit scope boundary. Detailed implementation history remains in the roadmap and reports. A small contract limits README length and bullet count and rejects obsolete prototype wording. This was chosen over preserving the exhaustive feature list because public readers need to understand the game and reach a build before they need subsystem history.
+
+## 2026-09-01 — Generated evidence never replaces human notes
+
+The per-session and cohort summarizers now open their output files in exclusive create mode and fail clearly when a destination already exists. Their shared writer is included in both checksummed platform cohorts. Observer guidance uses distinct `-automatic` filenames and asks reviewers to keep generated evidence separate from hand-written notes. This was chosen over a force flag because an accidental overwrite can destroy the only record of hesitation, direct quotes, or uncoached behavior that automation cannot reconstruct.

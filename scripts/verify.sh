@@ -41,6 +41,7 @@ python3 tests/test_prepare_playtest_session.py
 python3 tests/test_release_publication_contract.py
 python3 tests/test_release_notes.py
 python3 tests/test_readme_contract.py
+python3 tests/test_report_output.py
 python3 tests/test_smoke_playtest.py
 python3 tests/test_private_alpha_contract.py
 run_checked "" "$GODOT_BIN" --headless --path . --import

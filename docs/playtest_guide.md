@@ -47,6 +47,8 @@ The prototype keeps a small playtest journal on the local machine. It records ga
 
 Nothing is uploaded automatically. **Save Notes Locally** creates a JSON file containing the exact build version, the tester's three written answers—including their perceived cause and next-run change—replay score, final state, and local event journal. The receipt shows the filename and enables **Copy Report Path** for mouse, keyboard, or controller use. Copying places only the local path on the clipboard; the tester still chooses whether and where to share that file.
 
+Generate automatic session and cohort summaries into new filenames. The bundled tools use create-only output and refuse to replace an existing observer note or review. Keep hand-written observation sheets separate from `session-01-automatic.md` and similar generated evidence files.
+
 Before handing the build to a new tester, use **Settings → Reset Playtest Data** from the title. Confirm that the guided first-run title returns. Previously exported feedback reports remain in the user-data folder and must be managed separately by the test owner.
 
 Settings also includes **Interface Audio** at Muted, 40%, 70%, or 100%. These short cues reinforce focus, activation, warnings, and saved checkpoints, but never replace visible state. Ask the tester whether the default 70% feels useful or tiring; test Muted once to confirm the complete run remains understandable without sound.

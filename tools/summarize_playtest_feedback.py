@@ -7,6 +7,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+try:
+    from .report_output import write_new_report
+except ImportError:
+    from report_output import write_new_report
+
 
 PLAYER_ACTIONS = {
     "guard_contract_answered",
@@ -402,11 +407,15 @@ def main() -> int:
     except ValueError as exc:
         print(f"ERROR: {exc}")
         return 1
-    if args.output:
-        args.output.write_text(sheet, encoding="utf-8")
-        print(f"playtest session sheet: {args.output}")
-    else:
-        print(sheet)
+    try:
+        if args.output:
+            output = write_new_report(args.output, sheet, "playtest session summary")
+            print(f"playtest session sheet: {output}")
+        else:
+            print(sheet)
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
     return 0
 
 

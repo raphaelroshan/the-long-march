@@ -33,10 +33,10 @@ The game already records committed routes, interventions, services, event choice
 After the tester chooses **Record Playtest Notes → Save Notes Locally**, copy the report path and run:
 
 ```bash
-python3 tools/summarize_playtest_feedback.py /absolute/path/to/the_long_march_feedback_....json --output session-01.md
+python3 tools/summarize_playtest_feedback.py /absolute/path/to/the_long_march_feedback_....json --output session-01-automatic.md
 ```
 
-The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. Its journey section lists route commitments, road scenarios reached and resolved, and completed arrivals in chronological order. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate either metric block. It does not modify the source export, send data anywhere, or infer comprehension from interaction counts.
+The generated Markdown combines the local event trail with blank observation fields. Its contact section lists event-derived counts and the ordered target-lock, inspection, and emergency-order trail. Its journey section lists route commitments, road scenarios reached and resolved, and completed arrivals in chronological order. It warns if exported aggregate counts disagree with the raw events and derives counts for older exports that predate either metric block. It does not modify the source export, send data anywhere, infer comprehension from interaction counts, or replace an existing output file. Keep the automatic summary separate from the hand-written observer sheet.
 
 After collecting the intended five exports, generate a cohort review in the same argument order used for the session numbers:
 
@@ -44,7 +44,7 @@ After collecting the intended five exports, generate a cohort review in the same
 python3 tools/summarize_playtest_cohort.py /path/session-01.json /path/session-02.json /path/session-03.json /path/session-04.json /path/session-05.json --output cohort-review.md
 ```
 
-The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. It places each tester's three written answers beside the exported game-result explanation, system condition, and surviving-threat facts without scoring agreement. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
+The cohort tool reports whether five exports are present, but deliberately does not call the human gate passed. It places each tester's three written answers beside the exported game-result explanation, system condition, and surviving-threat facts without scoring agreement. It also refuses to replace an existing cohort review. Confirm consent, unique participants, uncoached conditions, and repeated observed failures in the generated review before changing the roadmap.
 
 ## Required capture matrix
 

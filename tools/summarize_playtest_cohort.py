@@ -10,6 +10,7 @@ from statistics import mean
 from typing import Any
 
 from summarize_playtest_feedback import contact_metrics, journey_metrics, load_feedback, outcome_fact_lines
+from report_output import write_new_report
 
 
 def _cell(value: Any) -> str:
@@ -275,11 +276,15 @@ def main() -> int:
     except ValueError as exc:
         print(f"ERROR: {exc}")
         return 1
-    if args.output:
-        args.output.write_text(report, encoding="utf-8")
-        print(f"playtest cohort review: {args.output}")
-    else:
-        print(report)
+    try:
+        if args.output:
+            output = write_new_report(args.output, report, "playtest cohort review")
+            print(f"playtest cohort review: {output}")
+        else:
+            print(report)
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
     return 0
 
 
