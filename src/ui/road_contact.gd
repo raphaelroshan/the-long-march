@@ -11,7 +11,10 @@ const THREAT_PRESENTATION_PROFILES := {
 	"storm_front": {"wind_up": "ARC DISCHARGE", "response": "SIGNAL · ADJACENT ARMOR · SEAL · VENT", "risk": "Heat rises while exposed signal or sustain systems fail."},
 	"siege_beast": {"wind_up": "RAM CHARGE", "response": "SHELL FIRE · FRONT ARMOR", "risk": "A direct hit can break armor or crew capacity before final resolution."},
 	"flood_surge": {"wind_up": "SURGE CREST", "response": "CONDENSER · ARMOR · WORKSHOP · SEAL", "risk": "Lower systems take damage while hull pressure compounds."},
-	"civic_guardian": {"wind_up": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY", "risk": "Cargo, signal, crew, or armor can be disabled at the archive gate."}
+	"civic_guardian": {"wind_up": "ARCHIVE BEAM", "response": "SHELL FIRE · PROTECTED CARGO · REDUNDANCY", "risk": "Cargo, signal, crew, or armor can be disabled at the archive gate."},
+	"ember_drakes": {"wind_up": "EMBER DIVE", "response": "WALL LIGHT · REPEATER · CONDENSER", "risk": "Fireline pressure compounds heat and burns exposed sustain systems."},
+	"lift_saboteurs": {"wind_up": "CHAIN-CUTTING RUSH", "response": "REPEATER · SHELL · WORKSHOP", "risk": "Generator, repair, and signal dependencies can be severed before the climb."},
+	"elevator_warden": {"wind_up": "COUNTERWEIGHT CRUSH", "response": "SHELL FIRE · ARMOR · SWITCHBACK", "risk": "The old lift's final guardian attacks movement and power at once."}
 }
 
 signal pause_requested
@@ -641,14 +644,15 @@ class ContactCanvas extends Control:
 
 	func _draw() -> void:
 		var flooded := String(current_view.get("region_id", "ashgate_lowlands")) == "flooded_veyru"
-		var sky := Color("#071013") if high_contrast_enabled else (Color("#18363d") if flooded else Color("#31383b"))
-		var ground := Color("#0d2427") if flooded else Color("#30271f")
+		var cinder := String(current_view.get("region_id", "ashgate_lowlands")) == "cinder_spine"
+		var sky := Color("#071013") if high_contrast_enabled else (Color("#18363d") if flooded else (Color("#381a17") if cinder else Color("#31383b")))
+		var ground := Color("#0d2427") if flooded else (Color("#291511") if cinder else Color("#30271f"))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.80, size.y * 0.18), 52.0, Color(0.95, 0.75, 0.43, 0.15))
 		_draw_contact_pressure()
 		for ridge in range(4):
 			var y := size.y * (0.32 + ridge * 0.045)
-			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#395358") if flooded else Color("#655b4d"), 24.0)
+			draw_line(Vector2(0, y), Vector2(size.x, y - 26.0 + ridge * 8.0), Color("#395358") if flooded else (Color("#87452f") if cinder else Color("#655b4d")), 24.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.64), Vector2(size.x, size.y * 0.36)), ground, true)
 		for road_mark in range(7):
 			var x := 28.0 + road_mark * (size.x - 56.0) / 6.0

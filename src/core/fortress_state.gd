@@ -7,11 +7,11 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 11
+const SAVE_VERSION := 12
 const MIN_SUPPORTED_SAVE_VERSION := 4
-const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru"]
-const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal"]
-const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost"]
+const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine"]
+const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan"]
+const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost", "spine_powered", "spine_bypassed", "cinder_lost"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
@@ -68,7 +68,10 @@ const CAMPAIGN_DECISION_OPTIONS := {
 	"the_miller_with_a_broken_wheel": ["lend_workshop_bench", "keep_moving"],
 	"drain_pumps": ["drain_gallery", "leave_gallery"],
 	"registry_salvage": ["recover_records", "abandon_records"],
-	"archive_broadcast": ["broadcast_archive", "seal_archive"]
+	"archive_broadcast": ["broadcast_archive", "seal_archive"],
+	"charcoal_vow": ["bank_coals", "share_coals"],
+	"lift_engine_choice": ["power_lift", "cut_switchback"],
+	"commune_design": ["share_lift_plan", "keep_guild_pattern"]
 }
 const OCCURRENCE_STREAM_NAME := "ashgate_operational_occurrences_v1"
 const OCCURRENCE_HISTORY_LIMIT := 8
@@ -94,7 +97,10 @@ const THREATS := {
 	"storm_front": {"name": "Storm Front", "target_tags": ["signal", "exterior", "sustain"], "damage": 1},
 	"siege_beast": {"name": "Siege Beast", "target_tags": ["armor", "crew"], "damage": 2},
 	"flood_surge": {"name": "Flood Surge", "target_tags": ["lower_hull", "cargo", "sustain"], "damage": 1},
-	"civic_guardian": {"name": "Civic Guardian", "target_tags": ["cargo", "signal", "crew", "armor"], "damage": 2}
+	"civic_guardian": {"name": "Civic Guardian", "target_tags": ["cargo", "signal", "crew", "armor"], "damage": 2},
+	"ember_drakes": {"name": "Ember Drakes", "target_tags": ["fuel", "exterior", "sustain"], "damage": 1},
+	"lift_saboteurs": {"name": "Lift Saboteurs", "target_tags": ["generator", "workshop", "signal"], "damage": 1},
+	"elevator_warden": {"name": "Elevator Warden", "target_tags": ["generator", "engine", "armor"], "damage": 2}
 }
 const JOURNEY_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "kind": "city", "description": "The departure yard: fuel, parts, and one last decision."},
@@ -116,7 +122,16 @@ const JOURNEY_NODES := {
 	"drowned_registry": {"name": "Drowned Registry", "kind": "salvage", "description": "A short flooded records hall where salvage and exposed systems compete."},
 	"pilgrim_gantry": {"name": "Pilgrim Gantry", "kind": "recovery", "description": "A slow high-water gantry that remains passable after the lower roads close."},
 	"dry_archive_gate": {"name": "Dry Archive Gate", "kind": "choice", "description": "The last sealed approach where the archive's signal must be broadcast or hidden."},
-	"dry_archive": {"name": "The Dry Archive", "kind": "finale", "description": "The civic vault above the flood line and the chapter's final commitment."}
+	"dry_archive": {"name": "The Dry Archive", "kind": "finale", "description": "The civic vault above the flood line and the chapter's final commitment."},
+	"blackkiln": {"name": "Blackkiln", "kind": "city", "description": "A forge town beneath the ridge where every useful machine adds heat to the road."},
+	"charcoal_monastery": {"name": "Charcoal Monastery", "kind": "sanctuary", "description": "A slow terrace road whose banked coals can cool or provision the march."},
+	"red_cut": {"name": "Red Cut", "kind": "hazard", "description": "A steep exposed grade that rewards a light fortress and punishes hot engines."},
+	"old_lift_station": {"name": "Old Lift Station", "kind": "camp", "description": "A broken ore platform where one repair or firebreak can be completed before the climb."},
+	"long_slope": {"name": "The Long Slope", "kind": "hazard", "description": "A fuel-hungry ascent under an advancing fireline."},
+	"slag_tunnel": {"name": "Slag Tunnel", "kind": "salvage", "description": "A narrow industrial tunnel with rare plate and hidden saboteurs."},
+	"ash_chapel_bypass": {"name": "Ash Chapel Bypass", "kind": "recovery", "description": "A low-reward refuge road opened when the fireline closes the tunnel."},
+	"lift_engine_house": {"name": "Lift Engine House", "kind": "choice", "description": "The abandoned industrial elevator can be powered or bypassed at a permanent cost."},
+	"switchback_commune": {"name": "Switchback Commune", "kind": "finale", "description": "The mountain settlement above the fireline and the chapter's final engineering vote."}
 }
 const JOURNEY_ENCOUNTERS := {
 	"safe_road": ["road_raiders", "road_raiders"],
@@ -130,7 +145,10 @@ const ENCOUNTER_ENEMIES := {
 	"storm_front": {"name": "Storm Front", "health": 7, "damage": 1, "arrival_step": 1, "target_tags": ["signal", "exterior", "sustain"], "route": "weather line", "counter": "signal coverage, adjacent armor, Seal Compartment, or vent heat", "counter_modules": ["signal_coil", "signal_mast", "front_armor_plate", "side_armor_skirt"]},
 	"siege_beast": {"name": "Siege Beast", "health": 10, "damage": 3, "arrival_step": 4, "target_tags": ["armor", "crew"], "route": "direct road", "counter": "shell cannon and front armor", "counter_modules": ["shell_cannon", "front_armor_plate"]},
 	"flood_surge": {"name": "Flood Surge", "health": 4, "damage": 1, "arrival_step": 1, "target_tags": ["lower_hull", "cargo", "sustain"], "route": "rising waterline", "counter": "Water Condenser, Side Armor Skirt, Field Workshop, or Seal Compartment", "counter_modules": ["water_condenser", "side_armor_skirt", "field_workshop"]},
-	"civic_guardian": {"name": "Civic Guardian", "health": 10, "damage": 2, "arrival_step": 3, "target_tags": ["cargo", "signal", "crew", "armor"], "route": "archive gate", "counter": "Shell Cannon, protected cargo, or redundant signal and crew systems", "counter_modules": ["shell_cannon", "front_armor_plate", "signal_coil"]}
+	"civic_guardian": {"name": "Civic Guardian", "health": 10, "damage": 2, "arrival_step": 3, "target_tags": ["cargo", "signal", "crew", "armor"], "route": "archive gate", "counter": "Shell Cannon, protected cargo, or redundant signal and crew systems", "counter_modules": ["shell_cannon", "front_armor_plate", "signal_coil"]},
+	"ember_drakes": {"name": "Ember Drake", "health": 5, "damage": 1, "arrival_step": 4, "target_tags": ["fuel", "exterior", "sustain"], "route": "fireline above", "counter": "Wall Lamp, Repeater Gun, Water Condenser, or Vent Heat", "counter_modules": ["wall_lamp", "repeater_gun", "water_condenser", "shell_cannon"]},
+	"lift_saboteurs": {"name": "Lift Saboteur", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["generator", "workshop", "signal"], "route": "industrial gantry", "counter": "Repeater Gun, crew-connected Workshop, or adjacent armor", "counter_modules": ["repeater_gun", "field_workshop", "front_armor_plate", "side_armor_skirt"]},
+	"elevator_warden": {"name": "Elevator Warden", "health": 10, "damage": 2, "arrival_step": 4, "target_tags": ["generator", "engine", "armor"], "route": "lift counterweight", "counter": "Shell Cannon, protected Generator Core, or Cut Switchback", "counter_modules": ["shell_cannon", "front_armor_plate", "side_armor_skirt"]}
 }
 const CAMPAIGN_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "type": "settlement", "visibility": "known", "description": "Refit, choose the first guard contract, and leave before the blockade closes."},
@@ -152,7 +170,16 @@ const CAMPAIGN_NODES := {
 	"drowned_registry": {"name": "Drowned Registry", "type": "salvage", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.42, "pressure": 2, "reward": 20, "threat_hint": "flooded records and upper movement", "encounter": ["flood_surge", "climbers"]},
 	"pilgrim_gantry": {"name": "Pilgrim Gantry", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "reduced flood surge", "encounter": ["flood_surge"]},
 	"dry_archive_gate": {"name": "Dry Archive Gate", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.36, "pressure": 1, "reward": 12, "threat_hint": "flood and archive defenses", "encounter": ["flood_surge", "climbers"]},
-	"dry_archive": {"name": "The Dry Archive", "type": "boss", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.56, "pressure": 1, "reward": 36, "threat_hint": "Civic Guardian", "encounter": ["civic_guardian"]}
+	"dry_archive": {"name": "The Dry Archive", "type": "boss", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.56, "pressure": 1, "reward": 36, "threat_hint": "Civic Guardian", "encounter": ["civic_guardian"]},
+	"blackkiln": {"name": "Blackkiln", "type": "settlement", "visibility": "known", "description": "Choose the Guild dynamo contract and prepare for the Cinder Spine."},
+	"charcoal_monastery": {"name": "Charcoal Monastery", "type": "sanctuary", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.2, "pressure": 1, "reward": 10, "threat_hint": "embers above the terraces", "encounter": ["ember_drakes"]},
+	"red_cut": {"name": "Red Cut", "type": "hazard", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.34, "pressure": 2, "reward": 18, "mass_sensitive": true, "threat_hint": "steep grade and exposed fuel", "encounter": ["ember_drakes"]},
+	"old_lift_station": {"name": "Old Lift Station", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.28, "pressure": 1, "reward": 12, "threat_hint": "saboteurs in the ore gantry", "encounter": ["lift_saboteurs"]},
+	"long_slope": {"name": "The Long Slope", "type": "hazard", "visibility": "known", "days": 2, "fuel": 2, "risk": 0.3, "pressure": 1, "reward": 14, "mass_sensitive": true, "threat_hint": "fireline and fuel strain", "encounter": ["ember_drakes"]},
+	"slag_tunnel": {"name": "Slag Tunnel", "type": "salvage", "visibility": "unscouted", "days": 1, "fuel": 1, "risk": 0.46, "pressure": 2, "reward": 22, "threat_hint": "embers and industrial sabotage", "encounter": ["ember_drakes", "lift_saboteurs"]},
+	"ash_chapel_bypass": {"name": "Ash Chapel Bypass", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "sheltered ember drift", "encounter": ["ember_drakes"]},
+	"lift_engine_house": {"name": "Lift Engine House", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.4, "pressure": 1, "reward": 16, "threat_hint": "saboteurs around the dynamo", "encounter": ["lift_saboteurs", "ember_drakes"]},
+	"switchback_commune": {"name": "Switchback Commune", "type": "boss", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.56, "pressure": 1, "reward": 36, "threat_hint": "Elevator Warden", "encounter": ["elevator_warden"]}
 }
 const CAMPAIGN_EDGES := {
 	"ashgate_depot": ["rill_crossing", "soot_orchard"],
@@ -175,6 +202,16 @@ const VEYRU_EDGES := {
 	"drowned_registry": ["dry_archive_gate"],
 	"pilgrim_gantry": ["dry_archive_gate"],
 	"dry_archive_gate": ["dry_archive"]
+}
+const CINDER_EDGES := {
+	"blackkiln": ["charcoal_monastery", "red_cut"],
+	"charcoal_monastery": ["old_lift_station"],
+	"red_cut": ["old_lift_station"],
+	"old_lift_station": ["long_slope", "slag_tunnel", "ash_chapel_bypass"],
+	"long_slope": ["lift_engine_house"],
+	"slag_tunnel": ["lift_engine_house"],
+	"ash_chapel_bypass": ["lift_engine_house"],
+	"lift_engine_house": ["switchback_commune"]
 }
 const MODULE_DEFS := {
 	"steam_lance_engine": {"name": "Steam Lance Engine", "family": "engine", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 0, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"], "capability": "Keeps the fortress moving while adjacent to a fuel module."},
@@ -252,10 +289,12 @@ var occurrence_cooldowns: Dictionary = {}
 var guard_contract_status: String = "unoffered"
 var veyru_contract_status: String = "unoffered"
 var veyru_medicine_carrier_id: String = ""
+var cinder_contract_status: String = "unoffered"
 var settlement_trust: int = 0
 var mobility_tendency: int = 0
 var shelter_tendency: int = 0
 var knowledge_tendency: int = 0
+var industry_tendency: int = 0
 var specialist_id: String = ""
 var mara_repaired_module_id: String = ""
 var relay_repaired: bool = false
@@ -595,7 +634,7 @@ func module_count(module_id: String) -> int:
 	return count
 
 func can_refit() -> bool:
-	return not encounter_active and phase in ["refit", "settlement"] and current_location in ["ashgate_depot", "morrowline_camp", "lantern_quay", "veyru_evacuation_camp"]
+	return not encounter_active and phase in ["refit", "settlement"] and current_location in ["ashgate_depot", "morrowline_camp", "lantern_quay", "veyru_evacuation_camp", "blackkiln", "old_lift_station"]
 
 func start_campaign() -> Dictionary:
 	campaign_active = true
@@ -616,10 +655,12 @@ func start_campaign() -> Dictionary:
 	guard_contract_status = "offered"
 	veyru_contract_status = "unoffered"
 	veyru_medicine_carrier_id = ""
+	cinder_contract_status = "unoffered"
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
 	knowledge_tendency = 0
+	industry_tendency = 0
 	specialist_id = ""
 	mara_repaired_module_id = ""
 	relay_repaired = false
@@ -654,7 +695,12 @@ func start_tutorial() -> Dictionary:
 	campaign_decisions.clear()
 	guard_contract_status = "unoffered"
 	veyru_contract_status = "unoffered"
+	cinder_contract_status = "unoffered"
 	settlement_trust = 0
+	mobility_tendency = 0
+	shelter_tendency = 0
+	knowledge_tendency = 0
+	industry_tendency = 0
 	specialist_id = ""
 	mastery_experiment_id = ""
 	acquired_intel_ids.clear()
@@ -731,10 +777,12 @@ func start_flooded_veyru() -> Dictionary:
 	guard_contract_status = "unoffered"
 	veyru_contract_status = "offered"
 	veyru_medicine_carrier_id = ""
+	cinder_contract_status = "unoffered"
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
 	knowledge_tendency = 0
+	industry_tendency = 0
 	specialist_id = ""
 	mara_repaired_module_id = ""
 	relay_repaired = false
@@ -756,8 +804,60 @@ func start_flooded_veyru() -> Dictionary:
 	log.append("The Flooded Veyru chart is open. Decide whether to carry Lantern Quay's sealed medicines before the water rises.")
 	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
 
+func start_cinder_spine() -> Dictionary:
+	campaign_active = true
+	campaign_region_id = "cinder_spine"
+	campaign_encounters_completed = 0
+	campaign_path = ["blackkiln"]
+	campaign_target_node = ""
+	campaign_last_safe_node = "blackkiln"
+	campaign_pressure = 0
+	campaign_retreats = 0
+	campaign_event_pending = ""
+	campaign_decisions.clear()
+	occurrence_stream_cursor = 0
+	occurrence_active_phase = ""
+	occurrence_phase_history.clear()
+	occurrence_history.clear()
+	occurrence_cooldowns.clear()
+	guard_contract_status = "unoffered"
+	veyru_contract_status = "unoffered"
+	veyru_medicine_carrier_id = ""
+	cinder_contract_status = "offered"
+	settlement_trust = 0
+	mobility_tendency = 0
+	shelter_tendency = 0
+	knowledge_tendency = 0
+	industry_tendency = 0
+	specialist_id = ""
+	mara_repaired_module_id = ""
+	relay_repaired = false
+	workers_rescued = false
+	mastery_experiment_id = ""
+	acquired_intel_ids.clear()
+	purchased_market_offer_ids.clear()
+	journey_node = "blackkiln"
+	journey_destination = ""
+	journey_route = ""
+	journey_leg = 0
+	current_location = "blackkiln"
+	phase = "refit"
+	journey_complete = false
+	run_complete = false
+	final_result = ""
+	encounter_active = false
+	encounter_outcome = ""
+	log.append("The Cinder Spine chart is open. Decide whether Blackkiln's Guild dynamo travels under fortress protection before the fireline climbs.")
+	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
+
 func campaign_region_name() -> String:
-	return "Flooded Veyru" if campaign_region_id == "flooded_veyru" else "Ashgate Lowlands"
+	match campaign_region_id:
+		"flooded_veyru":
+			return "Flooded Veyru"
+		"cinder_spine":
+			return "The Cinder Spine"
+		_:
+			return "Ashgate Lowlands"
 
 func set_regional_developments(developments: Array) -> Dictionary:
 	var validated: Array[String] = []
@@ -777,24 +877,43 @@ func has_regional_development(development_id: String) -> bool:
 func earned_regional_development() -> String:
 	if phase == "results" and final_result in ["archive_kept", "archive_scarred"] and String(campaign_decisions.get("archive_broadcast", "")) == "broadcast_archive":
 		return "veyru_public_archive_signal"
+	if phase == "results" and final_result in ["spine_powered", "spine_bypassed"] and String(campaign_decisions.get("commune_design", "")) == "share_lift_plan":
+		return "cinder_communal_lift_plan"
 	return ""
 
 func campaign_pressure_name() -> String:
-	return "Rising water" if campaign_region_id == "flooded_veyru" else "Blockade"
+	match campaign_region_id:
+		"flooded_veyru":
+			return "Rising water"
+		"cinder_spine":
+			return "Fireline"
+		_:
+			return "Blockade"
 
 func campaign_edges() -> Dictionary:
 	return _campaign_edges_for_state(campaign_region_id, campaign_pressure, campaign_retreats)
 
 func _campaign_edges_for_state(region_id: String, pressure: int, retreats: int) -> Dictionary:
-	if region_id != "flooded_veyru":
-		return CAMPAIGN_EDGES
-	var edges := VEYRU_EDGES.duplicate(true)
-	if pressure < 5 and retreats == 0:
-		edges["veyru_evacuation_camp"].erase("pilgrim_gantry")
-	return edges
+	if region_id == "flooded_veyru":
+		var veyru_edges := VEYRU_EDGES.duplicate(true)
+		if pressure < 5 and retreats == 0:
+			veyru_edges["veyru_evacuation_camp"].erase("pilgrim_gantry")
+		return veyru_edges
+	if region_id == "cinder_spine":
+		var cinder_edges := CINDER_EDGES.duplicate(true)
+		if pressure < 5 and retreats == 0:
+			cinder_edges["old_lift_station"].erase("ash_chapel_bypass")
+		return cinder_edges
+	return CAMPAIGN_EDGES
 
 func campaign_final_node_id() -> String:
-	return "dry_archive" if campaign_region_id == "flooded_veyru" else "meridian_pass"
+	match campaign_region_id:
+		"flooded_veyru":
+			return "dry_archive"
+		"cinder_spine":
+			return "switchback_commune"
+		_:
+			return "meridian_pass"
 
 func campaign_pressure_band() -> String:
 	if campaign_region_id == "flooded_veyru":
@@ -803,6 +922,12 @@ func campaign_pressure_band() -> String:
 		if campaign_pressure >= 3:
 			return "flooding"
 		return "low_water"
+	if campaign_region_id == "cinder_spine":
+		if campaign_pressure >= 5:
+			return "inferno"
+		if campaign_pressure >= 3:
+			return "advancing"
+		return "embers"
 	if campaign_pressure >= 5:
 		return "break"
 	if campaign_pressure >= 3:
@@ -812,6 +937,8 @@ func campaign_pressure_band() -> String:
 func campaign_node_closed(node_id: String) -> bool:
 	if campaign_region_id == "flooded_veyru":
 		return node_id == "drowned_registry" and campaign_pressure_band() == "breach"
+	if campaign_region_id == "cinder_spine":
+		return node_id == "slag_tunnel" and campaign_pressure_band() == "inferno"
 	if node_id == "signal_causeway" and campaign_pressure_band() == "break" and specialist_id != "iven_pell" and not _has_ready_tag("forecast"):
 		return true
 	return false
@@ -835,22 +962,25 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var node: Dictionary = CAMPAIGN_NODES.get(node_id, {})
 	if node.is_empty():
 		return {"ok": false, "reason": "unknown campaign node"}
-	var mass_penalty := 1 if bool(node.get("mass_sensitive", false)) and total_mass() > BASE_MASS_LIMIT - 2 else 0
+	var cinder_grade := campaign_region_id == "cinder_spine" and node_id != "ash_chapel_bypass"
+	var mass_penalty := 1 if (bool(node.get("mass_sensitive", false)) or cinder_grade) and total_mass() > BASE_MASS_LIMIT - 2 else 0
 	var condenser_discount := 1 if node_id == "dry_cistern_cut" and _has_ready_tag("water") else 0
 	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount)
-	var predicted_heat := maxi(0, total_heat() + (2 if doctrine == "run_hot" else 0))
+	var contract_heat := 1 if campaign_region_id == "cinder_spine" and cinder_contract_status == "accepted" else 0
+	var predicted_heat := maxi(0, total_heat() + contract_heat + (2 if doctrine == "run_hot" else 0))
 	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
 	var acquired_intel := acquired_intel_for_node(node_id)
 	var development_reveal := campaign_region_id == "flooded_veyru" and node_id == "drowned_registry" and has_regional_development("veyru_public_archive_signal")
+	var cinder_development_reveal := campaign_region_id == "cinder_spine" and node_id == "slag_tunnel" and has_regional_development("cinder_communal_lift_plan")
 	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
-	if development_reveal or not acquired_intel.is_empty():
+	if development_reveal or cinder_development_reveal or not acquired_intel.is_empty():
 		visibility = "known"
 	if campaign_region_id == "flooded_veyru" and node_id == "dry_archive" and String(campaign_decisions.get("archive_broadcast", "")) == "seal_archive":
 		visibility = "forecast"
 	var signal_discount := 0.08 if informed else 0.0
 	var heat_penalty := 0.08 if predicted_heat > BASE_HEAT_LIMIT else 0.0
 	var base_risk := float(node.get("risk", 0.0))
-	var blockade_risk := campaign_pressure * 0.02
+	var blockade_risk := campaign_pressure * (0.025 if campaign_region_id == "cinder_spine" else 0.02)
 	var mass_risk := float(mass_penalty) * 0.05
 	var risk := clampf(base_risk + route_risk_modifier + blockade_risk + mass_risk + heat_penalty - signal_discount, 0.0, 0.95)
 	var pressure_gain := int(node.get("pressure", 1))
@@ -877,7 +1007,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	if visibility != "unscouted":
 		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
 	if blockade_risk > 0.0:
-		risk_factors.append("blockade +%dpt" % roundi(blockade_risk * 100.0))
+		risk_factors.append("%s +%dpt" % [campaign_pressure_name().to_lower(), roundi(blockade_risk * 100.0)])
 	if mass_risk > 0.0:
 		risk_factors.append("heavy fortress +%dpt, +1 fuel" % roundi(mass_risk * 100.0))
 	if heat_penalty > 0.0:
@@ -907,7 +1037,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"threats": threat_names,
 		"counter_hints": counter_hints,
 		"ready_counter_names": ready_counter_names,
-		"regional_development": "Public Archive Signal" if development_reveal else "",
+		"regional_development": "Public Archive Signal" if development_reveal else ("Communal Lift Plan" if cinder_development_reveal else ""),
 		"intel_id": String(acquired_intel.get("id", "")),
 		"intel_source": String(acquired_intel.get("source_name", "")),
 		"intel_confidence": String(acquired_intel.get("confidence", "")),
@@ -1014,6 +1144,25 @@ func _refresh_veyru_contract_state() -> bool:
 	if encounter_active:
 		_encounter_log(message)
 	return true
+
+func choose_cinder_forge_contract(accept: bool) -> Dictionary:
+	if not campaign_active or campaign_region_id != "cinder_spine" or current_location != "blackkiln" or phase != "refit":
+		return {"ok": false, "reason": "the dynamo contract is only offered at Blackkiln"}
+	if cinder_contract_status != "offered":
+		return {"ok": false, "reason": "the dynamo contract has already been answered"}
+	if accept and not operational("generator_core"):
+		return {"ok": false, "reason": "requires an operational Generator Core to carry the Guild pattern"}
+	if accept:
+		cinder_contract_status = "accepted"
+		industry_tendency += 1
+		var accepted_message := "Dynamo contract accepted: keep the Generator Core operational through Switchback Commune for 30 Ashmarks and 2 trust. Its full load adds 1 heat on every Cinder route."
+		log.append(accepted_message)
+		return {"ok": true, "status": cinder_contract_status, "message": accepted_message, "summary": summary()}
+	cinder_contract_status = "declined"
+	mobility_tendency += 1
+	var declined_message := "Dynamo contract declined: Mobility rises by 1 and the fortress carries no Guild heat load, but gives up the delivery reward and the powered-lift ending."
+	log.append(declined_message)
+	return {"ok": true, "status": cinder_contract_status, "message": declined_message, "summary": summary()}
 
 func mara_recruitment_status() -> Dictionary:
 	if not campaign_active or current_location != "morrowline_camp" or phase != "settlement" or campaign_event_pending != "mara_meeting":
@@ -1321,6 +1470,22 @@ func campaign_event_details() -> Dictionary:
 				{"id": "broadcast_archive", "label": "Broadcast the archive", "effect": "Knowledge +1 · Trust +1\nClimbers join the final contact", "enabled": true, "reason": ""},
 				{"id": "seal_archive", "label": "Seal the archive", "effect": "Rising water -1 · Carrier damage -1\nFinal targeting stays forecast", "enabled": true, "reason": ""}
 			]}
+		"charcoal_vow":
+			return {"id": "charcoal_vow", "title": "Coals for the Climb", "body": "The monastery can bank its last cold coals inside the fortress or share them with the settlements below before the fireline arrives.", "choices": [
+				{"id": "bank_coals", "label": "Bank the cold coals", "effect": "Fuel +1 · Fireline +1", "enabled": true, "reason": ""},
+				{"id": "share_coals", "label": "Share them downhill", "effect": "Trust +2 · Fireline -1", "enabled": true, "reason": ""}
+			]}
+		"lift_engine_choice":
+			var generator_ready := operational("generator_core")
+			return {"id": "lift_engine_choice", "title": "The Counterweight Road", "body": "The old elevator can carry the fortress if its dynamo is powered, or the crew can cut a permanent switchback around the Warden.", "choices": [
+				{"id": "power_lift", "label": "Power the industrial lift", "effect": "Industry +1 · Fireline +1 · full Warden contact", "enabled": generator_ready, "reason": "Requires an operational Generator Core" if not generator_ready else ""},
+				{"id": "cut_switchback", "label": "Cut the switchback", "effect": "Day +1 · Warden damage -1 · dynamo contract fails", "enabled": true, "reason": ""}
+			]}
+		"commune_design":
+			return {"id": "commune_design", "title": "Who Owns the Lift", "body": "Switchback Commune can publish the recovered lift pattern as shared infrastructure or return it to the Cinder Guild as a guarded industrial design.", "choices": [
+				{"id": "share_lift_plan", "label": "Publish the communal plan", "effect": "Knowledge +1 · future Slag Tunnel becomes Known", "enabled": true, "reason": ""},
+				{"id": "keep_guild_pattern", "label": "Keep the Guild pattern", "effect": "Ashmarks +12 · Industry +1", "enabled": true, "reason": ""}
+			]}
 	return {}
 
 func resolve_campaign_event(choice_id: String) -> Dictionary:
@@ -1511,6 +1676,42 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			result_message = "The archive seals its signal. Rising water falls by 1 and the medicine carrier gains cover for the final approach."
 		else:
 			return {"ok": false, "reason": "that archive commitment is not available"}
+	elif resolved_event == "charcoal_vow":
+		if choice_id == "bank_coals":
+			fuel += 1
+			campaign_pressure += 1
+			result_message = "The fortress banks one fuel of cold coals while the fireline gains 1 behind the delayed column."
+		elif choice_id == "share_coals":
+			settlement_trust += 2
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			result_message = "The monastery sends its coals downhill. Trust rises by 2 and the organized firebreak reduces the fireline by 1."
+		else:
+			return {"ok": false, "reason": "that charcoal vow is not available"}
+	elif resolved_event == "lift_engine_choice":
+		if choice_id == "power_lift" and operational("generator_core"):
+			industry_tendency += 1
+			campaign_pressure += 1
+			next_event = "commune_design"
+			result_message = "The Generator Core wakes the industrial lift. Industry and fireline each rise by 1 before the Warden contact."
+		elif choice_id == "cut_switchback":
+			day += 1
+			if cinder_contract_status == "accepted":
+				cinder_contract_status = "failed"
+			next_event = "commune_design"
+			result_message = "The crew cuts a slower switchback. The final Warden loses 1 damage, but the powered-lift contract cannot be delivered."
+		else:
+			return {"ok": false, "reason": "that lift-engine choice is not available"}
+	elif resolved_event == "commune_design":
+		if choice_id == "share_lift_plan":
+			knowledge_tendency += 1
+			settlement_trust += 1
+			result_message = "Switchback Commune publishes the lift plan. Knowledge and trust rise by 1, and a future Slag Tunnel approach begins Known."
+		elif choice_id == "keep_guild_pattern":
+			money += 12
+			industry_tendency += 1
+			result_message = "The Guild pays 12 Ashmarks for the guarded pattern and Industry rises by 1."
+		else:
+			return {"ok": false, "reason": "that commune decision is not available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
 	var completes_road_arrival := road_arrival_event_active() and resolved_event == "salvage_choice"
@@ -1559,6 +1760,8 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 		return {"ok": false, "reason": "answer the Ashgate guard contract before departure"}
 	if campaign_region_id == "flooded_veyru" and veyru_contract_status == "offered":
 		return {"ok": false, "reason": "answer the Lantern Quay medicine contract before departure"}
+	if campaign_region_id == "cinder_spine" and cinder_contract_status == "offered":
+		return {"ok": false, "reason": "answer the Blackkiln dynamo contract before departure"}
 	if not campaign_event_pending.is_empty():
 		return {"ok": false, "reason": "resolve the current node decision before leaving"}
 	var lock_reason := campaign_node_lock_reason(node_id)
@@ -1574,7 +1777,7 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 	target_doctrine = doctrine
 	encounter_target_doctrine = doctrine
 	heat_relief = 0
-	heat_surge = 2 if doctrine == "run_hot" else 0
+	heat_surge = (2 if doctrine == "run_hot" else 0) + (1 if campaign_region_id == "cinder_spine" and cinder_contract_status == "accepted" else 0)
 	vent_exposure = false
 	_recalculate()
 	fuel -= int(preview.fuel)
@@ -2051,10 +2254,12 @@ func summary() -> Dictionary:
 		"guard_contract_status": guard_contract_status,
 		"veyru_contract_status": veyru_contract_status,
 		"veyru_medicine_carrier_id": veyru_medicine_carrier_id,
+		"cinder_contract_status": cinder_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
 		"shelter_tendency": shelter_tendency,
 		"knowledge_tendency": knowledge_tendency,
+		"industry_tendency": industry_tendency,
 		"specialist_id": specialist_id,
 		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
@@ -2122,10 +2327,12 @@ func serialize() -> Dictionary:
 		"guard_contract_status": guard_contract_status,
 		"veyru_contract_status": veyru_contract_status,
 		"veyru_medicine_carrier_id": veyru_medicine_carrier_id,
+		"cinder_contract_status": cinder_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
 		"shelter_tendency": shelter_tendency,
 		"knowledge_tendency": knowledge_tendency,
+		"industry_tendency": industry_tendency,
 		"specialist_id": specialist_id,
 		"mara_repaired_module_id": mara_repaired_module_id,
 		"relay_repaired": relay_repaired,
@@ -2338,6 +2545,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_mara_repaired_module_id := String(data.get("mara_repaired_module_id", ""))
 	var restored_veyru_contract_status := String(data.get("veyru_contract_status", "unoffered"))
 	var restored_veyru_medicine_carrier_id := String(data.get("veyru_medicine_carrier_id", ""))
+	var restored_cinder_contract_status := String(data.get("cinder_contract_status", "unoffered"))
 	var restored_mastery_experiment_id := String(data.get("mastery_experiment_id", ""))
 	var raw_regional_developments: Variant = data.get("regional_developments", [])
 	var raw_acquired_intel_ids: Variant = data.get("acquired_intel_ids", [])
@@ -2405,15 +2613,18 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		if node_id not in CAMPAIGN_NODES:
 			return {"ok": false, "reason": "campaign path contains an unknown node"}
 	if restored_campaign_active:
-		var expected_start := "lantern_quay" if restored_campaign_region_id == "flooded_veyru" else "ashgate_depot"
+		var expected_start := "lantern_quay" if restored_campaign_region_id == "flooded_veyru" else ("blackkiln" if restored_campaign_region_id == "cinder_spine" else "ashgate_depot")
 		if restored_campaign_path.is_empty() or restored_campaign_path[0] != expected_start:
 			return {"ok": false, "reason": "campaign path does not begin at the region's starting settlement"}
-		var restored_edges := VEYRU_EDGES if restored_campaign_region_id == "flooded_veyru" else CAMPAIGN_EDGES
+		var restored_edges := VEYRU_EDGES if restored_campaign_region_id == "flooded_veyru" else (CINDER_EDGES if restored_campaign_region_id == "cinder_spine" else CAMPAIGN_EDGES)
 		for index in range(1, restored_campaign_path.size()):
 			if restored_campaign_path[index] not in restored_edges.get(restored_campaign_path[index - 1], []):
 				return {"ok": false, "reason": "campaign path contains an impossible route"}
 		if restored_campaign_region_id == "flooded_veyru":
 			if restored_campaign_last_safe_node not in ["lantern_quay", "veyru_evacuation_camp"] or restored_campaign_last_safe_node not in restored_campaign_path:
+				return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
+		elif restored_campaign_region_id == "cinder_spine":
+			if restored_campaign_last_safe_node not in ["blackkiln", "old_lift_station"] or restored_campaign_last_safe_node not in restored_campaign_path:
 				return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
 		elif restored_campaign_last_safe_node != restored_campaign_path.back():
 			return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
@@ -2432,6 +2643,10 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "checkpoint contains an unknown specialist"}
 	if restored_veyru_contract_status not in VALID_CONTRACT_STATUSES:
 		return {"ok": false, "reason": "checkpoint contains an unknown Veyru contract state"}
+	if restored_cinder_contract_status not in VALID_CONTRACT_STATUSES:
+		return {"ok": false, "reason": "checkpoint contains an unknown Cinder contract state"}
+	if restored_campaign_region_id == "cinder_spine" and restored_cinder_contract_status == "unoffered":
+		return {"ok": false, "reason": "Cinder campaign is missing its dynamo contract state"}
 	if not restored_veyru_medicine_carrier_id.is_empty() and restored_veyru_medicine_carrier_id not in ["refugee_bunk", "parts_crate"]:
 		return {"ok": false, "reason": "checkpoint contains an invalid medicine carrier"}
 	if restored_veyru_contract_status in ["accepted", "completed", "failed"] and restored_veyru_medicine_carrier_id.is_empty():
@@ -2533,10 +2748,12 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	guard_contract_status = String(data.get("guard_contract_status", guard_contract_status))
 	veyru_contract_status = restored_veyru_contract_status
 	veyru_medicine_carrier_id = restored_veyru_medicine_carrier_id
+	cinder_contract_status = restored_cinder_contract_status
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))
 	shelter_tendency = int(data.get("shelter_tendency", shelter_tendency))
 	knowledge_tendency = int(data.get("knowledge_tendency", knowledge_tendency))
+	industry_tendency = int(data.get("industry_tendency", 0))
 	specialist_id = restored_specialist_id
 	mara_repaired_module_id = restored_mara_repaired_module_id
 	relay_repaired = bool(data.get("relay_repaired", relay_repaired))
@@ -2651,7 +2868,8 @@ func settlement_refuel() -> Dictionary:
 	money -= 8
 	fuel += 2
 	settlement_actions_remaining -= 1
-	var message := "Morrowline loaded 2 fuel for 8 Ashmarks."
+	var settlement_name := String(JOURNEY_NODES.get(current_location, {}).get("name", "The settlement"))
+	var message := "%s loaded 2 fuel for 8 Ashmarks." % settlement_name
 	settlement_report.append(message)
 	log.append(message)
 	return {"ok": true, "fuel_added": 2, "cost": 8, "summary": summary()}
@@ -2744,6 +2962,12 @@ func encounter_forecast() -> Dictionary:
 		exact_target = "engine or workshop modules"
 	elif "storm_front" in threat_ids:
 		exact_target = "signal, exterior, or sustain systems"
+	elif "ember_drakes" in threat_ids:
+		exact_target = "fuel, exterior, or sustain systems"
+	elif "lift_saboteurs" in threat_ids:
+		exact_target = "generator, workshop, or signal systems"
+	elif "elevator_warden" in threat_ids:
+		exact_target = "generator, engine, or armor systems"
 	elif "siege_beast" in threat_ids:
 		exact_target = "front armor or crew modules"
 	var signal_ready: bool = _has_ready_tag("forecast") or specialist_id == "iven_pell"
@@ -2798,6 +3022,39 @@ func _encounter_module_damage(enemy_id: String, priority_override: String = "") 
 			elif "repair" in tags or "lower_hull" in tags:
 				damage = 1
 				behavior_lines.append("%s braces the flooded approach." % definition.name)
+		elif enemy_id == "ember_drakes":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "wall_lamp" or module_id == "water_condenser":
+				damage = 2
+				behavior_lines.append("%s breaks the ember flight before it reaches the fuel line." % definition.name)
+			elif module_id == "repeater_gun":
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Repeater Gun scatters the ember flight.")
+			elif module_id == "shell_cannon":
+				damage = 1
+				behavior_lines.append("Shell Cannon breaks the densest ember flight.")
+			elif "armor" in tags:
+				damage = 1
+				behavior_lines.append("%s shields the exposed grade." % definition.name)
+		elif enemy_id == "lift_saboteurs":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "repeater_gun":
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Repeater Gun clears the industrial gantry.")
+			elif module_id == "shell_cannon":
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Shell Cannon breaks the saboteurs' gantry access.")
+			elif "repair" in tags or "forecast" in tags:
+				damage = 1
+				behavior_lines.append("%s detects and clears a sabotage route." % definition.name)
+		elif enemy_id == "elevator_warden":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "shell_cannon":
+				damage = 3 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Shell Cannon strikes the Warden's counterweight.")
+			elif "armor" in tags:
+				damage = 1
+				behavior_lines.append("%s holds the lift line steady." % definition.name)
 		elif module_id == "shell_cannon":
 			damage = 3 if enemy_id in ["road_raiders", "siege_beast"] else 1
 			if String(status.get("state", "ready")) == "strained":
@@ -3105,6 +3362,19 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 	if enemy_id == "civic_guardian" and target_id == veyru_medicine_carrier_id and String(campaign_decisions.get("archive_broadcast", "")) == "seal_archive":
 		damage = maxi(0, damage - 1)
 		profile["archive_effect"] = "sealed_approach"
+	if enemy_id == "ember_drakes":
+		if campaign_pressure >= 3 or heat > BASE_HEAT_LIMIT:
+			damage += 1
+			profile["threat_effect"] = "fireline_heat"
+		if _has_ready_tag("water") and target_id != "water_condenser":
+			damage = maxi(0, damage - 1)
+			profile["water_effect"] = "condenser_buffer"
+	if enemy_id == "lift_saboteurs" and campaign_pressure >= 5:
+		damage += 1
+		profile["threat_effect"] = "fireline_sabotage"
+	if enemy_id == "elevator_warden" and String(campaign_decisions.get("lift_engine_choice", "")) == "cut_switchback":
+		damage = maxi(0, damage - 1)
+		profile["route_effect"] = "cut_switchback"
 	if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
 		damage = maxi(0, damage - 1)
 		profile["doctrine_effect"] = "protect_cargo"
@@ -3244,10 +3514,16 @@ func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure
 			_encounter_log("Dry-system exposure adds 1 Storm Front damage to %s." % module_def.name)
 		elif String(profile.get("threat_effect", "")) == "flood_pressure":
 			_encounter_log("Flooding water or maximum mass adds 1 Flood Surge damage to %s." % module_def.name)
+		elif String(profile.get("threat_effect", "")) == "fireline_heat":
+			_encounter_log("Advancing fire or unsafe heat adds 1 Ember Drake damage to %s." % module_def.name)
+		elif String(profile.get("threat_effect", "")) == "fireline_sabotage":
+			_encounter_log("Inferno conditions add 1 Lift Saboteur damage to %s." % module_def.name)
 		if String(profile.get("water_effect", "")) == "condenser_buffer":
 			_encounter_log("The Ready Water Condenser removes 1 Flood Surge damage from %s." % module_def.name)
 		if String(profile.get("route_effect", "")) == "high_gantry":
 			_encounter_log("Pilgrim Gantry's high deck removes 1 Flood Surge damage from %s." % module_def.name)
+		elif String(profile.get("route_effect", "")) == "cut_switchback":
+			_encounter_log("The cut switchback removes 1 Elevator Warden damage from %s." % module_def.name)
 		if String(profile.get("archive_effect", "")) == "sealed_approach":
 			_encounter_log("The sealed archive approach removes 1 Civic Guardian damage from %s." % module_def.name)
 		if String(profile.get("mara_effect", "")) == "refuge_bracing":
@@ -3309,6 +3585,13 @@ func _campaign_event_for_node(node_id: String) -> String:
 				return "registry_salvage"
 			"dry_archive_gate":
 				return "archive_broadcast"
+		return ""
+	if campaign_region_id == "cinder_spine":
+		match node_id:
+			"charcoal_monastery":
+				return "charcoal_vow"
+			"lift_engine_house":
+				return "lift_engine_choice"
 		return ""
 	if node_id in ["lower_ash_road", "dry_cistern_cut", "signal_causeway"] and specialist_id == "mara_flint" and campaign_decisions.has("mara_workbench_choice") and not campaign_decisions.has("mara_followup"):
 		return "mara_followup"
@@ -3372,7 +3655,7 @@ func _campaign_recover_from_failure() -> Dictionary:
 	journey_node = campaign_last_safe_node
 	current_location = campaign_last_safe_node
 	journey_destination = ""
-	phase = "settlement" if campaign_last_safe_node in ["morrowline_camp", "veyru_evacuation_camp"] else ("refit" if campaign_last_safe_node in ["ashgate_depot", "lantern_quay"] else "map")
+	phase = "settlement" if campaign_last_safe_node in ["morrowline_camp", "veyru_evacuation_camp", "old_lift_station"] else ("refit" if campaign_last_safe_node in ["ashgate_depot", "lantern_quay", "blackkiln"] else "map")
 	if phase == "settlement":
 		settlement_actions_remaining = maxi(1, settlement_actions_remaining)
 	_recalculate()
@@ -3405,6 +3688,8 @@ func _campaign_recover_from_failure() -> Dictionary:
 func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 	if campaign_region_id == "flooded_veyru":
 		return _finish_veyru_encounter(engine_alive)
+	if campaign_region_id == "cinder_spine":
+		return _finish_cinder_encounter(engine_alive)
 	var arrived_node := campaign_target_node
 	if hull_condition <= 0 or not engine_alive:
 		if arrived_node == "meridian_pass":
@@ -3542,6 +3827,67 @@ func _finish_veyru_encounter(engine_alive: bool) -> Dictionary:
 			encounter_outcome = "archive_scarred"
 			final_result = "archive_scarred"
 		_encounter_log("Outcome: %s after five Veyru encounters. Water, medicine, archive commitment, and surviving systems remain in the result." % final_result.replace("_", " "))
+	else:
+		phase = "map"
+		campaign_event_pending = _campaign_event_for_node(arrived_node)
+		encounter_outcome = "route_secured"
+		_encounter_log("Outcome: %s is secured. Choose the next available route%s." % [String(JOURNEY_NODES.get(arrived_node, {}).get("name", arrived_node)), " after resolving the local decision" if not campaign_event_pending.is_empty() else ""])
+	campaign_target_node = ""
+	_clear_temporary_seals()
+	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+
+func _finish_cinder_encounter(engine_alive: bool) -> Dictionary:
+	var arrived_node := campaign_target_node
+	if arrived_node == "red_cut" and total_mass() > BASE_MASS_LIMIT - 2:
+		hull_condition = maxi(0, hull_condition - 1)
+		_encounter_log("The heavy fortress loses 1 hull dragging across Red Cut's steep grade.")
+	if hull_condition <= 0 or not engine_alive:
+		if arrived_node == "switchback_commune":
+			encounter_outcome = "cinder_lost"
+			final_result = "cinder_lost"
+			run_complete = true
+			journey_complete = true
+			phase = "results"
+			_encounter_log("Outcome: the Cinder march fails below Switchback Commune. The final report preserves the heat, grade, and dependency chain.")
+			_clear_temporary_seals()
+			return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+		return _campaign_recover_from_failure()
+	campaign_encounters_completed += 1
+	current_location = arrived_node
+	journey_node = arrived_node
+	if arrived_node not in campaign_path:
+		campaign_path.append(arrived_node)
+	if arrived_node == "old_lift_station":
+		campaign_last_safe_node = arrived_node
+	money += pending_route_reward
+	pending_route_reward = 0
+	command_points = 2
+	power_priority = "balanced"
+	heat_surge = 0
+	heat_relief = 0
+	_recalculate()
+	if arrived_node == "old_lift_station":
+		phase = "settlement"
+		settlement_actions_remaining = 2 if cinder_contract_status == "accepted" and operational("generator_core") else 1
+		settlement_report.clear()
+		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
+		_encounter_log("Outcome: %s at Old Lift Station. %d service action%s and a full refit window are available." % [encounter_outcome.replace("_", " "), settlement_actions_remaining, "s" if settlement_actions_remaining != 1 else ""])
+	elif arrived_node == "switchback_commune":
+		journey_complete = true
+		run_complete = true
+		phase = "results"
+		var delivered := cinder_contract_status == "accepted" and operational("generator_core") and String(campaign_decisions.get("lift_engine_choice", "")) == "power_lift"
+		if delivered:
+			cinder_contract_status = "completed"
+			money += 30
+			settlement_trust += 2
+			encounter_outcome = "spine_powered"
+			final_result = "spine_powered"
+			_encounter_log("Dynamo contract complete: the powered lift reaches Switchback Commune. Payment is 30 Ashmarks and trust rises by 2.")
+		else:
+			encounter_outcome = "spine_bypassed"
+			final_result = "spine_bypassed"
+		_encounter_log("Outcome: %s after five Cinder encounters. Fireline, lift choice, contract, and surviving systems remain in the result." % final_result.replace("_", " "))
 	else:
 		phase = "map"
 		campaign_event_pending = _campaign_event_for_node(arrived_node)

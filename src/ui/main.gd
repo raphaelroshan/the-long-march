@@ -465,6 +465,14 @@ func _run_flow_step() -> int:
 		if state.veyru_contract_status != "offered" or state.campaign_encounters_completed > 0 or state.phase in ["map", "battle"]:
 			return 1
 		return 0
+	if state.campaign_region_id == "cinder_spine":
+		if state.current_location == "old_lift_station" or state.campaign_encounters_completed >= 2:
+			if state.current_location != "old_lift_station" and state.campaign_encounters_completed >= 3:
+				return 3
+			return 2
+		if state.cinder_contract_status != "offered" or state.campaign_encounters_completed > 0 or state.phase in ["map", "battle"]:
+			return 1
+		return 0
 	if state.current_location == "morrowline_camp" or state.campaign_encounters_completed >= 3:
 		if state.current_location != "morrowline_camp" and state.campaign_encounters_completed >= 3:
 			return 3
@@ -613,7 +621,7 @@ func set_reduced_motion(enabled: bool) -> void:
 		road_contact.set_reduced_motion(enabled)
 
 func _reset_state() -> void:
-	state = LongMarchState.new(3301 if tutorial_mode else (2204 if starting_region_id == "flooded_veyru" else 1107))
+	state = LongMarchState.new(3301 if tutorial_mode else (2204 if starting_region_id == "flooded_veyru" else (3305 if starting_region_id == "cinder_spine" else 1107)))
 	if tutorial_mode:
 		state.start_tutorial()
 		tutorial_director = TutorialDirectorScript.new()
@@ -625,6 +633,14 @@ func _reset_state() -> void:
 		state.place_module("field_workshop", Vector2i(2, 2))
 		state.place_module("water_condenser", Vector2i(2, 3))
 		state.place_module("parts_crate", Vector2i(4, 2))
+	elif starting_region_id == "cinder_spine":
+		state.place_module("ash_runner_engine", Vector2i(0, 0), false, true)
+		state.place_module("coal_cell", Vector2i(0, 1))
+		state.place_module("generator_core", Vector2i(2, 0))
+		state.place_module("crew_quarters", Vector2i(2, 1))
+		state.place_module("ammunition_lift", Vector2i(4, 0))
+		state.place_module("repeater_gun", Vector2i(5, 1), true)
+		state.place_module("wall_lamp", Vector2i(5, 2), true)
 	else:
 		state.place_module("steam_lance_engine", Vector2i(0, 0))
 		state.place_module("coal_cell", Vector2i(0, 1))
@@ -637,6 +653,8 @@ func _reset_state() -> void:
 		state.seed_starter_inventory()
 		if starting_region_id == "flooded_veyru":
 			state.start_flooded_veyru()
+		elif starting_region_id == "cinder_spine":
+			state.start_cinder_spine()
 		else:
 			state.start_campaign()
 	state.set_regional_developments(starting_regional_developments)
@@ -2210,12 +2228,13 @@ func _on_departure_option_changed(_index: int) -> void:
 	_refresh_tutorial_ui()
 
 func _on_guard_contract_pressed(accept: bool) -> void:
-	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else state.choose_guard_contract(accept)
+	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else (state.choose_cinder_forge_contract(accept) if state.campaign_region_id == "cinder_spine" else state.choose_guard_contract(accept))
 	if bool(result.get("ok", false)):
 		var contract_message := String(result.get("message", "Contract decision recorded."))
 		last_journey_receipt = "CONTRACT · %s" % contract_message
 		_set_event("CONTRACT DECISION\n%s" % contract_message)
-		_journal_event("medicine_contract_answered" if state.campaign_region_id == "flooded_veyru" else "guard_contract_answered", {"accepted": accept})
+		var contract_event := "medicine_contract_answered" if state.campaign_region_id == "flooded_veyru" else ("dynamo_contract_answered" if state.campaign_region_id == "cinder_spine" else "guard_contract_answered")
+		_journal_event(contract_event, {"accepted": accept})
 		_checkpoint("contract_answered")
 	else:
 		_set_event("Contract choice blocked: %s." % String(result.get("reason", "unknown")))
@@ -2432,7 +2451,7 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 
 func _restore_journey_transition_view() -> Dictionary:
 	var destination_id := state.campaign_target_node
-	var origin_id := String(state.campaign_path[-1]) if not state.campaign_path.is_empty() else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
+	var origin_id := String(state.campaign_path[-1]) if not state.campaign_path.is_empty() else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else "ashgate_depot"))
 	var preview := state.campaign_node_preview(destination_id, state.encounter_target_doctrine)
 	var days := int(preview.get("days", 0))
 	var fuel_cost := int(preview.get("fuel", 0))
@@ -2457,6 +2476,16 @@ func _journey_promise_summary() -> String:
 				return "PROMISE BROKEN · The medicine carrier failed; the march continues."
 			_:
 				return "PROMISE DECLINED · Preserve cargo freedom instead of carrying the medicine cases."
+	if state.campaign_region_id == "cinder_spine":
+		match state.cinder_contract_status:
+			"accepted":
+				return "PROMISE · Carry Blackkiln's dynamo pattern and keep the Generator Core running."
+			"completed":
+				return "PROMISE KEPT · The powered lift carried the guild pattern to Switchback Commune."
+			"failed":
+				return "PROMISE BROKEN · The generator failed; the Spine crossing continued by hand."
+			_:
+				return "PROMISE DECLINED · Travel light without the guild's heat-heavy dynamo load."
 	match state.guard_contract_status:
 		"accepted":
 			return "PROMISE · Guard Morrowline's parts convoy through the Lowlands."
@@ -2904,7 +2933,7 @@ func _campaign_departure_block_reason(node_id: String) -> String:
 	return ""
 
 func current_location_is_region_start() -> bool:
-	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else "ashgate_depot")
+	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else "ashgate_depot"))
 
 func _settlement_hub_available() -> bool:
 	return state != null and state.campaign_active and state.phase == "refit" and current_location_is_region_start()
@@ -3317,12 +3346,12 @@ func _apply_start_detail_visibility() -> void:
 	asset_row.visible = show_workshop
 
 func _active_contract_status() -> String:
-	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
+	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else (state.cinder_contract_status if state.campaign_region_id == "cinder_spine" else state.guard_contract_status)
 
 func _recovery_location_name() -> String:
 	if tutorial_mode:
 		return "Muster Yard"
-	return "Evacuation Camp" if state.campaign_region_id == "flooded_veyru" else "Morrowline"
+	return "Evacuation Camp" if state.campaign_region_id == "flooded_veyru" else ("Old Lift Station" if state.campaign_region_id == "cinder_spine" else "Morrowline")
 
 func _on_grid_cell_pressed(cell: Vector2i) -> void:
 	var clicked := state.module_at(cell)
@@ -3818,7 +3847,7 @@ func focus_march_on_action() -> void:
 func _on_march_on_pressed() -> void:
 	if state.phase != "results":
 		return
-	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
+	var next_region_id := "ashgate_lowlands" if state.campaign_region_id in ["flooded_veyru", "cinder_spine"] else "flooded_veyru"
 	_journal_event("march_on_requested", {"from_region": state.campaign_region_id, "to_region": next_region_id, "result": state.final_result})
 	march_on_requested.emit(next_region_id)
 
@@ -3862,6 +3891,14 @@ func _refresh_campaign_controls() -> void:
 		elif pressure_band == "breach":
 			pressure_effect = "Drowned Registry is closed · Pilgrim Gantry is open and cannot close."
 			pressure_color = Color("#ef8375")
+	elif state.campaign_region_id == "cinder_spine":
+		pressure_effect = "Advancing begins at 3 · Inferno at 5 closes Slag Tunnel and opens Ash Chapel Bypass."
+		if pressure_band == "advancing":
+			pressure_effect = "Ember impacts gain damage · Inferno at 5 opens the guaranteed refuge road."
+			pressure_color = Color("#e89270")
+		elif pressure_band == "inferno":
+			pressure_effect = "Slag Tunnel is closed · Ash Chapel Bypass is open and cannot close."
+			pressure_color = Color("#ef8375")
 	else:
 		if pressure_band == "closing":
 			pressure_effect = "Break begins at 5 and can close Signal Causeway without forecasting."
@@ -3874,12 +3911,16 @@ func _refresh_campaign_controls() -> void:
 			pressure_color = Color("#ef8375")
 	campaign_pressure_label.text = "%s — %s · pressure %d · secured %d/5\n%s" % [state.campaign_pressure_name(), pressure_band.replace("_", " ").capitalize(), state.campaign_pressure, state.campaign_encounters_completed, pressure_effect]
 	campaign_pressure_label.add_theme_color_override("font_color", pressure_color)
-	var active_contract_status := state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else state.guard_contract_status
+	var active_contract_status := _active_contract_status()
 	if state.campaign_region_id == "flooded_veyru":
 		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if not state.veyru_medicine_carrier_id.is_empty() else "none"
 		campaign_path_label.text = "Medicine contract: %s · Carrier: %s" % [active_contract_status.replace("_", " ").capitalize(), carrier_name]
 		if state.has_regional_development("veyru_public_archive_signal"):
 			campaign_path_label.text += "\nRegional development: Public Archive Signal · Drowned Registry contacts known"
+	elif state.campaign_region_id == "cinder_spine":
+		campaign_path_label.text = "Dynamo contract: %s · Generator: %s" % [active_contract_status.replace("_", " ").capitalize(), "READY" if state.operational("generator_core") else "AT RISK"]
+		if state.has_regional_development("cinder_communal_lift_plan"):
+			campaign_path_label.text += "\nRegional development: Communal Lift Plan · Slag Tunnel contacts known"
 	else:
 		campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [active_contract_status.replace("_", " ").capitalize(), state.specialist_name()]
 
@@ -3902,6 +3943,14 @@ func _refresh_campaign_controls() -> void:
 			contract_accept_button.text += "\nLOCKED · %s" % String(medicine_status.get("reason", "No carrier available")).to_upper()
 		contract_decline_button.text = "DECLINE THE DELIVERY\nNO RESERVED CARRIER · MOBILITY +1\nONE CAMP ACTION · NO DELIVERY REWARD"
 		contract_decline_button.tooltip_text = "Keep cargo capacity free and gain one Mobility tendency, but forgo the medicine reward and extra camp action."
+	elif state.campaign_region_id == "cinder_spine":
+		contract_title.text = "BLACKKILN CONTRACT"
+		contract_label.text = "Carry the Cinder Guild dynamo pattern to Switchback Commune. Its full load heats every road and makes the Generator Core a visible obligation."
+		contract_accept_button.text = "CARRY THE GUILD DYNAMO\nEVERY ROAD · HEAT +1\nDELIVERY · +30 ASHMARKS · +2 TRUST · +1 CAMP ACTION"
+		contract_accept_button.tooltip_text = "Protect the Generator Core and power the old lift to complete the industrial delivery."
+		contract_accept_button.disabled = not state.operational("generator_core")
+		contract_decline_button.text = "TRAVEL LIGHT\nNO GUILD HEAT LOAD · MOBILITY +1\nONE CAMP ACTION · NO DELIVERY REWARD"
+		contract_decline_button.tooltip_text = "Keep the fortress cooler and lighter in purpose, but give up the powered-lift reward."
 	else:
 		contract_title.text = "ASHGATE CONTRACT"
 		contract_label.text = "Morrowline's parts wagon is exposed. Decide whether its payment and trust are worth a harder camp approach."
@@ -4104,11 +4153,11 @@ func _refresh_ui() -> void:
 		results_record_label.text = _result_record_text()
 		results_replay_label.text = _result_replay_text()
 		_configure_vertical_focus_cycle([current_order_button, results_inspect_button, feedback_button, march_on_button, play_again_button, results_title_button])
-		var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
-		var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
+		var next_region_id := "ashgate_lowlands" if state.campaign_region_id in ["flooded_veyru", "cinder_spine"] else "flooded_veyru"
+		var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else ("FLOODED VEYRU" if next_region_id == "flooded_veyru" else "THE CINDER SPINE")
 		var next_region_result := String(starting_region_results.get(next_region_id, ""))
-		march_on_button.text = "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name]
-		march_on_button.tooltip_text = "Begin a fresh %s run. This result remains in the March Charter; the local Continue slot changes only at the next save." % ("Ashgate" if next_region_id == "ashgate_lowlands" else "Flooded Veyru")
+		march_on_button.text = "%s · %s" % ["REVISIT" if not next_region_result.is_empty() and next_region_result not in ["march_failed", "veyru_lost", "cinder_lost"] else "MARCH ON", next_region_name]
+		march_on_button.tooltip_text = "Begin a fresh %s run. This result remains in the March Charter; the local Continue slot changes only at the next save." % ("Ashgate" if next_region_id == "ashgate_lowlands" else ("Flooded Veyru" if next_region_id == "flooded_veyru" else "Cinder Spine"))
 	guidance_label.text = _current_guidance()
 	current_order_button.text = _current_action_jump_label()
 	current_order_button.tooltip_text = "Move focus to %s without activating it." % _current_action_jump_target().to_lower()
@@ -4308,7 +4357,8 @@ func _refresh_ui() -> void:
 		if not state.campaign_event_pending.is_empty():
 			_set_route_preview("A local decision blocks departure. Resolve it before choosing the next road.", "warning")
 		elif _active_contract_status() == "offered":
-			_set_route_preview("The first map branches are visible after the %s contract is answered." % ("Lantern Quay medicine" if state.campaign_region_id == "flooded_veyru" else "Ashgate convoy"))
+			var contract_name := "Lantern Quay medicine" if state.campaign_region_id == "flooded_veyru" else ("Blackkiln dynamo" if state.campaign_region_id == "cinder_spine" else "Ashgate convoy")
+			_set_route_preview("The first map branches are visible after the %s contract is answered." % contract_name)
 		elif not selected_campaign_node_id.is_empty():
 			_show_selected_route_preview(selected_campaign_node_id)
 		elif state.phase == "settlement":
@@ -4390,7 +4440,8 @@ func _refresh_ui() -> void:
 		encounter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
 		if _active_contract_status() == "offered":
-			encounter_label.text = "%s PREPARATION\nAnswer the %s contract to open the first roads." % [state.campaign_region_name().to_upper(), "medicine" if state.campaign_region_id == "flooded_veyru" else "convoy"]
+			var contract_kind := "medicine" if state.campaign_region_id == "flooded_veyru" else ("dynamo" if state.campaign_region_id == "cinder_spine" else "convoy")
+			encounter_label.text = "%s PREPARATION\nAnswer the %s contract to open the first roads." % [state.campaign_region_name().to_upper(), contract_kind]
 		elif state.phase == "settlement":
 			encounter_label.text = "%s RECOVERY\n%s. Refit freely, then prepare for the next road." % [_recovery_location_name().to_upper(), _service_action_status_text()]
 		else:
@@ -4503,7 +4554,11 @@ func _current_guidance() -> String:
 		if settlement_detail_mode == "journey" and selected_campaign_node_id.is_empty():
 			return "ROUTE TABLE · Select one highlighted destination to inspect it; Commit is a separate action."
 	if _active_contract_status() == "offered":
-		return "CURRENT ORDER · Decide whether to carry Lantern Quay's sealed medicines. This unlocks the first roads." if state.campaign_region_id == "flooded_veyru" else "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
+		if state.campaign_region_id == "flooded_veyru":
+			return "CURRENT ORDER · Decide whether to carry Lantern Quay's sealed medicines. This unlocks the first roads."
+		if state.campaign_region_id == "cinder_spine":
+			return "CURRENT ORDER · Decide whether to carry Blackkiln's dynamo pattern. This unlocks the first roads."
+		return "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
 	if not selected_campaign_node_id.is_empty():
 		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
 		var block_reason := _campaign_departure_block_reason(selected_campaign_node_id)
@@ -4720,13 +4775,17 @@ func _result_record_text() -> String:
 	var dependencies: Dictionary = state.dependency_summary()
 	var specialist_name := state.specialist_name()
 	var stopping_line := ""
-	if state.final_result in ["march_failed", "veyru_lost"] and state.current_location not in state.campaign_path:
+	if state.final_result in ["march_failed", "veyru_lost", "cinder_lost"] and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
 	var mara_line := "\n%s" % state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else ""
 	var occurrence_lines := state.occurrence_debrief_lines()
 	var occurrence_block := "\n%s" % "\n".join(occurrence_lines) if not occurrence_lines.is_empty() else ""
 	var carrier_record := " · Carrier: %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty() else ""
-	var development_record := "\nRegional development: PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts" if state.earned_regional_development() == "veyru_public_archive_signal" else ""
+	var development_record := ""
+	if state.earned_regional_development() == "veyru_public_archive_signal":
+		development_record = "\nRegional development: PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts"
+	elif state.earned_regional_development() == "cinder_communal_lift_plan":
+		development_record = "\nRegional development: COMMUNAL LIFT PLAN · future Cinder runs reveal Slag Tunnel contacts"
 	return "RUN RECORD · %s · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		current_run_code(),
 		" → ".join(path_names),
@@ -4751,7 +4810,7 @@ func _result_record_text() -> String:
 	]
 
 func current_run_code() -> String:
-	var region_code := "VEY" if state.campaign_region_id == "flooded_veyru" else "ASH"
+	var region_code := "VEY" if state.campaign_region_id == "flooded_veyru" else ("CIN" if state.campaign_region_id == "cinder_spine" else "ASH")
 	return "%s-%d" % [region_code, state.seed]
 
 func current_run_record_text() -> String:
@@ -4810,6 +4869,14 @@ func _campaign_decision_record_text() -> String:
 			decisions.append("Drowned Registry — %s" % ("recovered sealed records" if String(recorded.registry_salvage) == "recover_records" else "abandoned the flooded stacks"))
 		if recorded.has("archive_broadcast"):
 			decisions.append("Dry Archive — %s" % ("broadcast publicly" if String(recorded.archive_broadcast) == "broadcast_archive" else "sealed the signal"))
+		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
+	if state.campaign_region_id == "cinder_spine":
+		if recorded.has("charcoal_vow"):
+			decisions.append("Charcoal Monastery — %s" % ("banked the coals" if String(recorded.charcoal_vow) == "bank_coals" else "shared the coals"))
+		if recorded.has("lift_engine_choice"):
+			decisions.append("Lift Engine — %s" % ("powered the industrial lift" if String(recorded.lift_engine_choice) == "power_lift" else "cut a human switchback"))
+		if recorded.has("commune_design"):
+			decisions.append("Switchback Commune — %s" % ("shared the lift plan" if String(recorded.commune_design) == "share_lift_plan" else "kept the guild pattern"))
 		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
 	if "soot_orchard" in state.campaign_path:
 		var orchard_choice := String(recorded.get("salvage_choice", "rescue_workers" if state.workers_rescued else "take_fuel"))

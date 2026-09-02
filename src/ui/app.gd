@@ -78,6 +78,7 @@ var tutorial_button: Button
 var start_button: Button
 var quick_start_button: Button
 var veyru_start_button: Button
+var cinder_start_button: Button
 var continue_button: Button
 var save_recovery_button: Button
 var guide_button: Button
@@ -349,6 +350,15 @@ func _build_title_menu() -> void:
 	_bind_title_preview(veyru_start_button, "veyru")
 	actions.add_child(veyru_start_button)
 
+	cinder_start_button = Button.new()
+	cinder_start_button.name = "CinderStartButton"
+	cinder_start_button.text = "START THE CINDER SPINE  ·  FIRELINE"
+	cinder_start_button.custom_minimum_size = Vector2(0, 50)
+	cinder_start_button.tooltip_text = "Begin the five-encounter Cinder Spine chapter at Blackkiln."
+	cinder_start_button.pressed.connect(_start_cinder_game)
+	_bind_title_preview(cinder_start_button, "cinder")
+	actions.add_child(cinder_start_button)
+
 	continue_button = Button.new()
 	continue_button.name = "ContinueButton"
 	continue_button.custom_minimum_size = Vector2(0, 52)
@@ -469,7 +479,9 @@ func _configure_title_focus() -> void:
 	quick_start_button.focus_neighbor_top = quick_start_button.get_path_to(start_button)
 	quick_start_button.focus_neighbor_bottom = quick_start_button.get_path_to(veyru_start_button)
 	veyru_start_button.focus_neighbor_top = veyru_start_button.get_path_to(quick_start_button)
-	continue_button.focus_neighbor_top = continue_button.get_path_to(veyru_start_button)
+	veyru_start_button.focus_neighbor_bottom = veyru_start_button.get_path_to(cinder_start_button)
+	cinder_start_button.focus_neighbor_top = cinder_start_button.get_path_to(veyru_start_button)
+	continue_button.focus_neighbor_top = continue_button.get_path_to(cinder_start_button)
 	continue_button.focus_neighbor_bottom = continue_button.get_path_to(settings_button)
 	save_recovery_button.focus_neighbor_top = save_recovery_button.get_path_to(quick_start_button)
 	save_recovery_button.focus_neighbor_bottom = save_recovery_button.get_path_to(settings_button)
@@ -490,6 +502,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 	if show_quick_start:
 		title_actions.append(quick_start_button)
 	title_actions.append(veyru_start_button)
+	title_actions.append(cinder_start_button)
 	if has_invalid_save:
 		title_actions.append(save_recovery_button)
 	var active_controls: Array = []
@@ -713,18 +726,18 @@ func _build_guide_overlay() -> void:
 	title.add_theme_color_override("font_color", Color("#f0d29d"))
 	content.add_child(title)
 	var intro := Label.new()
-	intro.text = "Ashgate and Flooded Veyru use the same fortress rules but test different weaknesses. Victory and failure make sense when you can trace what caused the outcome."
+	intro.text = "Ashgate, Flooded Veyru, and The Cinder Spine use the same fortress rules but test different weaknesses. Victory and failure make sense when you can trace what caused the outcome."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.custom_minimum_size = Vector2(690, 50)
 	intro.add_theme_color_override("font_color", Color("#c7d0ce"))
 	content.add_child(intro)
 	content.add_child(_flow_step("1", "PREP · READ DEPENDENCIES", "Green systems are ready, amber are strained, and red are offline or blocked. Stored parts are finite; inspect dependencies before moving one."))
-	content.add_child(_flow_step("2", "CONTRACT · NAME THE OBLIGATION", "Guard Ashgate's convoy or carry Veyru's medicines. Accepted work changes danger, rewards, recovery, and the exact system the road may target."))
-	content.add_child(_flow_step("3", "ROUTE · READ PRESSURE", "Known roads name contacts and counters; forecasts reveal a hazard class; unscouted roads stay broad. Ashgate reaches Closing at 3 and Break at 5; Veyru reaches Flooding at 3 and Breach at 5."))
+	content.add_child(_flow_step("2", "CONTRACT · NAME THE OBLIGATION", "Guard Ashgate's convoy, carry Veyru's medicines, or haul Blackkiln's dynamo. Accepted work changes danger, rewards, recovery, and the exact system the road may target."))
+	content.add_child(_flow_step("3", "ROUTE · READ PRESSURE", "Known roads name contacts and counters; forecasts reveal a hazard class; unscouted roads stay broad. Regional pressure can close one road but always preserves a recovery path."))
 	content.add_child(_flow_step("4", "ENCOUNTER · READ", "Each advance resolves one combat step. Read arriving contacts, TARGET, WHY, and NEXT first; only one emergency order is available per encounter."))
 	content.add_child(_flow_step("5", "RECOVER · COMMIT · DEBRIEF", "Recover at Morrowline or Evacuation Camp, commit to the fifth encounter, then use the named result thresholds and replay goal to plan one deliberate change."))
 	var note := Label.new()
-	note.text = "CHAPTER STARTS open the prepared fortress directly. Ashgate skips its introductory overlay; both chapters keep the normal simulation, seed, route graph, and checkpoint rules."
+	note.text = "CHAPTER STARTS open the prepared fortress directly. Ashgate skips its introductory overlay; all chapters keep the normal simulation, seed, route graph, and checkpoint rules."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color("#d8c389"))
@@ -1586,6 +1599,8 @@ func _refresh_title_state() -> void:
 	quick_start_button.text = "REPLAY ASHGATE · SKIP BRIEFING" if has_completed_save else ("NEW ASHGATE · SKIP BRIEFING" if has_valid_save else "START ASHGATE  ·  SKIP BRIEFING")
 	veyru_start_button.text = "REPLAY FLOODED VEYRU · RISING WATER" if has_completed_save else ("NEW FLOODED VEYRU RUN · RISING WATER" if has_valid_save else ("START FLOODED VEYRU · RISING WATER" if tutorial_complete else "FLOODED VEYRU · ADVANCED JOURNEY"))
 	veyru_start_button.tooltip_text = "%s%s" % ["Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay." if tutorial_complete else "Flooded Veyru remains available, but The First Watch is recommended before this advanced journey.", " Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else ""]
+	cinder_start_button.text = "REPLAY THE CINDER SPINE · FIRELINE" if has_completed_save else ("NEW CINDER SPINE RUN · FIRELINE" if has_valid_save else ("START THE CINDER SPINE · FIRELINE" if tutorial_complete else "THE CINDER SPINE · ADVANCED JOURNEY"))
+	cinder_start_button.tooltip_text = "%s%s" % ["Begin the five-encounter Cinder Spine chapter at Blackkiln." if tutorial_complete else "The Cinder Spine remains available, but The First Watch is recommended before this advanced journey.", " Communal Lift Plan is active: Slag Tunnel contacts will be Known." if campaign_progress.has_development("cinder_communal_lift_plan") else ""]
 	var ashgate_completed := not campaign_progress.result_for_region("ashgate_lowlands").is_empty()
 	var veyru_completed := not campaign_progress.result_for_region("flooded_veyru").is_empty()
 	guide_quick_start_button.text = "REPLAY · ASHGATE" if ashgate_completed else ("START NEW · ASHGATE" if has_valid_save else "QUICK START · ASHGATE")
@@ -1608,13 +1623,15 @@ func _refresh_title_state() -> void:
 		actions.move_child(start_button, 2)
 		actions.move_child(quick_start_button, 3)
 		actions.move_child(veyru_start_button, 4)
+		actions.move_child(cinder_start_button, 5)
 	else:
 		actions.move_child(tutorial_button, 0)
 		actions.move_child(start_button, 1)
 		actions.move_child(quick_start_button, 2)
 		actions.move_child(veyru_start_button, 3)
-		actions.move_child(continue_button, 4)
-		actions.move_child(save_recovery_button, 5)
+		actions.move_child(cinder_start_button, 4)
+		actions.move_child(continue_button, 5)
+		actions.move_child(save_recovery_button, 6)
 	_refresh_title_focus(has_valid_save, has_invalid_save, quick_start_button.visible)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
@@ -1678,12 +1695,12 @@ func _refresh_title_preview(save_info: Dictionary = {}) -> void:
 			title_region_briefing_label.text = "%s at %s. Continue restores this exact validated decision; it does not begin a replacement run." % [String(current_save.get("region", "Campaign")), String(current_save.get("location", "the saved location"))]
 			title_preview_scope_label.text = "%s · %d/5 SECURED   ·   DAY %d   ·   SAVED BY %s" % [String(current_save.get("phase", "Checkpoint")).to_upper(), int(current_save.get("encounters", 0)), int(current_save.get("day", 1)), String(current_save.get("saved_build", "EARLIER BUILD")).to_upper()]
 			rule_titles = ["Return to the waiting decision", "Check the fortress condition", "Keep replacement runs deliberate"]
-			rule_details = [String(current_save.get("next_action", "Review the current decision")), "Fuel %d · Hull %d/10 · Heat %d/%d · %s" % [int(current_save.get("fuel", 0)), int(current_save.get("hull", 0)), int(current_save.get("heat", 0)), LongMarchState.BASE_HEAT_LIMIT, String(current_save.get("condition", "unknown")).capitalize()], "New Ashgate or Veyru runs ask before they can replace this Continue slot."]
+			rule_details = [String(current_save.get("next_action", "Review the current decision")), "Fuel %d · Hull %d/10 · Heat %d/%d · %s" % [int(current_save.get("fuel", 0)), int(current_save.get("hull", 0)), int(current_save.get("heat", 0)), LongMarchState.BASE_HEAT_LIMIT, String(current_save.get("condition", "unknown")).capitalize()], "New regional runs ask before they can replace this Continue slot."]
 		"recovery":
 			var backup_valid := bool(current_save.get("backup_valid", false))
 			title_preview_eyebrow_label.text = "LOCAL CHECKPOINT · RECOVERY REQUIRED"
 			title_preview_title_label.text = "Restore the previous checkpoint" if backup_valid else "Remove the unusable checkpoint"
-			title_region_briefing_label.text = "The primary Continue file cannot be loaded by this build. New Ashgate and Veyru runs remain available."
+			title_region_briefing_label.text = "The primary Continue file cannot be loaded by this build. New regional runs remain available."
 			title_preview_scope_label.text = "BACKUP · %s   ·   PRIMARY · UNUSABLE   ·   ACTION · CONFIRM FIRST" % ("VALID" if backup_valid else "NOT AVAILABLE")
 			rule_titles = ["Protect valid state", "Make replacement explicit", "Keep both chapters playable"]
 			rule_details = ["Restore the validated predecessor before attempting Continue." if backup_valid else "No validated predecessor exists; the broken file cannot be resumed.", "Recovery never silently chooses or deletes a local file.", "Starting a new run remains separate from clearing the unusable checkpoint."]
@@ -1696,6 +1713,15 @@ func _refresh_title_preview(save_info: Dictionary = {}) -> void:
 			title_preview_scope_label.text = "PRESSURE · RISING WATER   ·   RECOVERY · EVACUATION CAMP   ·   FINALE · CIVIC GUARDIAN"
 			rule_titles = ["Bind medicine to a real module", "Read a changing map", "Choose what the archive says"]
 			rule_details = ["Accept the obligation with a named carrier, or decline before the first road.", "Flooding can close one approach, but never every recovery path.", "Broadcast or seal the archive after five encounters; each choice changes the finale."]
+		"cinder":
+			title_preview_eyebrow_label.text = "THE CINDER SPINE · THIRD JOURNEY · 15–25 MINUTES"
+			title_preview_title_label.text = "Cross the moving fireline"
+			var development_note := " Communal Lift Plan is active: Slag Tunnel contacts begin Known." if campaign_progress.has_development("cinder_communal_lift_plan") else ""
+			var tutorial_note := " Complete The First Watch first if you have not yet placed modules or read a live contact." if not FileAccess.file_exists(TUTORIAL_COMPLETE_PATH) else ""
+			title_region_briefing_label.text = "A prepared fortress climbs from Blackkiln while heat, mass, and an industrial obligation compete for the same narrow margin.%s%s" % [development_note, tutorial_note]
+			title_preview_scope_label.text = "PRESSURE · FIRELINE   ·   RECOVERY · OLD LIFT STATION   ·   FINALE · ELEVATOR WARDEN"
+			rule_titles = ["Carry a working dynamo", "Respect grade and heat", "Decide who owns the crossing"]
+			rule_details = ["Accept the guild pattern only with a ready Generator Core, or travel light.", "Heavy chassis lose margin on steep grades; inferno closes the low tunnel but opens refuge.", "Power the old lift or cut a communal switchback, then decide whether to share the design."]
 		"ashgate_quick":
 			title_preview_eyebrow_label.text = "ASHGATE LOWLANDS · QUICK START · 15–25 MINUTES"
 			title_preview_title_label.text = "Use the prepared fortress"
@@ -1718,18 +1744,21 @@ func _refresh_title_preview(save_info: Dictionary = {}) -> void:
 
 func _march_charter_text() -> String:
 	if not campaign_progress_error.is_empty():
-		return "MARCH CHARTER · RECORD UNAVAILABLE\nBoth chapters remain playable; the next terminal result can rebuild this local record."
+		return "MARCH CHARTER · RECORD UNAVAILABLE\nAll chapters remain playable; the next terminal result can rebuild this local record."
 	var ashgate_result := campaign_progress.result_for_region("ashgate_lowlands")
 	var veyru_result := campaign_progress.result_for_region("flooded_veyru")
+	var cinder_result := campaign_progress.result_for_region("cinder_spine")
 	var survived := campaign_progress.survived_region_count()
-	var next_road := "Choose either chapter"
+	var next_road := "Choose any chapter"
 	if survived > 0 and not campaign_progress.survived_region("ashgate_lowlands"):
 		next_road = "Ashgate Lowlands"
 	elif survived > 0 and not campaign_progress.survived_region("flooded_veyru"):
 		next_road = "Flooded Veyru"
-	elif survived == 2:
-		next_road = "Both roads remain open for replay"
-	return "MARCH CHARTER · %d/2 REGIONS SURVIVED\nAshgate %s · Veyru %s · Next: %s" % [survived, _charter_result_label(ashgate_result), _charter_result_label(veyru_result), next_road]
+	elif survived > 0 and not campaign_progress.survived_region("cinder_spine"):
+		next_road = "The Cinder Spine"
+	elif survived == 3:
+		next_road = "All roads remain open for replay"
+	return "MARCH CHARTER · %d/3 REGIONS SURVIVED\nAshgate %s · Veyru %s · Cinder %s · Next: %s" % [survived, _charter_result_label(ashgate_result), _charter_result_label(veyru_result), _charter_result_label(cinder_result), next_road]
 
 func _charter_result_label(result_id: String) -> String:
 	if result_id.is_empty():
@@ -1851,6 +1880,8 @@ func _saved_next_action(saved_state: LongMarchState) -> String:
 		return "Resolve %s" % String(event.get("title", "local decision"))
 	if saved_state.campaign_region_id == "flooded_veyru" and saved_state.veyru_contract_status == "offered":
 		return "Answer medicine contract"
+	if saved_state.campaign_region_id == "cinder_spine" and saved_state.cinder_contract_status == "offered":
+		return "Answer dynamo contract"
 	if saved_state.guard_contract_status == "offered":
 		return "Answer convoy contract"
 	if saved_state.phase == "settlement" and saved_state.settlement_actions_remaining > 0:
@@ -1877,13 +1908,13 @@ func _empty_save_summary() -> String:
 	return "No saved march · Autosave begins after your first committed decision." if autosave_enabled else "No saved march · Use Save March from the pause menu."
 
 func _region_menu_name(region_id: String) -> String:
-	return "VEYRU" if region_id == "flooded_veyru" else "ASHGATE"
+	return "VEYRU" if region_id == "flooded_veyru" else ("CINDER" if region_id == "cinder_spine" else "ASHGATE")
 
 func _region_display_name(region_id: String) -> String:
-	return "Flooded Veyru" if region_id == "flooded_veyru" else "Ashgate Lowlands"
+	return "Flooded Veyru" if region_id == "flooded_veyru" else ("The Cinder Spine" if region_id == "cinder_spine" else "Ashgate Lowlands")
 
 func _region_start_name(region_id: String) -> String:
-	return "Lantern Quay" if region_id == "flooded_veyru" else "Ashgate Depot"
+	return "Lantern Quay" if region_id == "flooded_veyru" else ("Blackkiln" if region_id == "cinder_spine" else "Ashgate Depot")
 
 func _active_region_id() -> String:
 	if game_view == null:
@@ -1919,9 +1950,12 @@ func _quick_start_game() -> void:
 func _start_veyru_game() -> void:
 	_request_new_game(false, "flooded_veyru")
 
+func _start_cinder_game() -> void:
+	_request_new_game(false, "cinder_spine")
+
 func _request_new_game(show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
 	if bool(_saved_run_info().get("valid", false)):
-		_request_confirmation("new_veyru" if region_id == "flooded_veyru" else ("new_guided" if show_briefing else "new_quick"))
+		_request_confirmation("new_veyru" if region_id == "flooded_veyru" else ("new_cinder" if region_id == "cinder_spine" else ("new_guided" if show_briefing else "new_quick")))
 		return
 	_open_stage(false, show_briefing, region_id)
 
@@ -2346,7 +2380,7 @@ func _request_replay_confirmation() -> void:
 	_request_confirmation("replay")
 
 func _request_march_on_confirmation(region_id: String) -> void:
-	if game_view == null or region_id not in ["ashgate_lowlands", "flooded_veyru"]:
+	if game_view == null or region_id not in ["ashgate_lowlands", "flooded_veyru", "cinder_spine"]:
 		return
 	if _active_stage_is_tutorial() and region_id == "ashgate_lowlands":
 		var marker := FileAccess.open(TUTORIAL_COMPLETE_PATH, FileAccess.WRITE)
@@ -2358,10 +2392,10 @@ func _request_march_on_confirmation(region_id: String) -> void:
 	if String(game_view.get("state").get("phase")) != "results":
 		return
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
-	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else "march_on_veyru")
+	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else ("march_on_veyru" if region_id == "flooded_veyru" else "march_on_cinder"))
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "reset_playtest_data", "new_guided", "new_quick", "new_veyru"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "march_on_cinder", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "reset_playtest_data", "new_guided", "new_quick", "new_veyru", "new_cinder"]:
 		return
 	if action in ["clear_progress", "reset_playtest_data"] and game_view != null:
 		return
@@ -2395,8 +2429,8 @@ func _request_confirmation(action: String) -> void:
 		else:
 			confirmation_body_label.text = "This result is not saved under Continue. Play Again will create a fresh %s checkpoint immediately." % replay_menu_name if autosave_enabled else "This result is not saved under Continue. Play Again starts a fresh %s run without creating a checkpoint until you save manually." % replay_menu_name
 		confirmation_confirm_button.text = "PLAY AGAIN"
-	elif action in ["march_on_ashgate", "march_on_veyru"]:
-		var next_region_id := "ashgate_lowlands" if action == "march_on_ashgate" else "flooded_veyru"
+	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
+		var next_region_id := "ashgate_lowlands" if action == "march_on_ashgate" else ("flooded_veyru" if action == "march_on_veyru" else "cinder_spine")
 		var next_region_name := _region_display_name(next_region_id)
 		var current_region_name := _region_display_name(_active_region_id())
 		confirmation_title_label.text = "Continue to %s?" % next_region_name
@@ -2446,7 +2480,7 @@ func _request_confirmation(action: String) -> void:
 		confirmation_cancel_button.text = "KEEP FILE"
 	elif action == "restore_backup":
 		confirmation_cancel_button.text = "KEEP FILES"
-	elif action in ["new_guided", "new_quick", "new_veyru"]:
+	elif action in ["new_guided", "new_quick", "new_veyru", "new_cinder"]:
 		confirmation_cancel_button.text = "KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE"
 	elif action == "clear_save":
 		confirmation_cancel_button.text = "KEEP SAVE"
@@ -2454,7 +2488,7 @@ func _request_confirmation(action: String) -> void:
 		confirmation_cancel_button.text = "KEEP CHARTER"
 	elif action == "reset_playtest_data":
 		confirmation_cancel_button.text = "KEEP LOCAL DATA"
-	elif action in ["march_on_ashgate", "march_on_veyru"]:
+	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
 		confirmation_cancel_button.text = "STAY AT DEBRIEF"
 	elif action == "quit_save":
 		confirmation_cancel_button.text = "KEEP PLAYING"
@@ -2478,7 +2512,7 @@ func _cancel_confirmation() -> void:
 		elif game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call_deferred("focus_replay_action")
-	elif previous_action in ["march_on_ashgate", "march_on_veyru"]:
+	elif previous_action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
 		if game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call_deferred("focus_march_on_action")
@@ -2512,6 +2546,8 @@ func _cancel_confirmation() -> void:
 		start_button.grab_focus()
 	elif previous_action == "new_veyru":
 		(guide_veyru_start_button if guide_view.visible else veyru_start_button).grab_focus()
+	elif previous_action == "new_cinder":
+		cinder_start_button.grab_focus()
 	else:
 		title_button.grab_focus()
 
@@ -2527,10 +2563,10 @@ func _confirm_pending_action() -> void:
 			paused_stage_focus = null
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call("start_replay_from_results")
-	elif action in ["march_on_ashgate", "march_on_veyru"]:
+	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
 		pause_view.visible = false
 		paused_stage_focus = null
-		_open_stage(false, false, "ashgate_lowlands" if action == "march_on_ashgate" else "flooded_veyru")
+		_open_stage(false, false, "ashgate_lowlands" if action == "march_on_ashgate" else ("flooded_veyru" if action == "march_on_veyru" else "cinder_spine"))
 	elif action == "quit_save":
 		_save_and_quit()
 	elif action == "title":
@@ -2583,6 +2619,8 @@ func _confirm_pending_action() -> void:
 		_open_stage(false, false)
 	elif action == "new_veyru":
 		_open_stage(false, false, "flooded_veyru")
+	elif action == "new_cinder":
+		_open_stage(false, false, "cinder_spine")
 
 func _show_guide() -> void:
 	guide_view.visible = true

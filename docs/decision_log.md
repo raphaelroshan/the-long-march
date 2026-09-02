@@ -1290,3 +1290,11 @@ An active contact still rejects a save whose target names a missing installed sy
 ## 2026-09-02 — Heat warnings are edge-triggered state changes
 
 Recalculation records a heat warning only when the fortress crosses from a safe state to above its limit. Loading an already-overheated checkpoint no longer appends a duplicate warning. This makes save/load byte-stable and keeps the log a record of player-visible changes rather than a side effect of deserialization.
+
+## 2026-09-02 — The Cinder Spine makes mass and heat a route promise
+
+The third chapter binds its optional guild contract to an operational Generator Core and adds one heat to every accepted road. Two climbs explicitly punish mass above 12, while an inferno closes Slag Tunnel and opens Ash Chapel Bypass so pressure changes the journey without erasing recovery. This was chosen over another generic hazard modifier because the chapter should make the physical chassis and its carried obligation compete for the same margin.
+
+## 2026-09-02 — Regional developments reveal information without lowering risk
+
+Sharing the lift design after a surviving Cinder result unlocks Communal Lift Plan. Later Cinder runs see Slag Tunnel contacts as Known, but receive no risk discount. This mirrors Public Archive Signal's information-first contract: memory changes planning evidence while preserving the danger and preventing a permanent upgrade from becoming a universal best answer.

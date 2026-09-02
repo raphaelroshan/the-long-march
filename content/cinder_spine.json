@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "region": {
+    "id": "cinder_spine",
+    "name": "The Cinder Spine",
+    "start_node": "blackkiln",
+    "final_node": "switchback_commune",
+    "encounter_count": 5,
+    "pressure": {
+      "id": "fireline",
+      "bands": [
+        {"id": "embers", "minimum": 0, "maximum": 2},
+        {"id": "advancing", "minimum": 3, "maximum": 4},
+        {"id": "inferno", "minimum": 5}
+      ],
+      "inferno_closes": ["slag_tunnel"],
+      "inferno_opens": ["ash_chapel_bypass"],
+      "guaranteed_recovery_node": "ash_chapel_bypass"
+    }
+  },
+  "contract": {
+    "id": "cinder_guild_dynamo",
+    "offer_node": "blackkiln",
+    "delivery_node": "switchback_commune",
+    "required_module": "generator_core",
+    "reward": {"ashmarks": 30, "trust": 2},
+    "route_heat": 1,
+    "failure_ends_run": false,
+    "camp_action_bonus": 1
+  },
+  "nodes": [
+    {"id": "blackkiln", "kind": "settlement", "encounter": [], "next": ["charcoal_monastery", "red_cut"]},
+    {"id": "charcoal_monastery", "kind": "sanctuary", "encounter": ["ember_drakes"], "next": ["old_lift_station"], "decision": "charcoal_vow"},
+    {"id": "red_cut", "kind": "hazard", "encounter": ["ember_drakes"], "next": ["old_lift_station"], "mass_sensitive": true},
+    {"id": "old_lift_station", "kind": "settlement", "encounter": ["lift_saboteurs"], "next": ["long_slope", "slag_tunnel", "ash_chapel_bypass"], "base_service_actions": 1},
+    {"id": "long_slope", "kind": "hazard", "encounter": ["ember_drakes"], "next": ["lift_engine_house"], "mass_sensitive": true},
+    {"id": "slag_tunnel", "kind": "salvage", "encounter": ["ember_drakes", "lift_saboteurs"], "next": ["lift_engine_house"]},
+    {"id": "ash_chapel_bypass", "kind": "recovery", "encounter": ["ember_drakes"], "next": ["lift_engine_house"], "pressure_change": -1},
+    {"id": "lift_engine_house", "kind": "choice", "encounter": ["lift_saboteurs", "ember_drakes"], "next": ["switchback_commune"], "decision": "lift_engine_choice"},
+    {"id": "switchback_commune", "kind": "finale", "encounter": ["elevator_warden"], "next": []}
+  ],
+  "regional_threats": [
+    {"id": "ember_drakes", "role": "heat_hazard", "targets": ["fuel", "exterior", "sustain"], "counters": ["wall_lamp", "repeater_gun", "water_condenser", "vent_heat"]},
+    {"id": "lift_saboteurs", "role": "dependency_hazard", "targets": ["generator", "workshop", "signal"], "counters": ["repeater_gun", "field_workshop", "armor"]},
+    {"id": "elevator_warden", "role": "final_contact", "targets": ["generator", "engine", "armor"], "counters": ["shell_cannon", "armor", "cut_switchback"]}
+  ],
+  "regional_developments": [
+    {"id": "cinder_communal_lift_plan", "name": "Communal Lift Plan", "trigger": {"decision": "share_lift_plan", "results": ["spine_powered", "spine_bypassed"]}, "future_effect": {"node": "slag_tunnel", "visibility": "known", "risk_discount": 0}}
+  ],
+  "decisions": [
+    {"id": "charcoal_vow", "choices": ["bank_coals", "share_coals"]},
+    {"id": "lift_engine_choice", "choices": ["power_lift", "cut_switchback"]},
+    {"id": "commune_design", "choices": ["share_lift_plan", "keep_guild_pattern"]}
+  ],
+  "results": [
+    {"id": "spine_powered", "requires": ["fortress_mobile", "generator_operational", "power_lift"]},
+    {"id": "spine_bypassed", "requires": ["fortress_mobile"]},
+    {"id": "cinder_lost", "requires": ["final_mobility_or_hull_failure"]}
+  ]
+}

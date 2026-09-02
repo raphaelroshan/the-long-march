@@ -82,6 +82,33 @@ const REGION_LAYOUTS := {
 		},
 		"final_nodes": ["dry_archive"],
 		"closed_reason": "Closed by rising water. Pilgrim Gantry remains available as the recovery road."
+	},
+	"cinder_spine": {
+		"node_order": ["blackkiln", "charcoal_monastery", "red_cut", "old_lift_station", "long_slope", "slag_tunnel", "ash_chapel_bypass", "lift_engine_house", "switchback_commune"],
+		"node_positions": {
+			"blackkiln": Vector2(94, 8),
+			"charcoal_monastery": Vector2(4, 56),
+			"red_cut": Vector2(184, 56),
+			"old_lift_station": Vector2(94, 104),
+			"long_slope": Vector2(4, 152),
+			"slag_tunnel": Vector2(184, 152),
+			"ash_chapel_bypass": Vector2(94, 200),
+			"lift_engine_house": Vector2(94, 248),
+			"switchback_commune": Vector2(94, 296)
+		},
+		"short_names": {
+			"blackkiln": "Blackkiln",
+			"charcoal_monastery": "Charcoal Monastery",
+			"red_cut": "Red Cut",
+			"old_lift_station": "Old Lift Station",
+			"long_slope": "Long Slope",
+			"slag_tunnel": "Slag Tunnel",
+			"ash_chapel_bypass": "Ash Chapel Bypass",
+			"lift_engine_house": "Lift Engine House",
+			"switchback_commune": "Switchback Commune"
+		},
+		"final_nodes": ["switchback_commune"],
+		"closed_reason": "Closed by the inferno. Ash Chapel Bypass remains available as the recovery road."
 	}
 }
 

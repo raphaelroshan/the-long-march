@@ -9,7 +9,8 @@
     "regional_objective": "Reach the Meridian Refuge before the ash season closes the eastern passes.",
     "content_extensions": [
       "content/gameplay_framework.json",
-      "content/flooded_veyru.json"
+      "content/flooded_veyru.json",
+      "content/cinder_spine.json"
     ],
     "chapters": [
       {

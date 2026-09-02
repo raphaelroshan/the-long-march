@@ -41,8 +41,9 @@ Battles resolve through deterministic simulation. The player still chooses the c
 | **First Watch** | Guided engine, weapon, workshop, road, contact, damage, and repair lessons | Muster recovery siding | Certification into Ashgate |
 | **Ashgate Lowlands** | Blockade pressure, uncertain roads, a convoy promise, Iven Pell or Mara Flint | Morrowline Camp | Meridian Pass and the Siege Beast |
 | **Flooded Veyru** | Rising water, route closures, a named medicine carrier, Flood Surges | Evacuation Camp | The Dry Archive and Civic Guardian |
+| **The Cinder Spine** | Moving fireline, steep grades, a heat-bearing dynamo contract, Ember Drakes | Old Lift Station | Switchback Commune and the Elevator Warden |
 
-Both campaign chapters are isolated five-contact test journeys. They share the same fortress simulation, accessibility settings, save system, recovery rules, and terminal debrief, but they do not pretend the planned five-region campaign is complete.
+The three campaign chapters are isolated five-contact test journeys. They share the same fortress simulation, accessibility settings, save system, recovery rules, and terminal debrief, but they do not pretend the planned campaign is complete.
 
 ## What makes the fortress matter
 

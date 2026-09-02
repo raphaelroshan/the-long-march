@@ -308,7 +308,15 @@ class MarchCanvas extends Control:
 		"drowned_registry": {"motif": "archive", "marker": "DROWNED STACKS"},
 		"pilgrim_gantry": {"motif": "gantry", "marker": "PILGRIM GANTRY"},
 		"dry_archive_gate": {"motif": "archive", "marker": "ARCHIVE GATE"},
-		"dry_archive": {"motif": "archive", "marker": "DRY ARCHIVE"}
+		"dry_archive": {"motif": "archive", "marker": "DRY ARCHIVE"},
+		"charcoal_monastery": {"motif": "monastery", "marker": "CHARCOAL BELLS"},
+		"red_cut": {"motif": "pass", "marker": "RED CUT GRADES"},
+		"old_lift_station": {"motif": "gantry", "marker": "OLD LIFT TOWERS"},
+		"long_slope": {"motif": "pass", "marker": "LONG SLOPE"},
+		"slag_tunnel": {"motif": "tunnel", "marker": "SLAG TUNNEL"},
+		"ash_chapel_bypass": {"motif": "monastery", "marker": "ASH CHAPEL"},
+		"lift_engine_house": {"motif": "gantry", "marker": "LIFT ENGINE"},
+		"switchback_commune": {"motif": "gantry", "marker": "SWITCHBACK LIFT"}
 	}
 
 	var region_id: String = "ashgate_lowlands"
@@ -359,10 +367,11 @@ class MarchCanvas extends Control:
 
 	func _draw() -> void:
 		var flooded := region_id == "flooded_veyru"
-		var sky := Color("#071014") if high_contrast_enabled else (Color("#19333a") if flooded else Color("#293136"))
-		var far_horizon := Color("#1f4249") if flooded else Color("#47463f")
-		var horizon := Color("#284e55") if flooded else Color("#625849")
-		var ground := Color("#10262a") if flooded else Color("#30271f")
+		var cinder := region_id == "cinder_spine"
+		var sky := Color("#071014") if high_contrast_enabled else (Color("#19333a") if flooded else (Color("#321716") if cinder else Color("#293136")))
+		var far_horizon := Color("#1f4249") if flooded else (Color("#603026") if cinder else Color("#47463f"))
+		var horizon := Color("#284e55") if flooded else (Color("#8b4a32") if cinder else Color("#625849"))
+		var ground := Color("#10262a") if flooded else (Color("#281611") if cinder else Color("#30271f"))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.78, size.y * 0.18), 64.0, Color(0.91, 0.72, 0.42, 0.18))
 		_draw_far_silhouette(far_horizon)
@@ -370,7 +379,7 @@ class MarchCanvas extends Control:
 			var ridge_y := size.y * (0.30 + ridge_index * 0.035)
 			draw_line(Vector2(0, ridge_y), Vector2(size.x, ridge_y - 30 + ridge_index * 8), horizon.darkened(float(ridge_index) * 0.08), 28.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.58), Vector2(size.x, size.y * 0.42)), ground, true)
-		_draw_road_edge(flooded)
+		_draw_road_edge(flooded, cinder)
 		for marker_index in range(-1, 9):
 			var marker_x := fmod(float(marker_index * 96) - travel_offset, size.x + 96.0)
 			if marker_x < -30.0:
@@ -395,14 +404,18 @@ class MarchCanvas extends Control:
 			draw_rect(Rect2(Vector2(x, size.y * 0.29 - height), Vector2(28.0, height)), color.darkened(0.18), true)
 			draw_line(Vector2(x + 14.0, size.y * 0.29 - height), Vector2(x + 14.0, size.y * 0.29 - height - 18.0), color, 3.0)
 
-	func _draw_road_edge(flooded: bool) -> void:
-		var edge_color := Color("#66a6a3") if flooded else Color("#806443")
+	func _draw_road_edge(flooded: bool, cinder: bool) -> void:
+		var edge_color := Color("#66a6a3") if flooded else (Color("#bd673d") if cinder else Color("#806443"))
 		draw_line(Vector2(0, size.y * 0.64), Vector2(size.x, size.y * 0.62), edge_color.darkened(0.22), 5.0)
 		draw_line(Vector2(0, size.y * 0.92), Vector2(size.x, size.y * 0.92), edge_color.darkened(0.34), 4.0)
 		if flooded:
 			for wave_index in range(6):
 				var wave_x := fmod(float(wave_index) * 142.0 - travel_offset * 0.9, size.x + 142.0)
 				draw_arc(Vector2(wave_x, size.y * 0.72), 24.0, PI, TAU, 12, Color(0.39, 0.70, 0.72, 0.42), 3.0)
+		elif cinder:
+			for ember_index in range(7):
+				var ember_x := fmod(float(ember_index) * 107.0 - travel_offset * 0.4, size.x + 107.0)
+				draw_circle(Vector2(ember_x, size.y * (0.68 + float(ember_index % 3) * 0.07)), 3.0, Color(0.96, 0.36, 0.16, 0.48))
 
 	func _draw_beat_landmark(flooded: bool) -> void:
 		var accent := Color("#9fddd4") if flooded else Color("#d3aa68")
