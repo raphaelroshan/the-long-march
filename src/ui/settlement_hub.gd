@@ -31,6 +31,14 @@ const ATTENDANT_ROLES := {
 		"hiring_post": "DIVER CAPTAIN",
 		"assignment_board": "MEDICINE COURIER",
 		"departure_gate": "FERRY MARSHAL"
+	},
+	"blackkiln": {
+		"workshop": "DYNAMO WRIGHT",
+		"quartermaster": "CINDER FACTOR",
+		"signal_broker": "SMOKE READER",
+		"hiring_post": "RIDGE CAPTAIN",
+		"assignment_board": "GUILD COURIER",
+		"departure_gate": "GRADE MARSHAL"
 	}
 }
 
@@ -473,8 +481,9 @@ class StationPortrait extends Control:
 
 	func _draw() -> void:
 		var flooded := location_id == "lantern_quay"
-		var border := Color.WHITE if high_contrast_enabled else (Color("#8ddbd0") if flooded else Color("#d8b572"))
-		var background := Color("#071013") if high_contrast_enabled else (Color("#173137") if flooded else Color("#2b251f"))
+		var cinder := location_id == "blackkiln"
+		var border := Color.WHITE if high_contrast_enabled else (Color("#8ddbd0") if flooded else (Color("#f09a62") if cinder else Color("#d8b572")))
+		var background := Color("#071013") if high_contrast_enabled else (Color("#173137") if flooded else (Color("#351b18") if cinder else Color("#2b251f")))
 		draw_rect(Rect2(Vector2.ZERO, size), background, true)
 		draw_rect(Rect2(Vector2.ONE, size - Vector2(2, 2)), border, false, 2.0)
 		if flooded:
@@ -554,9 +563,10 @@ class BazaarCanvas extends Control:
 
 	func _draw() -> void:
 		var flooded := location_id == "lantern_quay"
-		var sky := Color("#080d10") if high_contrast_enabled else (Color("#17363d") if flooded else Color("#1b292f"))
-		var haze := Color("#27363a") if high_contrast_enabled else (Color("#35575c") if flooded else Color("#485052"))
-		var ground := Color("#17120e") if high_contrast_enabled else (Color("#10282c") if flooded else Color("#342a21"))
+		var cinder := location_id == "blackkiln"
+		var sky := Color("#080d10") if high_contrast_enabled else (Color("#17363d") if flooded else (Color("#321715") if cinder else Color("#1b292f")))
+		var haze := Color("#27363a") if high_contrast_enabled else (Color("#35575c") if flooded else (Color("#6e3829") if cinder else Color("#485052")))
+		var ground := Color("#17120e") if high_contrast_enabled else (Color("#10282c") if flooded else (Color("#281713") if cinder else Color("#342a21")))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.72, size.y * 0.18), 72.0, Color(0.82, 0.66, 0.42, 0.12))
 		for index in range(7):
@@ -628,6 +638,13 @@ class BazaarCanvas extends Control:
 			for lantern_x in [size.x * 0.18, size.x * 0.82]:
 				draw_line(Vector2(lantern_x, size.y * 0.23), Vector2(lantern_x, size.y * 0.34), dock, 3.0)
 				draw_circle(Vector2(lantern_x, size.y * 0.36), 7.0, Color("#ffd47f"))
+		elif location_id == "blackkiln":
+			var iron := Color("#c66b45") if not high_contrast_enabled else Color("#ffd5ac")
+			for stack_x in [size.x * 0.16, size.x * 0.50, size.x * 0.84]:
+				draw_rect(Rect2(Vector2(stack_x - 13.0, size.y * 0.27), Vector2(26.0, size.y * 0.31)), iron.darkened(0.48), true)
+				draw_circle(Vector2(stack_x, size.y * 0.22), 18.0, Color(0.75, 0.30, 0.18, 0.16))
+			for rail_y in [size.y * 0.71, size.y * 0.84]:
+				draw_line(Vector2(0, rail_y), Vector2(size.x, rail_y - 36.0), iron.darkened(0.22), 5.0)
 		else:
 			var rail := Color("#8d744d") if not high_contrast_enabled else Color("#f2dda2")
 			for rail_y in [size.y * 0.69, size.y * 0.82]:
@@ -640,23 +657,24 @@ class BazaarCanvas extends Control:
 		_draw_route_sign(flooded)
 
 	func _draw_route_sign(flooded: bool) -> void:
-		var post_color := Color("#bfe5df") if flooded else Color("#d0ad6d")
+		var cinder := location_id == "blackkiln"
+		var post_color := Color("#bfe5df") if flooded else (Color("#ef9660") if cinder else Color("#d0ad6d"))
 		var sign_center := Vector2(size.x * 0.50, size.y * 0.13)
 		draw_line(sign_center, sign_center + Vector2(0, 64), post_color.darkened(0.25), 4.0)
 		var left_sign := Rect2(sign_center + Vector2(-132, 4), Vector2(126, 25))
 		var right_sign := Rect2(sign_center + Vector2(6, 33), Vector2(126, 25))
 		for sign_rect in [left_sign, right_sign]:
-			draw_rect(sign_rect, Color("#162328") if flooded else Color("#34291f"), true)
+			draw_rect(sign_rect, Color("#162328") if flooded else (Color("#351915") if cinder else Color("#34291f")), true)
 			draw_rect(sign_rect, post_color, false, 2.0)
-		var labels := ["PUMP GALLERY", "TRAMWORKS"] if flooded else ["RILL CROSSING", "SOOT ORCHARD"]
+		var labels := ["PUMP GALLERY", "TRAMWORKS"] if flooded else (["MONASTERY", "RED CUT"] if cinder else ["RILL CROSSING", "SOOT ORCHARD"])
 		draw_string(ThemeDB.fallback_font, left_sign.position + Vector2(5, 17), "← %s" % labels[0], HORIZONTAL_ALIGNMENT_CENTER, left_sign.size.x - 10, 9, post_color)
 		draw_string(ThemeDB.fallback_font, right_sign.position + Vector2(5, 17), "%s →" % labels[1], HORIZONTAL_ALIGNMENT_CENTER, right_sign.size.x - 10, 9, post_color)
 
 	func presentation_signature() -> String:
-		return "LANTERN QUAY · FLOOD DOCK · HANGING LAMPS" if location_id == "lantern_quay" else "ASHGATE DEPOT · BLACK RAILS · SIGNAL GANTRY"
+		return "LANTERN QUAY · FLOOD DOCK · HANGING LAMPS" if location_id == "lantern_quay" else ("BLACKKILN · FORGE STACKS · GRADE RAILS" if location_id == "blackkiln" else "ASHGATE DEPOT · BLACK RAILS · SIGNAL GANTRY")
 
 	func route_signature() -> String:
-		return "PUMP GALLERY · SUNKEN TRAMWORKS" if location_id == "lantern_quay" else "RILL CROSSING · SOOT ORCHARD"
+		return "PUMP GALLERY · SUNKEN TRAMWORKS" if location_id == "lantern_quay" else ("CHARCOAL MONASTERY · RED CUT" if location_id == "blackkiln" else "RILL CROSSING · SOOT ORCHARD")
 
 	func _draw_stall(rect: Rect2, station_id: String) -> void:
 		var selected := station_id == selected_station_id

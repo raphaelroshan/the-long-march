@@ -1,7 +1,7 @@
 # The Long March — Early Access Requirements
 
 **Status:** Planning contract for a skeletal but commercially credible Early Access build  
-**Current baseline:** High-quality moving-fortress foundation with two five-encounter chapters, settlement hubs, route planning, committed travel, road contacts, events, recovery, Debrief, persistent fortress state, deterministic simulation, accessibility, controller support, and private-alpha hardening.
+**Current baseline:** High-quality moving-fortress foundation with three five-encounter chapters, settlement hubs, route planning, committed travel, road contacts, events, recovery, Debrief, persistent fortress state, deterministic simulation, accessibility, controller support, and private-alpha hardening.
 
 ## Product decision
 
@@ -77,7 +77,7 @@ Every new chapter, region, settlement, module, specialist, threat, event, or rou
 
 **LM-EA-1:** complete in `0.3.0-alpha.350`. Ashgate and Flooded Veyru now have four command-only full-run plans, 64 exact save/load boundary checks, responsive Veyru coverage, and explicit regression protection for completed-contact history after a legal refit. See [`lm_ea_1_anchor_lock_report.md`](lm_ea_1_anchor_lock_report.md).
 
-**LM-EA-2:** add a third region with five to six encounters, a distinctive settlement, three routes, and one failure-forward development.
+**LM-EA-2:** complete in `0.3.0-alpha.351`. The Cinder Spine adds a Blackkiln forge bazaar, six complete route plans, mass/heat/generator pressure, three threat families, Old Lift recovery, an inferno-opened refuge route, 34 exact save/load checks, responsive UI coverage, and the persistent Communal Lift Plan. See [`lm_ea_2_cinder_spine_report.md`](lm_ea_2_cinder_spine_report.md).
 
 **LM-EA-3:** add a fourth region and one alternate fortress chassis/template.
 

@@ -7,7 +7,7 @@ extends RefCounted
 const SCHEMA_VERSION := 2
 const MIN_SUPPORTED_SCHEMA_VERSION := 1
 const DEFAULT_PROGRESS_PATH := "user://the_long_march_progress.json"
-const VALID_DEVELOPMENTS := ["veyru_public_archive_signal"]
+const VALID_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan"]
 const REGION_RESULT_RANKS := {
 	"ashgate_lowlands": {
 		"march_failed": 0,
@@ -18,6 +18,11 @@ const REGION_RESULT_RANKS := {
 		"veyru_lost": 0,
 		"archive_scarred": 1,
 		"archive_kept": 2
+	},
+	"cinder_spine": {
+		"cinder_lost": 0,
+		"spine_bypassed": 1,
+		"spine_powered": 2
 	}
 }
 
