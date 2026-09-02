@@ -13,7 +13,8 @@
     "content/cinder_spine.json",
     "content/white_salt_expanse.json",
     "content/early_access_systems.json",
-    "content/campaign_memory.json"
+    "content/campaign_memory.json",
+    "content/early_access_candidate.json"
     ],
     "chapters": [
       {

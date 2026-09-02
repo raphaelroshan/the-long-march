@@ -9,3 +9,7 @@ The principal trade-off is **campaign breadth versus final asset completeness**.
 The second trade-off is **operational complexity versus comprehension**. The fortress may accumulate dependencies and scars, but every new system must be visible through route promise, forecast, target, impact, recovery, and Debrief language. Audio, particles, and transition animation remain presentation layers and cannot alter route results, damage, heat, fuel, pressure, targeting, or saves.
 
 The active implementation order is anchor completion, a third region, a fourth region and alternate chassis, module/specialist/threat breadth, event/regional-memory/replay depth, and release hardening. Human testing may later calibrate the build but is not a prerequisite for implementation. Deterministic replay, complete-journey fixtures, responsive and input checks, screenshots, package validation, and save migration evidence are the active gates.
+
+That implementation sequence is complete in `0.3.0-alpha.355`. The result is an Early Access candidate, not an authorization to publish: the machine-readable release flag remains false until the owner reviews the exact packaged artifacts and human playtest evidence.
+
+Current release evidence is defined by the [candidate contract](early_access_candidate.md), [known limitations](early_access_known_limitations.md), and [test matrix](early_access_test_matrix.md).

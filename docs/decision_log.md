@@ -1318,3 +1318,11 @@ Ash Chapel Bypass and Lee Trench now contain choices that can establish a Refuge
 ## 2026-09-02 — Endings are composed from independent causes
 
 The chapter result remains the concrete terminal outcome, while Debrief also combines survival condition, the strongest regional tendency, and contract state. This produces a bounded vocabulary of endings with explicit cause lines instead of dozens of hand-written permutations or a single score that hides what the player valued.
+
+## 2026-09-02 — The third chassis belongs to the chapter that tests mass
+
+The Cinder Spine now launches on the Ridge Crawler: a 15-mass frame with two missing lower-rear cells and the ordinary two exterior mounts. Its extra carrying margin is therefore a spatial trade rather than a free capacity increase, and the chapter's mass-sensitive grades receive a distinct physical baseline.
+
+## 2026-09-02 — Candidate status is machine-readable but owner-controlled
+
+The Early Access candidate declares its implemented breadth, save window, platforms, verification gates, and human evidence gaps in one validated artifact. The CI manifest still sets `release_ready` to false. Passing automation permits review of an exact candidate; only the owner can decide that the build and its human evidence justify public promotion.

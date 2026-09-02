@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "candidate_not_public_release",
+  "version": "0.3.0-alpha.355",
+  "scope": {
+    "regions": 4,
+    "chassis_templates": 3,
+    "modules": 20,
+    "specialists": 6,
+    "threat_families": 15,
+    "authored_decisions_and_meetings": 20,
+    "regional_developments": 5,
+    "composable_ending_combinations": 60
+  },
+  "chassis_contracts": [
+    {"id": "road_keep", "mass_limit": 14, "exterior_mounts": 2, "cut_away_cells": []},
+    {"id": "salt_skimmer", "mass_limit": 13, "exterior_mounts": 3, "cut_away_cells": [[0, 3], [5, 3]]},
+    {"id": "ridge_crawler", "mass_limit": 15, "exterior_mounts": 2, "cut_away_cells": [[0, 3], [1, 3]]}
+  ],
+  "specialist_contracts": [
+    {"id": "iven_pell", "system": "crew_quarters", "question": "information versus pressure"},
+    {"id": "mara_flint", "system": "field_workshop", "question": "repair versus shelter"},
+    {"id": "sela_vonn", "system": "command_deck", "question": "schedule versus risk"},
+    {"id": "nera_quill", "system": "infirmary", "question": "crew safety versus chassis capacity"},
+    {"id": "orla_nine", "system": "engine", "question": "fuel versus heat"},
+    {"id": "tomas_reed", "system": "field_workshop", "question": "anti-sabotage rigging versus workshop dependency"}
+  ],
+  "compatibility": {
+    "save_versions": {"minimum": 4, "current": 15},
+    "candidate_platforms": ["windows", "macos"],
+    "offline_runtime": true,
+    "storefront_adapters": false
+  },
+  "required_gates": [
+    "content_validation",
+    "deterministic_full_runs",
+    "save_migration_and_tamper_rejection",
+    "controller_and_keyboard_navigation",
+    "large_text_high_contrast_reduced_motion",
+    "performance_budget",
+    "semantic_audio_with_visual_equivalents",
+    "platform_package_manifest_and_checksum",
+    "owner_release_approval"
+  ],
+  "human_evidence_required": [
+    "uncoached route and dependency comprehension",
+    "difficulty and pacing calibration",
+    "accessibility review with target players",
+    "temporary asset replacement direction"
+  ]
+}

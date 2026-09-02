@@ -41,7 +41,7 @@ Battles resolve through deterministic simulation. The player still chooses the c
 | **First Watch** | Guided engine, weapon, workshop, road, contact, damage, and repair lessons | Muster recovery siding | Certification into Ashgate |
 | **Ashgate Lowlands** | Blockade pressure, uncertain roads, a convoy promise, Iven Pell or Mara Flint | Morrowline Camp | Meridian Pass and the Siege Beast |
 | **Flooded Veyru** | Rising water, route closures, a named medicine carrier, Flood Surges | Evacuation Camp | The Dry Archive and Civic Guardian |
-| **The Cinder Spine** | Moving fireline, steep grades, a heat-bearing dynamo contract, Ember Drakes | Old Lift Station | Switchback Commune and the Elevator Warden |
+| **The Cinder Spine** | Moving fireline, steep grades, a heat-bearing dynamo contract, and the heavy cut-away Ridge Crawler | Old Lift Station | Switchback Commune and the Elevator Warden |
 | **White Salt Expanse** | Open sightlines, scarce water, a beacon escort, and an alternate cut-away chassis | The Windbreak | Salt Citadel and a rival fortress |
 
 The four campaign chapters are isolated five-contact test journeys. They share the same fortress simulation, accessibility settings, save system, recovery rules, and terminal debrief, but they do not pretend the broader campaign is complete.
@@ -53,6 +53,7 @@ The four campaign chapters are isolated five-contact test journeys. They share t
 - **Causal contact:** threats announce their route, target, expected impact, visible counters, and resulting dependency failures.
 - **Failure-forward recovery:** most non-final defeats retreat to a valid anchor with explicit time, money, pressure, and damage costs.
 - **Operational characters:** specialists change forecasting, repair, crew space, routes, or later obligations instead of acting as detached dialogue bonuses.
+- **Campaign memory:** five named developments unlock visible later-run choices; Debrief composes survival, regional direction, and promise state without reducing the run to one score.
 
 ## Controls and comfort
 
@@ -109,3 +110,5 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 
 - [Early Access requirements](docs/early_access_requirements.md) — skeletal-but-playable campaign breadth floor, quality gates, and agent-executable expansion order.
 - [Early Access decision record](docs/early_access_decision.md) — breadth-versus-final-art and complexity-versus-comprehension trade-offs.
+- [Early Access candidate](docs/early_access_candidate.md) — implemented scope, verification, save compatibility, rollback, and approval boundary.
+- [Known limitations](docs/early_access_known_limitations.md) — temporary content, unsupported features, and human validation still required.

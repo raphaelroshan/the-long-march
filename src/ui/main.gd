@@ -642,6 +642,7 @@ func _reset_state() -> void:
 		state.place_module("water_condenser", Vector2i(2, 3))
 		state.place_module("parts_crate", Vector2i(4, 2))
 	elif starting_region_id == "cinder_spine":
+		state.choose_chassis_template("ridge_crawler")
 		state.place_module("ash_runner_engine", Vector2i(0, 0), false, true)
 		state.place_module("coal_cell", Vector2i(0, 1))
 		state.place_module("generator_core", Vector2i(2, 0))
@@ -2323,6 +2324,15 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_on_mastery_experiment_selected("salt_dependency_watch")
 		"hire_sela", "hire_nera":
 			var specialist_id := "sela_vonn" if action_id == "hire_sela" else "nera_quill"
+			var result := state.assign_specialist(specialist_id)
+			_set_event(String(result.get("message", "Specialist assignment blocked: %s." % String(result.get("reason", "unknown")))))
+			if bool(result.get("ok", false)):
+				_journal_event("specialist_recruited", {"specialist": specialist_id})
+				_checkpoint("specialist_recruited")
+			_refresh_ui()
+			settlement_hub.focus_station.call_deferred("hiring_post")
+		"hire_orla", "hire_tomas":
+			var specialist_id := "orla_nine" if action_id == "hire_orla" else "tomas_reed"
 			var result := state.assign_specialist(specialist_id)
 			_set_event(String(result.get("message", "Specialist assignment blocked: %s." % String(result.get("reason", "unknown")))))
 			if bool(result.get("ok", false)):

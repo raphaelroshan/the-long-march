@@ -57,6 +57,8 @@ def main() -> int:
         errors.append("region must run from blackkiln to switchback_commune")
     if region.get("encounter_count") != 5:
         errors.append("region.encounter_count must be 5")
+    if data.get("chassis") != {"id": "ridge_crawler", "grid": [6, 4], "cut_away_cells": [[0, 3], [1, 3]], "mass_limit": 15, "exterior_mounts": 2}:
+        errors.append("Cinder must declare the heavy Ridge Crawler and its paired rear cut-away")
 
     nodes = data.get("nodes", [])
     node_ids = item_ids(nodes, "nodes", errors)
