@@ -112,6 +112,29 @@ func _run_bypass_plan() -> void:
 	_expect(state.mobility_tendency == 1 and state.industry_tendency == 1, "bypass result should retain its mobility and Guild commitments")
 
 
+func _run_failure_forward_plan() -> void:
+	var state := LongMarchState.new(3305)
+	_install_loadout(state)
+	state.start_cinder_spine()
+	state.choose_cinder_forge_contract(false)
+	state = _contact(state, "red_cut", "protect_crew", "vent_heat")
+	state = _contact(state, "old_lift_station", "protect_crew", "vent_heat")
+	_expect(bool(state.settlement_refuel().get("ok", false)), "failure-forward plan should reserve fuel before the Inferno route change")
+	_fit_upper_grade(state)
+	state.campaign_pressure = 5
+	state.campaign_retreats = 1
+	state = _checkpoint(state, "failure-forward Inferno")
+	_expect(state.campaign_node_closed("slag_tunnel") and "ash_chapel_bypass" in state.campaign_available_nodes(), "Inferno should close the tunnel while opening Ash Chapel as a playable replacement")
+	state = _contact(state, "ash_chapel_bypass", "protect_crew", "shift_power")
+	state = _event(state, "light_refuge_markers", "Ash Chapel refuge")
+	state = _contact(state, "lift_engine_house", "protect_cargo", "shift_power")
+	state = _event(state, "cut_switchback", "failure-forward lift bypass")
+	state = _event(state, "keep_guild_pattern", "failure-forward guild design")
+	state = _contact(state, "switchback_commune", "protect_crew", "shift_power")
+	_expect(state.phase == "results" and state.run_complete and state.campaign_encounters_completed == 5, "the Inferno-opened refuge route should remain a complete five-contact journey")
+	_expect(String(state.campaign_decisions.get("chapel_refuge", "")) == "light_refuge_markers" and state.shelter_tendency > 0, "the failure-forward route should carry its refuge consequence into the result")
+
+
 func _test_failure_forward_route() -> void:
 	var state := LongMarchState.new(3305)
 	_install_loadout(state)
@@ -126,13 +149,20 @@ func _test_failure_forward_route() -> void:
 	state.campaign_retreats = 1
 	_expect(state.campaign_node_closed("slag_tunnel"), "inferno should close Slag Tunnel")
 	_expect(state.campaign_available_nodes().has("ash_chapel_bypass") and state.campaign_available_nodes().has("long_slope"), "inferno should open a guaranteed bypass without deleting every road")
+	for pressure in range(0, 8):
+		state.campaign_pressure = pressure
+		var available: Array[String] = state.campaign_available_nodes()
+		_expect(not available.is_empty(), "Old Lift should retain at least one legal road at pressure %d" % pressure)
+		if pressure >= 5:
+			_expect("ash_chapel_bypass" in available, "Inferno should guarantee Ash Chapel at pressure %d" % pressure)
 
 
 func _init() -> void:
 	_run_powered_plan()
 	_run_bypass_plan()
+	_run_failure_forward_plan()
 	_test_failure_forward_route()
-	_expect(checkpoints >= 30, "Cinder acceptance should cross at least thirty exact checkpoints")
+	_expect(checkpoints >= 45, "Cinder acceptance should cross at least forty-five exact checkpoints across three complete route plans")
 	if failures.is_empty():
 		print("PASS: The Long March Cinder Spine chapter (%d checkpoints)" % checkpoints)
 		quit(0)

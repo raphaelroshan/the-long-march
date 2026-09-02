@@ -148,6 +148,7 @@ var journey_transition_active: bool = false
 var journey_transition_view: Dictionary = {}
 var journey_planner: JourneyPlannerView
 var journey_planner_active: bool = false
+var recovery_refit_active: bool = false
 var road_contact: RoadContactView
 var contact_inspection_active: bool = false
 var journey_arrival: JourneyArrivalView
@@ -1272,6 +1273,7 @@ func _build_ui() -> void:
 	recovery_panel.repair_requested.connect(_on_recovery_repair_requested)
 	recovery_panel.refuel_requested.connect(_on_recovery_refuel_requested)
 	recovery_panel.hull_requested.connect(_on_recovery_hull_requested)
+	recovery_panel.refit_requested.connect(_on_recovery_refit_requested)
 	recovery_panel.routes_requested.connect(_on_settlement_routes_pressed)
 	margin.add_child(recovery_panel)
 	journey_transition = JourneyTransitionScene.instantiate()
@@ -2366,6 +2368,13 @@ func _on_mastery_experiment_selected(experiment_id: String) -> void:
 	_refresh_ui()
 
 func _on_return_to_settlement_hub() -> void:
+	if recovery_refit_active:
+		recovery_refit_active = false
+		settlement_detail_mode = "hub"
+		_set_event("Returned to field recovery. No service action was spent in the chassis workbench.")
+		_refresh_ui()
+		recovery_panel.focus_default.call_deferred()
+		return
 	if not _settlement_hub_available():
 		return
 	selected_campaign_node_id = ""
@@ -2996,7 +3005,9 @@ func _refresh_settlement_hub(snapshot: Dictionary) -> void:
 	var show_hub := available and settlement_hub_active
 	settlement_hub.visible = show_hub
 	main_columns.visible = not show_hub
-	settlement_hub_return_button.visible = available and not show_hub
+	settlement_hub_return_button.visible = (available and not show_hub) or recovery_refit_active
+	if recovery_refit_active:
+		settlement_hub_return_button.text = "RETURN TO %s RECOVERY" % _recovery_location_name().to_upper()
 	if available:
 		var location_name := String(LongMarchState.JOURNEY_NODES.get(state.current_location, {}).get("name", "settlement"))
 		settlement_hub_return_button.text = "RETURN TO %s BAZAAR" % location_name.to_upper()
@@ -3120,9 +3131,11 @@ func _refresh_debrief() -> void:
 func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 	if recovery_panel == null:
 		return
-	var show_recovery := state.phase == "settlement" and state.campaign_active and not tutorial_mode and not journey_arrival_active and state.campaign_event_pending.is_empty() and not journey_planner_active
+	var show_recovery := state.phase == "settlement" and state.campaign_active and not tutorial_mode and not journey_arrival_active and state.campaign_event_pending.is_empty() and not journey_planner_active and not recovery_refit_active
 	recovery_panel.visible = show_recovery
 	if not show_recovery:
+		if recovery_refit_active and state.phase == "settlement":
+			main_columns.visible = true
 		return
 	main_columns.visible = false
 	settlement_hub.visible = false
@@ -3144,7 +3157,7 @@ func _refresh_recovery_panel(snapshot: Dictionary) -> void:
 		"hull_text": settlement_hull_button.text,
 		"hull_tooltip": settlement_hull_button.tooltip_text,
 		"hull_disabled": settlement_hull_button.disabled,
-		"routes_text": settlement_routes_button.text,
+		"routes_text": "NEXT ROADS\n%d ACTION%s REMAIN" % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "S"] if state.settlement_actions_remaining > 0 else "NEXT ROADS\nRECOVERY COMPLETE",
 		"repair_priority_view": repair_priority
 	}, last_recovery_receipt, location_name))
 
@@ -3162,6 +3175,16 @@ func _on_recovery_hull_requested() -> void:
 	_on_settlement_hull_pressed()
 	if recovery_panel != null and recovery_panel.visible:
 		recovery_panel.hull_button.call_deferred("grab_focus")
+
+func _on_recovery_refit_requested() -> void:
+	if state.phase != "settlement" or not state.can_refit():
+		return
+	recovery_refit_active = true
+	settlement_detail_mode = "workshop"
+	selected_module_cell = Vector2i(-1, -1)
+	_set_event("The field workbench is open. Refit freely; service actions are unchanged until a repair, refuel, or hull service is ordered.")
+	_refresh_ui()
+	_focus_control.call_deferred(focus_chassis_button)
 
 func _debrief_view() -> Dictionary:
 	return DebriefPresenter.build(state, _fortress_presentation_snapshot(), {
@@ -3187,6 +3210,14 @@ func _debrief_causal_chain() -> String:
 			if state.veyru_contract_status != "completed":
 				return "Medicine carrier exposed → delivery ended %s → the archive was secured at a cost." % state.veyru_contract_status.replace("_", " ")
 			return "Final-road damage → hull fell to %d/10 → the archive was secured at a cost." % state.hull_condition
+		"spine_powered":
+			return "Generator Core remained operational → the old lift was powered → Blackkiln's dynamo reached Switchback Commune."
+		"spine_bypassed":
+			return "The industrial lift was refused or unavailable → a human switchback was cut → the Commune remained reachable."
+		"expanse_allied":
+			return "The signal chain remained operational → the Compact followed the public beacons → Salt Citadel opened to the caravan."
+		"expanse_crossed":
+			return "The beacon obligation was declined or broken → the fortress crossed alone → the Compact alliance remained unfinished."
 		"scarred_march":
 			var remaining_contacts := _undefeated_final_contacts()
 			if not remaining_contacts.is_empty():
@@ -3194,7 +3225,7 @@ func _debrief_causal_chain() -> String:
 			if state.settlement_actions_remaining > 0:
 				return "%d unused Morrowline service action%s → hull ended at %d/10 → the decisive threshold was missed." % [state.settlement_actions_remaining, "" if state.settlement_actions_remaining == 1 else "s", state.hull_condition]
 			return "Accumulated damage → hull ended at %d/10 → the decisive threshold was missed." % state.hull_condition
-		"march_failed", "veyru_lost":
+		"march_failed", "veyru_lost", "cinder_lost", "salt_lost":
 			if state.hull_condition <= 0:
 				return "Uncontained impacts → hull reached zero → the march stopped."
 			var diagnosis := _movement_failure_diagnosis()
@@ -3704,6 +3735,7 @@ func _on_settlement_routes_pressed() -> void:
 	if state.phase != "settlement" or not state.campaign_active:
 		return
 	journey_planner_active = true
+	recovery_refit_active = false
 	_refresh_ui()
 	for raw_node_id in state.campaign_available_nodes():
 		var node_id := String(raw_node_id)

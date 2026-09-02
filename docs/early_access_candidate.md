@@ -1,9 +1,9 @@
 # The Long March — Early Access candidate
 
-**Candidate version:** `0.3.0-alpha.357`
+**Candidate version:** `0.3.0-alpha.358`
 **Release state:** mechanically complete candidate; owner approval and human playtesting are still required before public release.
 
-This candidate contains four standalone five-contact journeys: Ashgate Lowlands, Flooded Veyru, the Cinder Spine, and the White Salt Expanse. Together they exercise three chassis geometries, twenty modules, six specialists, fifteen threat families, twenty authored decisions or meetings, five persistent regional developments, and composable Debrief outcomes.
+This candidate contains four standalone five-contact journeys: Ashgate Lowlands, Flooded Veyru, the Cinder Spine, and the White Salt Expanse. Together they exercise three chassis geometries, twenty modules, six specialists, fifteen threat families, twenty-one authored decisions or meetings, five persistent regional developments, and composable Debrief outcomes.
 
 ## Build and verification
 

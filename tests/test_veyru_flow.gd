@@ -186,7 +186,7 @@ func _run() -> void:
 	await _finish_battle()
 	_expect(game.state.phase == "settlement" and game.settlement_title.text.contains("EVACUATION CAMP SERVICES") and game.settlement_title.text.contains("2 ACTIONS LEFT"), "the protected medicine carrier should grant two visible Evacuation Camp actions")
 	var camp_focus := game.get_viewport().gui_get_focus_owner()
-	_expect(game.recovery_panel.visible and camp_focus in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button, game.recovery_panel.routes_button] and camp_focus.is_visible_in_tree(), "arrival at Evacuation Camp should focus a visible recovery or road-review action")
+	_expect(game.recovery_panel.visible and camp_focus in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button, game.recovery_panel.refit_button, game.recovery_panel.routes_button] and camp_focus.is_visible_in_tree(), "arrival at Evacuation Camp should focus a visible recovery, refit, or road-review action")
 	_expect(game.recovery_panel.local_stake_label.text.contains("medicine carrier") and game.recovery_panel.route_outlook_label.text.contains("Archive Causeway") and game.recovery_panel.route_outlook_label.text.contains("Drowned Registry") and game.recovery_panel.route_outlook_label.text.contains("Pilgrim Gantry"), "Evacuation Camp recovery should carry the medicine stake into three distinct outbound road meanings")
 	_expect_visible_inside(game.recovery_panel, [game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, camp_focus], "Evacuation Camp recovery")
 	game.state.fuel = 1

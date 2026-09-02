@@ -7,6 +7,7 @@ signal pause_requested
 signal repair_requested
 signal refuel_requested
 signal hull_requested
+signal refit_requested
 signal routes_requested
 
 var pause_button: Button
@@ -24,6 +25,7 @@ var route_outlook_label: Label
 var repair_button: Button
 var refuel_button: Button
 var hull_button: Button
+var refit_button: Button
 var routes_button: Button
 var high_contrast_enabled: bool = false
 
@@ -185,15 +187,27 @@ func _build_ui() -> void:
 	repair_button = _service_button(services, repair_requested)
 	refuel_button = _service_button(services, refuel_requested)
 	hull_button = _service_button(services, hull_requested)
+	refit_button = Button.new()
+	refit_button.custom_minimum_size = Vector2(0, 44)
+	refit_button.text = "REFIT CHASSIS\nNO SERVICE ACTION"
+	refit_button.tooltip_text = "Open the chassis workbench. Moving stored modules does not spend a service action."
+	refit_button.add_theme_font_size_override("font_size", 12)
+	refit_button.pressed.connect(func() -> void: refit_requested.emit())
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	services.add_child(spacer)
+	var navigation_row := HBoxContainer.new()
+	navigation_row.add_theme_constant_override("separation", 6)
+	services.add_child(navigation_row)
+	refit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	navigation_row.add_child(refit_button)
 	routes_button = Button.new()
-	routes_button.custom_minimum_size = Vector2(0, 48)
+	routes_button.custom_minimum_size = Vector2(0, 44)
+	routes_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	routes_button.set_meta("long_march_audio_cue", "route_review")
 	routes_button.add_theme_font_size_override("font_size", 12)
 	routes_button.pressed.connect(func() -> void: routes_requested.emit())
-	services.add_child(routes_button)
+	navigation_row.add_child(routes_button)
 	_configure_focus()
 
 func _service_button(parent: VBoxContainer, callback: Signal) -> Button:
@@ -235,7 +249,7 @@ func configure(view: Dictionary) -> void:
 	_configure_focus()
 
 func focus_default() -> void:
-	for button in [repair_button, refuel_button, hull_button, routes_button]:
+	for button in [repair_button, refuel_button, hull_button, refit_button, routes_button]:
 		if not button.disabled:
 			button.grab_focus()
 			return
@@ -251,7 +265,7 @@ func set_controller_cancel_label(cancel_label: String) -> void:
 
 func _configure_focus() -> void:
 	var controls: Array[Control] = []
-	for button in [repair_button, refuel_button, hull_button, routes_button]:
+	for button in [repair_button, refuel_button, hull_button, refit_button, routes_button]:
 		if not button.disabled:
 			controls.append(button)
 	if controls.is_empty():
@@ -269,20 +283,24 @@ class RecoveryCanvas extends Control:
 	var high_contrast_enabled: bool = false
 
 	func _draw() -> void:
-		var flooded := String(current_view.get("region_id", "ashgate_lowlands")) == "flooded_veyru"
+		var region_id := String(current_view.get("region_id", "ashgate_lowlands"))
+		var flooded := region_id == "flooded_veyru"
+		var cinder := region_id == "cinder_spine"
 		var location_id := String(current_view.get("location_id", ""))
-		var sky := Color("#071013") if high_contrast_enabled else (Color("#17373e") if flooded else Color("#333a3b"))
-		var ground := Color("#10282c") if flooded else Color("#30271f")
+		var sky := Color("#071013") if high_contrast_enabled else (Color("#41251f") if cinder else (Color("#17373e") if flooded else Color("#333a3b")))
+		var ground := Color("#392019") if cinder else (Color("#10282c") if flooded else Color("#30271f"))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.78, size.y * 0.17), 52.0, Color(0.95, 0.75, 0.43, 0.16))
 		for ridge in range(4):
 			var y := size.y * (0.30 + float(ridge) * 0.05)
-			draw_line(Vector2(0, y), Vector2(size.x, y - 22.0 + float(ridge) * 7.0), Color("#39565b") if flooded else Color("#665c4e"), 24.0)
+			draw_line(Vector2(0, y), Vector2(size.x, y - 22.0 + float(ridge) * 7.0), Color("#78442f") if cinder else (Color("#39565b") if flooded else Color("#665c4e")), 24.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.66), Vector2(size.x, size.y * 0.34)), ground, true)
 		if location_id == "morrowline_camp":
 			_draw_morrowline_shelter()
 		elif location_id == "veyru_evacuation_camp":
 			_draw_veyru_evacuation_platform()
+		elif location_id == "old_lift_station":
+			_draw_old_lift_station()
 		_draw_route_sign(location_id)
 		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
 		view["mode"] = "rest"
@@ -343,15 +361,34 @@ class RecoveryCanvas extends Control:
 			draw_line(case_rect.position + Vector2(case_rect.size.x * 0.5, 5.0), Vector2(case_rect.position.x + case_rect.size.x * 0.5, case_rect.end.y - 5.0), lamp, 2.0)
 		draw_circle(Vector2(size.x * 0.91, size.y * 0.40), 7.0, lamp)
 
+	func _draw_old_lift_station() -> void:
+		var iron := Color.WHITE if high_contrast_enabled else Color("#9b7350")
+		var ember := Color("#ffd39a") if high_contrast_enabled else Color("#e4773f")
+		var gantry_y := size.y * 0.43
+		for tower_x in [size.x * 0.08, size.x * 0.90]:
+			draw_line(Vector2(tower_x, size.y * 0.20), Vector2(tower_x, size.y * 0.67), iron, 8.0)
+			draw_line(Vector2(tower_x - 28, gantry_y), Vector2(tower_x + 28, gantry_y), iron, 6.0)
+		draw_line(Vector2(size.x * 0.08, size.y * 0.24), Vector2(size.x * 0.90, size.y * 0.24), iron, 7.0)
+		for link_index in range(7):
+			var link := Vector2(size.x * 0.12, size.y * (0.28 + float(link_index) * 0.045))
+			draw_arc(link, 8.0, 0.0, TAU, 16, iron, 3.0)
+		var trough := Rect2(Vector2(size.x * 0.78, size.y * 0.55), Vector2(size.x * 0.16, size.y * 0.07))
+		draw_rect(trough, Color("#24383a"), true)
+		draw_rect(trough, iron, false, 3.0)
+		draw_line(trough.position + Vector2(8, 12), trough.end - Vector2(8, 12), Color("#78b7b2"), 3.0)
+		for spark_index in range(4):
+			draw_circle(Vector2(size.x * (0.83 + float(spark_index) * 0.022), size.y * (0.43 - float(spark_index % 2) * 0.035)), 4.0, ember)
+
 	func _draw_route_sign(location_id: String) -> void:
 		var flooded := location_id == "veyru_evacuation_camp"
-		var color := Color("#bfe5df") if flooded else Color("#d9b87c")
+		var cinder := location_id == "old_lift_station"
+		var color := Color("#efb176") if cinder else (Color("#bfe5df") if flooded else Color("#d9b87c"))
 		var center := Vector2(size.x * 0.50, size.y * 0.10)
 		draw_line(center, center + Vector2(0, 56), color.darkened(0.25), 4.0)
 		var sign_rect := Rect2(center + Vector2(-150, 5), Vector2(300, 27))
 		draw_rect(sign_rect, Color("#14262a") if flooded else Color("#33281f"), true)
 		draw_rect(sign_rect, color, false, 2.0)
-		var sign_text := "CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL · QUARRY"
+		var sign_text := "SLOPE · SLAG TUNNEL · ASH CHAPEL" if cinder else ("CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL · QUARRY")
 		draw_string(ThemeDB.fallback_font, sign_rect.position + Vector2(6, 18), sign_text, HORIZONTAL_ALIGNMENT_CENTER, sign_rect.size.x - 12, 9, color)
 
 	func presentation_signature() -> String:
@@ -360,7 +397,10 @@ class RecoveryCanvas extends Control:
 				return "MORROWLINE · CANVAS REPAIR BAYS · PARTS WAGONS · DEPARTURE LAMP"
 			"veyru_evacuation_camp":
 				return "EVACUATION CAMP · RAISED PLATFORM · WATER PUMP · SEALED CASES"
+			"old_lift_station":
+				return "OLD LIFT STATION · CHAIN HOISTS · COOLING TROUGHS · FORGE CREWS"
 		return "FIELD RECOVERY · TEMPORARY ROAD STOP"
 
 	func route_signature() -> String:
-		return "CAUSEWAY · REGISTRY · GANTRY" if String(current_view.get("location_id", "")) == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL · QUARRY"
+		var location_id := String(current_view.get("location_id", ""))
+		return "SLOPE · SLAG TUNNEL · ASH CHAPEL" if location_id == "old_lift_station" else ("CAUSEWAY · REGISTRY · GANTRY" if location_id == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL · QUARRY")
