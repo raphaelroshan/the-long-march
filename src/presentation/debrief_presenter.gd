@@ -58,6 +58,9 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		carried.append("sealed medicines in %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "carrier")))
 	if not carried.is_empty():
 		promises.append("Carried · %s" % " · ".join(carried))
+	var specialist_consequence := state.specialist_campaign_summary()
+	if not specialist_consequence.is_empty():
+		promises.append("Specialist consequence · " + specialist_consequence)
 	promises.append("Road state · %s %d  |  Trust · %d" % [state.campaign_pressure_band().replace("_", " ").capitalize(), state.campaign_pressure, state.settlement_trust])
 	var decision_record := String(context.get("decision_record", ""))
 	if decision_record not in ["", "no route events on this path", "no regional decisions recorded"]:

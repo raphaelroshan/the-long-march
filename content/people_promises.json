@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "specialists": [
+    {
+      "id": "iven_pell",
+      "capability": "Reveals exact immediate contacts and improves informed route safety.",
+      "limitation": "Requires Crew Quarters, 12 Ashmarks of supplies, and the fortress's only specialist berth.",
+      "conflict_or_promise": "At Morrowline, retain exact forecasts or leave Iven with the relay crews so Mara can take the berth.",
+      "visible_consequence": "Route dossiers name exact contacts while assigned; the Morrowline choice and Debrief record whether forecast certainty was kept."
+    },
+    {
+      "id": "mara_flint",
+      "capability": "A Ready Field Workshop restores one additional durability for the same service price.",
+      "limitation": "Her repair bonus stops when the crew-connected Field Workshop is offline and she occupies the only berth.",
+      "conflict_or_promise": "Commit one forge core to a damaged system or the Refugee Bunk, then test that promise on the fourth road.",
+      "visible_consequence": "The recovery receipt names her bonus and What Held records success or failure in Debrief."
+    },
+    {
+      "id": "sela_vonn",
+      "capability": "Run Hot saves one day and enables a feint against scouts and Signal Hunters.",
+      "limitation": "Requires a Ready crew-connected Command Deck; Run Hot adds four route-risk points.",
+      "conflict_or_promise": "Choose schedule over safety and keep the staffed command chain intact.",
+      "visible_consequence": "The route receipt shows one fewer day and four more risk points; applicable contacts name Sela's feint."
+    },
+    {
+      "id": "nera_quill",
+      "capability": "Reduces damage to crew and refuge compartments by one.",
+      "limitation": "Requires a Ready crew-connected Field Infirmary and contributes no attack.",
+      "conflict_or_promise": "Reserve scarce chassis capacity for people instead of command acceleration or firepower.",
+      "visible_consequence": "Contact receipts attribute Nera's triage when a crew or refuge target takes reduced damage."
+    },
+    {
+      "id": "orla_nine",
+      "capability": "Long roads cost one less fuel.",
+      "limitation": "Requires a Ready engine and adds one heat to the route forecast.",
+      "conflict_or_promise": "Trade thermal margin for a longer fuel line across the Cinder Spine.",
+      "visible_consequence": "Route dossiers show both the one-fuel saving and one-heat cost before commitment."
+    },
+    {
+      "id": "tomas_reed",
+      "capability": "Reduces Lift Saboteur damage by one.",
+      "limitation": "Requires a Ready crew-connected Field Workshop and affects no other threat family.",
+      "conflict_or_promise": "Keep workshop rigging available for sabotage instead of using the berth for route, medical, or fuel expertise.",
+      "visible_consequence": "The impact profile attributes Tomas's rigging when it reduces a Lift Saboteur hit."
+    }
+  ],
+  "obligations": [
+    {"status": "completed", "memory": "morrowline_supply_line", "later_change": "Evacuation Camp gains one service action.", "ending_network": "industrial_corridor"},
+    {"status": "declined", "memory": "free_carters_chart", "later_change": "Sunken Tramworks gains one less pressure.", "ending_network": "fast_corridor"},
+    {"status": "failed", "memory": "wreckers_warning", "later_change": "Pump Gallery risk falls by six points.", "ending_network": "shelter_chain"}
+  ],
+  "active_event_checkpoints": ["mara_berth_choice", "mara_workbench_choice", "mara_followup"],
+  "replay_comparisons": [
+    {"id": "iven_or_mara", "first": "exact route forecasts", "second": "stronger workshop recovery and a forge-core callback"},
+    {"id": "guard_outcome", "first": "completed supply-line service", "second": "declined chart or failed-guard warning"}
+  ]
+}

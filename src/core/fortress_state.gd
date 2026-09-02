@@ -408,6 +408,22 @@ func choose_chassis_template(template_id: String) -> Dictionary:
 func specialist_name() -> String:
 	return String(SPECIALIST_NAMES.get(specialist_id, "None" if specialist_id.is_empty() else specialist_id.replace("_", " ").capitalize()))
 
+func specialist_campaign_summary() -> String:
+	match specialist_id:
+		"iven_pell":
+			return "Iven Pell · Exact immediate forecasts retained; 12 Ashmarks and the sole berth committed"
+		"mara_flint":
+			return "Mara Flint · Workshop repairs +1 while the Field Workshop is Ready; forge-core promise %s" % ("active" if not String(campaign_decisions.get("mara_workbench_choice", "")).is_empty() else "unresolved") if operational("field_workshop") else "Mara Flint · Repair bonus inactive because the Field Workshop is offline"
+		"sela_vonn":
+			return "Sela Vonn · Run Hot saves 1 day and adds 4 risk points while the Command Deck is Ready" if operational("command_deck") else "Sela Vonn · Route command inactive because the Command Deck is offline"
+		"nera_quill":
+			return "Dr. Nera Quill · Crew and refuge damage -1 while the Field Infirmary is Ready" if operational("infirmary") else "Dr. Nera Quill · Triage inactive because the Field Infirmary is offline"
+		"orla_nine":
+			return "Orla Nine · Long roads cost 1 less fuel and add 1 heat while the engine is Ready" if _has_engine() else "Orla Nine · Fuel-line tuning inactive because the engine is offline"
+		"tomas_reed":
+			return "Tomas Reed · Lift Saboteur damage -1 while the Field Workshop is Ready" if operational("field_workshop") else "Tomas Reed · Anti-sabotage rigging inactive because the Field Workshop is offline"
+	return ""
+
 func assign_specialist(candidate_id: String) -> Dictionary:
 	if candidate_id not in ["sela_vonn", "nera_quill", "orla_nine", "tomas_reed"]:
 		return {"ok": false, "reason": "specialist is not available through this assignment"}
@@ -1532,7 +1548,7 @@ func _has_recoverable_refuge_bunk() -> bool:
 	return module_count("refugee_bunk") + stored_module_count("refugee_bunk") > 0
 
 func mara_repair_bonus() -> int:
-	return 1 if specialist_id == "mara_flint" else 0
+	return 1 if specialist_id == "mara_flint" and operational("field_workshop") else 0
 
 func mara_refuge_bracing_active() -> bool:
 	return String(campaign_decisions.get("mara_workbench_choice", "")) == "brace_refuge"
