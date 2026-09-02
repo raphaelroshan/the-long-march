@@ -6,6 +6,28 @@
     "pressure": {"id": "ash_front", "whiteout_closes": ["empty_mile"], "whiteout_opens": ["lee_trench"], "guaranteed_recovery_node": "lee_trench"}
   },
   "chassis": {"id": "salt_skimmer", "grid": [6, 4], "cut_away_cells": [[0, 3], [5, 3]], "mass_limit": 13, "exterior_mounts": 3},
+  "chassis_comparison": {
+    "road_keep": {"mass_limit": 14, "exterior_mounts": 2, "cut_away_cells": []},
+    "salt_skimmer": {"mass_limit": 13, "exterior_mounts": 3, "cut_away_cells": [[0, 3], [5, 3]]}
+  },
+  "prepared_loadouts": [
+    {
+      "id": "beacon_skimmer",
+      "doctrine": "protect_cargo",
+      "route_priority": "beacon_road",
+      "mass": 13,
+      "modules": ["ash_runner_engine", "coal_cell", "generator_core", "signal_coil", "ammunition_lift", "shell_cannon", "wall_lamp"],
+      "tradeoff": "Full-ammunition cannon and ready forecast line; no lower-hull armor."
+    },
+    {
+      "id": "armored_skimmer",
+      "doctrine": "protect_cargo",
+      "route_priority": "empty_mile",
+      "mass": 13,
+      "modules": ["ash_runner_engine", "coal_cell", "generator_core", "signal_coil", "shell_cannon", "side_armor_skirt", "wall_lamp"],
+      "tradeoff": "Lower-hull protection replaces the Ammunition Lift, so the cannon uses emergency rounds."
+    }
+  ],
   "contract": {"id": "compact_beacon_escort", "required_tag": "forecast", "reward": {"ashmarks": 26, "trust": 2}, "failure_ends_run": false},
   "nodes": [
     {"id": "saltglass_haven", "next": ["buried_observatory", "quiet_caravan"]},
@@ -15,7 +37,7 @@
     {"id": "salt_mine", "encounter": ["salt_storm", "signal_hunters"], "next": ["rival_approach"]},
     {"id": "empty_mile", "encounter": ["bridgebreakers"], "next": ["rival_approach"]},
     {"id": "beacon_road", "encounter": ["salt_storm"], "next": ["rival_approach"]},
-    {"id": "lee_trench", "encounter": ["rival_scouts"], "next": ["rival_approach"]},
+    {"id": "lee_trench", "encounter": ["rival_scouts"], "decision": "trench_cistern", "next": ["rival_approach"]},
     {"id": "rival_approach", "encounter": ["rival_scouts", "salt_storm"], "decision": "rival_terms", "next": ["salt_citadel"]},
     {"id": "salt_citadel", "encounter": ["rival_fortress"], "next": []}
   ],
@@ -28,10 +50,12 @@
   ],
   "decisions": [
     {"id": "observatory_signal", "choices": ["broadcast_beacons", "sell_coordinates"]},
-    {"id": "rival_terms", "choices": ["escort_compact", "race_rival"]}
+    {"id": "rival_terms", "choices": ["escort_compact", "race_rival"]},
+    {"id": "trench_cistern", "choices": ["share_trench_water", "seal_trench_reserve"]}
   ],
   "regional_developments": [
-    {"id": "salt_public_beacons", "trigger": {"decision": "broadcast_beacons", "results": ["expanse_allied", "expanse_crossed"]}, "future_effect": {"node": "salt_mine", "visibility": "known", "risk_discount": 0}}
+    {"id": "salt_public_beacons", "trigger": {"decision": "broadcast_beacons", "results": ["expanse_allied", "expanse_crossed"]}, "future_effect": {"node": "salt_mine", "visibility": "known", "risk_discount": 0}},
+    {"id": "salt_shared_cisterns", "trigger": {"decision": "share_trench_water", "results": ["expanse_allied", "expanse_crossed"]}, "future_effect": {"event": "observatory_signal", "choice": "call_cistern_network"}}
   ],
   "results": [
     {"id": "expanse_allied"}, {"id": "expanse_crossed"}, {"id": "salt_lost"}
