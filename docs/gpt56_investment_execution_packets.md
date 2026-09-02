@@ -3,6 +3,8 @@
 **Baseline:** `0.3.0-alpha.362` on current `main`.  
 **Latest audit:** verification is passing through the current journey and breadth checks, with no failure markers in the completed log. The fresh title, First Watch, and dependency captures show the strongest creative identity of the three. The investment risk is proving that this identity survives the full journey and meaningful regional choices.
 
+**Execution status:** LM-GPT56-1 is complete in `0.3.0-alpha.363`; see [`lm_gpt56_1_full_journey_report.md`](lm_gpt56_1_full_journey_report.md). LM-GPT56-2 is next.
+
 ## Packet LM-GPT56-1 — Full creative journey
 
 Build and verify one clean-save route from First Watch through live refit, route planning, exact cost commitment, travel, road contact or event, visible dependency consequence, recovery, settlement arrival, next route decision, and terminal Debrief. The path must use normal player actions and preserve fortress state, save/resume, controller focus, scaled layouts, and deterministic replay. No debug action may be required.

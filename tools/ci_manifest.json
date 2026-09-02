@@ -1,7 +1,7 @@
 {
   "slug": "the-long-march",
   "display_name": "The Long March",
-  "prototype_version": "0.3.0-alpha.362",
+  "prototype_version": "0.3.0-alpha.363",
 	"save_compatibility": {"minimum": 4, "current": 16},
 	"early_access_candidate": true,
   "playtest_ready": true,

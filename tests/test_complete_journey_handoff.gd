@@ -22,6 +22,7 @@ var declined_convoy_profile := false
 var mastery_profile := false
 var iven_profile := false
 var investment_profile := false
+var gpt56_journey_profile := false
 var pre_contact_resume_tested := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
@@ -332,6 +333,7 @@ func _run_ashgate_journey() -> void:
 		game._on_grid_cell_pressed(Vector2i(5, 2))
 		await _settle()
 		_expect(game.state.operational("ash_runner_engine") and game.state.operational("field_workshop") and game.state.operational("wall_lamp") and game.state.total_mass() <= game.state.BASE_MASS_LIMIT, "the investment refit should preserve movement and repair while adding signal capacity within the chassis limit")
+		await _capture("05a_live_refit")
 		game.settlement_hub_return_button.pressed.emit()
 		await _settle()
 		_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "returning from the investment refit should restore the required Ashgate assignment")
@@ -471,9 +473,17 @@ func _run_ashgate_journey() -> void:
 	_expect(game.recovery_panel.route_outlook_label.text.contains("Lower Ash") and game.recovery_panel.route_outlook_label.text.contains("Dry Cistern") and game.recovery_panel.route_outlook_label.text.contains("Signal Causeway") and game.recovery_panel.route_outlook_label.text.contains("Cinder Quarry"), "Morrowline recovery should carry the convoy stake into four distinct outbound road meanings")
 	_expect_three_column_contract(game.recovery_panel, game.recovery_panel.value_labels["hull"], game.recovery_panel.recovery_canvas, game.recovery_panel.routes_button, "Morrowline recovery")
 	await _capture("11_morrowline_recovery")
-	if not game.recovery_panel.refuel_button.disabled:
-		game.recovery_panel.refuel_button.pressed.emit()
-		await _settle()
+	var recovery_actions_before: int = int(game.state.settlement_actions_remaining)
+	var recovery_sacrifice_made := false
+	for recovery_button in [game.recovery_panel.repair_button, game.recovery_panel.refuel_button, game.recovery_panel.hull_button]:
+		if recovery_button.visible and not recovery_button.disabled:
+			recovery_button.pressed.emit()
+			await _settle()
+			recovery_sacrifice_made = true
+			break
+	_expect(recovery_sacrifice_made and game.state.settlement_actions_remaining == recovery_actions_before - 1, "the complete journey should spend exactly one finite Morrowline service opportunity before choosing the next road")
+	if recovery_sacrifice_made:
+		_expect(not game.last_recovery_receipt.is_empty() and game.recovery_panel.receipt_label.text.contains("LAST RECEIPT"), "the recovery sacrifice should leave a visible material receipt")
 		_expect_semantic_cue("service", "a completed recovery action should use the distinct material service cue")
 	game.recovery_panel.routes_button.pressed.emit()
 	await _settle()
@@ -557,7 +567,8 @@ func _run() -> void:
 	declined_convoy_profile = OS.get_environment("LONG_MARCH_DECLINED_CONVOY_PROFILE") == "1"
 	mastery_profile = OS.get_environment("LONG_MARCH_MASTERY_PROFILE") == "1"
 	iven_profile = OS.get_environment("LONG_MARCH_IVEN_PROFILE") == "1"
-	investment_profile = OS.get_environment("LONG_MARCH_INVESTMENT_PROFILE") == "1"
+	gpt56_journey_profile = OS.get_environment("LONG_MARCH_GPT56_1_PROFILE") == "1"
+	investment_profile = OS.get_environment("LONG_MARCH_INVESTMENT_PROFILE") == "1" or gpt56_journey_profile
 	var capture_filter_text := OS.get_environment("LONG_MARCH_CAPTURE_FILTER")
 	if not capture_filter_text.is_empty():
 		for capture_name in capture_filter_text.split(",", false):
@@ -565,6 +576,11 @@ func _run() -> void:
 	root.size = viewport_size
 	await _launch_app()
 	_expect(app.tutorial_button.has_focus(), "a clean save should focus Learn to Command")
+	if gpt56_journey_profile:
+		_expect(app.title_preview_eyebrow_label.text.contains("20–30 MINUTES"), "the clean First Watch entry should disclose its expected tutorial duration")
+		app.start_button.mouse_entered.emit()
+		_expect(app.title_preview_eyebrow_label.text.contains("15–25 MINUTES"), "the Ashgate journey should disclose a duration that composes with First Watch into a 35–55 minute creative run")
+		app.start_button.mouse_exited.emit()
 	if responsive_profile:
 		_expect(app.text_scale_percent == 110 and app.high_contrast_enabled and app.reduced_motion and app.controller_layout_id == "east_confirm", "the compact journey should load the complete accessibility and alternate-controller profile")
 		_expect(_rect_encloses(app.get_global_rect(), app.tutorial_button.get_global_rect()) and _rect_encloses(app.get_global_rect(), app.settings_button.get_global_rect()), "the compact large-text title should keep primary and utility actions visible")
@@ -585,6 +601,8 @@ func _run() -> void:
 			print("PASS: The Long March Iven specialist profile")
 		if investment_profile:
 			print("PASS: The Long March investment evaluation vertical")
+		if gpt56_journey_profile:
+			print("PASS: The Long March LM-GPT56-1 full creative journey")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")
