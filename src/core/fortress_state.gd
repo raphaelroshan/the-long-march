@@ -7,10 +7,10 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 14
+const SAVE_VERSION := 15
 const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine", "white_salt_expanse"]
-const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "salt_public_beacons"]
+const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "cinder_refuge_chain", "salt_public_beacons", "salt_shared_cisterns"]
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost", "spine_powered", "spine_bypassed", "cinder_lost", "expanse_allied", "expanse_crossed", "salt_lost"]
 const VALID_CHASSIS_TEMPLATES := ["road_keep", "salt_skimmer"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
@@ -18,16 +18,36 @@ const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint", "sela_vonn", "nera
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
 const MASTERY_EXPERIMENTS := {
 	"ashgate_quarry_adaptation": {
+		"region_id": "ashgate_lowlands",
+		"origin_location_id": "ashgate_depot",
 		"title": "Quarry Adaptation",
 		"brief": "Secure Cinder Quarry with either speed and Run Hot or lower-hull protection and a cargo doctrine.",
 		"proof": "Cinder Quarry secured",
 		"solutions": ["Run Hot with enough movement and firepower", "Protect Cargo with lower-hull armor"]
 	},
 	"ashgate_signal_discipline": {
+		"region_id": "ashgate_lowlands",
+		"origin_location_id": "ashgate_depot",
 		"title": "Signal Discipline",
 		"brief": "Secure Signal Causeway with either Iven Pell's forecast or an operational Wall Lamp.",
 		"proof": "Signal Causeway secured",
 		"solutions": ["Recruit Iven Pell after restoring Broken Relay", "Carry and preserve an operational Wall Lamp"]
+	},
+	"cinder_redundant_lift": {
+		"region_id": "cinder_spine",
+		"origin_location_id": "blackkiln",
+		"title": "Redundant Lift",
+		"brief": "Reach the lift engine with a working Generator Core, then choose either the powered lift or the slower human switchback.",
+		"proof": "Lift Engine choice resolved with movement intact",
+		"solutions": ["Power the old lift with a working Generator Core", "Cut the switchback and preserve another operational engine"]
+	},
+	"salt_dependency_watch": {
+		"region_id": "white_salt_expanse",
+		"origin_location_id": "saltglass_haven",
+		"title": "Dependency Watch",
+		"brief": "Secure one specialist threat road with its physical counter: Command Deck at Salt Mine or Salvage Crane at Empty Mile.",
+		"proof": "Dependency counter carried through its authored road",
+		"solutions": ["Secure Salt Mine with a Ready Command Deck", "Secure Empty Mile with a Ready Salvage Crane"]
 	}
 }
 const INTEL_OFFERS := {
@@ -70,11 +90,13 @@ const CAMPAIGN_DECISION_OPTIONS := {
 	"drain_pumps": ["drain_gallery", "leave_gallery"],
 	"registry_salvage": ["recover_records", "abandon_records"],
 	"archive_broadcast": ["broadcast_archive", "seal_archive"],
-	"charcoal_vow": ["bank_coals", "share_coals"],
+	"charcoal_vow": ["bank_coals", "share_coals", "call_refuge_chain"],
 	"lift_engine_choice": ["power_lift", "cut_switchback"],
 	"commune_design": ["share_lift_plan", "keep_guild_pattern"]
-	,"observatory_signal": ["broadcast_beacons", "sell_coordinates"]
+	,"observatory_signal": ["broadcast_beacons", "sell_coordinates", "call_cistern_network"]
 	,"rival_terms": ["escort_compact", "race_rival"]
+	,"chapel_refuge": ["light_refuge_markers", "strip_chapel_bell"]
+	,"trench_cistern": ["share_trench_water", "seal_trench_reserve"]
 }
 const OCCURRENCE_STREAM_NAME := "ashgate_operational_occurrences_v1"
 const OCCURRENCE_HISTORY_LIMIT := 8
@@ -394,10 +416,11 @@ func assign_specialist(candidate_id: String) -> Dictionary:
 	return {"ok": true, "specialist": specialist_id, "message": "%s is now assigned to the %s." % [specialist_name(), module_definition(required_module).name], "summary": summary()}
 
 func choose_mastery_experiment(experiment_id: String) -> Dictionary:
-	if not campaign_active or campaign_region_id != "ashgate_lowlands" or current_location != "ashgate_depot" or phase != "refit" or campaign_encounters_completed != 0:
-		return {"ok": false, "reason": "field experiments can only be chosen at Ashgate before the first road"}
 	if experiment_id not in MASTERY_EXPERIMENTS:
 		return {"ok": false, "reason": "unknown field experiment"}
+	var definition: Dictionary = MASTERY_EXPERIMENTS[experiment_id]
+	if not campaign_active or campaign_region_id != String(definition.get("region_id", "")) or current_location != String(definition.get("origin_location_id", "")) or phase != "refit" or campaign_encounters_completed != 0:
+		return {"ok": false, "reason": "field experiments can only be chosen at their chapter's starting settlement before the first road"}
 	mastery_experiment_id = experiment_id
 	var details := mastery_experiment_details()
 	var message := "Field experiment selected: %s. %s No reward or unlock is attached; the order is a replay goal." % [String(details.get("title", "Experiment")), String(details.get("brief", ""))]
@@ -414,6 +437,10 @@ func mastery_experiment_details() -> Dictionary:
 			proven = "cinder_quarry" in campaign_path
 		"ashgate_signal_discipline":
 			proven = "signal_causeway" in campaign_path
+		"cinder_redundant_lift":
+			proven = campaign_decisions.has("lift_engine_choice") and _has_engine() and (String(campaign_decisions.get("lift_engine_choice", "")) != "power_lift" or operational("generator_core"))
+		"salt_dependency_watch":
+			proven = ("salt_mine" in campaign_path and operational("command_deck")) or ("empty_mile" in campaign_path and operational("salvage_crane"))
 	details["id"] = mastery_experiment_id
 	details["active"] = true
 	details["proven"] = proven
@@ -1004,13 +1031,77 @@ func has_regional_development(development_id: String) -> bool:
 	return development_id in regional_developments
 
 func earned_regional_development() -> String:
-	if phase == "results" and final_result in ["archive_kept", "archive_scarred"] and String(campaign_decisions.get("archive_broadcast", "")) == "broadcast_archive":
-		return "veyru_public_archive_signal"
-	if phase == "results" and final_result in ["spine_powered", "spine_bypassed"] and String(campaign_decisions.get("commune_design", "")) == "share_lift_plan":
-		return "cinder_communal_lift_plan"
-	if phase == "results" and final_result in ["expanse_allied", "expanse_crossed"] and String(campaign_decisions.get("observatory_signal", "")) == "broadcast_beacons":
-		return "salt_public_beacons"
-	return ""
+	var earned := earned_regional_developments()
+	return String(earned[0]) if not earned.is_empty() else ""
+
+func earned_regional_developments() -> Array[String]:
+	var earned: Array[String] = []
+	if phase != "results":
+		return earned
+	if final_result in ["archive_kept", "archive_scarred"] and String(campaign_decisions.get("archive_broadcast", "")) == "broadcast_archive":
+		earned.append("veyru_public_archive_signal")
+	if final_result in ["spine_powered", "spine_bypassed"]:
+		if String(campaign_decisions.get("commune_design", "")) == "share_lift_plan":
+			earned.append("cinder_communal_lift_plan")
+		if String(campaign_decisions.get("chapel_refuge", "")) == "light_refuge_markers":
+			earned.append("cinder_refuge_chain")
+	if final_result in ["expanse_allied", "expanse_crossed"]:
+		if String(campaign_decisions.get("observatory_signal", "")) == "broadcast_beacons":
+			earned.append("salt_public_beacons")
+		if String(campaign_decisions.get("trench_cistern", "")) == "share_trench_water":
+			earned.append("salt_shared_cisterns")
+	return earned
+
+func composable_ending() -> Dictionary:
+	var survival := "lost"
+	if final_result in ["decisive_march", "archive_kept", "spine_powered", "expanse_allied"]:
+		survival = "secure"
+	elif final_result in ["scarred_march", "archive_scarred", "spine_bypassed", "expanse_crossed"]:
+		survival = "scarred"
+	var network := "isolated_road"
+	if knowledge_tendency > 0:
+		network = "open_signal_network"
+	elif shelter_tendency > 0:
+		network = "shelter_chain"
+	elif industry_tendency > 0:
+		network = "industrial_corridor"
+	elif mobility_tendency > 0:
+		network = "fast_corridor"
+	var contract_status := guard_contract_status
+	if campaign_region_id == "flooded_veyru":
+		contract_status = veyru_contract_status
+	elif campaign_region_id == "cinder_spine":
+		contract_status = cinder_contract_status
+	elif campaign_region_id == "white_salt_expanse":
+		contract_status = salt_contract_status
+	var promise := "unbound"
+	if contract_status == "completed":
+		promise = "promise_kept"
+	elif contract_status == "failed":
+		promise = "promise_broken"
+	elif contract_status == "accepted":
+		promise = "promise_unresolved"
+	var titles := {
+		"secure": "Secure",
+		"scarred": "Scarred",
+		"lost": "Lost",
+		"open_signal_network": "Open Signal Network",
+		"shelter_chain": "Shelter Chain",
+		"industrial_corridor": "Industrial Corridor",
+		"fast_corridor": "Fast Corridor",
+		"isolated_road": "Isolated Road",
+		"promise_kept": "Promise Kept",
+		"promise_broken": "Promise Broken",
+		"promise_unresolved": "Promise Unresolved",
+		"unbound": "Unbound"
+	}
+	return {
+		"survival": survival,
+		"network": network,
+		"promise": promise,
+		"title": "%s · %s · %s" % [titles[survival], titles[network], titles[promise]],
+		"causes": ["Hull %d/10 and %d secured contacts" % [hull_condition, campaign_encounters_completed], "Tendencies M%d S%d K%d I%d" % [mobility_tendency, shelter_tendency, knowledge_tendency, industry_tendency], "Contract %s" % contract_status.replace("_", " ")]
+	}
 
 func campaign_pressure_name() -> String:
 	match campaign_region_id:
@@ -1645,10 +1736,13 @@ func campaign_event_details() -> Dictionary:
 				{"id": "seal_archive", "label": "Seal the archive", "effect": "Rising water -1 · Carrier damage -1\nFinal targeting stays forecast", "enabled": true, "reason": ""}
 			]}
 		"charcoal_vow":
-			return {"id": "charcoal_vow", "title": "Coals for the Climb", "body": "The monastery can bank its last cold coals inside the fortress or share them with the settlements below before the fireline arrives.", "choices": [
+			var charcoal_choices: Array[Dictionary] = [
 				{"id": "bank_coals", "label": "Bank the cold coals", "effect": "Fuel +1 · Fireline +1", "enabled": true, "reason": ""},
 				{"id": "share_coals", "label": "Share them downhill", "effect": "Trust +2 · Fireline -1", "enabled": true, "reason": ""}
-			]}
+			]
+			if has_regional_development("cinder_refuge_chain"):
+				charcoal_choices.append({"id": "call_refuge_chain", "label": "Call the refuge chain", "effect": "Trust +1 · Fireline -2 · no fuel taken", "enabled": true, "reason": "Unlocked by lighting the Ash Chapel refuge markers on an earlier march."})
+			return {"id": "charcoal_vow", "title": "Coals for the Climb", "body": "The monastery can bank its last cold coals inside the fortress, share them below, or call a refuge network established by an earlier march.", "choices": charcoal_choices}
 		"lift_engine_choice":
 			var generator_ready := operational("generator_core")
 			return {"id": "lift_engine_choice", "title": "The Counterweight Road", "body": "The old elevator can carry the fortress if its dynamo is powered, or the crew can cut a permanent switchback around the Warden.", "choices": [
@@ -1661,14 +1755,27 @@ func campaign_event_details() -> Dictionary:
 				{"id": "keep_guild_pattern", "label": "Keep the Guild pattern", "effect": "Ashmarks +12 · Industry +1", "enabled": true, "reason": ""}
 			]}
 		"observatory_signal":
-			return {"id": "observatory_signal", "title": "The White Horizon", "body": "The buried lens can broadcast safe headings to every caravan or sell one private line before the ash front arrives.", "choices": [
+			var observatory_choices: Array[Dictionary] = [
 				{"id": "broadcast_beacons", "label": "Broadcast public beacons", "effect": "Knowledge +1 · Trust +1 · future Salt Mine becomes Known", "enabled": true, "reason": ""},
 				{"id": "sell_coordinates", "label": "Sell the private line", "effect": "Ashmarks +10 · Ash front -1", "enabled": true, "reason": ""}
-			]}
+			]
+			if has_regional_development("salt_shared_cisterns"):
+				observatory_choices.append({"id": "call_cistern_network", "label": "Call the cistern network", "effect": "Fuel +1 · Ash front -1 · Trust +1", "enabled": true, "reason": "Unlocked by marking Lee Trench's water on an earlier march."})
+			return {"id": "observatory_signal", "title": "The White Horizon", "body": "The buried lens can broadcast safe headings, sell one private line, or call a public water network established by an earlier march.", "choices": observatory_choices}
 		"rival_terms":
 			return {"id": "rival_terms", "title": "Two Fortresses on One Horizon", "body": "The Refugee Compact asks for an escorted approach. The rival captain offers a clean race to the water towers instead.", "choices": [
 				{"id": "escort_compact", "label": "Hold the Compact line", "effect": "Shelter +1 · Trust +2 · rival fortress gains 1 endurance", "enabled": true, "reason": ""},
 				{"id": "race_rival", "label": "Race for the towers", "effect": "Mobility +1 · Ash front +1 · rival impact -1", "enabled": true, "reason": ""}
+			]}
+		"chapel_refuge":
+			return {"id": "chapel_refuge", "title": "Lamps in the Ash Chapel", "body": "Families shelter in the bypass while the abandoned bell and lamp oil could still be stripped for the climb. Marking the refuge makes this failure road part of a future network.", "choices": [
+				{"id": "light_refuge_markers", "label": "Light the refuge markers", "effect": "Shelter +1 · Trust +2 · future Refuge Chain option", "enabled": true, "reason": ""},
+				{"id": "strip_chapel_bell", "label": "Strip the bell and oil", "effect": "Ashmarks +8 · Industry +1", "enabled": true, "reason": ""}
+			]}
+		"trench_cistern":
+			return {"id": "trench_cistern", "title": "Water Under the Lee", "body": "A buried cistern survived beneath the refuge trench. Sharing its location establishes a public water chain; sealing it keeps one reserve aboard.", "choices": [
+				{"id": "share_trench_water", "label": "Mark the public cistern", "effect": "Fuel -1 · Shelter +1 · Trust +2 · future Cistern Network option", "enabled": fuel > 1, "reason": "Requires at least 2 fuel so the fortress can still depart" if fuel <= 1 else ""},
+				{"id": "seal_trench_reserve", "label": "Seal one reserve aboard", "effect": "Fuel +1 · Knowledge -1", "enabled": true, "reason": ""}
 			]}
 	return {}
 
@@ -1869,6 +1976,10 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			settlement_trust += 2
 			campaign_pressure = maxi(0, campaign_pressure - 1)
 			result_message = "The monastery sends its coals downhill. Trust rises by 2 and the organized firebreak reduces the fireline by 1."
+		elif choice_id == "call_refuge_chain" and has_regional_development("cinder_refuge_chain"):
+			settlement_trust += 1
+			campaign_pressure = maxi(0, campaign_pressure - 2)
+			result_message = "The Ash Chapel refuge chain answers the monastery. Trust rises by 1 and coordinated firebreaks reduce the fireline by 2 without consuming the coals."
 		else:
 			return {"ok": false, "reason": "that charcoal vow is not available"}
 	elif resolved_event == "lift_engine_choice":
@@ -1905,6 +2016,11 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			money += 10
 			campaign_pressure = maxi(0, campaign_pressure - 1)
 			result_message = "The private coordinates sell for 10 Ashmarks while the fortress gains one clear day ahead of the ash front."
+		elif choice_id == "call_cistern_network" and has_regional_development("salt_shared_cisterns"):
+			fuel += 1
+			settlement_trust += 1
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			result_message = "The shared cistern network answers the observatory signal. Fuel and trust rise by 1 while ash-front pressure falls by 1."
 		else:
 			return {"ok": false, "reason": "that observatory decision is not available"}
 	elif resolved_event == "rival_terms":
@@ -1918,6 +2034,29 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			result_message = "The fortress races the rival. Mobility and ash-front pressure rise by 1, but the final impact loses 1 damage."
 		else:
 			return {"ok": false, "reason": "those rival terms are not available"}
+	elif resolved_event == "chapel_refuge":
+		if choice_id == "light_refuge_markers":
+			shelter_tendency += 1
+			settlement_trust += 2
+			result_message = "The chapel lamps become a marked refuge chain. Shelter rises by 1 and trust by 2; future Cinder columns can call that chain from Charcoal Monastery."
+		elif choice_id == "strip_chapel_bell":
+			money += 8
+			industry_tendency += 1
+			result_message = "The crew strips the old bell and lamp oil for 8 Ashmarks. Industry rises by 1, but no refuge chain survives the passage."
+		else:
+			return {"ok": false, "reason": "that chapel choice is not available"}
+	elif resolved_event == "trench_cistern":
+		if choice_id == "share_trench_water" and fuel > 1:
+			fuel -= 1
+			shelter_tendency += 1
+			settlement_trust += 2
+			result_message = "The fortress spends 1 fuel marking a safe public cistern. Shelter rises by 1 and trust by 2; future Salt caravans can answer from the network."
+		elif choice_id == "seal_trench_reserve":
+			fuel += 1
+			knowledge_tendency -= 1
+			result_message = "The cistern is sealed into the private route ledger. Fuel rises by 1 and Knowledge falls by 1."
+		else:
+			return {"ok": false, "reason": "that cistern choice is not available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
 	var completes_road_arrival := road_arrival_event_active() and resolved_event == "salvage_choice"
@@ -2794,7 +2933,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "checkpoint contains an unknown campaign region"}
 	if not restored_mastery_experiment_id.is_empty() and restored_mastery_experiment_id not in MASTERY_EXPERIMENTS:
 		return {"ok": false, "reason": "checkpoint contains an unknown mastery experiment"}
-	if not restored_mastery_experiment_id.is_empty() and restored_campaign_region_id != "ashgate_lowlands":
+	if not restored_mastery_experiment_id.is_empty() and restored_campaign_region_id != String(Dictionary(MASTERY_EXPERIMENTS[restored_mastery_experiment_id]).get("region_id", "")):
 		return {"ok": false, "reason": "mastery experiment conflicts with the campaign region"}
 	if not raw_regional_developments is Array or raw_regional_developments.size() > VALID_REGIONAL_DEVELOPMENTS.size():
 		return {"ok": false, "reason": "checkpoint regional development list is malformed"}
@@ -3903,6 +4042,8 @@ func _campaign_event_for_node(node_id: String) -> String:
 				return "observatory_signal"
 			"rival_approach":
 				return "rival_terms"
+			"lee_trench":
+				return "trench_cistern"
 		return ""
 	if campaign_region_id == "cinder_spine":
 		match node_id:
@@ -3910,6 +4051,8 @@ func _campaign_event_for_node(node_id: String) -> String:
 				return "charcoal_vow"
 			"lift_engine_house":
 				return "lift_engine_choice"
+			"ash_chapel_bypass":
+				return "chapel_refuge"
 		return ""
 	if node_id in ["lower_ash_road", "dry_cistern_cut", "signal_causeway"] and specialist_id == "mara_flint" and campaign_decisions.has("mara_workbench_choice") and not campaign_decisions.has("mara_followup"):
 		return "mara_followup"

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "slice": "lm_ea_5",
+  "events": [
+    {
+      "id": "chapel_refuge",
+      "node": "ash_chapel_bypass",
+      "choices": ["light_refuge_markers", "strip_chapel_bell"],
+      "memory": "cinder_refuge_chain"
+    },
+    {
+      "id": "trench_cistern",
+      "node": "lee_trench",
+      "choices": ["share_trench_water", "seal_trench_reserve"],
+      "memory": "salt_shared_cisterns"
+    }
+  ],
+  "regional_memory": [
+    {
+      "id": "cinder_refuge_chain",
+      "earned_by": "light_refuge_markers and a surviving Cinder result",
+      "later_option": "call_refuge_chain",
+      "later_event": "charcoal_vow"
+    },
+    {
+      "id": "salt_shared_cisterns",
+      "earned_by": "share_trench_water and a surviving Salt result",
+      "later_option": "call_cistern_network",
+      "later_event": "observatory_signal"
+    }
+  ],
+  "replay_goals": [
+    {"id": "cinder_redundant_lift", "region": "cinder_spine", "solutions": 2, "reward": "none"},
+    {"id": "salt_dependency_watch", "region": "white_salt_expanse", "solutions": 2, "reward": "none"}
+  ],
+  "ending_facets": {
+    "survival": ["secure", "scarred", "lost"],
+    "network": ["open_signal_network", "shelter_chain", "industrial_corridor", "fast_corridor", "isolated_road"],
+    "promise": ["promise_kept", "promise_broken", "promise_unresolved", "unbound"]
+  }
+}

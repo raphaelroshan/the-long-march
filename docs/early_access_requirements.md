@@ -83,7 +83,7 @@ Every new chapter, region, settlement, module, specialist, threat, event, or rou
 
 **LM-EA-4:** complete in `0.3.0-alpha.353`. Medical and command facilities require adjacent crew; Sela Vonn and Dr. Nera Quill require those staffed bays; Signal Hunters and Bridgebreakers attack new dependency surfaces; and the exterior Salvage Crane provides lower-hull counterplay. See [`lm_ea_4_systems_report.md`](lm_ea_4_systems_report.md).
 
-**LM-EA-5:** add event/meeting breadth, regional memory, replay goals, and composable endings.
+**LM-EA-5:** complete in `0.3.0-alpha.354`. Twenty authored decision/meeting IDs now include failure-road choices at Ash Chapel and Lee Trench; those choices can establish persistent Refuge Chain and Shared Cistern options in later runs. Cinder and Salt have bounded two-solution replay orders, and Debrief composes survival, regional direction, and promise state into 60 possible legible outcome combinations. See [`lm_ea_5_campaign_memory_report.md`](lm_ea_5_campaign_memory_report.md).
 
 **LM-EA-6:** harden campaign persistence, migration, controller/accessibility, package lifecycle, performance, audio, and Early Access release documentation.
 

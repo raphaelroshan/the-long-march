@@ -55,6 +55,8 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		promises.append("Field order · %s · %s" % [String(mastery.get("title", "Experiment")), String(mastery.get("status", "ACTIVE"))])
 	for occurrence_line in state.occurrence_debrief_lines():
 		promises.append(String(occurrence_line).replace("Road occurrence — ", "Occurrence · "))
+	var ending := state.composable_ending()
+	promises.append("Ending facets · %s" % String(ending.get("title", "Unrecorded")))
 	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"
 	var next_region_name := "ASHGATE LOWLANDS" if next_region_id == "ashgate_lowlands" else "FLOODED VEYRU"
 	var next_region_result := String(Dictionary(context.get("starting_region_results", {})).get(next_region_id, ""))
@@ -73,6 +75,7 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		"journey": "ROUTE SUMMARY\n%s\n\n%d of 5 encounters secured\n%s · %s %d" % [route_span, state.campaign_encounters_completed, state.campaign_pressure_name(), state.campaign_pressure_band().replace("_", " ").capitalize(), state.campaign_pressure],
 		"commitments": "\n".join(promises),
 		"consequence": "%s\n\nCAUSE → %s" % [String(context.get("result_summary", "")), String(context.get("causal_chain", ""))],
+		"ending": ending,
 		"condition": "HULL %d/10 · FUEL %d · HEAT %d/%d\n%d ready · %d strained · %d offline\n%s" % [state.hull_condition, state.fuel, state.heat, LongMarchState.BASE_HEAT_LIMIT, int(dependencies.get("ready", 0)), int(dependencies.get("strained", 0)), int(dependencies.get("offline", 0)), String(context.get("system_condition", ""))],
 		"experiment": experiment_text,
 		"march_on_label": "%s · %s" % ["REVISIT" if next_region_result in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else "MARCH ON", next_region_name],

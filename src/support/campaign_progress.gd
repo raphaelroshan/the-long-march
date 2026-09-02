@@ -7,7 +7,7 @@ extends RefCounted
 const SCHEMA_VERSION := 2
 const MIN_SUPPORTED_SCHEMA_VERSION := 1
 const DEFAULT_PROGRESS_PATH := "user://the_long_march_progress.json"
-const VALID_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "salt_public_beacons"]
+const VALID_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "cinder_refuge_chain", "salt_public_beacons", "salt_shared_cisterns"]
 const REGION_RESULT_RANKS := {
 	"ashgate_lowlands": {
 		"march_failed": 0,

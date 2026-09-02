@@ -2317,6 +2317,10 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_on_mastery_experiment_selected("ashgate_quarry_adaptation")
 		"select_experiment_signal":
 			_on_mastery_experiment_selected("ashgate_signal_discipline")
+		"select_experiment_cinder":
+			_on_mastery_experiment_selected("cinder_redundant_lift")
+		"select_experiment_salt":
+			_on_mastery_experiment_selected("salt_dependency_watch")
 		"hire_sela", "hire_nera":
 			var specialist_id := "sela_vonn" if action_id == "hire_sela" else "nera_quill"
 			var result := state.assign_specialist(specialist_id)
@@ -4850,14 +4854,19 @@ func _result_record_text() -> String:
 	var occurrence_lines := state.occurrence_debrief_lines()
 	var occurrence_block := "\n%s" % "\n".join(occurrence_lines) if not occurrence_lines.is_empty() else ""
 	var carrier_record := " · Carrier: %s" % String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if state.campaign_region_id == "flooded_veyru" and not state.veyru_medicine_carrier_id.is_empty() else ""
-	var development_record := ""
-	if state.earned_regional_development() == "veyru_public_archive_signal":
-		development_record = "\nRegional development: PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts"
-	elif state.earned_regional_development() == "cinder_communal_lift_plan":
-		development_record = "\nRegional development: COMMUNAL LIFT PLAN · future Cinder runs reveal Slag Tunnel contacts"
-	elif state.earned_regional_development() == "salt_public_beacons":
-		development_record = "\nRegional development: PUBLIC SALT BEACONS · future Salt runs reveal Salt Mine contacts"
-	return "RUN RECORD · %s · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
+	var development_lines: Array[String] = []
+	var development_copy := {
+		"veyru_public_archive_signal": "PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts",
+		"cinder_communal_lift_plan": "COMMUNAL LIFT PLAN · future Cinder runs reveal Slag Tunnel contacts",
+		"cinder_refuge_chain": "CINDER REFUGE CHAIN · future Charcoal vows can call the marked shelters",
+		"salt_public_beacons": "PUBLIC SALT BEACONS · future Salt runs reveal Salt Mine contacts",
+		"salt_shared_cisterns": "SHARED CISTERN NETWORK · future Observatory signals can call water support"
+	}
+	for development_id in state.earned_regional_developments():
+		development_lines.append(String(development_copy.get(development_id, development_id)))
+	var development_record := "\nRegional developments: %s" % "; ".join(development_lines) if not development_lines.is_empty() else ""
+	var ending := state.composable_ending()
+	return "RUN RECORD · %s · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\nEnding: %s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		current_run_code(),
 		" → ".join(path_names),
 		stopping_line,
@@ -4871,6 +4880,7 @@ func _result_record_text() -> String:
 		mara_line,
 		occurrence_block,
 		development_record,
+		String(ending.get("title", "Unrecorded")),
 		_recovery_location_name(),
 		_unused_recovery_text() if state.settlement_actions_remaining > 0 else "all service actions spent",
 		state.encounter_target_doctrine.replace("_", " ").capitalize(),
@@ -4948,12 +4958,16 @@ func _campaign_decision_record_text() -> String:
 			decisions.append("Lift Engine — %s" % ("powered the industrial lift" if String(recorded.lift_engine_choice) == "power_lift" else "cut a human switchback"))
 		if recorded.has("commune_design"):
 			decisions.append("Switchback Commune — %s" % ("shared the lift plan" if String(recorded.commune_design) == "share_lift_plan" else "kept the guild pattern"))
+		if recorded.has("chapel_refuge"):
+			decisions.append("Ash Chapel — %s" % ("lit the refuge markers" if String(recorded.chapel_refuge) == "light_refuge_markers" else "stripped the chapel bell"))
 		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
 	if state.campaign_region_id == "white_salt_expanse":
 		if recorded.has("observatory_signal"):
 			decisions.append("Buried Observatory — %s" % ("broadcast public beacons" if String(recorded.observatory_signal) == "broadcast_beacons" else "sold the private coordinates"))
 		if recorded.has("rival_terms"):
 			decisions.append("Rival Approach — %s" % ("escorted the Compact" if String(recorded.rival_terms) == "escort_compact" else "raced for the towers"))
+		if recorded.has("trench_cistern"):
+			decisions.append("Lee Trench — %s" % ("marked the public cistern" if String(recorded.trench_cistern) == "share_trench_water" else "sealed the reserve"))
 		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
 	if "soot_orchard" in state.campaign_path:
 		var orchard_choice := String(recorded.get("salvage_choice", "rescue_workers" if state.workers_rescued else "take_fuel"))
