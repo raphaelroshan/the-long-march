@@ -37,6 +37,7 @@ python3 tools/validate_cinder_spine.py --data content/cinder_spine.json
 python3 tools/validate_white_salt.py --data content/white_salt_expanse.json
 python3 tools/validate_early_access_systems.py --data content/early_access_systems.json
 python3 tools/validate_campaign_memory.py --data content/campaign_memory.json
+python3 tools/validate_early_access_candidate.py
 python3 tools/verify_offline_boundary.py --repo .
 python3 tests/test_playtest_summary.py
 python3 tests/test_playtest_cohort_summary.py
@@ -60,6 +61,7 @@ run_checked "PASS: The Long March Cinder Spine chapter" "$GODOT_BIN" --headless 
 run_checked "PASS: The Long March White Salt Expanse" "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_expanse.gd
 run_checked "PASS: The Long March Early Access systems" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_systems.gd
 run_checked "PASS: The Long March campaign memory and endings" "$GODOT_BIN" --headless --path . --script res://tests/test_campaign_memory.gd
+run_checked "PASS: The Long March Early Access hardening" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_hardening.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
 run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd

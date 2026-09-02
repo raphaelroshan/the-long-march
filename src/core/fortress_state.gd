@@ -12,9 +12,9 @@ const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine", "white_salt_expanse"]
 const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "cinder_refuge_chain", "salt_public_beacons", "salt_shared_cisterns"]
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost", "spine_powered", "spine_bypassed", "cinder_lost", "expanse_allied", "expanse_crossed", "salt_lost"]
-const VALID_CHASSIS_TEMPLATES := ["road_keep", "salt_skimmer"]
+const VALID_CHASSIS_TEMPLATES := ["road_keep", "salt_skimmer", "ridge_crawler"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
-const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint", "sela_vonn", "nera_quill"]
+const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint", "sela_vonn", "nera_quill", "orla_nine", "tomas_reed"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
 const MASTERY_EXPERIMENTS := {
 	"ashgate_quarry_adaptation": {
@@ -75,7 +75,7 @@ const MARKET_BUY_OFFERS := {
 const MARKET_SELL_PRICES := {
 	"shell_cannon": 14
 }
-const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint", "sela_vonn": "Sela Vonn", "nera_quill": "Dr. Nera Quill"}
+const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint", "sela_vonn": "Sela Vonn", "nera_quill": "Dr. Nera Quill", "orla_nine": "Orla Nine", "tomas_reed": "Tomas Reed"}
 const CAMPAIGN_DECISION_OPTIONS := {
 	"salvage_choice": ["take_fuel", "rescue_workers"],
 	"lost_signal": ["restore_relay", "move_silent"],
@@ -382,13 +382,17 @@ func module_definition(module_id: String) -> Dictionary:
 	return MODULE_DEFS.get(module_id, {})
 
 func chassis_mass_limit() -> int:
-	return 13 if chassis_template_id == "salt_skimmer" else BASE_MASS_LIMIT
+	return 13 if chassis_template_id == "salt_skimmer" else (15 if chassis_template_id == "ridge_crawler" else BASE_MASS_LIMIT)
 
 func chassis_exterior_limit() -> int:
 	return 3 if chassis_template_id == "salt_skimmer" else MAX_EXTERIOR_MOUNTS
 
 func chassis_cell_available(cell: Vector2i) -> bool:
-	return chassis_template_id != "salt_skimmer" or cell not in [Vector2i(0, 3), Vector2i(5, 3)]
+	if chassis_template_id == "salt_skimmer":
+		return cell not in [Vector2i(0, 3), Vector2i(5, 3)]
+	if chassis_template_id == "ridge_crawler":
+		return cell not in [Vector2i(0, 3), Vector2i(1, 3)]
+	return true
 
 func choose_chassis_template(template_id: String) -> Dictionary:
 	if template_id not in VALID_CHASSIS_TEMPLATES:
@@ -402,15 +406,19 @@ func specialist_name() -> String:
 	return String(SPECIALIST_NAMES.get(specialist_id, "None" if specialist_id.is_empty() else specialist_id.replace("_", " ").capitalize()))
 
 func assign_specialist(candidate_id: String) -> Dictionary:
-	if candidate_id not in ["sela_vonn", "nera_quill"]:
+	if candidate_id not in ["sela_vonn", "nera_quill", "orla_nine", "tomas_reed"]:
 		return {"ok": false, "reason": "specialist is not available through this assignment"}
 	if phase not in ["refit", "settlement"] or not campaign_active:
 		return {"ok": false, "reason": "specialists can only join while the fortress is at rest"}
 	if not specialist_id.is_empty():
 		return {"ok": false, "reason": "the specialist berth is already occupied"}
-	var required_module := "command_deck" if candidate_id == "sela_vonn" else "infirmary"
-	if not operational(required_module):
-		return {"ok": false, "reason": "%s requires a Ready %s" % [SPECIALIST_NAMES[candidate_id], module_definition(required_module).name]}
+	var required_modules := {"sela_vonn": "command_deck", "nera_quill": "infirmary", "orla_nine": "ash_runner_engine", "tomas_reed": "field_workshop"}
+	var required_module := String(required_modules.get(candidate_id, ""))
+	if candidate_id == "orla_nine":
+		required_module = _operational_module_id_with_tag("engine")
+	var requirement_ready := not required_module.is_empty() and operational(required_module)
+	if not requirement_ready:
+		return {"ok": false, "reason": "%s requires a Ready %s" % [SPECIALIST_NAMES[candidate_id], "engine" if candidate_id == "orla_nine" else module_definition(required_module).name]}
 	specialist_id = candidate_id
 	log.append("%s joins the fortress and staffs %s." % [specialist_name(), module_definition(required_module).name])
 	return {"ok": true, "specialist": specialist_id, "message": "%s is now assigned to the %s." % [specialist_name(), module_definition(required_module).name], "summary": summary()}
@@ -1204,11 +1212,12 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var cinder_grade := campaign_region_id == "cinder_spine" and node_id != "ash_chapel_bypass"
 	var mass_penalty := 1 if (bool(node.get("mass_sensitive", false)) or cinder_grade) and total_mass() > BASE_MASS_LIMIT - 2 else 0
 	var condenser_discount := 1 if node_id == "dry_cistern_cut" and _has_ready_tag("water") else 0
-	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount)
+	var orla_discount := 1 if specialist_id == "orla_nine" and int(node.get("days", 0)) >= 2 else 0
+	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount - orla_discount)
 	var sela_fast_line := specialist_id == "sela_vonn" and doctrine == "run_hot"
 	var route_days := maxi(1, int(node.get("days", 0)) - (1 if sela_fast_line else 0))
 	var contract_heat := 1 if campaign_region_id == "cinder_spine" and cinder_contract_status == "accepted" else 0
-	var predicted_heat := maxi(0, total_heat() + contract_heat + (2 if doctrine == "run_hot" else 0))
+	var predicted_heat := maxi(0, total_heat() + contract_heat + (2 if doctrine == "run_hot" else 0) + orla_discount)
 	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
 	var acquired_intel := acquired_intel_for_node(node_id)
 	var development_reveal := campaign_region_id == "flooded_veyru" and node_id == "drowned_registry" and has_regional_development("veyru_public_archive_signal")
@@ -1250,6 +1259,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var risk_factors: Array[String] = []
 	if sela_fast_line:
 		risk_factors.append("Sela fast line -1 day, +4pt")
+	if orla_discount > 0:
+		risk_factors.append("Orla fuel line -1 fuel, +1 heat")
 	if visibility != "unscouted":
 		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
 	if blockade_risk > 0.0:
@@ -1271,6 +1282,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"days": route_days,
 		"fuel": fuel_cost,
 		"fuel_discount": condenser_discount,
+		"specialist_fuel_discount": orla_discount,
 		"risk": risk,
 		"risk_band": "low" if risk <= 0.18 else ("guarded" if risk <= 0.32 else "high"),
 		"risk_factors": risk_factors,
@@ -2833,13 +2845,13 @@ func _validated_module_records(value: Variant, installed: bool, template_id: Str
 		for cell in occupied_cells(instance):
 			if cell.x < 0 or cell.x >= GRID_WIDTH or cell.y < 0 or cell.y >= GRID_HEIGHT:
 				return {"ok": false, "reason": "fortress module record places a system outside the chassis"}
-			if template_id == "salt_skimmer" and cell in [Vector2i(0, 3), Vector2i(5, 3)]:
+			if (template_id == "salt_skimmer" and cell in [Vector2i(0, 3), Vector2i(5, 3)]) or (template_id == "ridge_crawler" and cell in [Vector2i(0, 3), Vector2i(1, 3)]):
 				return {"ok": false, "reason": "fortress module record overlaps a cut-away chassis cell"}
 			if occupied.has(cell):
 				return {"ok": false, "reason": "fortress module record contains overlapping systems"}
 			occupied[cell] = true
 	var exterior_limit := 3 if template_id == "salt_skimmer" else MAX_EXTERIOR_MOUNTS
-	var mass_limit := 13 if template_id == "salt_skimmer" else BASE_MASS_LIMIT
+	var mass_limit := 13 if template_id == "salt_skimmer" else (15 if template_id == "ridge_crawler" else BASE_MASS_LIMIT)
 	if installed and exterior_count > exterior_limit:
 		return {"ok": false, "reason": "fortress module record exceeds exterior mount capacity"}
 	if installed and restored_mass > mass_limit:
@@ -3817,6 +3829,9 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 	if specialist_id == "sela_vonn" and operational("command_deck") and encounter_target_doctrine == "run_hot" and enemy_id in ["rival_scouts", "signal_hunters"]:
 		damage = maxi(0, damage - 1)
 		profile["specialist_effect"] = "sela_feint"
+	if specialist_id == "tomas_reed" and operational("field_workshop") and enemy_id == "lift_saboteurs":
+		damage = maxi(0, damage - 1)
+		profile["specialist_effect"] = "tomas_rigging"
 	if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
 		damage = maxi(0, damage - 1)
 		profile["doctrine_effect"] = "protect_cargo"
@@ -3976,6 +3991,8 @@ func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure
 			_encounter_log("Dr. Nera Quill's staffed infirmary removes 1 damage from %s." % module_def.name)
 		elif String(profile.get("specialist_effect", "")) == "sela_feint":
 			_encounter_log("Sela Vonn's command feint removes 1 damage from %s." % module_def.name)
+		elif String(profile.get("specialist_effect", "")) == "tomas_rigging":
+			_encounter_log("Tomas Reed's workshop rigging removes 1 Lift Saboteur damage from %s." % module_def.name)
 		if String(profile.get("mara_effect", "")) == "refuge_bracing":
 			_encounter_log("Mara Flint's forge-core bracing absorbs 1 damage intended for Refugee Bunk.")
 		if bool(profile.get("vent_exposed", false)):

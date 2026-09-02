@@ -59,6 +59,14 @@ static func build_planner(state: LongMarchState, snapshot: Dictionary, context: 
 			"available": true,
 			"status": "ASSIGNED TO FORTRESS"
 		}
+	elif state.specialist_id == "sela_vonn":
+		specialist_card = {"visible": true, "show_action": false, "id": "sela_vonn", "name": "Sela Vonn", "role": "Route Master · Command Deck", "belief": "Time saved is only honest when its risk is named before departure.", "effect": "ACTIVE · RUN HOT -1 DAY · RISK +4pt · SCOUT FEINT", "available": true, "status": "ASSIGNED TO FORTRESS"}
+	elif state.specialist_id == "nera_quill":
+		specialist_card = {"visible": true, "show_action": false, "id": "nera_quill", "name": "Dr. Nera Quill", "role": "Field Surgeon · Infirmary", "belief": "A moving refuge is measured by who survives the road inside it.", "effect": "ACTIVE · CREW AND REFUGE DAMAGE -1", "available": true, "status": "ASSIGNED TO FORTRESS"}
+	elif state.specialist_id == "orla_nine":
+		specialist_card = {"visible": true, "show_action": false, "id": "orla_nine", "name": "Orla Nine", "role": "Engine Tender · Grade Crew", "belief": "A careful firing rhythm can save coal, but never for free.", "effect": "ACTIVE · LONG ROAD FUEL -1 · PROJECTED HEAT +1", "available": true, "status": "ASSIGNED TO FORTRESS"}
+	elif state.specialist_id == "tomas_reed":
+		specialist_card = {"visible": true, "show_action": false, "id": "tomas_reed", "name": "Tomas Reed", "role": "Lift Rigger · Field Workshop", "belief": "Every chain tells you where it will fail if you listen before the pull.", "effect": "ACTIVE · LIFT SABOTEUR DAMAGE -1", "available": true, "status": "ASSIGNED TO FORTRESS"}
 	if bool(experiment.get("active", false)):
 		order += "  FIELD ORDER · %s · %s" % [String(experiment.get("title", "Experiment")).to_upper(), String(experiment.get("proof", "Complete the stated objective."))]
 	return {

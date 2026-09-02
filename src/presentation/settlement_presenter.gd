@@ -130,6 +130,18 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 			"primary": {"id": "hire_sela", "label": "ASSIGN SELA · COMMAND DECK", "enabled": sela_ready, "tooltip": "Requires a Ready Command Deck and an empty specialist berth."},
 			"secondary": {"id": "hire_nera", "label": "ASSIGN NERA · INFIRMARY", "enabled": nera_ready, "tooltip": "Requires a Ready Field Infirmary and an empty specialist berth."}
 		}
+	elif is_cinder:
+		var orla_ready := state.operational("ash_runner_engine") and state.specialist_id.is_empty()
+		var tomas_ready := state.operational("field_workshop") and state.specialist_id.is_empty()
+		hiring_station = {
+			"title": state.specialist_name() if not state.specialist_id.is_empty() else "Blackkiln Road Crew",
+			"status": "ASSIGNED" if not state.specialist_id.is_empty() else "SYSTEM-BOUND",
+			"button_status": state.specialist_name().to_upper() if not state.specialist_id.is_empty() else "ORLA / TOMAS",
+			"body": "Orla Nine saves 1 fuel on two-day roads but adds 1 projected heat. Tomas Reed reduces Lift Saboteur damage by 1 while a Ready Field Workshop remains aboard.",
+			"tone": "safe" if not state.specialist_id.is_empty() else "neutral",
+			"primary": {"id": "hire_orla", "label": "ASSIGN ORLA · ENGINE", "enabled": orla_ready, "tooltip": "Requires a Ready engine and an empty specialist berth."},
+			"secondary": {"id": "hire_tomas", "label": "ASSIGN TOMAS · WORKSHOP", "enabled": tomas_ready, "tooltip": "Requires a Ready Field Workshop and an empty specialist berth."}
+		}
 	elif not is_veyru and not is_cinder:
 		if state.specialist_id == "iven_pell":
 			hiring_station = {"title": "Iven Pell", "status": "ASSIGNED · SIGNAL OFFICER", "button_status": "IVEN ABOARD", "body": "Recruited at Broken Relay. Active contribution: exact immediate contacts, route risk up to -8 points, encounter pressure -1, and +2 anti-storm damage.", "tone": "safe"}

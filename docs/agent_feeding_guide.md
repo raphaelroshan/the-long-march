@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.352`; Feeds A through AT and **LM-EA-1** through **LM-EA-3** are complete. Four five-contact chapters and two physical chassis templates now meet deterministic and responsive automation gates. The next implementation feed is **LM-EA-4**, adding two module families, two specialists, and two threat families with new dependency questions. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain useful calibration rather than a prerequisite or a claim that the game is commercially finished.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.355`; Feeds A through AT and **LM-EA-1** through **LM-EA-6** are complete. Four five-contact chapters, three physical chassis templates, twenty modules, six specialists, regional memory, and composable endings meet deterministic, responsive, persistence, and package-contract automation gates. The next work is consented, uncoached human validation using [`early_access_test_matrix.md`](early_access_test_matrix.md) and [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md), followed by narrow changes grounded in repeated observations. This is calibration, not a claim that the game is commercially finished.
 
 ### Active Feed 0 — failure-forward consequence
 

@@ -21,9 +21,9 @@ func _run() -> void:
 	_expect(audio.players.size() == 3, "interface audio should keep a small overlap-safe player pool")
 	_expect(audio.focus_stream != null and audio.focus_stream.data.size() > 0 and audio.focus_stream.mix_rate == InterfaceAudio.MIX_RATE, "focus feedback should be a generated deterministic PCM cue")
 	_expect(audio.confirm_stream != null and audio.notice_stream != null and audio.warning_stream != null, "the controller should provide distinct confirmation, notice, and warning cues")
-	_expect(audio.SEMANTIC_STREAMS.size() == 22 and String(audio.SEMANTIC_STREAMS["route_commit"].resource_path).ends_with("confirmation_001.ogg") and String(audio.SEMANTIC_STREAMS["debrief"].resource_path).ends_with("bookOpen.ogg"), "the journey should load distinct licensed temporary cues for commitment, threat approach, refit results, impact, and Debrief")
+	_expect(audio.SEMANTIC_STREAMS.size() == 30 and String(audio.SEMANTIC_STREAMS["route_commit"].resource_path).ends_with("confirmation_001.ogg") and String(audio.SEMANTIC_STREAMS["debrief"].resource_path).ends_with("bookOpen.ogg"), "the journey should load distinct licensed temporary cues for commitment, every threat approach, refit results, impact, and Debrief")
 	var main_view := MainView.new()
-	var threat_arrivals := {"road_raiders": 2, "climbers": 3, "burrowers": 3, "storm_front": 1, "siege_beast": 4, "flood_surge": 1, "civic_guardian": 3}
+	var threat_arrivals := {"road_raiders": 2, "climbers": 3, "burrowers": 3, "storm_front": 1, "siege_beast": 4, "flood_surge": 1, "civic_guardian": 3, "ember_drakes": 4, "lift_saboteurs": 3, "elevator_warden": 4, "salt_storm": 2, "rival_scouts": 3, "rival_fortress": 3, "signal_hunters": 3, "bridgebreakers": 3}
 	for threat_id in threat_arrivals:
 		var cue_step: int = maxi(1, int(threat_arrivals[threat_id]) - 1)
 		var cue_id := main_view.contact_audio_cue_for_step(cue_step, [{"id": threat_id, "defeated": false}])

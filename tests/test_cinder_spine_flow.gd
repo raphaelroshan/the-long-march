@@ -77,7 +77,7 @@ func _run() -> void:
 		_apply_large_text(game)
 		await _settle_ui()
 
-	_expect(game.state.campaign_region_id == "cinder_spine" and game.state.current_location == "blackkiln", "the Cinder UI flow should begin at Blackkiln")
+	_expect(game.state.campaign_region_id == "cinder_spine" and game.state.current_location == "blackkiln" and game.state.chassis_template_id == "ridge_crawler", "the Cinder UI flow should begin at Blackkiln on the heavy Ridge Crawler")
 	_expect(game.settlement_hub.context_label.text.contains("BLACKKILN FORGE BAZAAR"), "Blackkiln should identify its forge bazaar")
 	_expect(game.settlement_hub.place_identity_label.text.contains("VOLCANIC FORGE MARKET") and game.settlement_hub.pressure_label.text.contains("FIRELINE"), "Blackkiln should state its volcanic identity and active fireline")
 	_expect(game.settlement_hub.bazaar_canvas.presentation_signature().contains("FORGE STACKS") and game.settlement_hub.bazaar_canvas.route_signature() == "CHARCOAL MONASTERY · RED CUT", "Blackkiln should render a distinct forge skyline and both opening roads")

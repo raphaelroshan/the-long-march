@@ -1,6 +1,6 @@
 # Temporary Journey Audio Map
 
-**Build:** `0.3.0-alpha.312`
+**Build:** `0.3.0-alpha.355`
 **Status:** CC0 testing cues; replace before final audio direction
 
 The interface retains its generated focus and ordinary confirmation sounds. Major journey transitions use distinct temporary cues so playtests can evaluate timing and acknowledgment without treating this library as final machine audio.
@@ -17,6 +17,14 @@ The interface retains its generated focus and ordinary confirmation sounds. Majo
 | Siege Beast warning | `threat_siege_beast` | `bong_001.ogg` | Plays one readable step before arrival as a low, heavy alarm. |
 | Flood Surge warning | `threat_flood_surge` | `drop_004.ogg` | Plays on the immediate warning step as a short fluid signal. |
 | Civic Guardian warning | `threat_civic_guardian` | `glitch_004.ogg` | Plays one readable step before arrival as a clipped machine interruption. |
+| Ember Drakes warning | `threat_ember_drakes` | `knifeSlice2.ogg` | A fast cutting cue precedes the overhead fireline dive. |
+| Lift Saboteurs warning | `threat_lift_saboteurs` | `metalLatch.ogg` | A small mechanical release precedes the gantry attack. |
+| Elevator Warden warning | `threat_elevator_warden` | `drop_003.ogg` | A heavy descending cue precedes the counterweight impact. |
+| Salt Storm warning | `threat_salt_storm` | `error_008.ogg` | A dry signal alarm precedes the whiteout shear. |
+| Rival Scouts warning | `threat_rival_scouts` | `drawKnife1.ogg` | A light weapon cue precedes the open-flank mark. |
+| Rival Fortress warning | `threat_rival_fortress` | `doorClose_4.ogg` | A heavy closure cue precedes the parallel broadside. |
+| Signal Hunters warning | `threat_signal_hunters` | `glitch_003.ogg` | A broken transmission cue precedes the false-beacon lock. |
+| Bridgebreakers warning | `threat_bridgebreakers` | `metalPot2.ogg` | A lower metallic strike precedes the underspan charge. |
 | Module placed or moved | `module_place` | `metalLatch.ogg` | Plays after the authoritative placement succeeds. |
 | Module rotated | `module_rotate` | `beltHandle1.ogg` | Plays after a stored footprint or installed module rotates successfully. |
 | Module removed | `module_remove` | `doorClose_2.ogg` | Plays after the selected module returns to storage. |

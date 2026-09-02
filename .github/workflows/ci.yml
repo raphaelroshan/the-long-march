@@ -190,6 +190,9 @@ jobs:
             --file packet_cohort_summarizer=tools/summarize_playtest_packets.py \
             --file evidence_workflow_smoke=tools/smoke_playtest_evidence.py \
             --file scope_and_limitations=docs/internal_test_release.md \
+            --file early_access_candidate=docs/early_access_candidate.md \
+            --file early_access_known_limitations=docs/early_access_known_limitations.md \
+            --file early_access_test_matrix=docs/early_access_test_matrix.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Verify exact cohort manifest
         run: python tools/verify_release_manifest.py artifacts/release_manifest.json
@@ -201,6 +204,9 @@ jobs:
             build/
             artifacts/
             docs/internal_test_release.md
+            docs/early_access_candidate.md
+            docs/early_access_known_limitations.md
+            docs/early_access_test_matrix.md
             docs/playtest_guide.md
             docs/private_alpha_session_sheet.md
             tools/prepare_playtest_session.py

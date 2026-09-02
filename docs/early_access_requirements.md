@@ -85,7 +85,7 @@ Every new chapter, region, settlement, module, specialist, threat, event, or rou
 
 **LM-EA-5:** complete in `0.3.0-alpha.354`. Twenty authored decision/meeting IDs now include failure-road choices at Ash Chapel and Lee Trench; those choices can establish persistent Refuge Chain and Shared Cistern options in later runs. Cinder and Salt have bounded two-solution replay orders, and Debrief composes survival, regional direction, and promise state into 60 possible legible outcome combinations. See [`lm_ea_5_campaign_memory_report.md`](lm_ea_5_campaign_memory_report.md).
 
-**LM-EA-6:** harden campaign persistence, migration, controller/accessibility, package lifecycle, performance, audio, and Early Access release documentation.
+**LM-EA-6:** complete in `0.3.0-alpha.355`. The candidate meets the declared breadth floors with three chassis, twenty modules, six specialists, fifteen threats, twenty decisions/meetings, five developments, and 60 composable ending combinations. Save versions 4–15, Ridge Crawler geometry, new specialist effects, three-choice controller focus, semantic cues for every threat, performance budgets, package manifests, checksums, rollback, and honest release boundaries are automated. Owner approval and human playtesting remain explicit blockers to public-release claims. See [`lm_ea_6_hardening_report.md`](lm_ea_6_hardening_report.md).
 
 ## Non-negotiable boundaries
 
