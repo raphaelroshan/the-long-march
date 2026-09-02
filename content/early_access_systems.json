@@ -6,20 +6,26 @@
       "id": "medical",
       "module": "infirmary",
       "dependency": "adjacent operational crew_quarters",
-      "decision": "Spend power, mass, and two cells to protect crew and refuge compartments."
+      "decision": "Spend power, mass, and two cells to protect crew and refuge compartments.",
+      "weakness": "The room contributes no attack and loses its protection when its staffed adjacency breaks.",
+      "repair_consequence": "Restoring the Infirmary or its adjacent Crew Quarters restores Nera Quill's mitigation."
     },
     {
       "id": "command",
       "module": "command_deck",
       "dependency": "adjacent operational crew_quarters",
-      "decision": "Trade a staffed bay and heat for faster, riskier route doctrine."
+      "decision": "Trade a staffed bay and heat for faster, riskier route doctrine.",
+      "weakness": "Run Hot saves a day but adds four risk points, and damage to either staffed room removes Sela's feint.",
+      "repair_consequence": "Restoring the Command Deck or its adjacent Crew Quarters restores route acceleration and the feint."
     }
   ],
   "support_module": {
     "id": "salvage_crane",
     "family": "recovery",
     "dependency": "power and one exterior mount",
-    "decision": "Give up exterior capacity to brace lower-hull demolition attacks."
+    "decision": "Give up exterior capacity to brace lower-hull demolition attacks and recover one damaged system afterward.",
+    "weakness": "It consumes one exposed mount and one power without replacing a general-purpose weapon.",
+    "repair_consequence": "Clearing the Empty Mile restores one durability to the weakest system, or sells fittings for eight Ashmarks when the fortress is whole."
   },
   "specialists": [
     {
@@ -36,13 +42,42 @@
   "threat_families": [
     {
       "id": "signal_hunters",
-      "targets": ["signal", "command", "exterior"],
-      "counters": ["command_deck", "repeater_gun", "side_armor_skirt"]
+      "targets": ["signal", "command", "crew", "exterior"],
+      "counters": ["command_deck", "repeater_gun", "side_armor_skirt", "infirmary", "nera_quill"]
     },
     {
       "id": "bridgebreakers",
       "targets": ["lower_hull", "engine", "armor"],
       "counters": ["shell_cannon", "side_armor_skirt", "salvage_crane"]
+    }
+  ],
+  "complete_journey_proofs": [
+    {
+      "id": "command_feint",
+      "region": "white_salt_expanse",
+      "modules": ["ash_runner_engine", "coal_cell", "generator_core", "crew_quarters", "command_deck", "signal_coil", "wall_lamp"],
+      "specialist": "sela_vonn",
+      "signature_route": "salt_mine",
+      "threats": ["salt_storm", "signal_hunters"],
+      "gives_up": "ammunition, armor, heavy firepower, and the thirteenth mass point"
+    },
+    {
+      "id": "medical_watch",
+      "region": "white_salt_expanse",
+      "modules": ["ash_runner_engine", "coal_cell", "generator_core", "crew_quarters", "infirmary", "signal_coil", "wall_lamp"],
+      "specialist": "nera_quill",
+      "signature_route": "salt_mine",
+      "threats": ["salt_storm", "signal_hunters"],
+      "gives_up": "command acceleration, ammunition, armor, and heavy firepower"
+    },
+    {
+      "id": "demolition_recovery",
+      "region": "white_salt_expanse",
+      "modules": ["ash_runner_engine", "coal_cell", "generator_core", "shell_cannon", "salvage_crane", "signal_coil", "wall_lamp"],
+      "specialist": "",
+      "signature_route": "empty_mile",
+      "threats": ["bridgebreakers"],
+      "gives_up": "crew facilities, armor, and full-ammunition cannon fire"
     }
   ]
 }
