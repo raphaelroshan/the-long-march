@@ -32,7 +32,7 @@ def main() -> int:
         errors.append("candidate content version must match the package manifest")
     if data.get("status") != "candidate_not_public_release" or manifest.get("release_ready") is not False:
         errors.append("candidate must not claim owner approval or public-release readiness")
-    if compatibility.get("candidate_platforms") != ["windows", "macos"] or compatibility.get("offline_runtime") is not True:
+    if compatibility.get("candidate_platforms") != ["windows", "macos", "linux"] or compatibility.get("offline_runtime") is not True:
         errors.append("candidate platform and offline boundaries must remain explicit")
     if compatibility.get("save_versions") != {"minimum": 4, "current": 15}:
         errors.append("save compatibility window must match the authoritative state")

@@ -15,8 +15,10 @@ def main() -> int:
     assert "not a public release or storefront-ready product" in notes
     assert "The-Long-March-v0.3.0-alpha.test-Windows.exe" in notes
     assert "The-Long-March-v0.3.0-alpha.test-macOS.zip" in notes
+    assert "The-Long-March-v0.3.0-alpha.test-Linux.x86_64" in notes
     assert "The-Long-March-v0.3.0-alpha.test-Windows-Cohort.zip" in notes
     assert "The-Long-March-v0.3.0-alpha.test-macOS-Cohort.zip" in notes
+    assert "The-Long-March-v0.3.0-alpha.test-Linux-Cohort.zip" in notes
     assert "prepare_playtest_session.py" in notes
     assert "finalize_playtest_session.py create" in notes
     assert "verified packet cohort review" in notes

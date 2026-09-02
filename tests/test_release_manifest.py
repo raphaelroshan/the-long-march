@@ -58,6 +58,20 @@ def main() -> int:
 		assert game_entry["bytes"] == len(b"deterministic build")
 		assert game_entry["sha256"] == hashlib.sha256(b"deterministic build").hexdigest()
 		assert verify_manifest(manifest, root) == []
+		linux_manifest = build_manifest(
+			root,
+			root / "tools/ci_manifest.json",
+			[("linux_executable", "build/game.exe")],
+			"merge-sha",
+			"head-sha",
+			"refs/pull/12/merge",
+			"https://example.invalid/runs/12",
+			"linux",
+			"4.4.1.stable.official",
+			["linux_export", "linux_packaged_smoke"],
+		)
+		assert linux_manifest["cohort"]["platform"] == "linux"
+		assert verify_manifest(linux_manifest, root) == []
 		missing_toolchain = json.loads(json.dumps(manifest))
 		missing_toolchain.pop("toolchain")
 		assert any("Godot toolchain" in error for error in verify_manifest(missing_toolchain, root))

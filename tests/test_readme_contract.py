@@ -12,6 +12,7 @@ def main() -> int:
         "private-alpha boundary": "not a public launch or storefront-ready release",
         "Windows download": "**Windows:**",
         "macOS download": "**macOS:**",
+        "Linux download": "**Linux:**",
         "release checksums": "SHA256SUMS.txt",
         "cohort preflight": "tools/prepare_playtest_session.py",
         "session packet finalizer": "tools/finalize_playtest_session.py",

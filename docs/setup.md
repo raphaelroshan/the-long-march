@@ -45,7 +45,7 @@ Title Settings treats local data categories separately: **Clear Local Save** rem
 
 ## Release staging
 
-The repository contains reviewed Windows and unsigned macOS playtest export presets. Run `bash scripts/export_playtest.sh windows` or `bash scripts/export_playtest.sh macos` after installing matching Godot export templates. Tags matching `v*` produce both artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.
+The repository contains reviewed Windows, unsigned macOS, and x86-64 Linux playtest export presets. Run `bash scripts/export_playtest.sh windows`, `bash scripts/export_playtest.sh macos`, or `bash scripts/export_playtest.sh linux` after installing matching Godot export templates. Tags matching `v*` produce all three artifacts in the guarded GitHub Actions workflow. Steam, Epic, Apple signing, and notarization credentials must be added only through protected environments after a human release review.
 
 The export script prints the detected Godot version, removes any stale target before building, and verifies that a non-empty artifact was created. A missing or mismatched export-template installation exits with status `3` and names the prerequisite instead of leaving an old build that appears current.
 
