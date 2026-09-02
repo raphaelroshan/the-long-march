@@ -1,13 +1,13 @@
 # The Long March — Early Access candidate
 
-**Candidate version:** `0.3.0-alpha.355`  
+**Candidate version:** `0.3.0-alpha.356`
 **Release state:** mechanically complete candidate; owner approval and human playtesting are still required before public release.
 
 This candidate contains four standalone five-contact journeys: Ashgate Lowlands, Flooded Veyru, the Cinder Spine, and the White Salt Expanse. Together they exercise three chassis geometries, twenty modules, six specialists, fifteen threat families, twenty authored decisions or meetings, five persistent regional developments, and composable Debrief outcomes.
 
 ## Build and verification
 
-Pull-request CI is the source of candidate packages. Windows and macOS jobs export with the pinned Godot version, launch the package headlessly, verify the offline boundary, and write a checksummed release manifest. A version tag can publish a GitHub prerelease only after both candidates are downloaded and reverified. `release_ready` remains false until the repository owner approves a public release.
+Pull-request CI is the source of candidate packages. Windows and Linux jobs export with the pinned Godot version, launch the packages headlessly, verify the offline boundary, and write checksummed release manifests before merge. A version tag repeats the complete workflow for Windows, unsigned macOS, and Linux, and can publish a GitHub prerelease only after all three candidates are downloaded and reverified. `release_ready` remains false until the repository owner approves a public release.
 
 Run the complete local gate with:
 

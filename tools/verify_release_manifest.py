@@ -30,7 +30,7 @@ def verify_manifest(manifest: dict[str, Any], root: Path) -> list[str]:
 		errors.append("manifest files must be a non-empty array")
 		return errors
 	cohort = manifest.get("cohort")
-	if not isinstance(cohort, dict) or cohort.get("platform") not in ("windows", "macos") or not str(cohort.get("id", "")).strip():
+	if not isinstance(cohort, dict) or cohort.get("platform") not in ("windows", "macos", "linux") or not str(cohort.get("id", "")).strip():
 		errors.append("manifest is missing a valid cohort ID or platform")
 	source = manifest.get("source")
 	if not isinstance(source, dict) or not all(str(source.get(key, "")).strip() for key in ("repository", "workflow_commit", "head_commit", "ref", "workflow_run_url")):

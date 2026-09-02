@@ -1,14 +1,14 @@
 {
   "slug": "the-long-march",
   "display_name": "The Long March",
-  "prototype_version": "0.3.0-alpha.355",
+  "prototype_version": "0.3.0-alpha.356",
 	"early_access_candidate": true,
   "playtest_ready": true,
   "godot_test": "res://tests/test_fortress_state.gd",
   "primary_repo": "raphaelroshan/the-long-march",
   "release_platforms": ["steam", "epic-games-store"],
   "release_ready": false,
-  "release_candidate_platforms": ["windows", "macos"],
+  "release_candidate_platforms": ["windows", "macos", "linux"],
   "ai_review_roles": ["architecture", "gameplay", "qa", "security"],
   "review_policy": {
     "fail_on": "critical",

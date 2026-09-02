@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.355`
+**Current code baseline:** `0.3.0-alpha.356`
 **Current playable slices:** Ashgate Lowlands, Flooded Veyru, The Cinder Spine, and The White Salt Expanse
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current stacked baseline:** `0.3.0-alpha.355`, completing LM-EA-1 through LM-EA-6 across four regions, three chassis, dependency breadth, campaign memory, composable endings, and candidate hardening.
+**Current stacked baseline:** `0.3.0-alpha.356`, completing LM-EA-1 through LM-EA-6 across four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, and native Linux cohort verification.
 **Next build target:** **LM-EA-4** — add two module families, two specialists, and two threat families that create new dependency questions.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -37,7 +37,7 @@ The implemented slice includes the following capabilities:
 | Recovery | Non-final defeats retreat to a valid regional anchor with explicit time, money, pressure, and limping-state costs. Meridian Pass and the Dry Archive are declared final commitments. |
 | Persistence | Versioned saves, backup recovery, incompatible-save handling, isolated profiles, local playtest notes, and explicit Continue/New Run behavior exist. |
 | Presentation | Ashgate Depot and Lantern Quay open as fortress-centered bazaars with six stable stations. Plan Journey has a full-frame readiness/map/dossier layout, route commitment enters a mandatory side-on moving-fortress road screen with exact cost receipts, and eligible authored interruptions can now occur before contact without moving the fortress to the destination. The UI also shows modules, dependencies, threat forecasts, encounter progress, services, and debrief information. |
-| Packaging | Local and CI verification includes Godot tests, policy/content checks, Windows/macOS export scripts, packaged smoke coverage, offline boundaries, input, scaling, pause, save path, and teardown checks. |
+| Packaging | Local and CI verification includes Godot tests, policy/content checks, Windows/macOS/Linux export scripts, packaged smoke coverage, offline boundaries, input, scaling, pause, save path, and teardown checks. |
 
 The implemented journeys are deliberately narrow and isolated. Cross-region consequences, a complete cargo economy, a broad faction simulation, a full character-campaign layer, final audio, final animation, and storefront adapters are not yet complete merely because they appear in the design package.
 
@@ -1082,4 +1082,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; see the linked reports in [`early_access_requirements.md`](early_access_requirements.md). The repository's next gate is human: retain exact Windows and macOS candidate artifacts, run consented uncoached sessions from [`early_access_test_matrix.md`](early_access_test_matrix.md), turn repeated observations into narrow issues, and require owner approval before public promotion. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.
+LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds a native, checksummed Linux cohort to the Windows/macOS release pipeline. See the linked reports in [`early_access_requirements.md`](early_access_requirements.md). The repository's next gate is human: retain exact Windows, macOS, and Linux candidate artifacts, run consented uncoached sessions from [`early_access_test_matrix.md`](early_access_test_matrix.md), turn repeated observations into narrow issues, and require owner approval before public promotion. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.

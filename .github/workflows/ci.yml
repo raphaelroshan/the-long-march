@@ -234,3 +234,110 @@ jobs:
         run: |
           python staging/candidate/tools/verify_release_manifest.py staging/candidate/artifacts/release_manifest.json
           python staging/candidate/tools/smoke_playtest_evidence.py staging/candidate/artifacts/release_manifest.json --output "$RUNNER_TEMP/pr-evidence-smoke"
+
+  package-linux:
+    name: Package Linux release candidate
+    runs-on: ubuntu-latest
+    needs: [policy, tests, ai-review]
+    if: needs.policy.result == 'success' && needs.tests.result == 'success' && needs.ai-review.result != 'failure'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: true
+      - name: Import and validate project
+        run: godot --headless --path . --editor --quit
+      - name: Export Linux build
+        run: LONG_MARCH_SKIP_IMPORT=1 bash scripts/export_playtest.sh linux
+      - name: Smoke packaged Linux build
+        run: python tools/smoke_playtest.py --platform linux --package build/the-long-march-linux.x86_64
+      - name: Package source snapshot
+        run: |
+          mkdir -p artifacts
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
+      - name: Create exact Linux cohort manifest
+        env:
+          COHORT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/create_release_manifest.py \
+            --root . \
+            --output artifacts/release_manifest.json \
+            --commit "$GITHUB_SHA" \
+            --head-commit "$COHORT_HEAD_SHA" \
+            --ref "$GITHUB_REF" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --platform linux \
+            --engine-version "$(godot --version | head -n 1)" \
+            --verification repository_policy \
+            --verification godot_tests_ubuntu \
+            --verification godot_tests_windows \
+            --verification ai_review \
+            --verification linux_export \
+            --verification linux_packaged_smoke \
+            --verification offline_boundary \
+            --verification performance_budget \
+            --file desktop_package=build/the-long-march-linux.x86_64 \
+            --file source_snapshot="artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            --file observer_brief=docs/playtest_guide.md \
+            --file session_sheet=docs/private_alpha_session_sheet.md \
+            --file session_preparer=tools/prepare_playtest_session.py \
+            --file session_finalizer=tools/finalize_playtest_session.py \
+            --file report_output=tools/report_output.py \
+            --file session_summarizer=tools/summarize_playtest_feedback.py \
+            --file cohort_summarizer=tools/summarize_playtest_cohort.py \
+            --file packet_cohort_summarizer=tools/summarize_playtest_packets.py \
+            --file evidence_workflow_smoke=tools/smoke_playtest_evidence.py \
+            --file scope_and_limitations=docs/internal_test_release.md \
+            --file early_access_candidate=docs/early_access_candidate.md \
+            --file early_access_known_limitations=docs/early_access_known_limitations.md \
+            --file early_access_test_matrix=docs/early_access_test_matrix.md \
+            --file manifest_verifier=tools/verify_release_manifest.py
+      - name: Verify exact Linux cohort manifest
+        run: python tools/verify_release_manifest.py artifacts/release_manifest.json
+      - name: Upload Linux release candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-release-candidate-${{ github.run_number }}
+          path: |
+            build/
+            artifacts/
+            docs/internal_test_release.md
+            docs/early_access_candidate.md
+            docs/early_access_known_limitations.md
+            docs/early_access_test_matrix.md
+            docs/playtest_guide.md
+            docs/private_alpha_session_sheet.md
+            tools/prepare_playtest_session.py
+            tools/finalize_playtest_session.py
+            tools/report_output.py
+            tools/summarize_playtest_feedback.py
+            tools/summarize_playtest_cohort.py
+            tools/summarize_playtest_packets.py
+            tools/smoke_playtest_evidence.py
+            tools/verify_release_manifest.py
+          if-no-files-found: error
+          retention-days: 30
+
+  verify-linux-package:
+    name: Verify downloaded Linux candidate
+    runs-on: ubuntu-latest
+    needs: package-linux
+    steps:
+      - name: Download exact Linux release candidate
+        uses: actions/download-artifact@v7
+        with:
+          name: linux-release-candidate-${{ github.run_number }}
+          path: staging/linux-candidate
+      - name: Verify downloaded Linux cohort and complete evidence workflow
+        run: |
+          python staging/linux-candidate/tools/verify_release_manifest.py staging/linux-candidate/artifacts/release_manifest.json
+          python staging/linux-candidate/tools/smoke_playtest_evidence.py staging/linux-candidate/artifacts/release_manifest.json --output "$RUNNER_TEMP/linux-pr-evidence-smoke"

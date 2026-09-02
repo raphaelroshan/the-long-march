@@ -13,8 +13,10 @@ def render_notes(tag: str, workflow_url: str) -> str:
         raise ValueError("workflow URL must be absolute")
     windows = f"The-Long-March-{tag}-Windows.exe"
     macos = f"The-Long-March-{tag}-macOS.zip"
+    linux = f"The-Long-March-{tag}-Linux.x86_64"
     windows_cohort = f"The-Long-March-{tag}-Windows-Cohort.zip"
     macos_cohort = f"The-Long-March-{tag}-macOS-Cohort.zip"
+    linux_cohort = f"The-Long-March-{tag}-Linux-Cohort.zip"
     return "\n".join(
         [
             "Private-alpha playtest build — not a public release or storefront-ready product.",
@@ -23,8 +25,10 @@ def render_notes(tag: str, workflow_url: str) -> str:
             "",
             f"- Windows standalone: `{windows}`",
             f"- macOS standalone: `{macos}`",
+            f"- Linux standalone: `{linux}`",
             f"- Windows observer cohort: `{windows_cohort}`",
             f"- macOS observer cohort: `{macos_cohort}`",
+            f"- Linux observer cohort: `{linux_cohort}`",
             "",
             "Standalone builds are the quickest way to play. Observer cohorts also contain the exact manifest, source snapshot, playtest guide, session template, local summary tools, session preflight, provenance-checked packet finalizer, and verified packet cohort review.",
             "",

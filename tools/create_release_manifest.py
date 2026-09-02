@@ -97,7 +97,7 @@ def main() -> int:
 	parser.add_argument("--head-commit", default="")
 	parser.add_argument("--ref", required=True)
 	parser.add_argument("--run-url", required=True)
-	parser.add_argument("--platform", required=True, choices=("windows", "macos"))
+	parser.add_argument("--platform", required=True, choices=("windows", "macos", "linux"))
 	parser.add_argument("--engine-version", required=True)
 	parser.add_argument("--file", action="append", type=parse_file, default=[])
 	parser.add_argument("--verification", action="append", default=[])

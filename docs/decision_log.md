@@ -1326,3 +1326,11 @@ The Cinder Spine now launches on the Ridge Crawler: a 15-mass frame with two mis
 ## 2026-09-02 — Candidate status is machine-readable but owner-controlled
 
 The Early Access candidate declares its implemented breadth, save window, platforms, verification gates, and human evidence gaps in one validated artifact. The CI manifest still sets `release_ready` to false. Passing automation permits review of an exact candidate; only the owner can decide that the build and its human evidence justify public promotion.
+
+## 2026-09-02 — Linux is a verified cohort, not a source-only promise
+
+The desktop candidate now exports an x86-64 Linux executable with the same source snapshot, observer tools, manifest, checksum, launch smoke, downloaded-cohort verification, and tag-gated publication contract as Windows and macOS. Pull requests build Linux natively on Ubuntu instead of treating a headless editor test as evidence that a player artifact works. This was chosen over advertising source compatibility because playtest comparisons require an exact runnable artifact; distro packaging and compatibility beyond the current Ubuntu runner remain explicit human-validation work.
+
+## 2026-09-02 — A created package is accepted only through native launch smoke
+
+Godot can return a nonzero export status after completing `savepack` and creating a nonempty desktop artifact without reporting a configuration or serialization error. The export wrapper still fails when no artifact exists, including missing-template and partial-export cases. When a nonempty artifact exists, it records the anomalous status and hands the file to the mandatory native packaged-launch smoke; only that successful launch permits manifesting or upload. This was chosen over deleting an unexamined artifact or ignoring export failures unconditionally because the runnable package, not an ambiguous process status, is the object the cohort must prove.

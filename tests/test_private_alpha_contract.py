@@ -18,8 +18,8 @@ def main() -> int:
         errors.append("candidate manifest must remain playtest_ready")
     if manifest.get("release_ready") is not False:
         errors.append("private alpha must not claim public release readiness")
-    if manifest.get("release_candidate_platforms") != ["windows", "macos"]:
-        errors.append("candidate platforms must stay explicitly bounded to Windows and macOS")
+    if manifest.get("release_candidate_platforms") != ["windows", "macos", "linux"]:
+        errors.append("candidate platforms must stay explicitly bounded to Windows, macOS, and Linux")
 
     verify = (root / "scripts/verify.sh").read_text(encoding="utf-8")
     for marker in (
@@ -61,26 +61,29 @@ def main() -> int:
     require(workflows, "name: Verify downloaded release candidate", "downloaded PR cohort gate", errors)
     require(workflows, "needs: package", "downloaded PR cohort dependency", errors)
     require(workflows, "tools/smoke_playtest_evidence.py staging/candidate/", "downloaded PR cohort evidence smoke", errors)
-    if workflows.count("session_preparer=tools/prepare_playtest_session.py") != 2:
-        errors.append("both CI and tagged release manifests must checksum the session preflight")
-    if workflows.count("tools/prepare_playtest_session.py") < 4:
-        errors.append("both CI and tagged release artifacts must upload the session preflight")
-    if workflows.count("session_finalizer=tools/finalize_playtest_session.py") != 2:
-        errors.append("both CI and tagged release manifests must checksum the session finalizer")
-    if workflows.count("tools/finalize_playtest_session.py") < 4:
-        errors.append("both CI and tagged release artifacts must upload the session finalizer")
-    if workflows.count("packet_cohort_summarizer=tools/summarize_playtest_packets.py") != 2:
-        errors.append("both CI and tagged release manifests must checksum the packet cohort summarizer")
-    if workflows.count("tools/summarize_playtest_packets.py") < 4:
-        errors.append("both CI and tagged release artifacts must upload the packet cohort summarizer")
-    if workflows.count("report_output=tools/report_output.py") != 2:
-        errors.append("both CI and tagged release manifests must checksum the safe report writer")
-    if workflows.count("tools/report_output.py") < 4:
-        errors.append("both CI and tagged release artifacts must upload the safe report writer")
-    if workflows.count("evidence_workflow_smoke=tools/smoke_playtest_evidence.py") != 2:
-        errors.append("both CI and tagged release manifests must checksum the evidence workflow smoke")
-    if workflows.count("tools/smoke_playtest_evidence.py") < 4:
-        errors.append("both CI and tagged release artifacts must upload and exercise the evidence workflow smoke")
+    require(workflows, "name: Package Linux release candidate", "native Linux package gate", errors)
+    require(workflows, "name: Verify downloaded Linux candidate", "downloaded Linux cohort gate", errors)
+    require(workflows, "tools/smoke_playtest_evidence.py staging/linux-candidate/", "downloaded Linux cohort evidence smoke", errors)
+    if workflows.count("session_preparer=tools/prepare_playtest_session.py") != 3:
+        errors.append("Windows CI, Linux CI, and tagged release manifests must checksum the session preflight")
+    if workflows.count("tools/prepare_playtest_session.py") < 6:
+        errors.append("Windows CI, Linux CI, and tagged release artifacts must upload the session preflight")
+    if workflows.count("session_finalizer=tools/finalize_playtest_session.py") != 3:
+        errors.append("Windows CI, Linux CI, and tagged release manifests must checksum the session finalizer")
+    if workflows.count("tools/finalize_playtest_session.py") < 6:
+        errors.append("Windows CI, Linux CI, and tagged release artifacts must upload the session finalizer")
+    if workflows.count("packet_cohort_summarizer=tools/summarize_playtest_packets.py") != 3:
+        errors.append("Windows CI, Linux CI, and tagged release manifests must checksum the packet cohort summarizer")
+    if workflows.count("tools/summarize_playtest_packets.py") < 6:
+        errors.append("Windows CI, Linux CI, and tagged release artifacts must upload the packet cohort summarizer")
+    if workflows.count("report_output=tools/report_output.py") != 3:
+        errors.append("Windows CI, Linux CI, and tagged release manifests must checksum the safe report writer")
+    if workflows.count("tools/report_output.py") < 6:
+        errors.append("Windows CI, Linux CI, and tagged release artifacts must upload the safe report writer")
+    if workflows.count("evidence_workflow_smoke=tools/smoke_playtest_evidence.py") != 3:
+        errors.append("Windows CI, Linux CI, and tagged release manifests must checksum the evidence workflow smoke")
+    if workflows.count("tools/smoke_playtest_evidence.py") < 6:
+        errors.append("Windows CI, Linux CI, and tagged release artifacts must upload and exercise the evidence workflow smoke")
 
     release_doc = (root / "docs/internal_test_release.md").read_text(encoding="utf-8")
     for statement in (

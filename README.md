@@ -14,6 +14,7 @@ _Current code-native alpha presentation. Final art and animation are still in de
 
 - **Windows:** download the standalone `.exe`.
 - **macOS:** download the standalone `.zip`, extract it, and open the app.
+- **Linux:** download the standalone `.x86_64`, mark it executable, and launch it.
 - **Observed playtest:** download the matching `Cohort.zip`; it includes the manifest, source snapshot, observer guide, session template, and local review tools.
 - **Integrity:** use the attached `SHA256SUMS.txt` for release assets. Cohort manifests verify every file inside an observer archive.
 
@@ -75,9 +76,10 @@ Run the project to open the title menu. For local desktop exports:
 ```bash
 bash scripts/export_playtest.sh windows
 bash scripts/export_playtest.sh macos
+bash scripts/export_playtest.sh linux
 ```
 
-Generated builds go to `build/` and are ignored by Git. Pull requests re-download and verify their exact packaged Windows cohort. Owner-created `v*` tags run the guarded Windows/macOS build, launch smoke, manifest verification, complete local-evidence smoke, archive, checksum, and prerelease pipeline.
+Generated builds go to `build/` and are ignored by Git. Pull requests re-download and verify exact packaged Windows and Linux cohorts. Owner-created `v*` tags run guarded Windows, macOS, and Linux builds through launch smoke, manifest verification, complete local-evidence smoke, archive, checksum, and prerelease publication.
 
 ## Run an observed playtest
 

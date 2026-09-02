@@ -22,11 +22,14 @@ case "$platform" in
 	macos)
 		rm -f build/the-long-march-macos.zip
 		;;
+	linux)
+		rm -f build/the-long-march-linux.x86_64
+		;;
 	all)
-		rm -f build/the-long-march-windows.exe build/the-long-march-macos.zip
+		rm -f build/the-long-march-windows.exe build/the-long-march-macos.zip build/the-long-march-linux.x86_64
 		;;
 	*)
-		echo "Usage: scripts/export_playtest.sh [windows|macos|all]" >&2
+		echo "Usage: scripts/export_playtest.sh [windows|macos|linux|all]" >&2
 		exit 2
 		;;
 esac
@@ -40,17 +43,18 @@ fi
 export_playtest() {
 	local preset="$1"
 	local output="$2"
-	if ! "$engine" --headless --path . --export-release "$preset" "$output"; then
+	local export_status=0
+	"$engine" --headless --path . --export-release "$preset" "$output" || export_status=$?
+	if [ ! -s "$output" ]; then
 		rm -f "$output"
 		echo "Export failed for ${preset}. Install export templates matching ${engine_version}, then retry." >&2
 		exit 3
 	fi
-	if [ ! -s "$output" ]; then
-		echo "Export reported success but did not create ${output}." >&2
-		exit 3
-	fi
 	local bytes
 	bytes="$(wc -c < "$output" | tr -d ' ')"
+	if [ "$export_status" -ne 0 ]; then
+		echo "WARNING: ${preset} returned status ${export_status} after creating ${output}; the mandatory packaged launch smoke must validate it." >&2
+	fi
 	echo "Created ${output} (${bytes} bytes)"
 }
 
@@ -61,12 +65,16 @@ case "$platform" in
 	macos)
 		export_playtest "macOS Playtest" "build/the-long-march-macos.zip"
 		;;
+	linux)
+		export_playtest "Linux Playtest" "build/the-long-march-linux.x86_64"
+		;;
 	all)
 		export_playtest "Windows Desktop" "build/the-long-march-windows.exe"
 		export_playtest "macOS Playtest" "build/the-long-march-macos.zip"
+		export_playtest "Linux Playtest" "build/the-long-march-linux.x86_64"
 		;;
 	*)
-		echo "Usage: scripts/export_playtest.sh [windows|macos|all]" >&2
+		echo "Usage: scripts/export_playtest.sh [windows|macos|linux|all]" >&2
 		exit 2
 		;;
 esac

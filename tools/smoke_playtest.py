@@ -32,7 +32,7 @@ def smoke_error(returncode: int, output: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--platform", required=True, choices=("windows", "macos"))
+    parser.add_argument("--platform", required=True, choices=("windows", "macos", "linux"))
     parser.add_argument("--package", type=Path, required=True)
     parser.add_argument("--timeout", type=int, default=45)
     args = parser.parse_args()
@@ -43,7 +43,9 @@ def main() -> int:
     try:
         with tempfile.TemporaryDirectory(prefix="long-march-smoke-") as directory:
             smoke_root = Path(directory)
-            executable = package if args.platform == "windows" else macos_executable(package, smoke_root)
+            executable = macos_executable(package, smoke_root) if args.platform == "macos" else package
+            if args.platform == "linux":
+                executable.chmod(executable.stat().st_mode | stat.S_IXUSR)
             environment = os.environ.copy()
             environment["LONG_MARCH_PACKAGED_SMOKE"] = "1"
             result = subprocess.run(

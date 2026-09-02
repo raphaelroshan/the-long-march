@@ -24,6 +24,10 @@ jobs:
             os: macos-latest
             target: macos
             artifact: macos-playtest
+          - name: Linux
+            os: ubuntu-latest
+            target: linux
+            artifact: linux-playtest
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -48,22 +52,22 @@ jobs:
         run: LONG_MARCH_SKIP_IMPORT=1 bash scripts/export_playtest.sh "${{ matrix.target }}"
       - name: Smoke packaged desktop build
         run: |
-          if [ "${{ matrix.target }}" = "windows" ]; then
-            package="build/the-long-march-windows.exe"
-          else
-            package="build/the-long-march-macos.zip"
-          fi
+          case "${{ matrix.target }}" in
+            windows) package="build/the-long-march-windows.exe" ;;
+            macos) package="build/the-long-march-macos.zip" ;;
+            linux) package="build/the-long-march-linux.x86_64" ;;
+          esac
           python tools/smoke_playtest.py --platform "${{ matrix.target }}" --package "$package"
       - name: Create release manifest
         run: |
           mkdir -p artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
-          if [ "${{ matrix.target }}" = "windows" ]; then
-            package="build/the-long-march-windows.exe"
-          else
-            package="build/the-long-march-macos.zip"
-          fi
+          case "${{ matrix.target }}" in
+            windows) package="build/the-long-march-windows.exe" ;;
+            macos) package="build/the-long-march-macos.zip" ;;
+            linux) package="build/the-long-march-linux.x86_64" ;;
+          esac
           python tools/create_release_manifest.py \
             --root . \
             --output artifacts/release_manifest.json \
@@ -146,22 +150,32 @@ jobs:
         with:
           name: macos-playtest-${{ github.ref_name }}
           path: staging/macos
+      - name: Download Linux cohort
+        uses: actions/download-artifact@v7
+        with:
+          name: linux-playtest-${{ github.ref_name }}
+          path: staging/linux
       - name: Verify downloaded cohorts and complete evidence workflow
         run: |
           python staging/windows/tools/verify_release_manifest.py staging/windows/artifacts/release_manifest.json
           python staging/macos/tools/verify_release_manifest.py staging/macos/artifacts/release_manifest.json
+          python staging/linux/tools/verify_release_manifest.py staging/linux/artifacts/release_manifest.json
           python staging/windows/tools/smoke_playtest_evidence.py staging/windows/artifacts/release_manifest.json --output "$RUNNER_TEMP/windows-evidence-smoke"
           python staging/macos/tools/smoke_playtest_evidence.py staging/macos/artifacts/release_manifest.json --output "$RUNNER_TEMP/macos-evidence-smoke"
+          python staging/linux/tools/smoke_playtest_evidence.py staging/linux/artifacts/release_manifest.json --output "$RUNNER_TEMP/linux-evidence-smoke"
       - name: Assemble public release assets
         run: |
           version="$GITHUB_REF_NAME"
           mkdir -p release
           cp staging/windows/build/the-long-march-windows.exe "release/The-Long-March-${version}-Windows.exe"
           cp staging/macos/build/the-long-march-macos.zip "release/The-Long-March-${version}-macOS.zip"
+          cp staging/linux/build/the-long-march-linux.x86_64 "release/The-Long-March-${version}-Linux.x86_64"
           (cd staging/windows && zip -qr "$GITHUB_WORKSPACE/release/The-Long-March-${version}-Windows-Cohort.zip" .)
           (cd staging/macos && zip -qr "$GITHUB_WORKSPACE/release/The-Long-March-${version}-macOS-Cohort.zip" .)
+          (cd staging/linux && zip -qr "$GITHUB_WORKSPACE/release/The-Long-March-${version}-Linux-Cohort.zip" .)
           unzip -tq "release/The-Long-March-${version}-Windows-Cohort.zip"
           unzip -tq "release/The-Long-March-${version}-macOS-Cohort.zip"
+          unzip -tq "release/The-Long-March-${version}-Linux-Cohort.zip"
           unzip -tq "release/The-Long-March-${version}-macOS.zip"
           (cd release && sha256sum The-Long-March-* > SHA256SUMS.txt)
       - name: Prepare tester-facing release notes
