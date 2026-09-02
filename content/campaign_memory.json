@@ -29,6 +29,31 @@
       "later_event": "observatory_signal"
     }
   ],
+  "obligation_memory": {
+    "source_region": "ashgate_lowlands",
+    "contract": "morrowline_parts_guard",
+    "destination_region": "flooded_veyru",
+    "states": [
+      {
+        "status": "completed",
+        "id": "morrowline_supply_line",
+        "effect": "Evacuation Camp gains one service action from the delivered parts network.",
+        "ending_network": "industrial_corridor"
+      },
+      {
+        "status": "declined",
+        "id": "free_carters_chart",
+        "effect": "Sunken Tramworks gains one less regional pressure from the independent convoy's chart.",
+        "ending_network": "fast_corridor"
+      },
+      {
+        "status": "failed",
+        "id": "wreckers_warning",
+        "effect": "Pump Gallery risk falls by six points because survivors marked the failed approach.",
+        "ending_network": "shelter_chain"
+      }
+    ]
+  },
   "replay_goals": [
     {"id": "cinder_redundant_lift", "region": "cinder_spine", "solutions": 2, "reward": "none"},
     {"id": "salt_dependency_watch", "region": "white_salt_expanse", "solutions": 2, "reward": "none"}

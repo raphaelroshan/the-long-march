@@ -4,10 +4,11 @@ extends RefCounted
 ## Small local progression record for consequences and results that survive runs.
 ## It contains authored stable IDs only and performs no network I/O.
 
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const MIN_SUPPORTED_SCHEMA_VERSION := 1
 const DEFAULT_PROGRESS_PATH := "user://the_long_march_progress.json"
 const VALID_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "cinder_refuge_chain", "salt_public_beacons", "salt_shared_cisterns"]
+const VALID_OBLIGATION_STATES := ["completed", "declined", "failed"]
 const REGION_RESULT_RANKS := {
 	"ashgate_lowlands": {
 		"march_failed": 0,
@@ -34,6 +35,7 @@ const REGION_RESULT_RANKS := {
 var progress_path: String
 var developments: Array[String] = []
 var region_results: Dictionary = {}
+var obligation_records: Dictionary = {}
 
 
 func _init(path: String = DEFAULT_PROGRESS_PATH) -> void:
@@ -59,6 +61,27 @@ func survived_region_count() -> int:
 		if survived_region(String(region_id)):
 			count += 1
 	return count
+
+
+func obligation_for_region(region_id: String) -> String:
+	return String(obligation_records.get(region_id, ""))
+
+
+func record_obligation(region_id: String, status: String) -> Dictionary:
+	if region_id not in REGION_RESULT_RANKS:
+		return {"ok": false, "reason": "unknown obligation region"}
+	if status not in VALID_OBLIGATION_STATES:
+		return {"ok": false, "reason": "unknown obligation state"}
+	var previous := obligation_for_region(region_id)
+	obligation_records[region_id] = status
+	var saved := save()
+	if not bool(saved.get("ok", false)):
+		if previous.is_empty():
+			obligation_records.erase(region_id)
+		else:
+			obligation_records[region_id] = previous
+		return saved
+	return {"ok": true, "recorded": previous != status, "region": region_id, "status": status, "path": saved.get("path", "")}
 
 
 func unlock(development_id: String) -> Dictionary:
@@ -101,6 +124,7 @@ func clear_progress() -> Dictionary:
 			return {"ok": false, "reason": error_string(removal_error)}
 	developments.clear()
 	region_results.clear()
+	obligation_records.clear()
 	return {"ok": true, "cleared": true}
 
 
@@ -111,7 +135,8 @@ func save() -> Dictionary:
 	file.store_string(JSON.stringify({
 		"schema_version": SCHEMA_VERSION,
 		"developments": developments.duplicate(),
-		"region_results": region_results.duplicate(true)
+		"region_results": region_results.duplicate(true),
+		"obligation_records": obligation_records.duplicate(true)
 	}, "\t"))
 	file.close()
 	return {"ok": true, "path": ProjectSettings.globalize_path(progress_path)}
@@ -120,8 +145,9 @@ func save() -> Dictionary:
 func load_progress() -> Dictionary:
 	developments.clear()
 	region_results.clear()
+	obligation_records.clear()
 	if not FileAccess.file_exists(progress_path):
-		return {"ok": true, "exists": false, "developments": []}
+		return {"ok": true, "exists": false, "developments": [], "region_results": {}, "obligation_records": {}}
 	var file := FileAccess.open(progress_path, FileAccess.READ)
 	if file == null:
 		return {"ok": false, "exists": true, "reason": "regional record could not be opened"}
@@ -154,6 +180,17 @@ func load_progress() -> Dictionary:
 		if ranks.is_empty() or result_id not in ranks:
 			return {"ok": false, "exists": true, "reason": "regional record contains an unknown result"}
 		restored_results[region_id] = result_id
+	var raw_obligations: Variant = parsed.get("obligation_records", {})
+	if not raw_obligations is Dictionary or raw_obligations.size() > REGION_RESULT_RANKS.size():
+		return {"ok": false, "exists": true, "reason": "obligation record is malformed"}
+	var restored_obligations: Dictionary = {}
+	for raw_region_id in raw_obligations:
+		var region_id := String(raw_region_id)
+		var status := String(raw_obligations[raw_region_id])
+		if region_id not in REGION_RESULT_RANKS or status not in VALID_OBLIGATION_STATES:
+			return {"ok": false, "exists": true, "reason": "obligation record contains an unknown region or state"}
+		restored_obligations[region_id] = status
 	developments = restored
 	region_results = restored_results
-	return {"ok": true, "exists": true, "developments": developments.duplicate(), "region_results": region_results.duplicate(true)}
+	obligation_records = restored_obligations
+	return {"ok": true, "exists": true, "developments": developments.duplicate(), "region_results": region_results.duplicate(true), "obligation_records": obligation_records.duplicate(true)}

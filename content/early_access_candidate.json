@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "candidate_not_public_release",
-  "version": "0.3.0-alpha.360",
+  "version": "0.3.0-alpha.361",
   "scope": {
     "regions": 4,
     "chassis_templates": 3,
@@ -26,7 +26,7 @@
     {"id": "tomas_reed", "system": "field_workshop", "question": "anti-sabotage rigging versus workshop dependency"}
   ],
   "compatibility": {
-    "save_versions": {"minimum": 4, "current": 15},
+    "save_versions": {"minimum": 4, "current": 16},
     "candidate_platforms": ["windows", "macos", "linux"],
     "offline_runtime": true,
     "storefront_adapters": false
