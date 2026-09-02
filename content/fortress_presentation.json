@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "actor_id": "long_march_fortress_v1",
+  "renderer": "res://src/ui/fortress_silhouette.gd",
+  "snapshot_owner": "res://src/ui/main.gd::_fortress_presentation_snapshot",
+  "simulation_mutation": false,
+  "required_snapshot_fields": [
+    "region_id",
+    "mode",
+    "heat",
+    "heat_limit",
+    "modules"
+  ],
+  "modes": [
+    {"id": "rest", "motion": "settled", "stance": "service", "purpose": "fortress at rest and available for service"},
+    {"id": "departing", "motion": "gathering", "stance": "forward", "purpose": "committed route beginning"},
+    {"id": "travel", "aliases": ["traveling"], "motion": "marching", "stance": "forward", "purpose": "fortress moving between places"},
+    {"id": "retreating", "motion": "limping", "stance": "rearward", "purpose": "recoverable failure and withdrawal"},
+    {"id": "contact", "motion": "braced", "stance": "combat", "purpose": "threat intent and impact"},
+    {"id": "event", "motion": "halted", "stance": "watchful", "purpose": "roadside decision"},
+    {"id": "recovery", "motion": "settled", "stance": "service", "purpose": "repair and finite service choice"},
+    {"id": "debrief", "motion": "settled", "stance": "scarred", "purpose": "final condition and causal review"}
+  ],
+  "conditions": ["ready", "strained", "disabled", "damaged", "breached", "protected", "repaired", "targeted"],
+  "cues": [
+    {"id": "engine_strain", "visual": "amber_dependency_pulse", "audio": "contact_step", "reduced_motion": "steady_amber_outline", "high_contrast": "strained_label"},
+    {"id": "repair", "visual": "repair_stitch_and_service_light", "audio": "service", "reduced_motion": "repair_stitch", "high_contrast": "repaired_label"},
+    {"id": "threat_approach", "visual": "intent_line_and_target_bracket", "audio": "threat_family", "reduced_motion": "static_intent_line", "high_contrast": "targeted_label"},
+    {"id": "impact", "visual": "damage_crack_and_bounded_recoil", "audio": "contact_impact", "reduced_motion": "damage_crack", "high_contrast": "damage_label"},
+    {"id": "safe_arrival", "visual": "settled_legs_and_warm_service_lights", "audio": "arrival", "reduced_motion": "warm_service_lights", "high_contrast": "arrival_receipt"}
+  ],
+  "asset_policy": {
+    "shared_actor": "code_native_original",
+    "temporary_visuals": ["res://assets/temporary/kenney/particle-pack/smoke_03.png"],
+    "temporary_audio_root": "res://assets/temporary/kenney/",
+    "reference_only_root": "res://assets/temporary/kenney/tiny-town/",
+    "final_art_claim": false
+  }
+}

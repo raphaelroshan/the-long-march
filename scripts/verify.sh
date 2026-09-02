@@ -37,6 +37,7 @@ python3 tools/validate_cinder_spine.py --data content/cinder_spine.json
 python3 tools/validate_white_salt.py --data content/white_salt_expanse.json
 python3 tools/validate_early_access_systems.py --data content/early_access_systems.json
 python3 tools/validate_campaign_memory.py --data content/campaign_memory.json
+python3 tools/validate_fortress_presentation.py
 python3 tools/validate_early_access_candidate.py
 python3 tools/verify_offline_boundary.py --repo .
 python3 tests/test_playtest_summary.py
@@ -71,6 +72,7 @@ run_checked "PASS: The Long March LM-I6 candidate recovery flow 1280x720" env LO
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
 run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd
+run_checked "PASS: The Long March LM-GPT56-2 fortress presentation registry" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_presentation_registry.gd
 run_checked "PASS: The Long March presentation builders" "$GODOT_BIN" --headless --path . --script res://tests/test_presentation_builders.gd
 run_checked "PASS: The Long March performance budget" "$GODOT_BIN" --headless --path . --script res://tests/test_performance_budget.gd
 run_checked "PASS: The Long March road-contact presentation" "$GODOT_BIN" --headless --path . --script res://tests/test_road_contact_presentation.gd

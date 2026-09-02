@@ -2,6 +2,7 @@ class_name FortressSilhouette
 extends RefCounted
 
 const TEMP_DAMAGE_SMOKE: Texture2D = preload("res://assets/temporary/kenney/particle-pack/smoke_03.png")
+const PresentationRegistry = preload("res://src/presentation/fortress_presentation_registry.gd")
 
 const FAMILY_COLORS := {
 	"engine": Color("#bd7149"),
@@ -77,6 +78,7 @@ static func visual_signature(view: Dictionary) -> Dictionary:
 	var heat := int(view.get("heat", 0))
 	var heat_limit := int(view.get("heat_limit", 6))
 	return {
+		"actor_id": PresentationRegistry.actor_id(),
 		"region_id": region_id,
 		"place_treatment": "rain_waterworks" if region_id == "flooded_veyru" else "dust_industry",
 		"mode": String(view.get("mode", "rest")),
@@ -88,21 +90,8 @@ static func visual_signature(view: Dictionary) -> Dictionary:
 	}
 
 static func mode_treatment(mode: String) -> Dictionary:
-	match mode:
-		"departing":
-			return {"motion": "gathering", "stance": "forward"}
-		"travel", "traveling":
-			return {"motion": "marching", "stance": "forward"}
-		"retreating":
-			return {"motion": "limping", "stance": "rearward"}
-		"contact":
-			return {"motion": "braced", "stance": "combat"}
-		"event":
-			return {"motion": "halted", "stance": "watchful"}
-		"debrief":
-			return {"motion": "settled", "stance": "scarred"}
-		_:
-			return {"motion": "settled", "stance": "service"}
+	var treatment := PresentationRegistry.mode(mode)
+	return {"motion": String(treatment.get("motion", "settled")), "stance": String(treatment.get("stance", "service"))}
 
 static func rest_activity_signature(view: Dictionary = {}) -> Dictionary:
 	var reduced_motion := bool(view.get("reduced_motion", false))
