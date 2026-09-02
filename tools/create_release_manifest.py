@@ -61,6 +61,7 @@ def build_manifest(
 		)
 	entries.sort(key=lambda entry: (entry["role"], entry["path"]))
 	version = ci_manifest["prototype_version"]
+	save_compatibility = ci_manifest["save_compatibility"]
 	resolved_head = head_commit or commit
 	return {
 		"schema_version": 1,
@@ -83,6 +84,13 @@ def build_manifest(
 			"workflow_run_url": run_url,
 		},
 		"toolchain": {"godot": engine_version},
+		"compatibility": {
+			"save_versions": {
+				"minimum": int(save_compatibility["minimum"]),
+				"current": int(save_compatibility["current"]),
+			},
+			"offline_runtime": True,
+		},
 		"verification": sorted(set(verification)),
 		"files": entries,
 	}

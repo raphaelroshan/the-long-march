@@ -66,6 +66,8 @@ run_checked "PASS: The Long March LM-I5 memory gate" "$GODOT_BIN" --headless --p
 run_checked "PASS: The Long March LM-I5 memory UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_memory_flow.gd
 run_checked "PASS: The Long March LM-I5 memory UI flow 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_memory_flow.gd
 run_checked "PASS: The Long March Early Access hardening" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_hardening.gd
+run_checked "PASS: The Long March LM-I6 candidate recovery flow" "$GODOT_BIN" --headless --path . --script res://tests/test_hardening_flow.gd
+run_checked "PASS: The Long March LM-I6 candidate recovery flow 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_hardening_flow.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
 run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd

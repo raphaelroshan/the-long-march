@@ -39,10 +39,18 @@ func _test_scope_and_chassis() -> void:
 	var tampered := payload.duplicate(true)
 	tampered["modules"] = [{"id": "parts_crate", "position": [0, 3], "exterior": false, "rotated": false, "durability": 2, "sealed": false}]
 	_expect(not bool(LongMarchState.new(0).load_serialized(tampered).get("ok", true)), "save validation should reject a module inside the Ridge Crawler cut-away")
-	var previous_save := LongMarchState.new(6602).serialize()
-	previous_save["save_version"] = 14
-	_expect(bool(LongMarchState.new(0).load_serialized(previous_save).get("ok", false)), "the previous LM-EA-4 save version should migrate")
-	var future_save := previous_save.duplicate(true)
+	var compatibility_source := LongMarchState.new(6602)
+	compatibility_source.set_prior_obligations({"ashgate_lowlands": "completed"})
+	var current_save := compatibility_source.serialize()
+	for supported_version in range(LongMarchState.MIN_SUPPORTED_SAVE_VERSION, LongMarchState.SAVE_VERSION + 1):
+		var supported_save := current_save.duplicate(true)
+		supported_save["save_version"] = supported_version
+		if supported_version < 16:
+			supported_save.erase("prior_obligations")
+		var migrated := LongMarchState.new(0)
+		_expect(bool(migrated.load_serialized(supported_save).get("ok", false)), "declared save schema %d should remain loadable" % supported_version)
+		_expect(migrated.prior_obligations.is_empty() if supported_version < 16 else migrated.prior_obligation_status("ashgate_lowlands") == "completed", "schema %d should preserve only history available in that format" % supported_version)
+	var future_save := current_save.duplicate(true)
 	future_save["save_version"] = LongMarchState.SAVE_VERSION + 1
 	_expect(not bool(LongMarchState.new(0).load_serialized(future_save).get("ok", true)), "future save versions should remain blocked")
 

@@ -1334,3 +1334,11 @@ The desktop candidate now exports an x86-64 Linux executable with the same sourc
 ## 2026-09-02 — A created package is accepted only through native launch smoke
 
 Godot can return a nonzero export status after completing `savepack` and creating a nonempty desktop artifact without reporting a configuration or serialization error. The export wrapper still fails when no artifact exists, including missing-template and partial-export cases. When a nonempty artifact exists, it records the anomalous status and hands the file to the mandatory native packaged-launch smoke; only that successful launch permits manifesting or upload. This was chosen over deleting an unexamined artifact or ignoring export failures unconditionally because the runnable package, not an ambiguous process status, is the object the cohort must prove.
+
+## 2026-09-02 — Obligation history is distinct from best-result progression
+
+The March Charter stores each region's latest completed, declined, or failed obligation separately from its best achieved chapter result. A weaker replay may therefore change who remembers the fortress without erasing the strongest survival result. This was chosen over deriving history from score because failure and refusal must remain meaningful causes, not inferior values that disappear when a better result exists.
+
+## 2026-09-02 — Save health means validated state, not file presence
+
+Build & Local Data validates campaign and tutorial checkpoints before labeling them healthy, displays the authoritative schema window, and distinguishes missing, valid, and unusable files. Release manifests carry the same save window and offline boundary and reject incompatible metadata after download. This was chosen over an `AVAILABLE` label because a present but corrupt save is precisely when a tester needs accurate recovery information.

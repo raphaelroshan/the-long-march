@@ -69,6 +69,7 @@ def main() -> int:
                     "slug": "the-long-march",
                     "display_name": "The Long March",
                     "prototype_version": "0.3.0-alpha.test",
+                    "save_compatibility": {"minimum": 4, "current": 16},
                     "playtest_ready": True,
                     "release_ready": False,
                     "primary_repo": "example/the-long-march",

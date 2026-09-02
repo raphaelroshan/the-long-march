@@ -25,6 +25,7 @@ def main() -> int:
 					"slug": "the-long-march",
 					"display_name": "The Long March",
 					"prototype_version": "0.3.0-alpha.test",
+					"save_compatibility": {"minimum": 4, "current": 16},
 					"playtest_ready": True,
 					"release_ready": False,
 					"primary_repo": "example/the-long-march",
@@ -52,6 +53,7 @@ def main() -> int:
 		assert manifest["source"]["head_commit"] == "head-sha"
 		assert manifest["cohort"] == {"id": "0.3.0-alpha.test@head-sha", "platform": "windows"}
 		assert manifest["toolchain"] == {"godot": "4.4.1.stable.official"}
+		assert manifest["compatibility"] == {"save_versions": {"minimum": 4, "current": 16}, "offline_runtime": True}
 		assert manifest["verification"] == ["deterministic_tests", "windows_export"]
 		assert [entry["role"] for entry in manifest["files"]] == ["observer_brief", "windows_executable"]
 		game_entry = manifest["files"][1]
@@ -75,6 +77,12 @@ def main() -> int:
 		missing_toolchain = json.loads(json.dumps(manifest))
 		missing_toolchain.pop("toolchain")
 		assert any("Godot toolchain" in error for error in verify_manifest(missing_toolchain, root))
+		missing_compatibility = json.loads(json.dumps(manifest))
+		missing_compatibility.pop("compatibility")
+		assert any("compatibility data" in error for error in verify_manifest(missing_compatibility, root))
+		invalid_window = json.loads(json.dumps(manifest))
+		invalid_window["compatibility"]["save_versions"] = {"minimum": 16, "current": 4}
+		assert any("save compatibility window" in error for error in verify_manifest(invalid_window, root))
 		(root / "build/game.exe").write_bytes(b"changed build")
 		verification_errors = verify_manifest(manifest, root)
 		assert any("size mismatch" in error for error in verification_errors)
