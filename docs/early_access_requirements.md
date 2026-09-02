@@ -1,7 +1,7 @@
 # The Long March — Early Access Requirements
 
 **Status:** Planning contract for a skeletal but commercially credible Early Access build  
-**Current baseline:** High-quality moving-fortress foundation with three five-encounter chapters, settlement hubs, route planning, committed travel, road contacts, events, recovery, Debrief, persistent fortress state, deterministic simulation, accessibility, controller support, and private-alpha hardening.
+**Current baseline:** Four complete five-encounter chapters, two fortress chassis templates, settlement hubs, route planning, committed travel, road contacts, events, recovery, Debrief, persistent fortress state, deterministic simulation, accessibility, controller support, and private-alpha hardening.
 
 ## Product decision
 
@@ -79,7 +79,7 @@ Every new chapter, region, settlement, module, specialist, threat, event, or rou
 
 **LM-EA-2:** complete in `0.3.0-alpha.351`. The Cinder Spine adds a Blackkiln forge bazaar, six complete route plans, mass/heat/generator pressure, three threat families, Old Lift recovery, an inferno-opened refuge route, 34 exact save/load checks, responsive UI coverage, and the persistent Communal Lift Plan. See [`lm_ea_2_cinder_spine_report.md`](lm_ea_2_cinder_spine_report.md).
 
-**LM-EA-3:** add a fourth region and one alternate fortress chassis/template.
+**LM-EA-3:** complete in `0.3.0-alpha.352`. The White Salt Expanse adds six valid route plans, signal/water/rival pressure, failure-forward Lee Trench access, persistent Public Salt Beacons, and the cut-away Salt Skimmer chassis with a lower mass ceiling and third exterior mount. See [`lm_ea_3_white_salt_report.md`](lm_ea_3_white_salt_report.md).
 
 **LM-EA-4:** add two module families, two specialists, and two threat families that create new dependency questions.
 

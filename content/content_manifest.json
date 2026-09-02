@@ -10,7 +10,8 @@
     "content_extensions": [
       "content/gameplay_framework.json",
       "content/flooded_veyru.json",
-      "content/cinder_spine.json"
+    "content/cinder_spine.json",
+    "content/white_salt_expanse.json"
     ],
     "chapters": [
       {

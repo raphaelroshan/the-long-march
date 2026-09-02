@@ -7,11 +7,12 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 12
+const SAVE_VERSION := 13
 const MIN_SUPPORTED_SAVE_VERSION := 4
-const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine"]
-const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan"]
-const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost", "spine_powered", "spine_bypassed", "cinder_lost"]
+const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine", "white_salt_expanse"]
+const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "salt_public_beacons"]
+const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost", "spine_powered", "spine_bypassed", "cinder_lost", "expanse_allied", "expanse_crossed", "salt_lost"]
+const VALID_CHASSIS_TEMPLATES := ["road_keep", "salt_skimmer"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
@@ -72,6 +73,8 @@ const CAMPAIGN_DECISION_OPTIONS := {
 	"charcoal_vow": ["bank_coals", "share_coals"],
 	"lift_engine_choice": ["power_lift", "cut_switchback"],
 	"commune_design": ["share_lift_plan", "keep_guild_pattern"]
+	,"observatory_signal": ["broadcast_beacons", "sell_coordinates"]
+	,"rival_terms": ["escort_compact", "race_rival"]
 }
 const OCCURRENCE_STREAM_NAME := "ashgate_operational_occurrences_v1"
 const OCCURRENCE_HISTORY_LIMIT := 8
@@ -101,6 +104,9 @@ const THREATS := {
 	"ember_drakes": {"name": "Ember Drakes", "target_tags": ["fuel", "exterior", "sustain"], "damage": 1},
 	"lift_saboteurs": {"name": "Lift Saboteurs", "target_tags": ["generator", "workshop", "signal"], "damage": 1},
 	"elevator_warden": {"name": "Elevator Warden", "target_tags": ["generator", "engine", "armor"], "damage": 2}
+	,"salt_storm": {"name": "Salt Storm", "target_tags": ["water", "signal", "exterior"], "damage": 1}
+	,"rival_scouts": {"name": "Rival Scouts", "target_tags": ["cargo", "signal", "engine"], "damage": 1}
+	,"rival_fortress": {"name": "Rival Fortress", "target_tags": ["engine", "generator", "weapon", "armor"], "damage": 2}
 }
 const JOURNEY_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "kind": "city", "description": "The departure yard: fuel, parts, and one last decision."},
@@ -132,6 +138,16 @@ const JOURNEY_NODES := {
 	"ash_chapel_bypass": {"name": "Ash Chapel Bypass", "kind": "recovery", "description": "A low-reward refuge road opened when the fireline closes the tunnel."},
 	"lift_engine_house": {"name": "Lift Engine House", "kind": "choice", "description": "The abandoned industrial elevator can be powered or bypassed at a permanent cost."},
 	"switchback_commune": {"name": "Switchback Commune", "kind": "finale", "description": "The mountain settlement above the fireline and the chapter's final engineering vote."}
+	,"saltglass_haven": {"name": "Saltglass Haven", "kind": "city", "description": "A water-and-signal market where every visible promise travels across the flats."}
+	,"buried_observatory": {"name": "Buried Observatory", "kind": "relay", "description": "A half-buried lens station that can warn the whole Expanse or sell one private route."}
+	,"quiet_caravan": {"name": "Quiet Caravan", "kind": "convoy", "description": "A slow refugee column carrying water under canvas and no signal fire."}
+	,"windbreak": {"name": "The Windbreak", "kind": "camp", "description": "A stone lee wall with enough water for one deliberate recovery."}
+	,"salt_mine": {"name": "Salt Mine", "kind": "salvage", "description": "A deep brine shaft with useful stores and no clean horizon."}
+	,"empty_mile": {"name": "The Empty Mile", "kind": "hazard", "description": "An exposed straight crossing where speed matters and every silhouette is visible."}
+	,"beacon_road": {"name": "Beacon Road", "kind": "relay", "description": "A marked convoy lane that trades concealment for reliable direction."}
+	,"lee_trench": {"name": "Lee Trench", "kind": "recovery", "description": "A low-value storm refuge opened when the ash front erases the Empty Mile."}
+	,"rival_approach": {"name": "Rival Approach", "kind": "choice", "description": "The final open ground where the Compact and the rival fortress demand a doctrine."}
+	,"salt_citadel": {"name": "Salt Citadel", "kind": "finale", "description": "A rival walking fortress holds the last water towers beyond the flats."}
 }
 const JOURNEY_ENCOUNTERS := {
 	"safe_road": ["road_raiders", "road_raiders"],
@@ -149,6 +165,9 @@ const ENCOUNTER_ENEMIES := {
 	"ember_drakes": {"name": "Ember Drake", "health": 5, "damage": 1, "arrival_step": 4, "target_tags": ["fuel", "exterior", "sustain"], "route": "fireline above", "counter": "Wall Lamp, Repeater Gun, Water Condenser, or Vent Heat", "counter_modules": ["wall_lamp", "repeater_gun", "water_condenser", "shell_cannon"]},
 	"lift_saboteurs": {"name": "Lift Saboteur", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["generator", "workshop", "signal"], "route": "industrial gantry", "counter": "Repeater Gun, crew-connected Workshop, or adjacent armor", "counter_modules": ["repeater_gun", "field_workshop", "front_armor_plate", "side_armor_skirt"]},
 	"elevator_warden": {"name": "Elevator Warden", "health": 10, "damage": 2, "arrival_step": 4, "target_tags": ["generator", "engine", "armor"], "route": "lift counterweight", "counter": "Shell Cannon, protected Generator Core, or Cut Switchback", "counter_modules": ["shell_cannon", "front_armor_plate", "side_armor_skirt"]}
+	,"salt_storm": {"name": "Salt Storm", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["water", "signal", "exterior"], "route": "white horizon", "counter": "Water Condenser, protected signal, or Seal Compartment", "counter_modules": ["water_condenser", "signal_coil", "wall_lamp", "side_armor_skirt"]}
+	,"rival_scouts": {"name": "Rival Scouts", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["cargo", "signal", "engine"], "route": "open flank", "counter": "Repeater Gun, Signal Coil, or a light engine", "counter_modules": ["repeater_gun", "signal_coil", "ash_runner_engine"]}
+	,"rival_fortress": {"name": "Rival Fortress", "health": 11, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "generator", "weapon", "armor"], "route": "parallel march", "counter": "redundant systems, Shell Cannon, or escort beacons", "counter_modules": ["shell_cannon", "front_armor_plate", "side_armor_skirt", "signal_coil"]}
 }
 const CAMPAIGN_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "type": "settlement", "visibility": "known", "description": "Refit, choose the first guard contract, and leave before the blockade closes."},
@@ -180,6 +199,16 @@ const CAMPAIGN_NODES := {
 	"ash_chapel_bypass": {"name": "Ash Chapel Bypass", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "sheltered ember drift", "encounter": ["ember_drakes"]},
 	"lift_engine_house": {"name": "Lift Engine House", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.4, "pressure": 1, "reward": 16, "threat_hint": "saboteurs around the dynamo", "encounter": ["lift_saboteurs", "ember_drakes"]},
 	"switchback_commune": {"name": "Switchback Commune", "type": "boss", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.56, "pressure": 1, "reward": 36, "threat_hint": "Elevator Warden", "encounter": ["elevator_warden"]}
+	,"saltglass_haven": {"name": "Saltglass Haven", "type": "settlement", "visibility": "known", "description": "Choose the beacon escort and a fortress template before crossing the open salt."}
+	,"buried_observatory": {"name": "Buried Observatory", "type": "relay", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.20, "pressure": 1, "reward": 10, "threat_hint": "salt weather", "encounter": ["salt_storm"]}
+	,"quiet_caravan": {"name": "Quiet Caravan", "type": "convoy", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.30, "pressure": 1, "reward": 16, "threat_hint": "rival scouts", "encounter": ["rival_scouts"]}
+	,"windbreak": {"name": "The Windbreak", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.22, "pressure": 1, "reward": 10, "threat_hint": "salt storm", "encounter": ["salt_storm"]}
+	,"salt_mine": {"name": "Salt Mine", "type": "salvage", "visibility": "unscouted", "days": 2, "fuel": 1, "risk": 0.42, "pressure": 2, "reward": 22, "threat_hint": "storm and scouts", "encounter": ["salt_storm", "rival_scouts"]}
+	,"empty_mile": {"name": "The Empty Mile", "type": "hazard", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 18, "threat_hint": "visible pursuit", "encounter": ["rival_scouts"]}
+	,"beacon_road": {"name": "Beacon Road", "type": "relay", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.24, "pressure": 1, "reward": 12, "threat_hint": "salt weather", "encounter": ["salt_storm"]}
+	,"lee_trench": {"name": "Lee Trench", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "sheltered scouts", "encounter": ["rival_scouts"]}
+	,"rival_approach": {"name": "Rival Approach", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.40, "pressure": 1, "reward": 16, "threat_hint": "rival screen", "encounter": ["rival_scouts", "salt_storm"]}
+	,"salt_citadel": {"name": "Salt Citadel", "type": "boss", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.58, "pressure": 1, "reward": 38, "threat_hint": "Rival Fortress", "encounter": ["rival_fortress"]}
 }
 const CAMPAIGN_EDGES := {
 	"ashgate_depot": ["rill_crossing", "soot_orchard"],
@@ -212,6 +241,17 @@ const CINDER_EDGES := {
 	"slag_tunnel": ["lift_engine_house"],
 	"ash_chapel_bypass": ["lift_engine_house"],
 	"lift_engine_house": ["switchback_commune"]
+}
+const SALT_EDGES := {
+	"saltglass_haven": ["buried_observatory", "quiet_caravan"],
+	"buried_observatory": ["windbreak"],
+	"quiet_caravan": ["windbreak"],
+	"windbreak": ["salt_mine", "empty_mile", "beacon_road", "lee_trench"],
+	"salt_mine": ["rival_approach"],
+	"empty_mile": ["rival_approach"],
+	"beacon_road": ["rival_approach"],
+	"lee_trench": ["rival_approach"],
+	"rival_approach": ["salt_citadel"]
 }
 const MODULE_DEFS := {
 	"steam_lance_engine": {"name": "Steam Lance Engine", "family": "engine", "shape": Vector2i(2, 1), "mass": 3, "power_draw": 0, "power_output": 0, "heat": 1, "durability": 4, "tags": ["engine", "fuel_sensitive"], "capability": "Keeps the fortress moving while adjacent to a fuel module."},
@@ -290,6 +330,8 @@ var guard_contract_status: String = "unoffered"
 var veyru_contract_status: String = "unoffered"
 var veyru_medicine_carrier_id: String = ""
 var cinder_contract_status: String = "unoffered"
+var salt_contract_status: String = "unoffered"
+var chassis_template_id: String = "road_keep"
 var settlement_trust: int = 0
 var mobility_tendency: int = 0
 var shelter_tendency: int = 0
@@ -309,6 +351,23 @@ func _init(world_seed: int = 1107) -> void:
 
 func module_definition(module_id: String) -> Dictionary:
 	return MODULE_DEFS.get(module_id, {})
+
+func chassis_mass_limit() -> int:
+	return 13 if chassis_template_id == "salt_skimmer" else BASE_MASS_LIMIT
+
+func chassis_exterior_limit() -> int:
+	return 3 if chassis_template_id == "salt_skimmer" else MAX_EXTERIOR_MOUNTS
+
+func chassis_cell_available(cell: Vector2i) -> bool:
+	return chassis_template_id != "salt_skimmer" or cell not in [Vector2i(0, 3), Vector2i(5, 3)]
+
+func choose_chassis_template(template_id: String) -> Dictionary:
+	if template_id not in VALID_CHASSIS_TEMPLATES:
+		return {"ok": false, "reason": "unknown chassis template"}
+	if not modules.is_empty():
+		return {"ok": false, "reason": "choose a chassis template before installing modules"}
+	chassis_template_id = template_id
+	return {"ok": true, "template_id": chassis_template_id, "mass_limit": chassis_mass_limit(), "exterior_limit": chassis_exterior_limit()}
 
 func specialist_name() -> String:
 	return String(SPECIALIST_NAMES.get(specialist_id, "None" if specialist_id.is_empty() else specialist_id.replace("_", " ").capitalize()))
@@ -504,6 +563,8 @@ func validate_module_placement(module_id: String, position: Vector2i, exterior: 
 	for cell in occupied_cells(instance):
 		if cell.x < 0 or cell.x >= GRID_WIDTH or cell.y < 0 or cell.y >= GRID_HEIGHT:
 			return {"ok": false, "reason": "module is outside the chassis grid"}
+		if not chassis_cell_available(cell):
+			return {"ok": false, "reason": "module overlaps a cut-away chassis cell"}
 		if _cell_occupied(cell, ignore_index):
 			return {"ok": false, "reason": "module overlaps an existing module"}
 	if exterior and not _has_exterior_capacity(ignore_index):
@@ -511,7 +572,7 @@ func validate_module_placement(module_id: String, position: Vector2i, exterior: 
 	var placement_mass := total_mass()
 	if ignore_index >= 0 and ignore_index < modules.size():
 		placement_mass -= int(module_definition(String(modules[ignore_index].get("id", ""))).get("mass", 0))
-	if placement_mass + int(definition.get("mass", 0)) > BASE_MASS_LIMIT:
+	if placement_mass + int(definition.get("mass", 0)) > chassis_mass_limit():
 		return {"ok": false, "reason": "mass limit exceeded"}
 	return {"ok": true, "module": instance.duplicate(true)}
 
@@ -656,6 +717,7 @@ func start_campaign() -> Dictionary:
 	veyru_contract_status = "unoffered"
 	veyru_medicine_carrier_id = ""
 	cinder_contract_status = "unoffered"
+	salt_contract_status = "unoffered"
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
@@ -696,6 +758,7 @@ func start_tutorial() -> Dictionary:
 	guard_contract_status = "unoffered"
 	veyru_contract_status = "unoffered"
 	cinder_contract_status = "unoffered"
+	salt_contract_status = "unoffered"
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
@@ -778,6 +841,7 @@ func start_flooded_veyru() -> Dictionary:
 	veyru_contract_status = "offered"
 	veyru_medicine_carrier_id = ""
 	cinder_contract_status = "unoffered"
+	salt_contract_status = "unoffered"
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
@@ -824,6 +888,7 @@ func start_cinder_spine() -> Dictionary:
 	veyru_contract_status = "unoffered"
 	veyru_medicine_carrier_id = ""
 	cinder_contract_status = "offered"
+	salt_contract_status = "unoffered"
 	settlement_trust = 0
 	mobility_tendency = 0
 	shelter_tendency = 0
@@ -850,12 +915,55 @@ func start_cinder_spine() -> Dictionary:
 	log.append("The Cinder Spine chart is open. Decide whether Blackkiln's Guild dynamo travels under fortress protection before the fireline climbs.")
 	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
 
+func start_white_salt_expanse() -> Dictionary:
+	campaign_active = true
+	campaign_region_id = "white_salt_expanse"
+	campaign_encounters_completed = 0
+	campaign_path = ["saltglass_haven"]
+	campaign_target_node = ""
+	campaign_last_safe_node = "saltglass_haven"
+	campaign_pressure = 0
+	campaign_retreats = 0
+	campaign_event_pending = ""
+	campaign_decisions.clear()
+	occurrence_stream_cursor = 0
+	occurrence_active_phase = ""
+	occurrence_phase_history.clear()
+	occurrence_history.clear()
+	occurrence_cooldowns.clear()
+	guard_contract_status = "unoffered"
+	veyru_contract_status = "unoffered"
+	veyru_medicine_carrier_id = ""
+	cinder_contract_status = "unoffered"
+	salt_contract_status = "offered"
+	settlement_trust = 0
+	mobility_tendency = 0
+	shelter_tendency = 0
+	knowledge_tendency = 0
+	industry_tendency = 0
+	specialist_id = ""
+	journey_node = "saltglass_haven"
+	journey_destination = ""
+	journey_route = ""
+	journey_leg = 0
+	current_location = "saltglass_haven"
+	phase = "refit"
+	journey_complete = false
+	run_complete = false
+	final_result = ""
+	encounter_active = false
+	encounter_outcome = ""
+	log.append("The White Salt Expanse is open. Choose whether to guide the Compact under public beacons before the ash front arrives.")
+	return {"ok": true, "summary": summary(), "options": campaign_available_nodes()}
+
 func campaign_region_name() -> String:
 	match campaign_region_id:
 		"flooded_veyru":
 			return "Flooded Veyru"
 		"cinder_spine":
 			return "The Cinder Spine"
+		"white_salt_expanse":
+			return "The White Salt Expanse"
 		_:
 			return "Ashgate Lowlands"
 
@@ -879,6 +987,8 @@ func earned_regional_development() -> String:
 		return "veyru_public_archive_signal"
 	if phase == "results" and final_result in ["spine_powered", "spine_bypassed"] and String(campaign_decisions.get("commune_design", "")) == "share_lift_plan":
 		return "cinder_communal_lift_plan"
+	if phase == "results" and final_result in ["expanse_allied", "expanse_crossed"] and String(campaign_decisions.get("observatory_signal", "")) == "broadcast_beacons":
+		return "salt_public_beacons"
 	return ""
 
 func campaign_pressure_name() -> String:
@@ -887,6 +997,8 @@ func campaign_pressure_name() -> String:
 			return "Rising water"
 		"cinder_spine":
 			return "Fireline"
+		"white_salt_expanse":
+			return "Ash front"
 		_:
 			return "Blockade"
 
@@ -904,6 +1016,11 @@ func _campaign_edges_for_state(region_id: String, pressure: int, retreats: int) 
 		if pressure < 5 and retreats == 0:
 			cinder_edges["old_lift_station"].erase("ash_chapel_bypass")
 		return cinder_edges
+	if region_id == "white_salt_expanse":
+		var salt_edges := SALT_EDGES.duplicate(true)
+		if pressure < 5 and retreats == 0:
+			salt_edges["windbreak"].erase("lee_trench")
+		return salt_edges
 	return CAMPAIGN_EDGES
 
 func campaign_final_node_id() -> String:
@@ -912,6 +1029,8 @@ func campaign_final_node_id() -> String:
 			return "dry_archive"
 		"cinder_spine":
 			return "switchback_commune"
+		"white_salt_expanse":
+			return "salt_citadel"
 		_:
 			return "meridian_pass"
 
@@ -928,6 +1047,12 @@ func campaign_pressure_band() -> String:
 		if campaign_pressure >= 3:
 			return "advancing"
 		return "embers"
+	if campaign_region_id == "white_salt_expanse":
+		if campaign_pressure >= 5:
+			return "whiteout"
+		if campaign_pressure >= 3:
+			return "approaching"
+		return "clear"
 	if campaign_pressure >= 5:
 		return "break"
 	if campaign_pressure >= 3:
@@ -939,6 +1064,8 @@ func campaign_node_closed(node_id: String) -> bool:
 		return node_id == "drowned_registry" and campaign_pressure_band() == "breach"
 	if campaign_region_id == "cinder_spine":
 		return node_id == "slag_tunnel" and campaign_pressure_band() == "inferno"
+	if campaign_region_id == "white_salt_expanse":
+		return node_id == "empty_mile" and campaign_pressure_band() == "whiteout"
 	if node_id == "signal_causeway" and campaign_pressure_band() == "break" and specialist_id != "iven_pell" and not _has_ready_tag("forecast"):
 		return true
 	return false
@@ -972,8 +1099,9 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var acquired_intel := acquired_intel_for_node(node_id)
 	var development_reveal := campaign_region_id == "flooded_veyru" and node_id == "drowned_registry" and has_regional_development("veyru_public_archive_signal")
 	var cinder_development_reveal := campaign_region_id == "cinder_spine" and node_id == "slag_tunnel" and has_regional_development("cinder_communal_lift_plan")
+	var salt_development_reveal := campaign_region_id == "white_salt_expanse" and node_id == "salt_mine" and has_regional_development("salt_public_beacons")
 	var visibility := "known" if informed else String(node.get("visibility", "forecast"))
-	if development_reveal or cinder_development_reveal or not acquired_intel.is_empty():
+	if development_reveal or cinder_development_reveal or salt_development_reveal or not acquired_intel.is_empty():
 		visibility = "known"
 	if campaign_region_id == "flooded_veyru" and node_id == "dry_archive" and String(campaign_decisions.get("archive_broadcast", "")) == "seal_archive":
 		visibility = "forecast"
@@ -1037,7 +1165,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"threats": threat_names,
 		"counter_hints": counter_hints,
 		"ready_counter_names": ready_counter_names,
-		"regional_development": "Public Archive Signal" if development_reveal else ("Communal Lift Plan" if cinder_development_reveal else ""),
+		"regional_development": "Public Archive Signal" if development_reveal else ("Communal Lift Plan" if cinder_development_reveal else ("Public Salt Beacons" if salt_development_reveal else "")),
 		"intel_id": String(acquired_intel.get("id", "")),
 		"intel_source": String(acquired_intel.get("source_name", "")),
 		"intel_confidence": String(acquired_intel.get("confidence", "")),
@@ -1163,6 +1291,25 @@ func choose_cinder_forge_contract(accept: bool) -> Dictionary:
 	var declined_message := "Dynamo contract declined: Mobility rises by 1 and the fortress carries no Guild heat load, but gives up the delivery reward and the powered-lift ending."
 	log.append(declined_message)
 	return {"ok": true, "status": cinder_contract_status, "message": declined_message, "summary": summary()}
+
+func choose_salt_beacon_contract(accept: bool) -> Dictionary:
+	if not campaign_active or campaign_region_id != "white_salt_expanse" or current_location != "saltglass_haven" or phase != "refit":
+		return {"ok": false, "reason": "the beacon escort is only offered at Saltglass Haven"}
+	if salt_contract_status != "offered":
+		return {"ok": false, "reason": "the beacon escort has already been answered"}
+	if accept and not _has_ready_tag("forecast"):
+		return {"ok": false, "reason": "requires an operational signal system"}
+	if accept:
+		salt_contract_status = "accepted"
+		shelter_tendency += 1
+		var accepted_message := "Beacon escort accepted: keep a signal system operational through the Salt Citadel. Rival scouts gain 1 endurance; delivery pays 26 Ashmarks and 2 trust."
+		log.append(accepted_message)
+		return {"ok": true, "status": salt_contract_status, "message": accepted_message, "summary": summary()}
+	salt_contract_status = "declined"
+	mobility_tendency += 1
+	var declined_message := "Beacon escort declined: Mobility rises by 1 and rival scouts keep normal endurance, but the Compact receives no guided crossing."
+	log.append(declined_message)
+	return {"ok": true, "status": salt_contract_status, "message": declined_message, "summary": summary()}
 
 func mara_recruitment_status() -> Dictionary:
 	if not campaign_active or current_location != "morrowline_camp" or phase != "settlement" or campaign_event_pending != "mara_meeting":
@@ -1486,6 +1633,16 @@ func campaign_event_details() -> Dictionary:
 				{"id": "share_lift_plan", "label": "Publish the communal plan", "effect": "Knowledge +1 · future Slag Tunnel becomes Known", "enabled": true, "reason": ""},
 				{"id": "keep_guild_pattern", "label": "Keep the Guild pattern", "effect": "Ashmarks +12 · Industry +1", "enabled": true, "reason": ""}
 			]}
+		"observatory_signal":
+			return {"id": "observatory_signal", "title": "The White Horizon", "body": "The buried lens can broadcast safe headings to every caravan or sell one private line before the ash front arrives.", "choices": [
+				{"id": "broadcast_beacons", "label": "Broadcast public beacons", "effect": "Knowledge +1 · Trust +1 · future Salt Mine becomes Known", "enabled": true, "reason": ""},
+				{"id": "sell_coordinates", "label": "Sell the private line", "effect": "Ashmarks +10 · Ash front -1", "enabled": true, "reason": ""}
+			]}
+		"rival_terms":
+			return {"id": "rival_terms", "title": "Two Fortresses on One Horizon", "body": "The Refugee Compact asks for an escorted approach. The rival captain offers a clean race to the water towers instead.", "choices": [
+				{"id": "escort_compact", "label": "Hold the Compact line", "effect": "Shelter +1 · Trust +2 · rival fortress gains 1 endurance", "enabled": true, "reason": ""},
+				{"id": "race_rival", "label": "Race for the towers", "effect": "Mobility +1 · Ash front +1 · rival impact -1", "enabled": true, "reason": ""}
+			]}
 	return {}
 
 func resolve_campaign_event(choice_id: String) -> Dictionary:
@@ -1712,6 +1869,28 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			result_message = "The Guild pays 12 Ashmarks for the guarded pattern and Industry rises by 1."
 		else:
 			return {"ok": false, "reason": "that commune decision is not available"}
+	elif resolved_event == "observatory_signal":
+		if choice_id == "broadcast_beacons":
+			knowledge_tendency += 1
+			settlement_trust += 1
+			result_message = "The observatory broadcasts public headings. Knowledge and trust rise by 1, and future Salt Mine contacts begin Known."
+		elif choice_id == "sell_coordinates":
+			money += 10
+			campaign_pressure = maxi(0, campaign_pressure - 1)
+			result_message = "The private coordinates sell for 10 Ashmarks while the fortress gains one clear day ahead of the ash front."
+		else:
+			return {"ok": false, "reason": "that observatory decision is not available"}
+	elif resolved_event == "rival_terms":
+		if choice_id == "escort_compact":
+			shelter_tendency += 1
+			settlement_trust += 2
+			result_message = "The fortress holds the Compact line. Shelter rises by 1 and trust by 2; the rival prepares for a longer fight."
+		elif choice_id == "race_rival":
+			mobility_tendency += 1
+			campaign_pressure += 1
+			result_message = "The fortress races the rival. Mobility and ash-front pressure rise by 1, but the final impact loses 1 damage."
+		else:
+			return {"ok": false, "reason": "those rival terms are not available"}
 	else:
 		return {"ok": false, "reason": "unknown campaign event"}
 	var completes_road_arrival := road_arrival_event_active() and resolved_event == "salvage_choice"
@@ -1762,6 +1941,8 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 		return {"ok": false, "reason": "answer the Lantern Quay medicine contract before departure"}
 	if campaign_region_id == "cinder_spine" and cinder_contract_status == "offered":
 		return {"ok": false, "reason": "answer the Blackkiln dynamo contract before departure"}
+	if campaign_region_id == "white_salt_expanse" and salt_contract_status == "offered":
+		return {"ok": false, "reason": "answer the Saltglass beacon escort before departure"}
 	if not campaign_event_pending.is_empty():
 		return {"ok": false, "reason": "resolve the current node decision before leaving"}
 	var lock_reason := campaign_node_lock_reason(node_id)
@@ -1806,6 +1987,12 @@ func begin_campaign_route(node_id: String, doctrine: String = "protect_cargo") -
 			encounter_enemies[index]["hp"] = int(encounter_enemies[index].get("hp", 0)) + 1
 			encounter_enemies[index]["max_hp"] = int(encounter_enemies[index].get("max_hp", 0)) + 1
 		_encounter_log("Guard contract: the raiders commit to the convoy approach, adding one enemy endurance.")
+	if campaign_region_id == "white_salt_expanse" and salt_contract_status == "accepted":
+		for index in range(encounter_enemies.size()):
+			if String(encounter_enemies[index].get("id", "")) == "rival_scouts":
+				encounter_enemies[index]["hp"] = int(encounter_enemies[index].get("hp", 0)) + 1
+				encounter_enemies[index]["max_hp"] = int(encounter_enemies[index].get("max_hp", 0)) + 1
+		_encounter_log("Beacon escort: rival scouts commit to the visible convoy signal, adding one endurance.")
 	var pre_contact_occurrence := _schedule_first_pre_contact_occurrence(node_id)
 	log.append("Campaign route selected: %s. %s is %s (%d)." % [String(node.name), campaign_pressure_name(), campaign_pressure_band().replace("_", " "), campaign_pressure])
 	return {"ok": true, "node": node_id, "preview": preview, "forecast": encounter_forecast(), "encounter": encounter_summary(), "pre_contact_event": String(pre_contact_occurrence.get("event_id", "")), "summary": summary()}
@@ -2207,7 +2394,9 @@ func summary() -> Dictionary:
 		"heat": heat,
 		"heat_limit": BASE_HEAT_LIMIT,
 		"mass": total_mass(),
-		"mass_limit": BASE_MASS_LIMIT,
+		"mass_limit": chassis_mass_limit(),
+		"exterior_limit": chassis_exterior_limit(),
+		"chassis_template_id": chassis_template_id,
 		"power_output": total_power_output(),
 		"power_draw": total_power_draw(),
 		"hull_condition": hull_condition,
@@ -2255,6 +2444,7 @@ func summary() -> Dictionary:
 		"veyru_contract_status": veyru_contract_status,
 		"veyru_medicine_carrier_id": veyru_medicine_carrier_id,
 		"cinder_contract_status": cinder_contract_status,
+		"salt_contract_status": salt_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
 		"shelter_tendency": shelter_tendency,
@@ -2273,6 +2463,7 @@ func summary() -> Dictionary:
 func serialize() -> Dictionary:
 	return {
 		"save_version": SAVE_VERSION,
+		"chassis_template_id": chassis_template_id,
 		"seed": seed,
 		"day": day,
 		"fuel": fuel,
@@ -2328,6 +2519,7 @@ func serialize() -> Dictionary:
 		"veyru_contract_status": veyru_contract_status,
 		"veyru_medicine_carrier_id": veyru_medicine_carrier_id,
 		"cinder_contract_status": cinder_contract_status,
+		"salt_contract_status": salt_contract_status,
 		"settlement_trust": settlement_trust,
 		"mobility_tendency": mobility_tendency,
 		"shelter_tendency": shelter_tendency,
@@ -2434,7 +2626,7 @@ func _deserialized_modules(value: Variant) -> Array:
 				result.append(instance)
 	return result
 
-func _validated_module_records(value: Variant, installed: bool) -> Dictionary:
+func _validated_module_records(value: Variant, installed: bool, template_id: String = "road_keep") -> Dictionary:
 	if not value is Array:
 		return {"ok": false, "reason": "fortress module record is malformed"}
 	var restored := _deserialized_modules(value)
@@ -2463,12 +2655,16 @@ func _validated_module_records(value: Variant, installed: bool) -> Dictionary:
 		for cell in occupied_cells(instance):
 			if cell.x < 0 or cell.x >= GRID_WIDTH or cell.y < 0 or cell.y >= GRID_HEIGHT:
 				return {"ok": false, "reason": "fortress module record places a system outside the chassis"}
+			if template_id == "salt_skimmer" and cell in [Vector2i(0, 3), Vector2i(5, 3)]:
+				return {"ok": false, "reason": "fortress module record overlaps a cut-away chassis cell"}
 			if occupied.has(cell):
 				return {"ok": false, "reason": "fortress module record contains overlapping systems"}
 			occupied[cell] = true
-	if installed and exterior_count > MAX_EXTERIOR_MOUNTS:
+	var exterior_limit := 3 if template_id == "salt_skimmer" else MAX_EXTERIOR_MOUNTS
+	var mass_limit := 13 if template_id == "salt_skimmer" else BASE_MASS_LIMIT
+	if installed and exterior_count > exterior_limit:
 		return {"ok": false, "reason": "fortress module record exceeds exterior mount capacity"}
-	if installed and restored_mass > BASE_MASS_LIMIT:
+	if installed and restored_mass > mass_limit:
 		return {"ok": false, "reason": "fortress module record exceeds chassis mass capacity"}
 	return {"ok": true, "modules": restored}
 
@@ -2511,12 +2707,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save uses an unsupported older version"}
 	if not data.has("modules"):
 		return {"ok": false, "reason": "save is missing fortress modules"}
-	var restored_modules_result := _validated_module_records(data.get("modules", []), true)
+	var restored_chassis_template_id := String(data.get("chassis_template_id", "road_keep"))
+	if restored_chassis_template_id not in VALID_CHASSIS_TEMPLATES:
+		return {"ok": false, "reason": "checkpoint contains an unknown chassis template"}
+	var restored_modules_result := _validated_module_records(data.get("modules", []), true, restored_chassis_template_id)
 	if not bool(restored_modules_result.get("ok", false)):
 		return restored_modules_result
 	var restored_stored_modules_result := {"ok": true, "modules": []}
 	if data.has("stored_modules"):
-		restored_stored_modules_result = _validated_module_records(data.get("stored_modules", []), false)
+		restored_stored_modules_result = _validated_module_records(data.get("stored_modules", []), false, restored_chassis_template_id)
 		if not bool(restored_stored_modules_result.get("ok", false)):
 			return restored_stored_modules_result
 	var targets_may_be_historical := not bool(data.get("encounter_active", encounter_active)) and float(data.get("encounter_progress", encounter_progress)) >= 1.0
@@ -2546,6 +2745,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_veyru_contract_status := String(data.get("veyru_contract_status", "unoffered"))
 	var restored_veyru_medicine_carrier_id := String(data.get("veyru_medicine_carrier_id", ""))
 	var restored_cinder_contract_status := String(data.get("cinder_contract_status", "unoffered"))
+	var restored_salt_contract_status := String(data.get("salt_contract_status", "unoffered"))
 	var restored_mastery_experiment_id := String(data.get("mastery_experiment_id", ""))
 	var raw_regional_developments: Variant = data.get("regional_developments", [])
 	var raw_acquired_intel_ids: Variant = data.get("acquired_intel_ids", [])
@@ -2613,10 +2813,10 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		if node_id not in CAMPAIGN_NODES:
 			return {"ok": false, "reason": "campaign path contains an unknown node"}
 	if restored_campaign_active:
-		var expected_start := "lantern_quay" if restored_campaign_region_id == "flooded_veyru" else ("blackkiln" if restored_campaign_region_id == "cinder_spine" else "ashgate_depot")
+		var expected_start := "lantern_quay" if restored_campaign_region_id == "flooded_veyru" else ("blackkiln" if restored_campaign_region_id == "cinder_spine" else ("saltglass_haven" if restored_campaign_region_id == "white_salt_expanse" else "ashgate_depot"))
 		if restored_campaign_path.is_empty() or restored_campaign_path[0] != expected_start:
 			return {"ok": false, "reason": "campaign path does not begin at the region's starting settlement"}
-		var restored_edges := VEYRU_EDGES if restored_campaign_region_id == "flooded_veyru" else (CINDER_EDGES if restored_campaign_region_id == "cinder_spine" else CAMPAIGN_EDGES)
+		var restored_edges := VEYRU_EDGES if restored_campaign_region_id == "flooded_veyru" else (CINDER_EDGES if restored_campaign_region_id == "cinder_spine" else (SALT_EDGES if restored_campaign_region_id == "white_salt_expanse" else CAMPAIGN_EDGES))
 		for index in range(1, restored_campaign_path.size()):
 			if restored_campaign_path[index] not in restored_edges.get(restored_campaign_path[index - 1], []):
 				return {"ok": false, "reason": "campaign path contains an impossible route"}
@@ -2625,6 +2825,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 				return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
 		elif restored_campaign_region_id == "cinder_spine":
 			if restored_campaign_last_safe_node not in ["blackkiln", "old_lift_station"] or restored_campaign_last_safe_node not in restored_campaign_path:
+				return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
+		elif restored_campaign_region_id == "white_salt_expanse":
+			if restored_campaign_last_safe_node not in ["saltglass_haven", "windbreak"] or restored_campaign_last_safe_node not in restored_campaign_path:
 				return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
 		elif restored_campaign_last_safe_node != restored_campaign_path.back():
 			return {"ok": false, "reason": "safe campaign node conflicts with the secured path"}
@@ -2645,8 +2848,12 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "checkpoint contains an unknown Veyru contract state"}
 	if restored_cinder_contract_status not in VALID_CONTRACT_STATUSES:
 		return {"ok": false, "reason": "checkpoint contains an unknown Cinder contract state"}
+	if restored_salt_contract_status not in VALID_CONTRACT_STATUSES:
+		return {"ok": false, "reason": "checkpoint contains an unknown Salt contract state"}
 	if restored_campaign_region_id == "cinder_spine" and restored_cinder_contract_status == "unoffered":
 		return {"ok": false, "reason": "Cinder campaign is missing its dynamo contract state"}
+	if restored_campaign_region_id == "white_salt_expanse" and restored_salt_contract_status == "unoffered":
+		return {"ok": false, "reason": "Salt campaign is missing its beacon contract state"}
 	if not restored_veyru_medicine_carrier_id.is_empty() and restored_veyru_medicine_carrier_id not in ["refugee_bunk", "parts_crate"]:
 		return {"ok": false, "reason": "checkpoint contains an invalid medicine carrier"}
 	if restored_veyru_contract_status in ["accepted", "completed", "failed"] and restored_veyru_medicine_carrier_id.is_empty():
@@ -2696,6 +2903,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	if restored_phase != "results" and (restored_run_complete or restored_journey_complete or restored_final_result in FINAL_RESULTS):
 		return {"ok": false, "reason": "completion state conflicts with the active campaign phase"}
 	seed = int(data.get("seed", seed))
+	chassis_template_id = restored_chassis_template_id
 	day = int(data.get("day", day))
 	fuel = int(data.get("fuel", fuel))
 	money = int(data.get("money", money))
@@ -2749,6 +2957,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	veyru_contract_status = restored_veyru_contract_status
 	veyru_medicine_carrier_id = restored_veyru_medicine_carrier_id
 	cinder_contract_status = restored_cinder_contract_status
+	salt_contract_status = restored_salt_contract_status
 	settlement_trust = int(data.get("settlement_trust", settlement_trust))
 	mobility_tendency = int(data.get("mobility_tendency", mobility_tendency))
 	shelter_tendency = int(data.get("shelter_tendency", shelter_tendency))
@@ -3055,6 +3264,33 @@ func _encounter_module_damage(enemy_id: String, priority_override: String = "") 
 			elif "armor" in tags:
 				damage = 1
 				behavior_lines.append("%s holds the lift line steady." % definition.name)
+		elif enemy_id == "salt_storm":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "water_condenser":
+				damage = 3 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Water Condenser harvests the salt storm before it strips the chassis.")
+			elif "forecast" in tags:
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("%s holds a forecast line through the whiteout." % definition.name)
+			elif "signal" in tags or "armor" in tags:
+				damage = 1
+				behavior_lines.append("%s holds a line through the whiteout." % definition.name)
+		elif enemy_id == "rival_scouts":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "repeater_gun":
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Repeater Gun clears the rival screen.")
+			elif "forecast" in tags or "fast" in tags:
+				damage = 1
+				behavior_lines.append("%s denies the scouts an open flank." % definition.name)
+		elif enemy_id == "rival_fortress":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "shell_cannon":
+				damage = 3 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Shell Cannon answers the rival fortress at equal range.")
+			elif "armor" in tags or "forecast" in tags:
+				damage = 1
+				behavior_lines.append("%s preserves a redundant line under rival fire." % definition.name)
 		elif module_id == "shell_cannon":
 			damage = 3 if enemy_id in ["road_raiders", "siege_beast"] else 1
 			if String(status.get("state", "ready")) == "strained":
@@ -3375,6 +3611,12 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 	if enemy_id == "elevator_warden" and String(campaign_decisions.get("lift_engine_choice", "")) == "cut_switchback":
 		damage = maxi(0, damage - 1)
 		profile["route_effect"] = "cut_switchback"
+	if enemy_id == "salt_storm" and not _has_ready_tag("water"):
+		damage += 1
+		profile["threat_effect"] = "water_exposure"
+	if enemy_id == "rival_fortress" and String(campaign_decisions.get("rival_terms", "")) == "race_rival":
+		damage = maxi(0, damage - 1)
+		profile["route_effect"] = "racing_line"
 	if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
 		damage = maxi(0, damage - 1)
 		profile["doctrine_effect"] = "protect_cargo"
@@ -3518,12 +3760,16 @@ func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure
 			_encounter_log("Advancing fire or unsafe heat adds 1 Ember Drake damage to %s." % module_def.name)
 		elif String(profile.get("threat_effect", "")) == "fireline_sabotage":
 			_encounter_log("Inferno conditions add 1 Lift Saboteur damage to %s." % module_def.name)
+		elif String(profile.get("threat_effect", "")) == "water_exposure":
+			_encounter_log("No Ready Water Condenser adds 1 Salt Storm damage to %s." % module_def.name)
 		if String(profile.get("water_effect", "")) == "condenser_buffer":
 			_encounter_log("The Ready Water Condenser removes 1 Flood Surge damage from %s." % module_def.name)
 		if String(profile.get("route_effect", "")) == "high_gantry":
 			_encounter_log("Pilgrim Gantry's high deck removes 1 Flood Surge damage from %s." % module_def.name)
 		elif String(profile.get("route_effect", "")) == "cut_switchback":
 			_encounter_log("The cut switchback removes 1 Elevator Warden damage from %s." % module_def.name)
+		elif String(profile.get("route_effect", "")) == "racing_line":
+			_encounter_log("The racing line removes 1 Rival Fortress damage from %s." % module_def.name)
 		if String(profile.get("archive_effect", "")) == "sealed_approach":
 			_encounter_log("The sealed archive approach removes 1 Civic Guardian damage from %s." % module_def.name)
 		if String(profile.get("mara_effect", "")) == "refuge_bracing":
@@ -3585,6 +3831,13 @@ func _campaign_event_for_node(node_id: String) -> String:
 				return "registry_salvage"
 			"dry_archive_gate":
 				return "archive_broadcast"
+		return ""
+	if campaign_region_id == "white_salt_expanse":
+		match node_id:
+			"buried_observatory":
+				return "observatory_signal"
+			"rival_approach":
+				return "rival_terms"
 		return ""
 	if campaign_region_id == "cinder_spine":
 		match node_id:
@@ -3655,7 +3908,7 @@ func _campaign_recover_from_failure() -> Dictionary:
 	journey_node = campaign_last_safe_node
 	current_location = campaign_last_safe_node
 	journey_destination = ""
-	phase = "settlement" if campaign_last_safe_node in ["morrowline_camp", "veyru_evacuation_camp", "old_lift_station"] else ("refit" if campaign_last_safe_node in ["ashgate_depot", "lantern_quay", "blackkiln"] else "map")
+	phase = "settlement" if campaign_last_safe_node in ["morrowline_camp", "veyru_evacuation_camp", "old_lift_station", "windbreak"] else ("refit" if campaign_last_safe_node in ["ashgate_depot", "lantern_quay", "blackkiln", "saltglass_haven"] else "map")
 	if phase == "settlement":
 		settlement_actions_remaining = maxi(1, settlement_actions_remaining)
 	_recalculate()
@@ -3690,6 +3943,8 @@ func _finish_campaign_encounter(engine_alive: bool) -> Dictionary:
 		return _finish_veyru_encounter(engine_alive)
 	if campaign_region_id == "cinder_spine":
 		return _finish_cinder_encounter(engine_alive)
+	if campaign_region_id == "white_salt_expanse":
+		return _finish_salt_encounter(engine_alive)
 	var arrived_node := campaign_target_node
 	if hull_condition <= 0 or not engine_alive:
 		if arrived_node == "meridian_pass":
@@ -3888,6 +4143,64 @@ func _finish_cinder_encounter(engine_alive: bool) -> Dictionary:
 			encounter_outcome = "spine_bypassed"
 			final_result = "spine_bypassed"
 		_encounter_log("Outcome: %s after five Cinder encounters. Fireline, lift choice, contract, and surviving systems remain in the result." % final_result.replace("_", " "))
+	else:
+		phase = "map"
+		campaign_event_pending = _campaign_event_for_node(arrived_node)
+		encounter_outcome = "route_secured"
+		_encounter_log("Outcome: %s is secured. Choose the next available route%s." % [String(JOURNEY_NODES.get(arrived_node, {}).get("name", arrived_node)), " after resolving the local decision" if not campaign_event_pending.is_empty() else ""])
+	campaign_target_node = ""
+	_clear_temporary_seals()
+	return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+
+func _finish_salt_encounter(engine_alive: bool) -> Dictionary:
+	var arrived_node := campaign_target_node
+	if hull_condition <= 0 or not engine_alive:
+		if arrived_node == "salt_citadel":
+			encounter_outcome = "salt_lost"
+			final_result = "salt_lost"
+			run_complete = true
+			journey_complete = true
+			phase = "results"
+			_encounter_log("Outcome: the White Salt crossing fails below the Citadel. The final report preserves water, signal, and redundancy losses.")
+			_clear_temporary_seals()
+			return {"ok": true, "resolved": true, "outcome": encounter_outcome, "report": encounter_report.duplicate(), "summary": summary()}
+		return _campaign_recover_from_failure()
+	campaign_encounters_completed += 1
+	current_location = arrived_node
+	journey_node = arrived_node
+	if arrived_node not in campaign_path:
+		campaign_path.append(arrived_node)
+	if arrived_node == "windbreak":
+		campaign_last_safe_node = arrived_node
+	money += pending_route_reward
+	pending_route_reward = 0
+	command_points = 2
+	power_priority = "balanced"
+	heat_surge = 0
+	heat_relief = 0
+	_recalculate()
+	if arrived_node == "windbreak":
+		phase = "settlement"
+		settlement_actions_remaining = 2 if salt_contract_status == "accepted" and _has_ready_tag("forecast") else 1
+		settlement_report.clear()
+		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
+		_encounter_log("Outcome: %s at The Windbreak. %d water-service action%s and a full refit window are available." % [encounter_outcome.replace("_", " "), settlement_actions_remaining, "s" if settlement_actions_remaining != 1 else ""])
+	elif arrived_node == "salt_citadel":
+		journey_complete = true
+		run_complete = true
+		phase = "results"
+		var allied := salt_contract_status == "accepted" and _has_ready_tag("forecast") and String(campaign_decisions.get("rival_terms", "")) == "escort_compact"
+		if allied:
+			salt_contract_status = "completed"
+			money += 26
+			settlement_trust += 2
+			encounter_outcome = "expanse_allied"
+			final_result = "expanse_allied"
+			_encounter_log("Beacon escort complete: the Compact reaches the Salt Citadel. Payment is 26 Ashmarks and trust rises by 2.")
+		else:
+			encounter_outcome = "expanse_crossed"
+			final_result = "expanse_crossed"
+			_encounter_log("Outcome: the Expanse is crossed without a complete alliance. Signal, water, doctrine, and surviving systems remain in the result.")
 	else:
 		phase = "map"
 		campaign_event_pending = _campaign_event_for_node(arrived_node)
@@ -4137,7 +4450,7 @@ func _has_exterior_capacity(ignore_index: int = -1) -> bool:
 		var instance: Dictionary = modules[index]
 		if bool(instance.get("exterior", false)):
 			count += 1
-	return count < MAX_EXTERIOR_MOUNTS
+	return count < chassis_exterior_limit()
 
 func _has_engine() -> bool:
 	for instance in modules:

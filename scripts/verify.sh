@@ -34,6 +34,7 @@ run_checked() {
 python3 tools/validate_versions.py --repo .
 python3 tools/validate_flooded_veyru.py --data content/flooded_veyru.json
 python3 tools/validate_cinder_spine.py --data content/cinder_spine.json
+python3 tools/validate_white_salt.py --data content/white_salt_expanse.json
 python3 tools/verify_offline_boundary.py --repo .
 python3 tests/test_playtest_summary.py
 python3 tests/test_playtest_cohort_summary.py
@@ -54,6 +55,7 @@ run_checked "PASS: The Long March Early Access anchor runs" "$GODOT_BIN" --headl
 run_checked "PASS: The Long March local playtest journal" "$GODOT_BIN" --headless --path . --script res://tests/test_playtest_journal.gd
 run_checked "PASS: The Long March campaign progress" "$GODOT_BIN" --headless --path . --script res://tests/test_campaign_progress.gd
 run_checked "PASS: The Long March Cinder Spine chapter" "$GODOT_BIN" --headless --path . --script res://tests/test_cinder_spine.gd
+run_checked "PASS: The Long March White Salt Expanse" "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_expanse.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
 run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd
@@ -81,3 +83,6 @@ run_checked "PASS: The Long March responsive Veyru profile 1600x900" env LONG_MA
 run_checked "PASS: The Long March Cinder Spine UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_cinder_spine_flow.gd
 run_checked "PASS: The Long March responsive Cinder profile 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_cinder_spine_flow.gd
 run_checked "PASS: The Long March responsive Cinder profile 1600x900" env LONG_MARCH_VIEWPORT_WIDTH=1600 LONG_MARCH_VIEWPORT_HEIGHT=900 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_cinder_spine_flow.gd
+run_checked "PASS: The Long March White Salt UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_flow.gd
+run_checked "PASS: The Long March responsive White Salt profile 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_flow.gd
+run_checked "PASS: The Long March responsive White Salt profile 1600x900" env LONG_MARCH_VIEWPORT_WIDTH=1600 LONG_MARCH_VIEWPORT_HEIGHT=900 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_flow.gd

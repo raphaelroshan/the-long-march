@@ -79,6 +79,7 @@ var start_button: Button
 var quick_start_button: Button
 var veyru_start_button: Button
 var cinder_start_button: Button
+var salt_start_button: Button
 var continue_button: Button
 var save_recovery_button: Button
 var guide_button: Button
@@ -125,6 +126,8 @@ var pause_title_label: Label
 var pause_detail_label: Label
 var pause_hint_label: Label
 var title_build_label: Label
+var title_logo_label: Label
+var title_promise_label: Label
 var pause_build_label: Label
 var run_record_context_label: Label
 var run_record_body_label: Label
@@ -281,18 +284,18 @@ func _build_title_menu() -> void:
 	title_build_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	left.add_child(title_build_label)
 
-	var title := Label.new()
-	title.text = "THE LONG\nMARCH"
-	title.add_theme_font_size_override("font_size", 68)
-	title.add_theme_color_override("font_color", Color("#f0d29d"))
-	title.add_theme_constant_override("line_spacing", -10)
-	left.add_child(title)
+	title_logo_label = Label.new()
+	title_logo_label.text = "THE LONG\nMARCH"
+	title_logo_label.add_theme_font_size_override("font_size", 68)
+	title_logo_label.add_theme_color_override("font_color", Color("#f0d29d"))
+	title_logo_label.add_theme_constant_override("line_spacing", -10)
+	left.add_child(title_logo_label)
 
-	var promise := Label.new()
-	promise.text = "KEEP THE FORTRESS MOVING.\nKEEP ITS PROMISES."
-	promise.add_theme_font_size_override("font_size", 18)
-	promise.add_theme_color_override("font_color", Color("#d7dfd9"))
-	left.add_child(promise)
+	title_promise_label = Label.new()
+	title_promise_label.text = "KEEP THE FORTRESS MOVING.\nKEEP ITS PROMISES."
+	title_promise_label.add_theme_font_size_override("font_size", 18)
+	title_promise_label.add_theme_color_override("font_color", Color("#d7dfd9"))
+	left.add_child(title_promise_label)
 
 	title_control_contract_label = Label.new()
 	title_control_contract_label.text = "YOU CONTROL · CHASSIS · ROUTE · DOCTRINE · ONE EMERGENCY ORDER\nBATTLES RESOLVE STEP BY STEP."
@@ -358,6 +361,15 @@ func _build_title_menu() -> void:
 	cinder_start_button.pressed.connect(_start_cinder_game)
 	_bind_title_preview(cinder_start_button, "cinder")
 	actions.add_child(cinder_start_button)
+
+	salt_start_button = Button.new()
+	salt_start_button.name = "SaltStartButton"
+	salt_start_button.text = "START WHITE SALT EXPANSE · WHITEOUT"
+	salt_start_button.custom_minimum_size = Vector2(0, 50)
+	salt_start_button.tooltip_text = "Begin the five-encounter White Salt Expanse chapter at Saltglass Haven."
+	salt_start_button.pressed.connect(_start_salt_game)
+	_bind_title_preview(salt_start_button, "salt")
+	actions.add_child(salt_start_button)
 
 	continue_button = Button.new()
 	continue_button.name = "ContinueButton"
@@ -481,7 +493,9 @@ func _configure_title_focus() -> void:
 	veyru_start_button.focus_neighbor_top = veyru_start_button.get_path_to(quick_start_button)
 	veyru_start_button.focus_neighbor_bottom = veyru_start_button.get_path_to(cinder_start_button)
 	cinder_start_button.focus_neighbor_top = cinder_start_button.get_path_to(veyru_start_button)
-	continue_button.focus_neighbor_top = continue_button.get_path_to(cinder_start_button)
+	cinder_start_button.focus_neighbor_bottom = cinder_start_button.get_path_to(salt_start_button)
+	salt_start_button.focus_neighbor_top = salt_start_button.get_path_to(cinder_start_button)
+	continue_button.focus_neighbor_top = continue_button.get_path_to(salt_start_button)
 	continue_button.focus_neighbor_bottom = continue_button.get_path_to(settings_button)
 	save_recovery_button.focus_neighbor_top = save_recovery_button.get_path_to(quick_start_button)
 	save_recovery_button.focus_neighbor_bottom = save_recovery_button.get_path_to(settings_button)
@@ -503,6 +517,7 @@ func _refresh_title_focus(has_valid_save: bool, has_invalid_save: bool = false, 
 		title_actions.append(quick_start_button)
 	title_actions.append(veyru_start_button)
 	title_actions.append(cinder_start_button)
+	title_actions.append(salt_start_button)
 	if has_invalid_save:
 		title_actions.append(save_recovery_button)
 	var active_controls: Array = []
@@ -1407,6 +1422,19 @@ func _apply_text_scale() -> void:
 		title_control_contract_label.visible = text_scale_percent == 100
 	if title_right_spacer != null:
 		title_right_spacer.visible = text_scale_percent == 100
+	if title_charter_label != null:
+		title_charter_label.visible = text_scale_percent == 100
+	if salt_start_button != null:
+		var compact := text_scale_percent > 100
+		title_logo_label.add_theme_font_size_override("font_size", 50 if compact else 68)
+		title_promise_label.visible = not compact
+		tutorial_button.custom_minimum_size.y = 46 if compact else 64
+		start_button.custom_minimum_size.y = 44 if compact else 62
+		for regional_button in [veyru_start_button, cinder_start_button, salt_start_button]:
+			regional_button.custom_minimum_size.y = 34 if compact else 50
+		for utility_button in [guide_button, settings_button, quit_button]:
+			utility_button.custom_minimum_size.y = 30 if compact else 44
+		save_status_label.visible = not compact
 
 func _apply_text_scale_to_tree(node: Node) -> void:
 	if node is Control:
@@ -1601,6 +1629,8 @@ func _refresh_title_state() -> void:
 	veyru_start_button.tooltip_text = "%s%s" % ["Begin the separate five-encounter Flooded Veyru chapter at Lantern Quay." if tutorial_complete else "Flooded Veyru remains available, but The First Watch is recommended before this advanced journey.", " Public Archive Signal is active: Drowned Registry contacts will be Known." if campaign_progress.has_development("veyru_public_archive_signal") else ""]
 	cinder_start_button.text = "REPLAY THE CINDER SPINE · FIRELINE" if has_completed_save else ("NEW CINDER SPINE RUN · FIRELINE" if has_valid_save else ("START THE CINDER SPINE · FIRELINE" if tutorial_complete else "THE CINDER SPINE · ADVANCED JOURNEY"))
 	cinder_start_button.tooltip_text = "%s%s" % ["Begin the five-encounter Cinder Spine chapter at Blackkiln." if tutorial_complete else "The Cinder Spine remains available, but The First Watch is recommended before this advanced journey.", " Communal Lift Plan is active: Slag Tunnel contacts will be Known." if campaign_progress.has_development("cinder_communal_lift_plan") else ""]
+	salt_start_button.text = "REPLAY WHITE SALT EXPANSE · WHITEOUT" if has_completed_save else ("NEW WHITE SALT RUN · WHITEOUT" if has_valid_save else ("START WHITE SALT EXPANSE · WHITEOUT" if tutorial_complete else "WHITE SALT EXPANSE · ADVANCED JOURNEY"))
+	salt_start_button.tooltip_text = "%s%s" % ["Begin the five-encounter White Salt Expanse chapter at Saltglass Haven." if tutorial_complete else "The White Salt Expanse remains available, but The First Watch is recommended before this advanced journey.", " Public Salt Beacons are active: Salt Mine contacts will be Known." if campaign_progress.has_development("salt_public_beacons") else ""]
 	var ashgate_completed := not campaign_progress.result_for_region("ashgate_lowlands").is_empty()
 	var veyru_completed := not campaign_progress.result_for_region("flooded_veyru").is_empty()
 	guide_quick_start_button.text = "REPLAY · ASHGATE" if ashgate_completed else ("START NEW · ASHGATE" if has_valid_save else "QUICK START · ASHGATE")
@@ -1624,14 +1654,16 @@ func _refresh_title_state() -> void:
 		actions.move_child(quick_start_button, 3)
 		actions.move_child(veyru_start_button, 4)
 		actions.move_child(cinder_start_button, 5)
+		actions.move_child(salt_start_button, 6)
 	else:
 		actions.move_child(tutorial_button, 0)
 		actions.move_child(start_button, 1)
 		actions.move_child(quick_start_button, 2)
 		actions.move_child(veyru_start_button, 3)
 		actions.move_child(cinder_start_button, 4)
-		actions.move_child(continue_button, 5)
-		actions.move_child(save_recovery_button, 6)
+		actions.move_child(salt_start_button, 5)
+		actions.move_child(continue_button, 6)
+		actions.move_child(save_recovery_button, 7)
 	_refresh_title_focus(has_valid_save, has_invalid_save, quick_start_button.visible)
 	continue_button.text = String(save_info.get("action", "CONTINUE SAVED MARCH")) if has_valid_save else ("CONTINUE  ·  SAVE UNAVAILABLE" if bool(save_info.get("exists", false)) else "CONTINUE  ·  NO SAVE FOUND")
 	continue_button.tooltip_text = String(save_info.get("tooltip", "Load the last locally saved fortress state."))
@@ -1722,6 +1754,13 @@ func _refresh_title_preview(save_info: Dictionary = {}) -> void:
 			title_preview_scope_label.text = "PRESSURE · FIRELINE   ·   RECOVERY · OLD LIFT STATION   ·   FINALE · ELEVATOR WARDEN"
 			rule_titles = ["Carry a working dynamo", "Respect grade and heat", "Decide who owns the crossing"]
 			rule_details = ["Accept the guild pattern only with a ready Generator Core, or travel light.", "Heavy chassis lose margin on steep grades; inferno closes the low tunnel but opens refuge.", "Power the old lift or cut a communal switchback, then decide whether to share the design."]
+		"salt":
+			title_preview_eyebrow_label.text = "WHITE SALT EXPANSE · FOURTH JOURNEY · 15–25 MINUTES"
+			title_preview_title_label.text = "Cross where everyone can see you"
+			title_region_briefing_label.text = "The Salt Skimmer trades two lower corners and one mass capacity for a third exterior mount. Signals carry farther, water is scarce, and rival scouts can read every convoy."
+			title_preview_scope_label.text = "CHASSIS · SALT SKIMMER   ·   PRESSURE · ASH FRONT   ·   FINALE · RIVAL FORTRESS"
+			rule_titles = ["Choose the alternate chassis", "Guide or outrun the Compact", "Meet a fortress in open ground"]
+			rule_details = ["Fit a 13-mass cut-away deck with up to three exterior systems.", "Beacon escort earns trust but draws tougher scouts.", "Use doctrine and redundancy when concealment is impossible."]
 		"ashgate_quick":
 			title_preview_eyebrow_label.text = "ASHGATE LOWLANDS · QUICK START · 15–25 MINUTES"
 			title_preview_title_label.text = "Use the prepared fortress"
@@ -1748,6 +1787,7 @@ func _march_charter_text() -> String:
 	var ashgate_result := campaign_progress.result_for_region("ashgate_lowlands")
 	var veyru_result := campaign_progress.result_for_region("flooded_veyru")
 	var cinder_result := campaign_progress.result_for_region("cinder_spine")
+	var salt_result := campaign_progress.result_for_region("white_salt_expanse")
 	var survived := campaign_progress.survived_region_count()
 	var next_road := "Choose any chapter"
 	if survived > 0 and not campaign_progress.survived_region("ashgate_lowlands"):
@@ -1756,9 +1796,11 @@ func _march_charter_text() -> String:
 		next_road = "Flooded Veyru"
 	elif survived > 0 and not campaign_progress.survived_region("cinder_spine"):
 		next_road = "The Cinder Spine"
-	elif survived == 3:
+	elif survived > 0 and not campaign_progress.survived_region("white_salt_expanse"):
+		next_road = "White Salt Expanse"
+	elif survived == 4:
 		next_road = "All roads remain open for replay"
-	return "MARCH CHARTER · %d/3 REGIONS SURVIVED\nAshgate %s · Veyru %s · Cinder %s · Next: %s" % [survived, _charter_result_label(ashgate_result), _charter_result_label(veyru_result), _charter_result_label(cinder_result), next_road]
+	return "MARCH CHARTER · %d/4 REGIONS SURVIVED\nAshgate %s · Veyru %s · Cinder %s · Salt %s · Next: %s" % [survived, _charter_result_label(ashgate_result), _charter_result_label(veyru_result), _charter_result_label(cinder_result), _charter_result_label(salt_result), next_road]
 
 func _charter_result_label(result_id: String) -> String:
 	if result_id.is_empty():
@@ -1882,6 +1924,8 @@ func _saved_next_action(saved_state: LongMarchState) -> String:
 		return "Answer medicine contract"
 	if saved_state.campaign_region_id == "cinder_spine" and saved_state.cinder_contract_status == "offered":
 		return "Answer dynamo contract"
+	if saved_state.campaign_region_id == "white_salt_expanse" and saved_state.salt_contract_status == "offered":
+		return "Answer beacon escort"
 	if saved_state.guard_contract_status == "offered":
 		return "Answer convoy contract"
 	if saved_state.phase == "settlement" and saved_state.settlement_actions_remaining > 0:
@@ -1908,13 +1952,13 @@ func _empty_save_summary() -> String:
 	return "No saved march · Autosave begins after your first committed decision." if autosave_enabled else "No saved march · Use Save March from the pause menu."
 
 func _region_menu_name(region_id: String) -> String:
-	return "VEYRU" if region_id == "flooded_veyru" else ("CINDER" if region_id == "cinder_spine" else "ASHGATE")
+	return "VEYRU" if region_id == "flooded_veyru" else ("CINDER" if region_id == "cinder_spine" else ("WHITE SALT" if region_id == "white_salt_expanse" else "ASHGATE"))
 
 func _region_display_name(region_id: String) -> String:
-	return "Flooded Veyru" if region_id == "flooded_veyru" else ("The Cinder Spine" if region_id == "cinder_spine" else "Ashgate Lowlands")
+	return "Flooded Veyru" if region_id == "flooded_veyru" else ("The Cinder Spine" if region_id == "cinder_spine" else ("The White Salt Expanse" if region_id == "white_salt_expanse" else "Ashgate Lowlands"))
 
 func _region_start_name(region_id: String) -> String:
-	return "Lantern Quay" if region_id == "flooded_veyru" else ("Blackkiln" if region_id == "cinder_spine" else "Ashgate Depot")
+	return "Lantern Quay" if region_id == "flooded_veyru" else ("Blackkiln" if region_id == "cinder_spine" else ("Saltglass Haven" if region_id == "white_salt_expanse" else "Ashgate Depot"))
 
 func _active_region_id() -> String:
 	if game_view == null:
@@ -1953,9 +1997,12 @@ func _start_veyru_game() -> void:
 func _start_cinder_game() -> void:
 	_request_new_game(false, "cinder_spine")
 
+func _start_salt_game() -> void:
+	_request_new_game(false, "white_salt_expanse")
+
 func _request_new_game(show_briefing: bool, region_id: String = "ashgate_lowlands") -> void:
 	if bool(_saved_run_info().get("valid", false)):
-		_request_confirmation("new_veyru" if region_id == "flooded_veyru" else ("new_cinder" if region_id == "cinder_spine" else ("new_guided" if show_briefing else "new_quick")))
+		_request_confirmation("new_veyru" if region_id == "flooded_veyru" else ("new_cinder" if region_id == "cinder_spine" else ("new_salt" if region_id == "white_salt_expanse" else ("new_guided" if show_briefing else "new_quick"))))
 		return
 	_open_stage(false, show_briefing, region_id)
 
@@ -2380,7 +2427,7 @@ func _request_replay_confirmation() -> void:
 	_request_confirmation("replay")
 
 func _request_march_on_confirmation(region_id: String) -> void:
-	if game_view == null or region_id not in ["ashgate_lowlands", "flooded_veyru", "cinder_spine"]:
+	if game_view == null or region_id not in ["ashgate_lowlands", "flooded_veyru", "cinder_spine", "white_salt_expanse"]:
 		return
 	if _active_stage_is_tutorial() and region_id == "ashgate_lowlands":
 		var marker := FileAccess.open(TUTORIAL_COMPLETE_PATH, FileAccess.WRITE)
@@ -2392,10 +2439,10 @@ func _request_march_on_confirmation(region_id: String) -> void:
 	if String(game_view.get("state").get("phase")) != "results":
 		return
 	game_view.process_mode = Node.PROCESS_MODE_DISABLED
-	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else ("march_on_veyru" if region_id == "flooded_veyru" else "march_on_cinder"))
+	_request_confirmation("march_on_ashgate" if region_id == "ashgate_lowlands" else ("march_on_veyru" if region_id == "flooded_veyru" else ("march_on_cinder" if region_id == "cinder_spine" else "march_on_salt")))
 
 func _request_confirmation(action: String) -> void:
-	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "march_on_cinder", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "reset_playtest_data", "new_guided", "new_quick", "new_veyru", "new_cinder"]:
+	if action not in ["restart", "replay", "march_on_ashgate", "march_on_veyru", "march_on_cinder", "march_on_salt", "quit_save", "title", "restore_backup", "clear_progress", "clear_save", "clear_invalid_save", "reset_playtest_data", "new_guided", "new_quick", "new_veyru", "new_cinder", "new_salt"]:
 		return
 	if action in ["clear_progress", "reset_playtest_data"] and game_view != null:
 		return
@@ -2429,8 +2476,8 @@ func _request_confirmation(action: String) -> void:
 		else:
 			confirmation_body_label.text = "This result is not saved under Continue. Play Again will create a fresh %s checkpoint immediately." % replay_menu_name if autosave_enabled else "This result is not saved under Continue. Play Again starts a fresh %s run without creating a checkpoint until you save manually." % replay_menu_name
 		confirmation_confirm_button.text = "PLAY AGAIN"
-	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
-		var next_region_id := "ashgate_lowlands" if action == "march_on_ashgate" else ("flooded_veyru" if action == "march_on_veyru" else "cinder_spine")
+	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder", "march_on_salt"]:
+		var next_region_id := "ashgate_lowlands" if action == "march_on_ashgate" else ("flooded_veyru" if action == "march_on_veyru" else ("cinder_spine" if action == "march_on_cinder" else "white_salt_expanse"))
 		var next_region_name := _region_display_name(next_region_id)
 		var current_region_name := _region_display_name(_active_region_id())
 		confirmation_title_label.text = "Continue to %s?" % next_region_name
@@ -2480,7 +2527,7 @@ func _request_confirmation(action: String) -> void:
 		confirmation_cancel_button.text = "KEEP FILE"
 	elif action == "restore_backup":
 		confirmation_cancel_button.text = "KEEP FILES"
-	elif action in ["new_guided", "new_quick", "new_veyru", "new_cinder"]:
+	elif action in ["new_guided", "new_quick", "new_veyru", "new_cinder", "new_salt"]:
 		confirmation_cancel_button.text = "KEEP RESULT" if bool(_saved_run_info().get("completed", false)) else "KEEP SAVE"
 	elif action == "clear_save":
 		confirmation_cancel_button.text = "KEEP SAVE"
@@ -2512,7 +2559,7 @@ func _cancel_confirmation() -> void:
 		elif game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call_deferred("focus_replay_action")
-	elif previous_action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
+	elif previous_action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder", "march_on_salt"]:
 		if game_view != null:
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call_deferred("focus_march_on_action")
@@ -2548,6 +2595,8 @@ func _cancel_confirmation() -> void:
 		(guide_veyru_start_button if guide_view.visible else veyru_start_button).grab_focus()
 	elif previous_action == "new_cinder":
 		cinder_start_button.grab_focus()
+	elif previous_action == "new_salt":
+		salt_start_button.grab_focus()
 	else:
 		title_button.grab_focus()
 
@@ -2563,10 +2612,10 @@ func _confirm_pending_action() -> void:
 			paused_stage_focus = null
 			game_view.process_mode = Node.PROCESS_MODE_INHERIT
 			game_view.call("start_replay_from_results")
-	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder"]:
+	elif action in ["march_on_ashgate", "march_on_veyru", "march_on_cinder", "march_on_salt"]:
 		pause_view.visible = false
 		paused_stage_focus = null
-		_open_stage(false, false, "ashgate_lowlands" if action == "march_on_ashgate" else ("flooded_veyru" if action == "march_on_veyru" else "cinder_spine"))
+		_open_stage(false, false, "ashgate_lowlands" if action == "march_on_ashgate" else ("flooded_veyru" if action == "march_on_veyru" else ("cinder_spine" if action == "march_on_cinder" else "white_salt_expanse")))
 	elif action == "quit_save":
 		_save_and_quit()
 	elif action == "title":
@@ -2621,6 +2670,8 @@ func _confirm_pending_action() -> void:
 		_open_stage(false, false, "flooded_veyru")
 	elif action == "new_cinder":
 		_open_stage(false, false, "cinder_spine")
+	elif action == "new_salt":
+		_open_stage(false, false, "white_salt_expanse")
 
 func _show_guide() -> void:
 	guide_view.visible = true

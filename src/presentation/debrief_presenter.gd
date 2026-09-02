@@ -5,21 +5,21 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 	var result_name := result_id.replace("_", " ").capitalize()
 	var headline := "FAILED"
 	var tone := "critical"
-	if result_id in ["decisive_march", "archive_kept"]:
+	if result_id in ["decisive_march", "archive_kept", "spine_powered", "expanse_allied"]:
 		headline = "DECISIVE"
 		tone = "stable"
-	elif result_id in ["scarred_march", "archive_scarred"]:
+	elif result_id in ["scarred_march", "archive_scarred", "spine_bypassed", "expanse_crossed"]:
 		headline = "SCARRED"
 		tone = "scarred"
 	var timeline: Array[Dictionary] = []
 	var visited: Array[String] = state.campaign_path.duplicate()
-	var start_id := "ashgate_depot" if state.campaign_region_id == "ashgate_lowlands" else "lantern_quay"
+	var start_id := "ashgate_depot" if state.campaign_region_id == "ashgate_lowlands" else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else "saltglass_haven"))
 	if state.current_location not in visited and state.current_location != start_id:
 		visited.append(state.current_location)
 	for index in range(1, mini(visited.size(), 6)):
 		var node_id := visited[index]
 		var is_last := index == visited.size() - 1
-		var status := "FINAL COMMITMENT" if is_last and result_id in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred"] else ("MARCH ENDED" if is_last and result_id in ["march_failed", "veyru_lost"] else "ROAD SECURED")
+		var status := "FINAL COMMITMENT" if is_last and result_id in ["decisive_march", "scarred_march", "archive_kept", "archive_scarred", "spine_powered", "spine_bypassed", "expanse_allied", "expanse_crossed"] else ("MARCH ENDED" if is_last and result_id in ["march_failed", "veyru_lost", "cinder_lost", "salt_lost"] else "ROAD SECURED")
 		timeline.append({"name": String(LongMarchState.CAMPAIGN_NODES.get(node_id, {}).get("name", node_id.replace("_", " ").capitalize())), "status": status, "tone": "critical" if status == "MARCH ENDED" else ("scarred" if tone == "scarred" and is_last else "stable")})
 	var path_names: Array[String] = []
 	for node_id in visited:

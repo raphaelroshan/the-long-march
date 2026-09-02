@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "region": {
+    "id": "white_salt_expanse", "name": "The White Salt Expanse",
+    "start_node": "saltglass_haven", "final_node": "salt_citadel", "encounter_count": 5,
+    "pressure": {"id": "ash_front", "whiteout_closes": ["empty_mile"], "whiteout_opens": ["lee_trench"], "guaranteed_recovery_node": "lee_trench"}
+  },
+  "chassis": {"id": "salt_skimmer", "grid": [6, 4], "cut_away_cells": [[0, 3], [5, 3]], "mass_limit": 13, "exterior_mounts": 3},
+  "contract": {"id": "compact_beacon_escort", "required_tag": "forecast", "reward": {"ashmarks": 26, "trust": 2}, "failure_ends_run": false},
+  "nodes": [
+    {"id": "saltglass_haven", "next": ["buried_observatory", "quiet_caravan"]},
+    {"id": "buried_observatory", "encounter": ["salt_storm"], "decision": "observatory_signal", "next": ["windbreak"]},
+    {"id": "quiet_caravan", "encounter": ["rival_scouts"], "next": ["windbreak"]},
+    {"id": "windbreak", "encounter": ["salt_storm"], "next": ["salt_mine", "empty_mile", "beacon_road", "lee_trench"]},
+    {"id": "salt_mine", "encounter": ["salt_storm", "rival_scouts"], "next": ["rival_approach"]},
+    {"id": "empty_mile", "encounter": ["rival_scouts"], "next": ["rival_approach"]},
+    {"id": "beacon_road", "encounter": ["salt_storm"], "next": ["rival_approach"]},
+    {"id": "lee_trench", "encounter": ["rival_scouts"], "next": ["rival_approach"]},
+    {"id": "rival_approach", "encounter": ["rival_scouts", "salt_storm"], "decision": "rival_terms", "next": ["salt_citadel"]},
+    {"id": "salt_citadel", "encounter": ["rival_fortress"], "next": []}
+  ],
+  "regional_threats": [
+    {"id": "salt_storm", "counters": ["water_condenser", "signal_coil", "wall_lamp", "side_armor_skirt"]},
+    {"id": "rival_scouts", "counters": ["repeater_gun", "signal_coil", "ash_runner_engine"]},
+    {"id": "rival_fortress", "counters": ["shell_cannon", "front_armor_plate", "signal_coil", "escort_beacons"]}
+  ],
+  "decisions": [
+    {"id": "observatory_signal", "choices": ["broadcast_beacons", "sell_coordinates"]},
+    {"id": "rival_terms", "choices": ["escort_compact", "race_rival"]}
+  ],
+  "regional_developments": [
+    {"id": "salt_public_beacons", "trigger": {"decision": "broadcast_beacons", "results": ["expanse_allied", "expanse_crossed"]}, "future_effect": {"node": "salt_mine", "visibility": "known", "risk_discount": 0}}
+  ],
+  "results": [
+    {"id": "expanse_allied"}, {"id": "expanse_crossed"}, {"id": "salt_lost"}
+  ]
+}

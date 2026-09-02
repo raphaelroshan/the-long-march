@@ -4,7 +4,7 @@ Feed the implementation agent one slice at a time. Each prompt assumes the agent
 
 ## Current post-alpha feed order
 
-The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.351`; Feeds A through AT, **LM-EA-1**, and **LM-EA-2** are complete. Ashgate and Flooded Veyru remain quality anchors, and The Cinder Spine is the third complete chapter with mass/heat pressure, failure-forward routing, exact save/load checks, and responsive UI coverage. The next implementation feed is **LM-EA-3**, one fourth-region vertical slice plus an alternate chassis/template. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain useful calibration rather than a prerequisite or a claim that the game is commercially finished.
+The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.352`; Feeds A through AT and **LM-EA-1** through **LM-EA-3** are complete. Four five-contact chapters and two physical chassis templates now meet deterministic and responsive automation gates. The next implementation feed is **LM-EA-4**, adding two module families, two specialists, and two threat families with new dependency questions. Five consented, uncoached human sessions using [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) remain useful calibration rather than a prerequisite or a claim that the game is commercially finished.
 
 ### Active Feed 0 — failure-forward consequence
 
