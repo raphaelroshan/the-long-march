@@ -22,6 +22,9 @@ def main() -> int:
         errors.append("candidate platforms must stay explicitly bounded to Windows, macOS, and Linux")
     if manifest.get("save_compatibility") != {"minimum": 4, "current": 16}:
         errors.append("candidate manifest must declare the tested save compatibility window")
+    campaign = manifest.get("campaign_contract", {})
+    if campaign.get("session_minutes") != {"minimum": 30, "maximum": 90} or campaign.get("timing_evidence") != "authored_target_not_human_observation":
+        errors.append("candidate manifest must declare the authored, not-yet-human-observed 30–90 minute target")
 
     verify = (root / "scripts/verify.sh").read_text(encoding="utf-8")
     for marker in (
@@ -39,6 +42,7 @@ def main() -> int:
         "test_release_notes.py",
         "test_readme_contract.py",
         "test_report_output.py",
+        "test_gpt56_package_contract.py",
     ):
         require(verify, marker, "verification gate", errors)
 

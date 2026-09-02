@@ -381,3 +381,14 @@ These captures verify that three earlier obligation outcomes are attributed befo
 | Restored | [Both checkpoints validated after recovery](visual_evidence/v0.3.0-alpha.362-hardening-gate/03_restored_save_health.png) | `6cebca4bfba8005b3fa382d41a7919687c3537b5a2dfd8661fb2b253203df97b` |
 
 The captures verify player-facing diagnosis and explicit recovery at the declared build. They do not replace real suspend/resume testing on supported consumer hardware.
+
+## `v0.3.0-alpha.363` — GPT56 package recovery boundary
+
+| Candidate state | Evidence | SHA-256 |
+|---|---|---|
+| Clean install | [No local checkpoint](visual_evidence/v0.3.0-alpha.363-gpt56-5-package/00_clean_install_health.png) | `9ecb6c5ca6da2aed896eaca88d79438a0cb2e4ae876ca1493a3f5a1c75ba385f` |
+| Recoverable corruption | [Invalid primary and valid predecessor](visual_evidence/v0.3.0-alpha.363-gpt56-5-package/01_recoverable_save_health.png) | `974a945a872ec9449ab7da92e1e460338d91af4be51524963437b16f6e9bba4b` |
+| Explicit rollback | [Recovery confirmation retains cancellation](visual_evidence/v0.3.0-alpha.363-gpt56-5-package/02_restore_confirmation.png) | `2209cf931d0eb05789508b2c5e99140c513bd1fa018dbfba48aa4e12b225869f` |
+| Restored cohort state | [Both checkpoints validate](visual_evidence/v0.3.0-alpha.363-gpt56-5-package/03_restored_save_health.png) | `87dbbbca4c9e13268d586ee92602fc4633afb7d85e55da2ea3948bdc4b9751b4` |
+
+These are exact-build recovery captures for LM-GPT56-5. They verify clean-install and rollback presentation, not cross-platform consumer hardware behavior or human confidence in the recovery wording.

@@ -193,6 +193,8 @@ jobs:
             --file early_access_candidate=docs/early_access_candidate.md \
             --file early_access_known_limitations=docs/early_access_known_limitations.md \
             --file early_access_test_matrix=docs/early_access_test_matrix.md \
+            --file campaign_contract=content/early_access_candidate.json \
+            --file gpt56_execution=docs/lm_gpt56_5_early_access_package_report.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Verify exact cohort manifest
         run: python tools/verify_release_manifest.py artifacts/release_manifest.json
@@ -207,6 +209,8 @@ jobs:
             docs/early_access_candidate.md
             docs/early_access_known_limitations.md
             docs/early_access_test_matrix.md
+            docs/lm_gpt56_5_early_access_package_report.md
+            content/early_access_candidate.json
             docs/playtest_guide.md
             docs/private_alpha_session_sheet.md
             tools/prepare_playtest_session.py
@@ -300,6 +304,8 @@ jobs:
             --file early_access_candidate=docs/early_access_candidate.md \
             --file early_access_known_limitations=docs/early_access_known_limitations.md \
             --file early_access_test_matrix=docs/early_access_test_matrix.md \
+            --file campaign_contract=content/early_access_candidate.json \
+            --file gpt56_execution=docs/lm_gpt56_5_early_access_package_report.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Verify exact Linux cohort manifest
         run: python tools/verify_release_manifest.py artifacts/release_manifest.json
@@ -314,6 +320,8 @@ jobs:
             docs/early_access_candidate.md
             docs/early_access_known_limitations.md
             docs/early_access_test_matrix.md
+            docs/lm_gpt56_5_early_access_package_report.md
+            content/early_access_candidate.json
             docs/playtest_guide.md
             docs/private_alpha_session_sheet.md
             tools/prepare_playtest_session.py

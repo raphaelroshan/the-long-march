@@ -1,9 +1,9 @@
 # The Long March — GPT-5.6 Investment Execution Packets
 
-**Baseline:** `0.3.0-alpha.362` on current `main`.  
-**Latest audit:** verification is passing through the current journey and breadth checks, with no failure markers in the completed log. The fresh title, First Watch, and dependency captures show the strongest creative identity of the three. The investment risk is proving that this identity survives the full journey and meaningful regional choices.
+**Baseline:** `0.3.0-alpha.363` on the GPT56 execution branch.
+**Latest audit:** all five packets have deterministic repository evidence. The remaining investment risk is human calibration of comprehension, pacing, accessibility, and replay appetite on one retained candidate—not an unimplemented packet.
 
-**Execution status:** LM-GPT56-1 through LM-GPT56-4 are complete in `0.3.0-alpha.363`; see the linked packet reports beginning with [`lm_gpt56_1_full_journey_report.md`](lm_gpt56_1_full_journey_report.md). LM-GPT56-5 is next.
+**Execution status:** LM-GPT56-1 through LM-GPT56-5 are complete in `0.3.0-alpha.363`; see the packet reports from [`lm_gpt56_1_full_journey_report.md`](lm_gpt56_1_full_journey_report.md) through [`lm_gpt56_5_early_access_package_report.md`](lm_gpt56_5_early_access_package_report.md). The only next packet is the consented LM-H1 human observation packet.
 
 ## Packet LM-GPT56-1 — Full creative journey
 

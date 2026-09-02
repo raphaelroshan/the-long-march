@@ -55,6 +55,7 @@ python3 tests/test_readme_contract.py
 python3 tests/test_report_output.py
 python3 tests/test_smoke_playtest.py
 python3 tests/test_private_alpha_contract.py
+python3 tests/test_gpt56_package_contract.py
 run_checked "" "$GODOT_BIN" --headless --path . --import
 run_checked "PASS: The Long March fortress-state tests" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_state.gd
 run_checked "PASS: The Long March Early Access anchor runs" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_anchor_runs.gd

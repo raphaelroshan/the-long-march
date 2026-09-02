@@ -62,6 +62,7 @@ def build_manifest(
 	entries.sort(key=lambda entry: (entry["role"], entry["path"]))
 	version = ci_manifest["prototype_version"]
 	save_compatibility = ci_manifest["save_compatibility"]
+	campaign_contract = ci_manifest["campaign_contract"]
 	resolved_head = head_commit or commit
 	return {
 		"schema_version": 1,
@@ -90,6 +91,15 @@ def build_manifest(
 				"current": int(save_compatibility["current"]),
 			},
 			"offline_runtime": True,
+		},
+		"campaign": {
+			"regions": int(campaign_contract["regions"]),
+			"session_minutes": {
+				"minimum": int(campaign_contract["session_minutes"]["minimum"]),
+				"maximum": int(campaign_contract["session_minutes"]["maximum"]),
+			},
+			"timing_evidence": campaign_contract["timing_evidence"],
+			"completed_packets": list(campaign_contract["completed_packets"]),
 		},
 		"verification": sorted(set(verification)),
 		"files": entries,

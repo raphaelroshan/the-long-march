@@ -46,6 +46,18 @@ def main() -> int:
         errors.append("save compatibility window must match the authoritative state")
     if manifest.get("save_compatibility") != authoritative_window:
         errors.append("package manifest save compatibility must match the authoritative state")
+    session_contract = data.get("session_contract", {})
+    campaign_contract = manifest.get("campaign_contract", {})
+    if session_contract.get("target_minutes") != {"minimum": 30, "maximum": 90}:
+        errors.append("candidate must declare the 30–90 minute campaign target")
+    if campaign_contract.get("session_minutes") != session_contract.get("target_minutes"):
+        errors.append("package campaign duration must match the candidate contract")
+    if campaign_contract.get("regions") != scope.get("regions"):
+        errors.append("package campaign region count must match the candidate scope")
+    if session_contract.get("timing_evidence") != "authored_target_not_human_observation" or campaign_contract.get("timing_evidence") != session_contract.get("timing_evidence"):
+        errors.append("campaign timing must remain an authored target, not a human-observation claim")
+    if campaign_contract.get("completed_packets") != [f"LM-GPT56-{index}" for index in range(1, 6)]:
+        errors.append("package campaign contract must list all completed GPT56 packets")
     required_docs = [
         root / "docs/early_access_candidate.md",
         root / "docs/early_access_known_limitations.md",
