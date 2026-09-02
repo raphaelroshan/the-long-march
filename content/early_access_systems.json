@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "slice": "lm_ea_4",
+  "module_families": [
+    {
+      "id": "medical",
+      "module": "infirmary",
+      "dependency": "adjacent operational crew_quarters",
+      "decision": "Spend power, mass, and two cells to protect crew and refuge compartments."
+    },
+    {
+      "id": "command",
+      "module": "command_deck",
+      "dependency": "adjacent operational crew_quarters",
+      "decision": "Trade a staffed bay and heat for faster, riskier route doctrine."
+    }
+  ],
+  "support_module": {
+    "id": "salvage_crane",
+    "family": "recovery",
+    "dependency": "power and one exterior mount",
+    "decision": "Give up exterior capacity to brace lower-hull demolition attacks."
+  },
+  "specialists": [
+    {
+      "id": "sela_vonn",
+      "requires": "command_deck",
+      "effect": "Run Hot routes take one fewer day, add four risk points, and enable a command feint against scouts and Signal Hunters."
+    },
+    {
+      "id": "nera_quill",
+      "requires": "infirmary",
+      "effect": "Crew and refuge compartments take one less incoming damage while the staffed infirmary remains Ready."
+    }
+  ],
+  "threat_families": [
+    {
+      "id": "signal_hunters",
+      "targets": ["signal", "command", "exterior"],
+      "counters": ["command_deck", "repeater_gun", "side_armor_skirt"]
+    },
+    {
+      "id": "bridgebreakers",
+      "targets": ["lower_hull", "engine", "armor"],
+      "counters": ["shell_cannon", "side_armor_skirt", "salvage_crane"]
+    }
+  ]
+}

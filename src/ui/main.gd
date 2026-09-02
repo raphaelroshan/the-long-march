@@ -2317,6 +2317,15 @@ func _on_settlement_hub_action(_station_id: String, action_id: String) -> void:
 			_on_mastery_experiment_selected("ashgate_quarry_adaptation")
 		"select_experiment_signal":
 			_on_mastery_experiment_selected("ashgate_signal_discipline")
+		"hire_sela", "hire_nera":
+			var specialist_id := "sela_vonn" if action_id == "hire_sela" else "nera_quill"
+			var result := state.assign_specialist(specialist_id)
+			_set_event(String(result.get("message", "Specialist assignment blocked: %s." % String(result.get("reason", "unknown")))))
+			if bool(result.get("ok", false)):
+				_journal_event("specialist_recruited", {"specialist": specialist_id})
+				_checkpoint("specialist_recruited")
+			_refresh_ui()
+			settlement_hub.focus_station.call_deferred("hiring_post")
 		"plan_journey":
 			if _active_contract_status() == "offered":
 				_set_event("Answer the settlement assignment before planning the first road.")
@@ -5011,7 +5020,10 @@ class FortressPanel extends Control:
 		"armor": Color("#6f7b84"),
 		"cargo": Color("#8e6d4f"),
 		"signal": Color("#5e9b91"),
-		"sustain": Color("#4f8790")
+		"sustain": Color("#4f8790"),
+		"medical": Color("#6f9c82"),
+		"command": Color("#8c6e9f"),
+		"recovery": Color("#9a7752")
 	}
 
 	func _ready() -> void:

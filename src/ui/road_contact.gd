@@ -18,6 +18,8 @@ const THREAT_PRESENTATION_PROFILES := {
 	,"salt_storm": {"wind_up": "WHITEOUT SHEAR", "response": "CONDENSER · SIGNAL · SEAL", "risk": "Without water recovery, salt strips exposed systems and dries the hull."}
 	,"rival_scouts": {"wind_up": "OPEN-FLANK MARK", "response": "REPEATER · SIGNAL · FAST DRIVE", "risk": "Scouts mark cargo and movement systems for the rival fortress."}
 	,"rival_fortress": {"wind_up": "PARALLEL BROADSIDE", "response": "REDUNDANCY · SHELL · ESCORT BEACONS", "risk": "A peer fortress can break movement and power in the same exchange."}
+	,"signal_hunters": {"wind_up": "FALSE-BEACON LOCK", "response": "COMMAND · REPEATER · SIGNAL SCREEN", "risk": "Reflected signals expose command and exterior systems to a precision strike."}
+	,"bridgebreakers": {"wind_up": "UNDERSPAN CHARGE", "response": "SHELL · SIDE ARMOR · CRANE BRACE", "risk": "Demolition crews attack the lower hull and can stop the march outright."}
 }
 
 signal pause_requested

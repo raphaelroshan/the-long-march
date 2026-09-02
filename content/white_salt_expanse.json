@@ -12,8 +12,8 @@
     {"id": "buried_observatory", "encounter": ["salt_storm"], "decision": "observatory_signal", "next": ["windbreak"]},
     {"id": "quiet_caravan", "encounter": ["rival_scouts"], "next": ["windbreak"]},
     {"id": "windbreak", "encounter": ["salt_storm"], "next": ["salt_mine", "empty_mile", "beacon_road", "lee_trench"]},
-    {"id": "salt_mine", "encounter": ["salt_storm", "rival_scouts"], "next": ["rival_approach"]},
-    {"id": "empty_mile", "encounter": ["rival_scouts"], "next": ["rival_approach"]},
+    {"id": "salt_mine", "encounter": ["salt_storm", "signal_hunters"], "next": ["rival_approach"]},
+    {"id": "empty_mile", "encounter": ["bridgebreakers"], "next": ["rival_approach"]},
     {"id": "beacon_road", "encounter": ["salt_storm"], "next": ["rival_approach"]},
     {"id": "lee_trench", "encounter": ["rival_scouts"], "next": ["rival_approach"]},
     {"id": "rival_approach", "encounter": ["rival_scouts", "salt_storm"], "decision": "rival_terms", "next": ["salt_citadel"]},
@@ -22,7 +22,9 @@
   "regional_threats": [
     {"id": "salt_storm", "counters": ["water_condenser", "signal_coil", "wall_lamp", "side_armor_skirt"]},
     {"id": "rival_scouts", "counters": ["repeater_gun", "signal_coil", "ash_runner_engine"]},
-    {"id": "rival_fortress", "counters": ["shell_cannon", "front_armor_plate", "signal_coil", "escort_beacons"]}
+    {"id": "rival_fortress", "counters": ["shell_cannon", "front_armor_plate", "signal_coil", "escort_beacons"]},
+    {"id": "signal_hunters", "counters": ["command_deck", "repeater_gun", "side_armor_skirt"]},
+    {"id": "bridgebreakers", "counters": ["shell_cannon", "side_armor_skirt", "salvage_crane"]}
   ],
   "decisions": [
     {"id": "observatory_signal", "choices": ["broadcast_beacons", "sell_coordinates"]},

@@ -12,7 +12,10 @@ const FAMILY_COLORS := {
 	"armor": Color("#79858c"),
 	"cargo": Color("#9d7650"),
 	"signal": Color("#62a89d"),
-	"sustain": Color("#5795a0")
+	"sustain": Color("#5795a0"),
+	"medical": Color("#71a184"),
+	"command": Color("#9675a8"),
+	"recovery": Color("#a67d50")
 }
 
 const DEFAULT_FAMILIES := ["engine", "cargo", "power", "crew_room", "workshop", "weapon", "signal"]
