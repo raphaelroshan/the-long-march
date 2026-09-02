@@ -119,3 +119,9 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 ## Investment evaluation roadmap
 
 The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit is in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). Implemented evidence is recorded for [`LM-I1`](docs/lm_i1_creative_vertical_report.md), [`LM-I2`](docs/lm_i2_cinder_gate_report.md), [`LM-I3`](docs/lm_i3_white_salt_gate_report.md), [`LM-I4`](docs/lm_i4_breadth_gate_report.md), [`LM-I5`](docs/lm_i5_memory_gate_report.md), and [`LM-I6`](docs/lm_i6_hardening_gate_report.md). The repository roadmap is complete through LM-I6; uncoached human evaluation remains required before release claims.
+
+
+## GPT-5.6 investment execution packets
+
+For a complete moving-fortress creative vertical and credible Early Access campaign skeleton, issue the larger dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). The current first gate is LM-GPT56-1 after the latest automated and visual audit.
+| `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-audit verification, visual evidence, strong-opening assessment, and next complete-journey task. |

@@ -435,3 +435,8 @@ The recommended feeds are **LM-EA-1** anchor completion, **LM-EA-2** third regio
 Read [`investment_evaluation_roadmap.md`](investment_evaluation_roadmap.md) before expanding the campaign. The investment standard requires a complete moving-fortress fantasy: First Watch, refit, route commitment, travel, contact or event, damage, recovery, settlement consequence, next decision, and terminal Debrief.
 
 Issue the feeds in order: **LM-I1** lock one complete creative journey; **LM-I2** add a third region with a new route promise and failure-forward development; **LM-I3** add a fourth region and alternate chassis; **LM-I4** expand modules, specialists, and threat questions; **LM-I5** deepen campaign memory and endings; **LM-I6** harden the Early Access package. Do not add background-only regions or generic encounters. Human testing is optional and must not block implementation.
+
+
+## GPT-5.6 investment execution feed
+
+For the current investment-evaluation phase, read [`gpt56_investment_execution_packets.md`](gpt56_investment_execution_packets.md) and issue the packets in order. Start with **LM-GPT56-1**, which must prove First Watch, refit, route commitment, travel, contact/event, dependency consequence, recovery, settlement arrival, next route, and terminal Debrief in one clean-save path. Then issue LM-GPT56-2 for fortress identity across modes, LM-GPT56-3 for regional campaign breadth, LM-GPT56-4 for people/promises/memory, and LM-GPT56-5 for alpha hardening. Use deterministic fixtures, screenshots, save/resume, controller/scaling, and package checks; do not wait for human testing.
