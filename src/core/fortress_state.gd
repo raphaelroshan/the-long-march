@@ -80,6 +80,7 @@ const CAMPAIGN_DECISION_OPTIONS := {
 	"salvage_choice": ["take_fuel", "rescue_workers"],
 	"lost_signal": ["restore_relay", "move_silent"],
 	"toll_decision": ["pay_toll", "break_blockade"],
+	"mara_berth_choice": ["keep_iven", "replace_iven_with_mara"],
 	"mara_meeting": ["recruit_mara", "decline_mara"],
 	"mara_workbench_choice": ["rebuild_weakest", "brace_refuge"],
 	"mara_followup": ["record_repair_held", "record_repair_failed", "record_refuge_held", "record_refuge_failed"],
@@ -1681,6 +1682,12 @@ func campaign_event_details() -> Dictionary:
 				{"id": "pay_toll", "label": "Pay the toll", "effect": "Ashmarks -10 · Pressure -1", "enabled": can_pay_toll, "reason": "Requires 10 Ashmarks" if not can_pay_toll else ""},
 				{"id": "break_blockade", "label": "Break the toll post", "effect": "Ashmarks +8 · Trust +1 · Pressure +1", "enabled": true, "reason": ""}
 			]}
+		"mara_berth_choice":
+			var mara_ready := operational("field_workshop") and _has_operational_tag("crew")
+			return {"id": "mara_berth_choice", "title": "Two Hands, One Berth", "body": "Iven Pell can keep reading the road ahead, or step ashore to help Morrowline's relay crews while Mara Flint takes the only specialist berth. The fortress cannot carry both.", "choices": [
+				{"id": "keep_iven", "label": "Keep Iven on signal watch", "effect": "Retain exact nearby forecasts · Mara remains at Morrowline", "enabled": true, "reason": ""},
+				{"id": "replace_iven_with_mara", "label": "Give the berth to Mara", "effect": "Lose Iven's forecast · Workshop repairs +1 · Forge-core choice", "enabled": mara_ready, "reason": "Requires an operational crew-connected Field Workshop" if not mara_ready else ""}
+			]}
 		"mara_meeting":
 			var recruitment := mara_recruitment_status()
 			return {"id": "mara_meeting", "title": "The Forge Without a Roof", "body": "Mara Flint has kept the convoy's axles moving from an open repair bench. She will join a fortress that can give the work a staffed room.", "choices": [
@@ -1836,6 +1843,19 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			result_message = "The fortress breaks the toll post, recovering 8 Ashmarks and 1 trust while blockade pressure rises by 1."
 		else:
 			return {"ok": false, "reason": "that toll choice is not currently available"}
+	elif resolved_event == "mara_berth_choice":
+		if specialist_id != "iven_pell":
+			return {"ok": false, "reason": "Iven Pell is not occupying the specialist berth"}
+		if choice_id == "keep_iven":
+			campaign_decisions["mara_meeting"] = "decline_mara"
+			result_message = "Iven Pell remains on signal watch. Mara stays with Morrowline's repair crews; exact nearby forecasts remain available."
+		elif choice_id == "replace_iven_with_mara" and operational("field_workshop") and _has_operational_tag("crew"):
+			specialist_id = "mara_flint"
+			campaign_decisions["mara_meeting"] = "recruit_mara"
+			next_event = "mara_workbench_choice"
+			result_message = "Iven Pell joins Morrowline's relay crews and Mara Flint takes the specialist berth. Exact nearby forecasts are lost; workshop repairs gain 1 durability and the recovered forge core still needs a purpose."
+		else:
+			return {"ok": false, "reason": "Mara requires an operational crew-connected Field Workshop"}
 	elif resolved_event == "mara_meeting":
 		if choice_id == "recruit_mara" and bool(mara_recruitment_status().get("available", false)):
 			specialist_id = "mara_flint"
@@ -3061,7 +3081,14 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	if not restored_mara_repaired_module_id.is_empty() and restored_mara_repaired_module_id not in MODULE_DEFS:
 		return {"ok": false, "reason": "checkpoint contains an unknown Mara repair target"}
 	var mara_meeting_choice := String(restored_decisions.get("mara_meeting", ""))
+	var mara_berth_choice := String(restored_decisions.get("mara_berth_choice", ""))
 	var mara_workbench_choice := String(restored_decisions.get("mara_workbench_choice", ""))
+	if restored_campaign_event_pending == "mara_berth_choice" and (restored_specialist_id != "iven_pell" or not mara_meeting_choice.is_empty()):
+		return {"ok": false, "reason": "active specialist crossroads conflicts with the occupied berth"}
+	if mara_berth_choice == "keep_iven" and (restored_specialist_id != "iven_pell" or mara_meeting_choice != "decline_mara"):
+		return {"ok": false, "reason": "Iven retention conflicts with the specialist crossroads record"}
+	if mara_berth_choice == "replace_iven_with_mara" and (restored_specialist_id != "mara_flint" or mara_meeting_choice != "recruit_mara"):
+		return {"ok": false, "reason": "Mara reassignment conflicts with the specialist crossroads record"}
 	if restored_specialist_id == "mara_flint" and mara_meeting_choice != "recruit_mara":
 		return {"ok": false, "reason": "Mara specialist state conflicts with the meeting decision"}
 	if mara_workbench_choice == "rebuild_weakest" and restored_mara_repaired_module_id.is_empty():
@@ -4071,7 +4098,7 @@ func _campaign_event_for_node(node_id: String) -> String:
 			"ash_chapel_bypass":
 				return "chapel_refuge"
 		return ""
-	if node_id in ["lower_ash_road", "dry_cistern_cut", "signal_causeway"] and specialist_id == "mara_flint" and campaign_decisions.has("mara_workbench_choice") and not campaign_decisions.has("mara_followup"):
+	if node_id in ["lower_ash_road", "dry_cistern_cut", "signal_causeway", "cinder_quarry"] and specialist_id == "mara_flint" and campaign_decisions.has("mara_workbench_choice") and not campaign_decisions.has("mara_followup"):
 		return "mara_followup"
 	match node_id:
 		"soot_orchard":
@@ -4221,7 +4248,10 @@ func _complete_campaign_arrival(arrived_node: String) -> Dictionary:
 		if workers_rescued:
 			settlement_trust += 1
 			_encounter_log("The rescued orchard workers reach Morrowline and add one settlement trust.")
-		if specialist_id.is_empty() and not campaign_decisions.has("mara_meeting"):
+		if specialist_id == "iven_pell" and not campaign_decisions.has("mara_berth_choice"):
+			campaign_event_pending = "mara_berth_choice"
+			_encounter_log("Mara Flint offers Iven Pell a place with Morrowline's relay crews. The fortress must choose which specialist carries the next road.")
+		elif specialist_id.is_empty() and not campaign_decisions.has("mara_meeting"):
 			campaign_event_pending = "mara_meeting"
 			_encounter_log("Mara Flint waits beside an open forge bench. Her offer must be answered before the fortress departs.")
 		elif campaign_event_pending.is_empty():

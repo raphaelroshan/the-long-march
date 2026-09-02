@@ -339,6 +339,8 @@ class ScenarioCanvas extends Control:
 			_draw_barricade(center)
 		elif event_id == "mara_workbench_choice":
 			_draw_forge_core_choice(center)
+		elif event_id == "mara_berth_choice":
+			_draw_specialist_crossroads(center)
 		elif event_id == "mara_followup":
 			_draw_forge_callback(center)
 		elif event_id == "mara_meeting":
@@ -511,6 +513,21 @@ class ScenarioCanvas extends Control:
 		draw_line(anchor + Vector2(34, -12), anchor + Vector2(46, 0), outline, 6.0)
 		draw_string(ThemeDB.fallback_font, anchor + Vector2(-52, 47), "MARA FLINT", HORIZONTAL_ALIGNMENT_CENTER, 104.0, 10, outline)
 
+	func _draw_specialist_crossroads(center: Vector2) -> void:
+		var signal_color := Color("#83d7cf")
+		var forge_color := Color("#ef9b4d")
+		var iven_anchor := center + Vector2(-88, -35)
+		var mara_anchor := center + Vector2(88, -35)
+		_draw_signal(iven_anchor + Vector2(0, 46))
+		_draw_forge(mara_anchor + Vector2(-20, 45))
+		draw_circle(iven_anchor - Vector2(0, 28), 10.0, Color("#d6c394"))
+		draw_line(iven_anchor - Vector2(0, 18), iven_anchor + Vector2(0, 25), signal_color, 9.0)
+		draw_line(iven_anchor + Vector2(-14, 1), iven_anchor + Vector2(14, 1), signal_color, 5.0)
+		draw_string(ThemeDB.fallback_font, center + Vector2(-153, 104), "IVEN · SIGNAL", HORIZONTAL_ALIGNMENT_CENTER, 130.0, 10, signal_color)
+		draw_string(ThemeDB.fallback_font, center + Vector2(23, 104), "MARA · REPAIR", HORIZONTAL_ALIGNMENT_CENTER, 130.0, 10, forge_color)
+		draw_line(center + Vector2(-27, 89), center + Vector2(27, 89), Color("#e7d5a6"), 4.0)
+		draw_line(center + Vector2(0, 78), center + Vector2(0, 100), Color("#e7d5a6"), 4.0)
+
 	func _draw_forge_core_choice(center: Vector2) -> void:
 		_draw_forge(center + Vector2(0, 18))
 		var core := center + Vector2(0, -76)
@@ -558,6 +575,8 @@ class ScenarioCanvas extends Control:
 			return "BROKEN WHEEL · HELP OR KEEP MOVING"
 		if motif == "mara_core_choice":
 			return "ONE CORE · MACHINE OR SHELTER"
+		if motif == "specialist_crossroads":
+			return "ONE BERTH · IVEN SIGNAL OR MARA REPAIR"
 		if motif == "mara_meeting":
 			return "MARA FLINT · OPEN FORGE · JOIN OR REMAIN"
 		if motif == "mara_core_callback":
@@ -571,6 +590,8 @@ class ScenarioCanvas extends Control:
 		return "ROADSIDE OCCURRENCE"
 
 	func character_signature() -> String:
+		if event_id == "mara_berth_choice":
+			return "IVEN PELL ↔ MARA FLINT · FORECAST OR RECOVERY"
 		if event_id in ["mara_meeting", "mara_workbench_choice", "mara_followup"]:
 			return "MARA FLINT · FORGE MASTER · REPAIR BEFORE SACRIFICE"
 		return ""

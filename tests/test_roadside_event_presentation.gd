@@ -128,6 +128,22 @@ func _run() -> void:
 			{"id": "decline_mara", "label": "Leave Mara with Morrowline", "effect": "Keep specialist berth open · No repair bonus", "enabled": true, "reason": ""}
 		]
 	})
+	var crossroads_view: Dictionary = common.duplicate(true)
+	crossroads_view.merge({
+		"event_id": "mara_berth_choice",
+		"title": "Two Hands, One Berth",
+		"body": "Iven Pell can keep reading the road ahead, or step ashore while Mara Flint takes the only specialist berth.",
+		"story": {"motif": "specialist_crossroads", "heading": "ONE BERTH · SIGNAL OR REPAIR", "detail": "Keep Iven Pell's exact nearby forecasts, or bring Mara Flint aboard for stronger workshop recovery."},
+		"choices": [
+			{"id": "keep_iven", "label": "Keep Iven on signal watch", "effect": "Retain exact nearby forecasts · Mara remains at Morrowline", "enabled": true, "reason": ""},
+			{"id": "replace_iven_with_mara", "label": "Give the berth to Mara", "effect": "Lose Iven's forecast · Workshop repairs +1 · Forge-core choice", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(crossroads_view)
+	await _settle_ui()
+	_expect(event_view.tableau.presentation_signature() == "ONE BERTH · IVEN SIGNAL OR MARA REPAIR" and event_view.tableau.character_signature().contains("IVEN PELL ↔ MARA FLINT"), "the specialist crossroads should stage both named people and their competing operational roles")
+	_expect(event_view.choice_buttons[0].text.contains("exact nearby forecasts") and event_view.choice_buttons[1].text.contains("Workshop repairs +1"), "the specialist crossroads should disclose the capability lost and gained before commitment")
+	await _capture("05_specialist_crossroads")
 	event_view.configure(meeting_view)
 	await _settle_ui()
 	_expect(event_view.tableau.presentation_signature() == "MARA FLINT · OPEN FORGE · JOIN OR REMAIN" and event_view.tableau.character_signature() == "MARA FLINT · FORGE MASTER · REPAIR BEFORE SACRIFICE", "Mara's first offer should identify the named forge master and her practical belief beside the open forge")

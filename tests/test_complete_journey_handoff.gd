@@ -21,6 +21,7 @@ var cinder_quarry_profile := false
 var declined_convoy_profile := false
 var mastery_profile := false
 var iven_profile := false
+var investment_profile := false
 var pre_contact_resume_tested := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
@@ -121,6 +122,8 @@ func _relaunch_and_continue(expected_surface: String) -> void:
 			_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "Continue should restore the pending arrival and its action focus")
 			_expect(game.last_journey_receipt.begins_with("ROAD"), "arrival resume should preserve the resolved-road receipt")
 			_expect(String(game.journey_arrival.current_view.get("destination_id", "")) == "rill_crossing" and String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("motif", "")) == "crossing", "arrival resume should preserve the exact destination tableau")
+		"roadside_event":
+			_expect(game.roadside_event.visible and game.roadside_event.choice_buttons[0].has_focus(), "Continue should restore the unresolved authored decision and its first action")
 		_:
 			_expect(false, "unknown relaunch surface: " + expected_surface)
 
@@ -209,7 +212,7 @@ func _resolve_contact(expected_phase: String) -> void:
 			break
 		game.road_contact.advance_button.pressed.emit()
 		await _settle()
-	_expect(not game.state.encounter_active and game.state.phase == expected_phase, "visible contact steps should resolve into " + expected_phase)
+	_expect(not game.state.encounter_active and game.state.phase == expected_phase, "visible contact steps should resolve into %s, got %s at %s with %s pending" % [expected_phase, game.state.phase, game.state.current_location, game.state.campaign_event_pending])
 	_expect(game.journey_arrival.visible and game.journey_arrival.continue_button.has_focus(), "a resolved contact should stop at a focused arrival receipt")
 	_expect(not String(game.journey_arrival.current_view.get("destination_id", "")).is_empty() and not String(game.journey_arrival.arrival_canvas.arrival_visual_signature().get("marker", "")).is_empty(), "arrival should preserve a stable destination identity for the center-stage tableau")
 	_expect_semantic_cue("debrief" if expected_phase == "results" else "arrival", "the resolved road should announce arrival or Debrief with its semantic cue")
@@ -299,12 +302,40 @@ func _complete_first_watch() -> void:
 
 
 func _run_ashgate_journey() -> void:
+	var uses_iven := iven_profile or investment_profile
 	_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "Ashgate handoff should begin at the required assignment")
 	_expect(game.get_global_rect().encloses(game.settlement_hub.primary_action_button.get_global_rect()), "the first Ashgate action should be visible at 1600x900")
 	_expect(not app.checkpoint_toast.get_global_rect().intersects(game.settlement_hub.location_label.get_global_rect()), "the compact save notice should not obscure the current location heading")
 	_expect_three_column_contract(game.settlement_hub, game.settlement_hub.value_labels["hull"], game.settlement_hub.bazaar_canvas, game.settlement_hub.primary_action_button, "Ashgate bazaar")
 	await _capture("05_ashgate_handoff")
-	if iven_profile:
+	if investment_profile:
+		game.settlement_hub.station_buttons["workshop"].pressed.emit()
+		await _settle()
+		game.settlement_hub.primary_action_button.pressed.emit()
+		await _settle()
+		_expect(game.main_columns.visible and game.state.can_refit(), "the investment profile should enter Ashgate's workshop before departure")
+		game._on_grid_cell_pressed(Vector2i(0, 0))
+		await _settle()
+		game.remove_button.pressed.emit()
+		await _settle()
+		game._on_grid_cell_pressed(Vector2i(0, 1))
+		await _settle()
+		game.remove_button.pressed.emit()
+		await _settle()
+		await _select_module("ash_runner_engine")
+		game._on_grid_cell_pressed(Vector2i(0, 0))
+		await _settle()
+		await _select_module("coal_cell")
+		game._on_grid_cell_pressed(Vector2i(1, 1))
+		await _settle()
+		await _select_module("wall_lamp")
+		game._on_grid_cell_pressed(Vector2i(5, 2))
+		await _settle()
+		_expect(game.state.operational("ash_runner_engine") and game.state.operational("field_workshop") and game.state.operational("wall_lamp") and game.state.total_mass() <= game.state.BASE_MASS_LIMIT, "the investment refit should preserve movement and repair while adding signal capacity within the chassis limit")
+		game.settlement_hub_return_button.pressed.emit()
+		await _settle()
+		_expect(game.settlement_hub.visible and game.settlement_hub.station_buttons["assignment_board"].has_focus(), "returning from the investment refit should restore the required Ashgate assignment")
+	elif iven_profile:
 		game.settlement_hub.station_buttons["workshop"].pressed.emit()
 		await _settle()
 		game.settlement_hub.primary_action_button.pressed.emit()
@@ -402,8 +433,8 @@ func _run_ashgate_journey() -> void:
 	await _enter_contact()
 	await _resolve_contact("map")
 	await _acknowledge_arrival()
-	await _choose_event("restore_relay" if iven_profile else "move_silent")
-	if iven_profile:
+	await _choose_event("restore_relay" if uses_iven else "move_silent")
+	if uses_iven:
 		_expect(game.journey_planner.visible and game.recruit_iven_button.is_visible_in_tree() and not game.recruit_iven_button.disabled, "restoring the relay should expose Iven's legal recruitment action inside the active planner")
 		game.recruit_iven_button.pressed.emit()
 		await _settle()
@@ -414,8 +445,21 @@ func _run_ashgate_journey() -> void:
 	await _enter_contact()
 	await _resolve_contact("settlement")
 	await _acknowledge_arrival()
-	if iven_profile:
-		_expect(game.state.campaign_event_pending.is_empty() and game.recovery_panel.visible and game.state.specialist_id == "iven_pell", "an occupied specialist berth should bypass Mara's offer and continue into recovery with Iven assigned")
+	if uses_iven:
+		_expect(game.state.campaign_event_pending == "mara_berth_choice" and game.roadside_event.visible, "an occupied specialist berth should surface the Iven-versus-Mara crossroads")
+		await _capture("11_specialist_crossroads")
+		if investment_profile:
+			_expect(game.save_run(true), "the unresolved specialist crossroads should save successfully")
+			await _relaunch_and_continue("roadside_event")
+			_expect(game.state.campaign_event_pending == "mara_berth_choice" and game.state.specialist_id == "iven_pell", "the restored crossroads should preserve Iven and the unresolved berth")
+			await _choose_event("replace_iven_with_mara")
+			_expect(game.state.specialist_id == "mara_flint" and game.state.campaign_event_pending == "mara_workbench_choice", "the investment vertical should visibly trade Iven's forecast for Mara's recovery chain")
+			await _capture("11b_forge_core_dilemma")
+			await _choose_first_available_event()
+			_expect(game.recovery_panel.visible and game.state.specialist_id == "mara_flint" and game.state.campaign_decisions.has("mara_workbench_choice"), "the forge-core decision should persist into Morrowline recovery")
+		else:
+			await _choose_event("keep_iven")
+			_expect(game.recovery_panel.visible and game.state.specialist_id == "iven_pell", "keeping Iven should continue into recovery with signal certainty assigned")
 	else:
 		_expect(game.state.campaign_event_pending == "mara_meeting", "Morrowline arrival should surface Mara's operational offer")
 		await _choose_event("decline_mara")
@@ -435,7 +479,9 @@ func _run_ashgate_journey() -> void:
 	await _settle()
 	if iven_profile:
 		_expect(game.journey_planner.specialist_name_label.text == "IVEN PELL" and game.journey_planner.specialist_effect_label.text.begins_with("ACTIVE"), "Iven should remain visibly assigned after Morrowline recovery")
-	if cinder_quarry_profile or mastery_profile:
+	if investment_profile:
+		_expect(game.journey_planner.specialist_name_label.text == "MARA FLINT" and game.journey_planner.specialist_effect_label.text.begins_with("ACTIVE"), "Mara should remain visibly assigned after the berth exchange and recovery dilemma")
+	if cinder_quarry_profile or mastery_profile or investment_profile:
 		game.doctrine_option.select(2)
 		game.doctrine_option.item_selected.emit(2)
 		await _settle()
@@ -446,7 +492,7 @@ func _run_ashgate_journey() -> void:
 	_expect(game.route_preview_label.text.contains("CINDER QUARRY") and game.route_preview_label.text.contains("2 fuel") and game.route_preview_label.text.contains("weakest damaged system") and game.campaign_map.detail_for("cinder_quarry").contains("weakest damaged system"), "the Cinder Quarry preview should visibly disclose its exact cost and guaranteed field-recovery consequence")
 	await _capture("11b_cinder_quarry_route")
 
-	if cinder_quarry_profile or mastery_profile:
+	if cinder_quarry_profile or mastery_profile or investment_profile:
 		await _commit_route("cinder_quarry")
 		await _enter_contact()
 		await _capture("11c_cinder_quarry_contact")
@@ -464,6 +510,10 @@ func _run_ashgate_journey() -> void:
 		await _enter_contact()
 		await _resolve_contact("map")
 		await _acknowledge_arrival()
+	if investment_profile:
+		_expect(game.roadside_event.visible and game.state.campaign_event_pending == "mara_followup", "the fourth road should call back the forge-core commitment")
+		await _capture("11e_forge_core_callback")
+		await _choose_first_available_event()
 	_expect(game.state.campaign_encounters_completed == 4 and game.campaign_map.button_for("meridian_pass").visible, "the fourth road should expose the final commitment")
 
 	await _commit_route("meridian_pass")
@@ -475,7 +525,9 @@ func _run_ashgate_journey() -> void:
 	_expect(game.state.run_complete and game.state.campaign_encounters_completed == 5, "the player-facing journey should complete all five encounters")
 	_expect(game.debrief_panel.visible and game.debrief_panel.inspect_button.has_focus(), "the final arrival should hand focus to the terminal Debrief")
 	if iven_profile:
-		_expect(game.debrief_panel.commitments_label.text.contains("Carried · Iven Pell"), "the terminal Debrief should retain Iven as part of what the fortress carried")
+		_expect(game.debrief_panel.commitments_label.text.contains("Carried · Iven Pell") and game.debrief_panel.commitments_label.text.contains("Specialist crossroads") and game.debrief_panel.commitments_label.text.contains("exact forecasts retained"), "the terminal Debrief should retain Iven and explain the specialist tradeoff that carried him forward")
+	if investment_profile:
+		_expect(game.debrief_panel.commitments_label.text.contains("Carried · Mara Flint") and game.debrief_panel.commitments_label.text.contains("Iven → Mara") and game.debrief_panel.commitments_label.text.contains("forecast traded for repair") and game.debrief_panel.commitments_label.text.contains("Forge-core promise") and game.debrief_panel.commitments_label.text.contains("fourth road"), "the investment Debrief should connect the Iven-Mara exchange to the forge-core consequence")
 	if mastery_profile:
 		_expect(game.state.mastery_experiment_details().get("status") == "PROVEN" and game.debrief_panel.commitments_label.text.contains("Quarry Adaptation · PROVEN") and game.debrief_panel.experiment_label.text.contains("PROVEN · QUARRY ADAPTATION"), "the Debrief should evaluate the selected field order without granting progression")
 	_expect(game.get_global_rect().encloses(game.debrief_panel.inspect_button.get_global_rect()), "the first Debrief action should remain visible at 1600x900")
@@ -505,6 +557,7 @@ func _run() -> void:
 	declined_convoy_profile = OS.get_environment("LONG_MARCH_DECLINED_CONVOY_PROFILE") == "1"
 	mastery_profile = OS.get_environment("LONG_MARCH_MASTERY_PROFILE") == "1"
 	iven_profile = OS.get_environment("LONG_MARCH_IVEN_PROFILE") == "1"
+	investment_profile = OS.get_environment("LONG_MARCH_INVESTMENT_PROFILE") == "1"
 	var capture_filter_text := OS.get_environment("LONG_MARCH_CAPTURE_FILTER")
 	if not capture_filter_text.is_empty():
 		for capture_name in capture_filter_text.split(",", false):
@@ -530,6 +583,8 @@ func _run() -> void:
 			print("PASS: The Long March replayable mastery profile")
 		if iven_profile:
 			print("PASS: The Long March Iven specialist profile")
+		if investment_profile:
+			print("PASS: The Long March investment evaluation vertical")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")

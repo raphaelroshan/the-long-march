@@ -99,6 +99,8 @@ func _run_ashgate_reliable_plan() -> void:
 	state = _checkpoint(state, "Ashgate reliable specialist")
 	state = _resolve_contact(state, "morrowline_camp", "protect_cargo", "shift_power")
 	_expect(state.phase == "settlement" and state.guard_contract_status == "completed", "reliable Ashgate plan should reach Morrowline with its promise kept")
+	state = _resolve_pending_event(state, "keep_iven", "Morrowline specialist crossroads")
+	_expect(state.specialist_id == "iven_pell", "the reliable Ashgate plan should retain Iven for exact road forecasts")
 	_expect(bool(state.settlement_refuel().get("ok", false)), "reliable Ashgate plan should spend one visible recovery action on fuel")
 	state = _checkpoint(state, "Ashgate reliable recovery")
 	state = _resolve_contact(state, "signal_causeway", "protect_crew", "shift_power")

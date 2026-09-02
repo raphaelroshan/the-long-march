@@ -3283,6 +3283,12 @@ func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
 			"detail": "Machine: restore %s now (+1 day, +1 pressure). Shelter: reduce every Refugee Bunk hit by 1; no repair now." % repair_target,
 			"target_name": repair_target
 		}
+	if event_id == "mara_berth_choice":
+		return {
+			"motif": "specialist_crossroads",
+			"heading": "ONE BERTH · SIGNAL OR REPAIR",
+			"detail": "Keep Iven Pell's exact nearby forecasts, or leave him with Morrowline's relays and bring Mara Flint aboard for stronger workshop recovery."
+		}
 	if event_id == "mara_meeting":
 		return {
 			"motif": "mara_meeting",

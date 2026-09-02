@@ -32,6 +32,20 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		if int(module.get("durability", 0)) < int(state.module_definition(module_id).get("durability", 0)):
 			damaged_count += 1
 	var promises: Array[String] = []
+	var berth_choice := String(state.campaign_decisions.get("mara_berth_choice", ""))
+	if berth_choice == "keep_iven":
+		promises.append("Specialist crossroads · Iven kept; exact forecasts retained")
+	elif berth_choice == "replace_iven_with_mara":
+		promises.append("Specialist crossroads · Iven → Mara; forecast traded for repair")
+	if state.campaign_decisions.has("mara_workbench_choice"):
+		if berth_choice == "replace_iven_with_mara":
+			var forge_choice := String(state.campaign_decisions.get("mara_workbench_choice", ""))
+			var forge_followup := String(state.campaign_decisions.get("mara_followup", ""))
+			var forge_target := String(state.module_definition(state.mara_repaired_module_id).get("name", "System")) if forge_choice == "rebuild_weakest" else "Refugee Bunk"
+			var forge_result := "HELD" if forge_followup in ["record_repair_held", "record_refuge_held"] else ("FAILED" if forge_followup in ["record_repair_failed", "record_refuge_failed"] else "PENDING")
+			promises.append("Forge-core promise · %s → %s on fourth road" % [forge_target, forge_result])
+		else:
+			promises.append("Forge-core promise · %s" % state.mara_debrief_line().trim_prefix("Mara Flint — "))
 	promises.append("Contract · %s  |  Doctrine · %s" % [String(context.get("contract_status", "unoffered")).replace("_", " ").capitalize(), state.encounter_target_doctrine.replace("_", " ").capitalize()])
 	if state.campaign_region_id == "ashgate_lowlands" and state.guard_contract_status in ["completed", "declined", "failed"]:
 		promises.append("Morrowline service · %s" % ("Convoy delivered · 2 recovery actions" if state.guard_contract_status == "completed" else "Parts shortage · 1 recovery action"))
@@ -48,8 +62,6 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 	var decision_record := String(context.get("decision_record", ""))
 	if decision_record not in ["", "no route events on this path", "no regional decisions recorded"]:
 		promises.append("Key choices · %s" % decision_record)
-	if state.campaign_decisions.has("mara_workbench_choice"):
-		promises.append("Forge-core promise · %s" % state.mara_debrief_line().trim_prefix("Mara Flint — "))
 	var mastery := state.mastery_experiment_details()
 	if bool(mastery.get("active", false)):
 		promises.append("Field order · %s · %s" % [String(mastery.get("title", "Experiment")), String(mastery.get("status", "ACTIVE"))])

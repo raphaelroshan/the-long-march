@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "status": "candidate_not_public_release",
-  "version": "0.3.0-alpha.356",
+  "version": "0.3.0-alpha.357",
   "scope": {
     "regions": 4,
     "chassis_templates": 3,
     "modules": 20,
     "specialists": 6,
     "threat_families": 15,
-    "authored_decisions_and_meetings": 20,
+    "authored_decisions_and_meetings": 21,
     "regional_developments": 5,
     "composable_ending_combinations": 60
   },
