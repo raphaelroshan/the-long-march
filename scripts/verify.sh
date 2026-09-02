@@ -60,6 +60,7 @@ run_checked "PASS: The Long March campaign progress" "$GODOT_BIN" --headless --p
 run_checked "PASS: The Long March Cinder Spine chapter" "$GODOT_BIN" --headless --path . --script res://tests/test_cinder_spine.gd
 run_checked "PASS: The Long March White Salt Expanse" "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_expanse.gd
 run_checked "PASS: The Long March Early Access systems" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_systems.gd
+run_checked "PASS: The Long March LM-I4 breadth gate" "$GODOT_BIN" --headless --path . --script res://tests/test_breadth_gate.gd
 run_checked "PASS: The Long March campaign memory and endings" "$GODOT_BIN" --headless --path . --script res://tests/test_campaign_memory.gd
 run_checked "PASS: The Long March Early Access hardening" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_hardening.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
@@ -94,3 +95,5 @@ run_checked "PASS: The Long March responsive Cinder profile 1600x900" env LONG_M
 run_checked "PASS: The Long March White Salt UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_flow.gd
 run_checked "PASS: The Long March responsive White Salt profile 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_flow.gd
 run_checked "PASS: The Long March responsive White Salt profile 1600x900" env LONG_MARCH_VIEWPORT_WIDTH=1600 LONG_MARCH_VIEWPORT_HEIGHT=900 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_white_salt_flow.gd
+run_checked "PASS: The Long March LM-I4 breadth UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_breadth_flow.gd
+run_checked "PASS: The Long March LM-I4 breadth UI flow 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_breadth_flow.gd

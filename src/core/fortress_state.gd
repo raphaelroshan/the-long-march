@@ -130,7 +130,7 @@ const THREATS := {
 	,"salt_storm": {"name": "Salt Storm", "target_tags": ["water", "signal", "exterior"], "damage": 1}
 	,"rival_scouts": {"name": "Rival Scouts", "target_tags": ["cargo", "signal", "engine"], "damage": 1}
 	,"rival_fortress": {"name": "Rival Fortress", "target_tags": ["engine", "generator", "weapon", "armor"], "damage": 2}
-	,"signal_hunters": {"name": "Signal Hunters", "target_tags": ["signal", "command", "exterior"], "damage": 1}
+	,"signal_hunters": {"name": "Signal Hunters", "target_tags": ["signal", "command", "crew", "exterior"], "damage": 1}
 	,"bridgebreakers": {"name": "Bridgebreakers", "target_tags": ["lower_hull", "engine", "armor"], "damage": 2}
 }
 const JOURNEY_NODES := {
@@ -193,7 +193,7 @@ const ENCOUNTER_ENEMIES := {
 	,"salt_storm": {"name": "Salt Storm", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["water", "signal", "exterior"], "route": "white horizon", "counter": "Water Condenser, protected signal, or Seal Compartment", "counter_modules": ["water_condenser", "signal_coil", "wall_lamp", "side_armor_skirt"]}
 	,"rival_scouts": {"name": "Rival Scouts", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["cargo", "signal", "engine"], "route": "open flank", "counter": "Repeater Gun, Signal Coil, or a light engine", "counter_modules": ["repeater_gun", "signal_coil", "ash_runner_engine"]}
 	,"rival_fortress": {"name": "Rival Fortress", "health": 11, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "generator", "weapon", "armor"], "route": "parallel march", "counter": "redundant systems, Shell Cannon, or escort beacons", "counter_modules": ["shell_cannon", "front_armor_plate", "side_armor_skirt", "signal_coil"]}
-	,"signal_hunters": {"name": "Signal Hunter", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "command", "exterior"], "route": "reflected beacon line", "counter": "Command Deck, Repeater Gun, or protected signal", "counter_modules": ["command_deck", "repeater_gun", "side_armor_skirt"]}
+	,"signal_hunters": {"name": "Signal Hunter", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "command", "crew", "exterior"], "route": "reflected beacon line", "counter": "Command Deck, Repeater Gun, protected signal, or a staffed Infirmary", "counter_modules": ["command_deck", "repeater_gun", "side_armor_skirt", "infirmary"]}
 	,"bridgebreakers": {"name": "Bridgebreaker", "health": 8, "damage": 2, "arrival_step": 3, "target_tags": ["lower_hull", "engine", "armor"], "route": "salt crust below", "counter": "Shell Cannon, side armor, or Salvage Crane bracing", "counter_modules": ["shell_cannon", "side_armor_skirt", "salvage_crane"]}
 }
 const CAMPAIGN_NODES := {
@@ -231,7 +231,7 @@ const CAMPAIGN_NODES := {
 	,"quiet_caravan": {"name": "Quiet Caravan", "type": "convoy", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.30, "pressure": 1, "reward": 16, "threat_hint": "rival scouts", "encounter": ["rival_scouts"]}
 	,"windbreak": {"name": "The Windbreak", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.22, "pressure": 1, "reward": 10, "threat_hint": "salt storm", "encounter": ["salt_storm"]}
 	,"salt_mine": {"name": "Salt Mine", "type": "salvage", "visibility": "unscouted", "days": 2, "fuel": 1, "risk": 0.42, "pressure": 2, "reward": 22, "threat_hint": "signal hunters in the brine shafts", "encounter": ["salt_storm", "signal_hunters"]}
-	,"empty_mile": {"name": "The Empty Mile", "type": "hazard", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 18, "threat_hint": "bridgebreakers on open ground", "encounter": ["bridgebreakers"]}
+	,"empty_mile": {"name": "The Empty Mile", "type": "hazard", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 18, "threat_hint": "bridgebreakers on open ground", "encounter": ["bridgebreakers"], "route_effect": "A Ready Salvage Crane recovers 1 durability from the cleared demolition site; if no system is damaged, recovered fittings sell for 8 Ashmarks"}
 	,"beacon_road": {"name": "Beacon Road", "type": "relay", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.24, "pressure": 1, "reward": 12, "threat_hint": "salt weather", "encounter": ["salt_storm"]}
 	,"lee_trench": {"name": "Lee Trench", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "sheltered scouts", "encounter": ["rival_scouts"]}
 	,"rival_approach": {"name": "Rival Approach", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.40, "pressure": 1, "reward": 16, "threat_hint": "rival screen", "encounter": ["rival_scouts", "salt_storm"]}
@@ -300,7 +300,7 @@ const MODULE_DEFS := {
 	"water_condenser": {"name": "Water Condenser", "family": "sustain", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 2, "durability": 3, "tags": ["sustain", "water", "storm_target"], "capability": "Unlocks the Dry Cistern Cut and saves 1 fuel there while powered beside an operational Field Workshop."}
 	,"infirmary": {"name": "Field Infirmary", "family": "medical", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["medical", "crew_support"], "capability": "Reduces crew and refuge damage while staffed beside Crew Quarters; enables Dr. Nera Quill."}
 	,"command_deck": {"name": "Command Deck", "family": "command", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 1, "durability": 3, "tags": ["command", "crew_support"], "capability": "Improves committed doctrine while staffed beside Crew Quarters; enables Sela Vonn."}
-	,"salvage_crane": {"name": "Salvage Crane", "family": "recovery", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["recovery", "exterior", "brace"], "capability": "Braces Bridgebreaker contact and recovers exposed salvage, but consumes an exterior mount."}
+	,"salvage_crane": {"name": "Salvage Crane", "family": "recovery", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["recovery", "exterior", "brace"], "capability": "Braces Bridgebreaker contact, then restores the weakest damaged system or sells recovered fittings; consumes an exterior mount."}
 }
 
 var seed: int = 1107
@@ -3396,6 +3396,16 @@ func encounter_forecast() -> Dictionary:
 		exact_target = "generator, engine, or armor systems"
 	elif "siege_beast" in threat_ids:
 		exact_target = "front armor or crew modules"
+	elif "salt_storm" in threat_ids:
+		exact_target = "water, signal, or exterior systems"
+	elif "rival_scouts" in threat_ids:
+		exact_target = "cargo, signal, or engine systems"
+	elif "rival_fortress" in threat_ids:
+		exact_target = "engine, generator, weapon, or armor systems"
+	elif "signal_hunters" in threat_ids:
+		exact_target = "signal, command, crew, or exterior systems"
+	elif "bridgebreakers" in threat_ids:
+		exact_target = "lower-hull, engine, or armor systems"
 	var signal_ready: bool = _has_ready_tag("forecast") or specialist_id == "iven_pell"
 	var likely_target := ""
 	if signal_ready and not threat_ids.is_empty():
@@ -4137,6 +4147,20 @@ func _apply_cinder_quarry_recovery() -> Dictionary:
 	_encounter_log("Cinder Quarry recovery: plate crews restore %s by %d durability (%d→%d)." % [module_name, restored, int(result.get("before", 0)), int(result.get("after", 0))])
 	return {"kind": "repair", "module_id": weakest_id, "amount": restored, "before": int(result.get("before", 0)), "after": int(result.get("after", 0))}
 
+func _apply_salt_crane_recovery() -> Dictionary:
+	if not operational("salvage_crane"):
+		return {}
+	var weakest_id := _weakest_damaged_module_id()
+	if weakest_id.is_empty():
+		money += 8
+		_encounter_log("Empty Mile recovery: the Salvage Crane sells recovered demolition fittings for 8 Ashmarks.")
+		return {"kind": "ashmarks", "amount": 8}
+	var result := _change_module_durability(weakest_id, 1)
+	var module_name := String(module_definition(weakest_id).get("name", weakest_id))
+	var restored := int(result.get("after", 0)) - int(result.get("before", 0))
+	_encounter_log("Empty Mile recovery: the Salvage Crane restores %s by %d durability (%d→%d)." % [module_name, restored, int(result.get("before", 0)), int(result.get("after", 0))])
+	return {"kind": "repair", "module_id": weakest_id, "amount": restored, "before": int(result.get("before", 0)), "after": int(result.get("after", 0))}
+
 func _campaign_recover_from_failure() -> Dictionary:
 	var day_before := day
 	var money_before := money
@@ -4434,6 +4458,8 @@ func _finish_salt_encounter(engine_alive: bool) -> Dictionary:
 	heat_surge = 0
 	heat_relief = 0
 	_recalculate()
+	if arrived_node == "empty_mile" and _all_encounter_enemies_defeated():
+		_apply_salt_crane_recovery()
 	if arrived_node == "windbreak":
 		phase = "settlement"
 		settlement_actions_remaining = 2 if salt_contract_status == "accepted" and _has_ready_tag("forecast") else 1
