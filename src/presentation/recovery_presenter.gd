@@ -3,14 +3,20 @@ extends RefCounted
 static func build(state: LongMarchState, fortress: Dictionary, controls: Dictionary, last_receipt: String, location_name: String) -> Dictionary:
 	var pressure_name := state.campaign_pressure_name()
 	var is_morrowline := state.current_location == "morrowline_camp"
+	var is_cinder := state.campaign_region_id == "cinder_spine"
+	var is_salt := state.campaign_region_id == "white_salt_expanse"
 	var local_stake := "STAKE · "
 	if is_morrowline:
 		local_stake += "The convoy promise is kept; its people and parts preserve 2 service actions before Meridian Pass." if state.guard_contract_status == "completed" else "PARTS SHORTAGE · The convoy is absent; Morrowline can support only 1 service action before Meridian Pass."
+	elif is_cinder:
+		local_stake += "The delivered dynamo and working Generator Core preserve 2 service actions before the upper grade." if state.cinder_contract_status == "accepted" and state.operational("generator_core") else "HOIST SHORTAGE · The dynamo or its power chain is unavailable; Old Lift can support only 1 service action."
+	elif is_salt:
+		local_stake += "The guided beacon caravan preserves 2 service actions before the exposed salt roads." if state.salt_contract_status == "accepted" and state._has_ready_tag("forecast") else "BEACON SHORTAGE · The escort or signal chain is unavailable; the Windbreak can support only 1 service action."
 	else:
 		local_stake += "The sealed medicine carrier is intact and grants a second service opportunity." if state.veyru_contract_carrier_operational() else "The medicine carrier is absent or breached; only one service opportunity remains."
 	var experiment := state.mastery_experiment_details()
 	var repair_priority: Dictionary = controls.get("repair_priority_view", {})
-	var service_priority := "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass." if is_morrowline else "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road."
+	var service_priority := "PRIORITY · Restore the movement or repair chain, or reserve fuel and hull for Meridian Pass." if is_morrowline else ("PRIORITY · Reduce heat exposure, protect the Generator Core, or reserve fuel for the upper grade." if is_cinder else ("PRIORITY · Preserve signal, water, and hull margin before the open salt crossing." if is_salt else "PRIORITY · Protect the lower hull, medicine carrier, or fuel margin for the archive road."))
 	if bool(experiment.get("active", false)):
 		service_priority += "\nFIELD ORDER · %s · %s" % [String(experiment.get("title", "Experiment")).to_upper(), String(experiment.get("status", "ACTIVE"))]
 	return {
@@ -18,10 +24,10 @@ static func build(state: LongMarchState, fortress: Dictionary, controls: Diction
 		"location_id": state.current_location,
 		"location_name": location_name,
 		"context": "%s offers %d finite service %s before the next road." % [location_name, state.settlement_actions_remaining, "opportunity" if state.settlement_actions_remaining == 1 else "opportunities"],
-		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells." if is_morrowline else "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores.",
+		"place_identity": "MORROWLINE · A moving convoy shelter of canvas repair bays, parts wagons, and departure bells." if is_morrowline else ("OLD LIFT STATION · Chain hoists, cooling troughs, and guild plate crews beneath the burning grade." if is_cinder else ("THE WINDBREAK · Mirrored screens, water sledges, and beacon crews sheltering behind packed salt." if is_salt else "EVACUATION CAMP · A raised flood platform sharing dry tools and emergency stores.")),
 		"service_priority": service_priority,
 		"local_stake": local_stake,
-		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a condenser; Signal Causeway risks signal; Cinder Quarry trades a mixed contact for field repair." if is_morrowline else "OUTBOUND ROADS · Archive Causeway is the controlled high road; Drowned Registry trades safety for salvage; Pilgrim Gantry is the slow recovery line.",
+		"route_outlook": "OUTBOUND ROADS · Lower Ash tests the underside; Dry Cistern rewards a condenser; Signal Causeway risks signal; Cinder Quarry trades a mixed contact for field repair." if is_morrowline else ("OUTBOUND ROADS · Long Slope tests mass and heat; Slag Tunnel risks a two-family ambush; Ash Chapel opens as the guaranteed refuge when the fireline reaches Inferno." if is_cinder else ("OUTBOUND ROADS · Salt Mine strains water; Empty Mile tests fuel; Beacon Road rewards signal; Lee Trench opens as the failure-forward cistern route." if is_salt else "OUTBOUND ROADS · Archive Causeway is the controlled high road; Drowned Registry trades safety for salvage; Pilgrim Gantry is the slow recovery line.")),
 		"repair_priority": String(repair_priority.get("headline", "REPAIR PRIORITY · All installed systems are at full durability.")),
 		"repair_effect": String(repair_priority.get("effect", "WHY IT MATTERS · No damage is currently threatening a dependency chain.")),
 		"repair_priority_view": repair_priority.duplicate(true),

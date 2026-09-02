@@ -5,10 +5,10 @@ Use one exact checksummed build for a whole cohort. Record observed behavior; do
 | Area | Automated gate | Human check still required |
 |---|---|---|
 | Four chapters | Two complete plans per new chapter plus Ashgate/Veyru anchor runs | Can a player explain each region's distinct pressure and recovery rhythm? |
-| Fortress breadth | Three geometry contracts, placement rejection, eighteen module IDs | Do layouts produce several understandable plans rather than one dominant build? |
+| Fortress breadth | Three geometry contracts, placement rejection, twenty module IDs | Do layouts produce several understandable plans rather than one dominant build? |
 | Specialists | Six stable IDs, facility requirements, exact effects, save round-trip | Are costs and disabled states understood before assignment? |
 | Encounters | Fifteen threat IDs, deterministic targets/counters, phase-specific UI and audio | Can players predict likely targets and explain damage after impact? |
-| Events and memory | Twenty decisions, five developments, later-run options, save-safe active events | Do returning choices feel causal and memorable rather than arbitrary bonuses? |
+| Events and memory | Twenty-one decisions, five developments, later-run options, save-safe active events | Do returning choices feel causal and memorable rather than arbitrary bonuses? |
 | Endings and replay | Two-solution field orders and 60 ending-facet combinations | Do players recognize how their contract and regional priorities shaped Debrief? |
 | Accessibility | Keyboard/controller focus, A/B confirm swap, 110% text, high contrast, reduced motion | Test with target users and relevant assistive technology. |
 | Persistence | Save versions 4–15, future/malformed rejection, backup recovery | Suspend and resume real sessions at every transition on all candidate platforms. |

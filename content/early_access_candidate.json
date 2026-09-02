@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "candidate_not_public_release",
-  "version": "0.3.0-alpha.357",
+  "version": "0.3.0-alpha.358",
   "scope": {
     "regions": 4,
     "chassis_templates": 3,

@@ -752,7 +752,7 @@ func module_count(module_id: String) -> int:
 	return count
 
 func can_refit() -> bool:
-	return not encounter_active and phase in ["refit", "settlement"] and current_location in ["ashgate_depot", "morrowline_camp", "lantern_quay", "veyru_evacuation_camp", "blackkiln", "old_lift_station"]
+	return not encounter_active and phase in ["refit", "settlement"] and current_location in ["ashgate_depot", "morrowline_camp", "lantern_quay", "veyru_evacuation_camp", "blackkiln", "old_lift_station", "saltglass_haven", "windbreak"]
 
 func start_campaign() -> Dictionary:
 	campaign_active = true

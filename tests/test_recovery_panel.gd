@@ -76,12 +76,14 @@ func _run() -> void:
 	await _capture("03_morrowline_camp")
 	var focus_after_repair: Node = panel.repair_button.get_node_or_null(panel.repair_button.focus_neighbor_bottom)
 	_expect(focus_after_repair == panel.refuel_button and panel.routes_button.get_node_or_null(panel.routes_button.focus_neighbor_bottom) == panel.repair_button, "recovery controls should form an explicit controller loop")
-	var signal_counts := {"repair": 0, "routes": 0}
+	var signal_counts := {"repair": 0, "refit": 0, "routes": 0}
 	panel.repair_requested.connect(func() -> void: signal_counts["repair"] = int(signal_counts["repair"]) + 1)
+	panel.refit_requested.connect(func() -> void: signal_counts["refit"] = int(signal_counts["refit"]) + 1)
 	panel.routes_requested.connect(func() -> void: signal_counts["routes"] = int(signal_counts["routes"]) + 1)
 	panel.repair_button.pressed.emit()
+	panel.refit_button.pressed.emit()
 	panel.routes_button.pressed.emit()
-	_expect(int(signal_counts["repair"]) == 1 and int(signal_counts["routes"]) == 1, "the recovery tableau should forward service and route actions without owning simulation state")
+	_expect(int(signal_counts["repair"]) == 1 and int(signal_counts["refit"]) == 1 and int(signal_counts["routes"]) == 1, "the recovery tableau should forward service, refit, and route actions without owning simulation state")
 	view["values"] = {"hull": "7/10", "fuel": "5", "money": "16", "actions": "1", "trust": "1", "pressure": "STRAIN 4"}
 	view["repair_disabled"] = true
 	view["repair_text"] = "ALL SYSTEMS FULL"
@@ -98,7 +100,7 @@ func _run() -> void:
 	await _settle_ui()
 	var panel_rect: Rect2 = panel.get_global_rect()
 	_expect(panel.recovery_canvas.high_contrast_enabled, "the recovery fortress tableau should inherit high contrast")
-	_expect(panel_rect.encloses(panel.pause_button.get_global_rect()) and panel_rect.encloses(panel.routes_button.get_global_rect()) and panel.routes_button.is_visible_in_tree(), "the recovery screen should keep pause and route actions visible at 1280×720 with 110% text")
+	_expect(panel_rect.encloses(panel.pause_button.get_global_rect()) and panel_rect.encloses(panel.refit_button.get_global_rect()) and panel_rect.encloses(panel.routes_button.get_global_rect()) and panel.routes_button.is_visible_in_tree(), "the recovery screen should keep pause, refit, and route actions visible at 1280×720 with 110% text")
 	var veyru_view: Dictionary = view.duplicate(true)
 	veyru_view["region_id"] = "flooded_veyru"
 	veyru_view["location_id"] = "veyru_evacuation_camp"
