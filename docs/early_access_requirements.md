@@ -81,7 +81,7 @@ Every new chapter, region, settlement, module, specialist, threat, event, or rou
 
 **LM-EA-3:** complete in `0.3.0-alpha.352`. The White Salt Expanse adds six valid route plans, signal/water/rival pressure, failure-forward Lee Trench access, persistent Public Salt Beacons, and the cut-away Salt Skimmer chassis with a lower mass ceiling and third exterior mount. See [`lm_ea_3_white_salt_report.md`](lm_ea_3_white_salt_report.md).
 
-**LM-EA-4:** add two module families, two specialists, and two threat families that create new dependency questions.
+**LM-EA-4:** complete in `0.3.0-alpha.353`. Medical and command facilities require adjacent crew; Sela Vonn and Dr. Nera Quill require those staffed bays; Signal Hunters and Bridgebreakers attack new dependency surfaces; and the exterior Salvage Crane provides lower-hull counterplay. See [`lm_ea_4_systems_report.md`](lm_ea_4_systems_report.md).
 
 **LM-EA-5:** add event/meeting breadth, regional memory, replay goals, and composable endings.
 

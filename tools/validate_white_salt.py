@@ -25,7 +25,7 @@ def main() -> int:
     if chassis != {"id": "salt_skimmer", "grid": [6, 4], "cut_away_cells": [[0, 3], [5, 3]], "mass_limit": 13, "exterior_mounts": 3}:
         errors.append("Salt Skimmer must retain a 6x4 frame, cut two corners, cap mass at 13, and allow three exterior mounts")
     threat_ids = {item.get("id") for item in data.get("regional_threats", [])}
-    if threat_ids != {"salt_storm", "rival_scouts", "rival_fortress"}:
+    if threat_ids != {"salt_storm", "rival_scouts", "rival_fortress", "signal_hunters", "bridgebreakers"}:
         errors.append("White Salt threat set is incomplete")
     if {item.get("id") for item in data.get("results", [])} != {"expanse_allied", "expanse_crossed", "salt_lost"}:
         errors.append("White Salt result set is incomplete")

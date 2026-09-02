@@ -98,7 +98,19 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 		if buy_complete and not sell_available:
 			quartermaster_station["primary"] = {"id": "review_supplies", "label": "REVIEW FORTRESS STORES", "enabled": true, "tooltip": "Open the detailed module and capacity view."}
 	var hiring_station := {"title": "Hiring Post", "status": "NO VERIFIED LEADS", "button_status": "NO LEADS", "body": "Lantern Quay's divers and archive crews are committed to the flood response. No specialist has posted terms here." if is_veyru else "Blackkiln's riggers are committed to the lift line. No specialist has posted terms here.", "tone": "muted"}
-	if not is_veyru and not is_cinder and not is_salt:
+	if is_salt:
+		var sela_ready := state.operational("command_deck") and state.specialist_id.is_empty()
+		var nera_ready := state.operational("infirmary") and state.specialist_id.is_empty()
+		hiring_station = {
+			"title": state.specialist_name() if not state.specialist_id.is_empty() else "Saltglass Specialists",
+			"status": "ASSIGNED" if not state.specialist_id.is_empty() else "FACILITY-BOUND",
+			"button_status": state.specialist_name().to_upper() if not state.specialist_id.is_empty() else "SELA / NERA",
+			"body": "Sela Vonn shortens Run Hot routes by one day at +4% risk when a staffed Command Deck is ready. Dr. Nera Quill reduces crew and refuge hits by one when a staffed Field Infirmary is ready.",
+			"tone": "safe" if not state.specialist_id.is_empty() else "neutral",
+			"primary": {"id": "hire_sela", "label": "ASSIGN SELA · COMMAND DECK", "enabled": sela_ready, "tooltip": "Requires a Ready Command Deck and an empty specialist berth."},
+			"secondary": {"id": "hire_nera", "label": "ASSIGN NERA · INFIRMARY", "enabled": nera_ready, "tooltip": "Requires a Ready Field Infirmary and an empty specialist berth."}
+		}
+	elif not is_veyru and not is_cinder:
 		if state.specialist_id == "iven_pell":
 			hiring_station = {"title": "Iven Pell", "status": "ASSIGNED · SIGNAL OFFICER", "button_status": "IVEN ABOARD", "body": "Recruited at Broken Relay. Active contribution: exact immediate contacts, route risk up to -8 points, encounter pressure -1, and +2 anti-storm damage.", "tone": "safe"}
 		elif state.specialist_id == "mara_flint":

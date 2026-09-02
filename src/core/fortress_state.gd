@@ -7,14 +7,14 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 13
+const SAVE_VERSION := 14
 const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine", "white_salt_expanse"]
 const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "salt_public_beacons"]
 const FINAL_RESULTS := ["decisive_march", "scarred_march", "march_failed", "archive_kept", "archive_scarred", "veyru_lost", "spine_powered", "spine_bypassed", "cinder_lost", "expanse_allied", "expanse_crossed", "salt_lost"]
 const VALID_CHASSIS_TEMPLATES := ["road_keep", "salt_skimmer"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
-const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint"]
+const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint", "sela_vonn", "nera_quill"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
 const MASTERY_EXPERIMENTS := {
 	"ashgate_quarry_adaptation": {
@@ -55,7 +55,7 @@ const MARKET_BUY_OFFERS := {
 const MARKET_SELL_PRICES := {
 	"shell_cannon": 14
 }
-const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint"}
+const SPECIALIST_NAMES := {"iven_pell": "Iven Pell", "mara_flint": "Mara Flint", "sela_vonn": "Sela Vonn", "nera_quill": "Dr. Nera Quill"}
 const CAMPAIGN_DECISION_OPTIONS := {
 	"salvage_choice": ["take_fuel", "rescue_workers"],
 	"lost_signal": ["restore_relay", "move_silent"],
@@ -107,6 +107,8 @@ const THREATS := {
 	,"salt_storm": {"name": "Salt Storm", "target_tags": ["water", "signal", "exterior"], "damage": 1}
 	,"rival_scouts": {"name": "Rival Scouts", "target_tags": ["cargo", "signal", "engine"], "damage": 1}
 	,"rival_fortress": {"name": "Rival Fortress", "target_tags": ["engine", "generator", "weapon", "armor"], "damage": 2}
+	,"signal_hunters": {"name": "Signal Hunters", "target_tags": ["signal", "command", "exterior"], "damage": 1}
+	,"bridgebreakers": {"name": "Bridgebreakers", "target_tags": ["lower_hull", "engine", "armor"], "damage": 2}
 }
 const JOURNEY_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "kind": "city", "description": "The departure yard: fuel, parts, and one last decision."},
@@ -168,6 +170,8 @@ const ENCOUNTER_ENEMIES := {
 	,"salt_storm": {"name": "Salt Storm", "health": 5, "damage": 1, "arrival_step": 2, "target_tags": ["water", "signal", "exterior"], "route": "white horizon", "counter": "Water Condenser, protected signal, or Seal Compartment", "counter_modules": ["water_condenser", "signal_coil", "wall_lamp", "side_armor_skirt"]}
 	,"rival_scouts": {"name": "Rival Scouts", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["cargo", "signal", "engine"], "route": "open flank", "counter": "Repeater Gun, Signal Coil, or a light engine", "counter_modules": ["repeater_gun", "signal_coil", "ash_runner_engine"]}
 	,"rival_fortress": {"name": "Rival Fortress", "health": 11, "damage": 2, "arrival_step": 3, "target_tags": ["engine", "generator", "weapon", "armor"], "route": "parallel march", "counter": "redundant systems, Shell Cannon, or escort beacons", "counter_modules": ["shell_cannon", "front_armor_plate", "side_armor_skirt", "signal_coil"]}
+	,"signal_hunters": {"name": "Signal Hunter", "health": 6, "damage": 1, "arrival_step": 3, "target_tags": ["signal", "command", "exterior"], "route": "reflected beacon line", "counter": "Command Deck, Repeater Gun, or protected signal", "counter_modules": ["command_deck", "repeater_gun", "side_armor_skirt"]}
+	,"bridgebreakers": {"name": "Bridgebreaker", "health": 8, "damage": 2, "arrival_step": 3, "target_tags": ["lower_hull", "engine", "armor"], "route": "salt crust below", "counter": "Shell Cannon, side armor, or Salvage Crane bracing", "counter_modules": ["shell_cannon", "side_armor_skirt", "salvage_crane"]}
 }
 const CAMPAIGN_NODES := {
 	"ashgate_depot": {"name": "Ashgate Depot", "type": "settlement", "visibility": "known", "description": "Refit, choose the first guard contract, and leave before the blockade closes."},
@@ -203,8 +207,8 @@ const CAMPAIGN_NODES := {
 	,"buried_observatory": {"name": "Buried Observatory", "type": "relay", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.20, "pressure": 1, "reward": 10, "threat_hint": "salt weather", "encounter": ["salt_storm"]}
 	,"quiet_caravan": {"name": "Quiet Caravan", "type": "convoy", "visibility": "forecast", "days": 1, "fuel": 2, "risk": 0.30, "pressure": 1, "reward": 16, "threat_hint": "rival scouts", "encounter": ["rival_scouts"]}
 	,"windbreak": {"name": "The Windbreak", "type": "settlement", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.22, "pressure": 1, "reward": 10, "threat_hint": "salt storm", "encounter": ["salt_storm"]}
-	,"salt_mine": {"name": "Salt Mine", "type": "salvage", "visibility": "unscouted", "days": 2, "fuel": 1, "risk": 0.42, "pressure": 2, "reward": 22, "threat_hint": "storm and scouts", "encounter": ["salt_storm", "rival_scouts"]}
-	,"empty_mile": {"name": "The Empty Mile", "type": "hazard", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 18, "threat_hint": "visible pursuit", "encounter": ["rival_scouts"]}
+	,"salt_mine": {"name": "Salt Mine", "type": "salvage", "visibility": "unscouted", "days": 2, "fuel": 1, "risk": 0.42, "pressure": 2, "reward": 22, "threat_hint": "signal hunters in the brine shafts", "encounter": ["salt_storm", "signal_hunters"]}
+	,"empty_mile": {"name": "The Empty Mile", "type": "hazard", "visibility": "known", "days": 1, "fuel": 1, "risk": 0.38, "pressure": 2, "reward": 18, "threat_hint": "bridgebreakers on open ground", "encounter": ["bridgebreakers"]}
 	,"beacon_road": {"name": "Beacon Road", "type": "relay", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.24, "pressure": 1, "reward": 12, "threat_hint": "salt weather", "encounter": ["salt_storm"]}
 	,"lee_trench": {"name": "Lee Trench", "type": "recovery", "visibility": "known", "days": 2, "fuel": 1, "risk": 0.18, "pressure": -1, "reward": 0, "threat_hint": "sheltered scouts", "encounter": ["rival_scouts"]}
 	,"rival_approach": {"name": "Rival Approach", "type": "choice", "visibility": "forecast", "days": 1, "fuel": 1, "risk": 0.40, "pressure": 1, "reward": 16, "threat_hint": "rival screen", "encounter": ["rival_scouts", "salt_storm"]}
@@ -271,6 +275,9 @@ const MODULE_DEFS := {
 	"refugee_bunk": {"name": "Refugee Bunk", "family": "cargo", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["refuge", "cargo", "life_support"], "capability": "Unlocks shelter and rescue choices, but remains valuable cargo to Raiders."},
 	"signal_mast": {"name": "Signal Mast", "family": "signal", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["signal", "exterior", "long_range"], "capability": "Reveals exact contacts and cuts 2 Storm Front pressure while Ready."},
 	"water_condenser": {"name": "Water Condenser", "family": "sustain", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 2, "durability": 3, "tags": ["sustain", "water", "storm_target"], "capability": "Unlocks the Dry Cistern Cut and saves 1 fuel there while powered beside an operational Field Workshop."}
+	,"infirmary": {"name": "Field Infirmary", "family": "medical", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["medical", "crew_support"], "capability": "Reduces crew and refuge damage while staffed beside Crew Quarters; enables Dr. Nera Quill."}
+	,"command_deck": {"name": "Command Deck", "family": "command", "shape": Vector2i(2, 1), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 1, "durability": 3, "tags": ["command", "crew_support"], "capability": "Improves committed doctrine while staffed beside Crew Quarters; enables Sela Vonn."}
+	,"salvage_crane": {"name": "Salvage Crane", "family": "recovery", "shape": Vector2i(1, 2), "mass": 2, "power_draw": 1, "power_output": 0, "heat": 0, "durability": 3, "tags": ["recovery", "exterior", "brace"], "capability": "Braces Bridgebreaker contact and recovers exposed salvage, but consumes an exterior mount."}
 }
 
 var seed: int = 1107
@@ -371,6 +378,20 @@ func choose_chassis_template(template_id: String) -> Dictionary:
 
 func specialist_name() -> String:
 	return String(SPECIALIST_NAMES.get(specialist_id, "None" if specialist_id.is_empty() else specialist_id.replace("_", " ").capitalize()))
+
+func assign_specialist(candidate_id: String) -> Dictionary:
+	if candidate_id not in ["sela_vonn", "nera_quill"]:
+		return {"ok": false, "reason": "specialist is not available through this assignment"}
+	if phase not in ["refit", "settlement"] or not campaign_active:
+		return {"ok": false, "reason": "specialists can only join while the fortress is at rest"}
+	if not specialist_id.is_empty():
+		return {"ok": false, "reason": "the specialist berth is already occupied"}
+	var required_module := "command_deck" if candidate_id == "sela_vonn" else "infirmary"
+	if not operational(required_module):
+		return {"ok": false, "reason": "%s requires a Ready %s" % [SPECIALIST_NAMES[candidate_id], module_definition(required_module).name]}
+	specialist_id = candidate_id
+	log.append("%s joins the fortress and staffs %s." % [specialist_name(), module_definition(required_module).name])
+	return {"ok": true, "specialist": specialist_id, "message": "%s is now assigned to the %s." % [specialist_name(), module_definition(required_module).name], "summary": summary()}
 
 func choose_mastery_experiment(experiment_id: String) -> Dictionary:
 	if not campaign_active or campaign_region_id != "ashgate_lowlands" or current_location != "ashgate_depot" or phase != "refit" or campaign_encounters_completed != 0:
@@ -1093,6 +1114,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var mass_penalty := 1 if (bool(node.get("mass_sensitive", false)) or cinder_grade) and total_mass() > BASE_MASS_LIMIT - 2 else 0
 	var condenser_discount := 1 if node_id == "dry_cistern_cut" and _has_ready_tag("water") else 0
 	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount)
+	var sela_fast_line := specialist_id == "sela_vonn" and doctrine == "run_hot"
+	var route_days := maxi(1, int(node.get("days", 0)) - (1 if sela_fast_line else 0))
 	var contract_heat := 1 if campaign_region_id == "cinder_spine" and cinder_contract_status == "accepted" else 0
 	var predicted_heat := maxi(0, total_heat() + contract_heat + (2 if doctrine == "run_hot" else 0))
 	var informed := specialist_id == "iven_pell" or _has_ready_tag("forecast")
@@ -1111,6 +1134,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var blockade_risk := campaign_pressure * (0.025 if campaign_region_id == "cinder_spine" else 0.02)
 	var mass_risk := float(mass_penalty) * 0.05
 	var risk := clampf(base_risk + route_risk_modifier + blockade_risk + mass_risk + heat_penalty - signal_discount, 0.0, 0.95)
+	if sela_fast_line:
+		risk = clampf(risk + 0.04, 0.0, 0.95)
 	var pressure_gain := int(node.get("pressure", 1))
 	var encounter_difficulty := maxi(0, pressure_gain - (1 if informed else 0))
 	if predicted_heat > BASE_HEAT_LIMIT:
@@ -1132,6 +1157,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 					if module_name not in ready_counter_names:
 						ready_counter_names.append(module_name)
 	var risk_factors: Array[String] = []
+	if sela_fast_line:
+		risk_factors.append("Sela fast line -1 day, +4pt")
 	if visibility != "unscouted":
 		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
 	if blockade_risk > 0.0:
@@ -1150,7 +1177,7 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"name": String(node.get("name", node_id)),
 		"type": String(node.get("type", "route")),
 		"visibility": visibility,
-		"days": int(node.get("days", 0)),
+		"days": route_days,
 		"fuel": fuel_cost,
 		"fuel_discount": condenser_discount,
 		"risk": risk,
@@ -2088,6 +2115,15 @@ func dependency_status(instance: Dictionary) -> Dictionary:
 		elif is_operational:
 			state_name = "strained"
 			reasons.append("no adjacent Parts Crate; repairs are limited")
+	if "crew_support" in tags:
+		var staff_ready := _has_adjacent_tag(instance, "crew")
+		connections.append({"id": "crew_to_specialist_facility", "satisfied": staff_ready, "benefit": "specialist facility staffed", "failure": "specialist effect unavailable"})
+		if staff_ready:
+			benefits.append("specialist facility staffed")
+		else:
+			state_name = "offline"
+			is_operational = false
+			reasons.append("facility has no adjacent Crew Quarters")
 	if "signal" in tags:
 		var visibility_ready := bool(instance.get("exterior", false))
 		if not visibility_ready:
@@ -2133,6 +2169,7 @@ func module_dependency_card(instance: Dictionary) -> Dictionary:
 		"parts_to_workshop": "adjacent Parts Crate",
 		"visibility_to_signal": "exterior signal visibility",
 		"maintenance_to_condenser": "adjacent operational Field Workshop"
+		,"crew_to_specialist_facility": "adjacent Crew Quarters"
 	}
 	var failure_texts := {
 		"power_to_module": "Power demand can force this module offline.",
@@ -2142,6 +2179,7 @@ func module_dependency_card(instance: Dictionary) -> Dictionary:
 		"parts_to_workshop": "Losing the Parts Crate limits each workshop repair.",
 		"visibility_to_signal": "Losing exterior visibility broadens route and target forecasts.",
 		"maintenance_to_condenser": "Losing workshop access removes the Dry Cistern Cut fuel saving and route access."
+		,"crew_to_specialist_facility": "Losing adjacent Crew Quarters disables this staffed facility and its specialist."
 	}
 	var counter_texts := {
 		"power_to_module": "Keep total draw at or below output, or restore a Generator Core.",
@@ -2151,6 +2189,7 @@ func module_dependency_card(instance: Dictionary) -> Dictionary:
 		"parts_to_workshop": "Place a working Parts Crate adjacent to restore full repair output.",
 		"visibility_to_signal": "Use an exterior signal module or place this beside one.",
 		"maintenance_to_condenser": "Keep an operational Field Workshop adjacent, or refit before choosing the dry road."
+		,"crew_to_specialist_facility": "Keep operational Crew Quarters adjacent to staff this facility."
 	}
 	var dependency_names: Array[String] = []
 	var focus_connection: Dictionary = {}
@@ -3291,6 +3330,22 @@ func _encounter_module_damage(enemy_id: String, priority_override: String = "") 
 			elif "armor" in tags or "forecast" in tags:
 				damage = 1
 				behavior_lines.append("%s preserves a redundant line under rival fire." % definition.name)
+		elif enemy_id == "signal_hunters":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "command_deck" or module_id == "repeater_gun":
+				damage = 2 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("%s breaks the reflected approach." % definition.name)
+			elif "armor" in tags:
+				damage = 1
+				behavior_lines.append("%s screens the beacon line." % definition.name)
+		elif enemy_id == "bridgebreakers":
+			var tags: Array = definition.get("tags", [])
+			if module_id == "shell_cannon":
+				damage = 3 if String(status.get("state", "strained")) == "ready" else 1
+				behavior_lines.append("Shell Cannon breaks the demolition team before the span gives way.")
+			elif module_id == "salvage_crane" or "lower_hull" in tags:
+				damage = 2
+				behavior_lines.append("%s braces the fractured salt crust." % definition.name)
 		elif module_id == "shell_cannon":
 			damage = 3 if enemy_id in ["road_raiders", "siege_beast"] else 1
 			if String(status.get("state", "ready")) == "strained":
@@ -3617,6 +3672,12 @@ func _encounter_damage_profile(enemy_id: String, target_id: String, pressure_bon
 	if enemy_id == "rival_fortress" and String(campaign_decisions.get("rival_terms", "")) == "race_rival":
 		damage = maxi(0, damage - 1)
 		profile["route_effect"] = "racing_line"
+	if specialist_id == "nera_quill" and operational("infirmary") and ("crew" in target_tags or "refuge" in target_tags):
+		damage = maxi(0, damage - 1)
+		profile["specialist_effect"] = "nera_triage"
+	if specialist_id == "sela_vonn" and operational("command_deck") and encounter_target_doctrine == "run_hot" and enemy_id in ["rival_scouts", "signal_hunters"]:
+		damage = maxi(0, damage - 1)
+		profile["specialist_effect"] = "sela_feint"
 	if encounter_target_doctrine == "protect_cargo" and "cargo" in target_tags:
 		damage = maxi(0, damage - 1)
 		profile["doctrine_effect"] = "protect_cargo"
@@ -3772,6 +3833,10 @@ func _encounter_apply_enemy_damage(enemy_id: String, target_id: String, pressure
 			_encounter_log("The racing line removes 1 Rival Fortress damage from %s." % module_def.name)
 		if String(profile.get("archive_effect", "")) == "sealed_approach":
 			_encounter_log("The sealed archive approach removes 1 Civic Guardian damage from %s." % module_def.name)
+		if String(profile.get("specialist_effect", "")) == "nera_triage":
+			_encounter_log("Dr. Nera Quill's staffed infirmary removes 1 damage from %s." % module_def.name)
+		elif String(profile.get("specialist_effect", "")) == "sela_feint":
+			_encounter_log("Sela Vonn's command feint removes 1 damage from %s." % module_def.name)
 		if String(profile.get("mara_effect", "")) == "refuge_bracing":
 			_encounter_log("Mara Flint's forge-core bracing absorbs 1 damage intended for Refugee Bunk.")
 		if bool(profile.get("vent_exposed", false)):

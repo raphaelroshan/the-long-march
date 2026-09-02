@@ -1302,3 +1302,11 @@ Sharing the lift design after a surviving Cinder result unlocks Communal Lift Pl
 ## 2026-09-02 — Alternate chassis change geometry and capacity together
 
 The Salt Skimmer preserves the shared 6×4 workbench but removes both lower-corner cells, lowers mass capacity to 13, and permits a third exterior mount. The cutaways remain visible and reject placement in both live commands and save validation. This was chosen over a numerical preset because an alternate chassis should change spatial planning while retaining the established interface grammar.
+
+## 2026-09-02 — Specialists occupy physical dependencies
+
+Sela Vonn and Dr. Nera Quill can only be assigned when their Command Deck or Field Infirmary is operational, and both facilities require physical adjacency to Crew Quarters. Their effects stop when that dependency fails. This makes a specialist a fortress-layout commitment that enemies can disrupt, rather than a passive account-wide modifier.
+
+## 2026-09-02 — New threats attack dependency surfaces, not larger health bars
+
+Signal Hunters pressure command, signal, and exterior systems while Bridgebreakers pressure engines, armor, and the lower hull. Each has readable counter modules from multiple families, including the exterior Salvage Crane. This was chosen so LM-EA-4 expands planning questions without relying on inflated damage or a mandatory single answer.
