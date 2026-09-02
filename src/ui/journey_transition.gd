@@ -317,6 +317,15 @@ class MarchCanvas extends Control:
 		"ash_chapel_bypass": {"motif": "monastery", "marker": "ASH CHAPEL"},
 		"lift_engine_house": {"motif": "gantry", "marker": "LIFT ENGINE"},
 		"switchback_commune": {"motif": "gantry", "marker": "SWITCHBACK LIFT"}
+		,"buried_observatory": {"motif": "relay", "marker": "BURIED LENS"}
+		,"quiet_caravan": {"motif": "camp", "marker": "QUIET CARAVAN"}
+		,"windbreak": {"motif": "camp", "marker": "STONE WINDBREAK"}
+		,"salt_mine": {"motif": "quarry", "marker": "BRINE SHAFT"}
+		,"empty_mile": {"motif": "road", "marker": "EMPTY MILE"}
+		,"beacon_road": {"motif": "relay", "marker": "MIRROR BEACONS"}
+		,"lee_trench": {"motif": "lower_cut", "marker": "LEE TRENCH"}
+		,"rival_approach": {"motif": "crossing", "marker": "RIVAL STANDARD"}
+		,"salt_citadel": {"motif": "pass", "marker": "SALT CITADEL"}
 	}
 
 	var region_id: String = "ashgate_lowlands"
@@ -368,10 +377,11 @@ class MarchCanvas extends Control:
 	func _draw() -> void:
 		var flooded := region_id == "flooded_veyru"
 		var cinder := region_id == "cinder_spine"
-		var sky := Color("#071014") if high_contrast_enabled else (Color("#19333a") if flooded else (Color("#321716") if cinder else Color("#293136")))
-		var far_horizon := Color("#1f4249") if flooded else (Color("#603026") if cinder else Color("#47463f"))
-		var horizon := Color("#284e55") if flooded else (Color("#8b4a32") if cinder else Color("#625849"))
-		var ground := Color("#10262a") if flooded else (Color("#281611") if cinder else Color("#30271f"))
+		var salt := region_id == "white_salt_expanse"
+		var sky := Color("#071014") if high_contrast_enabled else (Color("#19333a") if flooded else (Color("#321716") if cinder else (Color("#786f62") if salt else Color("#293136"))))
+		var far_horizon := Color("#1f4249") if flooded else (Color("#603026") if cinder else (Color("#a09783") if salt else Color("#47463f")))
+		var horizon := Color("#284e55") if flooded else (Color("#8b4a32") if cinder else (Color("#c5bda5") if salt else Color("#625849")))
+		var ground := Color("#10262a") if flooded else (Color("#281611") if cinder else (Color("#d4cdb8") if salt else Color("#30271f")))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.78, size.y * 0.18), 64.0, Color(0.91, 0.72, 0.42, 0.18))
 		_draw_far_silhouette(far_horizon)

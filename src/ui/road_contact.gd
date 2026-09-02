@@ -15,6 +15,9 @@ const THREAT_PRESENTATION_PROFILES := {
 	"ember_drakes": {"wind_up": "EMBER DIVE", "response": "WALL LIGHT · REPEATER · CONDENSER", "risk": "Fireline pressure compounds heat and burns exposed sustain systems."},
 	"lift_saboteurs": {"wind_up": "CHAIN-CUTTING RUSH", "response": "REPEATER · SHELL · WORKSHOP", "risk": "Generator, repair, and signal dependencies can be severed before the climb."},
 	"elevator_warden": {"wind_up": "COUNTERWEIGHT CRUSH", "response": "SHELL FIRE · ARMOR · SWITCHBACK", "risk": "The old lift's final guardian attacks movement and power at once."}
+	,"salt_storm": {"wind_up": "WHITEOUT SHEAR", "response": "CONDENSER · SIGNAL · SEAL", "risk": "Without water recovery, salt strips exposed systems and dries the hull."}
+	,"rival_scouts": {"wind_up": "OPEN-FLANK MARK", "response": "REPEATER · SIGNAL · FAST DRIVE", "risk": "Scouts mark cargo and movement systems for the rival fortress."}
+	,"rival_fortress": {"wind_up": "PARALLEL BROADSIDE", "response": "REDUNDANCY · SHELL · ESCORT BEACONS", "risk": "A peer fortress can break movement and power in the same exchange."}
 }
 
 signal pause_requested

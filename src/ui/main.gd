@@ -473,6 +473,14 @@ func _run_flow_step() -> int:
 		if state.cinder_contract_status != "offered" or state.campaign_encounters_completed > 0 or state.phase in ["map", "battle"]:
 			return 1
 		return 0
+	if state.campaign_region_id == "white_salt_expanse":
+		if state.current_location == "windbreak" or state.campaign_encounters_completed >= 2:
+			if state.current_location != "windbreak" and state.campaign_encounters_completed >= 3:
+				return 3
+			return 2
+		if state.salt_contract_status != "offered" or state.campaign_encounters_completed > 0 or state.phase in ["map", "battle"]:
+			return 1
+		return 0
 	if state.current_location == "morrowline_camp" or state.campaign_encounters_completed >= 3:
 		if state.current_location != "morrowline_camp" and state.campaign_encounters_completed >= 3:
 			return 3
@@ -621,7 +629,7 @@ func set_reduced_motion(enabled: bool) -> void:
 		road_contact.set_reduced_motion(enabled)
 
 func _reset_state() -> void:
-	state = LongMarchState.new(3301 if tutorial_mode else (2204 if starting_region_id == "flooded_veyru" else (3305 if starting_region_id == "cinder_spine" else 1107)))
+	state = LongMarchState.new(3301 if tutorial_mode else (2204 if starting_region_id == "flooded_veyru" else (3305 if starting_region_id == "cinder_spine" else (4406 if starting_region_id == "white_salt_expanse" else 1107))))
 	if tutorial_mode:
 		state.start_tutorial()
 		tutorial_director = TutorialDirectorScript.new()
@@ -641,6 +649,15 @@ func _reset_state() -> void:
 		state.place_module("ammunition_lift", Vector2i(4, 0))
 		state.place_module("repeater_gun", Vector2i(5, 1), true)
 		state.place_module("wall_lamp", Vector2i(5, 2), true)
+	elif starting_region_id == "white_salt_expanse":
+		state.choose_chassis_template("salt_skimmer")
+		state.place_module("ash_runner_engine", Vector2i(0, 0), false, true)
+		state.place_module("coal_cell", Vector2i(0, 1))
+		state.place_module("generator_core", Vector2i(2, 0))
+		state.place_module("signal_coil", Vector2i(5, 1))
+		state.place_module("ammunition_lift", Vector2i(4, 0))
+		state.place_module("shell_cannon", Vector2i(3, 2), true)
+		state.place_module("wall_lamp", Vector2i(5, 2), true)
 	else:
 		state.place_module("steam_lance_engine", Vector2i(0, 0))
 		state.place_module("coal_cell", Vector2i(0, 1))
@@ -655,6 +672,8 @@ func _reset_state() -> void:
 			state.start_flooded_veyru()
 		elif starting_region_id == "cinder_spine":
 			state.start_cinder_spine()
+		elif starting_region_id == "white_salt_expanse":
+			state.start_white_salt_expanse()
 		else:
 			state.start_campaign()
 	state.set_regional_developments(starting_regional_developments)
@@ -2228,12 +2247,12 @@ func _on_departure_option_changed(_index: int) -> void:
 	_refresh_tutorial_ui()
 
 func _on_guard_contract_pressed(accept: bool) -> void:
-	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else (state.choose_cinder_forge_contract(accept) if state.campaign_region_id == "cinder_spine" else state.choose_guard_contract(accept))
+	var result := state.choose_veyru_medicine_contract(accept) if state.campaign_region_id == "flooded_veyru" else (state.choose_cinder_forge_contract(accept) if state.campaign_region_id == "cinder_spine" else (state.choose_salt_beacon_contract(accept) if state.campaign_region_id == "white_salt_expanse" else state.choose_guard_contract(accept)))
 	if bool(result.get("ok", false)):
 		var contract_message := String(result.get("message", "Contract decision recorded."))
 		last_journey_receipt = "CONTRACT · %s" % contract_message
 		_set_event("CONTRACT DECISION\n%s" % contract_message)
-		var contract_event := "medicine_contract_answered" if state.campaign_region_id == "flooded_veyru" else ("dynamo_contract_answered" if state.campaign_region_id == "cinder_spine" else "guard_contract_answered")
+		var contract_event := "medicine_contract_answered" if state.campaign_region_id == "flooded_veyru" else ("dynamo_contract_answered" if state.campaign_region_id == "cinder_spine" else ("beacon_contract_answered" if state.campaign_region_id == "white_salt_expanse" else "guard_contract_answered"))
 		_journal_event(contract_event, {"accepted": accept})
 		_checkpoint("contract_answered")
 	else:
@@ -2451,7 +2470,7 @@ func _build_journey_transition_view(origin_id: String, destination_id: String, p
 
 func _restore_journey_transition_view() -> Dictionary:
 	var destination_id := state.campaign_target_node
-	var origin_id := String(state.campaign_path[-1]) if not state.campaign_path.is_empty() else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else "ashgate_depot"))
+	var origin_id := String(state.campaign_path[-1]) if not state.campaign_path.is_empty() else ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else ("saltglass_haven" if state.campaign_region_id == "white_salt_expanse" else "ashgate_depot")))
 	var preview := state.campaign_node_preview(destination_id, state.encounter_target_doctrine)
 	var days := int(preview.get("days", 0))
 	var fuel_cost := int(preview.get("fuel", 0))
@@ -2486,6 +2505,12 @@ func _journey_promise_summary() -> String:
 				return "PROMISE BROKEN · The generator failed; the Spine crossing continued by hand."
 			_:
 				return "PROMISE DECLINED · Travel light without the guild's heat-heavy dynamo load."
+	if state.campaign_region_id == "white_salt_expanse":
+		match state.salt_contract_status:
+			"accepted": return "PROMISE · Guide the Refugee Compact across the open salt under visible beacons."
+			"completed": return "PROMISE KEPT · The Compact reached the Salt Citadel under the fortress signal."
+			"failed": return "PROMISE BROKEN · The beacon line failed; the fortress crossed without its convoy."
+			_: return "PROMISE DECLINED · Cross fast without the Compact's visible signal line."
 	match state.guard_contract_status:
 		"accepted":
 			return "PROMISE · Guard Morrowline's parts convoy through the Lowlands."
@@ -2848,7 +2873,7 @@ func _stored_module_capacity_warning(definition: Dictionary, selected_installed:
 	if not selected_installed.is_empty():
 		return ""
 	var warnings: Array[String] = []
-	var excess_mass := state.total_mass() + int(definition.get("mass", 0)) - LongMarchState.BASE_MASS_LIMIT
+	var excess_mass := state.total_mass() + int(definition.get("mass", 0)) - state.chassis_mass_limit()
 	if excess_mass > 0:
 		warnings.append("Remove at least %d mass" % excess_mass)
 	if "exterior" in definition.get("tags", []):
@@ -2856,7 +2881,7 @@ func _stored_module_capacity_warning(definition: Dictionary, selected_installed:
 		for instance in state.modules:
 			if bool(instance.get("exterior", false)):
 				mounts_used += 1
-		if mounts_used >= LongMarchState.MAX_EXTERIOR_MOUNTS:
+		if mounts_used >= state.chassis_exterior_limit():
 			warnings.append("free one exterior mount")
 	return "\nCAPACITY · %s." % "; ".join(warnings) if not warnings.is_empty() else ""
 
@@ -2933,7 +2958,7 @@ func _campaign_departure_block_reason(node_id: String) -> String:
 	return ""
 
 func current_location_is_region_start() -> bool:
-	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else "ashgate_depot"))
+	return state.current_location == ("lantern_quay" if state.campaign_region_id == "flooded_veyru" else ("blackkiln" if state.campaign_region_id == "cinder_spine" else ("saltglass_haven" if state.campaign_region_id == "white_salt_expanse" else "ashgate_depot")))
 
 func _settlement_hub_available() -> bool:
 	return state != null and state.campaign_active and state.phase == "refit" and current_location_is_region_start()
@@ -3346,12 +3371,12 @@ func _apply_start_detail_visibility() -> void:
 	asset_row.visible = show_workshop
 
 func _active_contract_status() -> String:
-	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else (state.cinder_contract_status if state.campaign_region_id == "cinder_spine" else state.guard_contract_status)
+	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else (state.cinder_contract_status if state.campaign_region_id == "cinder_spine" else (state.salt_contract_status if state.campaign_region_id == "white_salt_expanse" else state.guard_contract_status))
 
 func _recovery_location_name() -> String:
 	if tutorial_mode:
 		return "Muster Yard"
-	return "Evacuation Camp" if state.campaign_region_id == "flooded_veyru" else ("Old Lift Station" if state.campaign_region_id == "cinder_spine" else "Morrowline")
+	return "Evacuation Camp" if state.campaign_region_id == "flooded_veyru" else ("Old Lift Station" if state.campaign_region_id == "cinder_spine" else ("The Windbreak" if state.campaign_region_id == "white_salt_expanse" else "Morrowline"))
 
 func _on_grid_cell_pressed(cell: Vector2i) -> void:
 	var clicked := state.module_at(cell)
@@ -3899,6 +3924,13 @@ func _refresh_campaign_controls() -> void:
 		elif pressure_band == "inferno":
 			pressure_effect = "Slag Tunnel is closed · Ash Chapel Bypass is open and cannot close."
 			pressure_color = Color("#ef8375")
+	elif state.campaign_region_id == "white_salt_expanse":
+		pressure_effect = "Approaching begins at 3 · Whiteout at 5 closes Empty Mile and opens Lee Trench."
+		if pressure_band == "approaching":
+			pressure_color = Color("#e8c58e")
+		elif pressure_band == "whiteout":
+			pressure_effect = "Empty Mile is closed · Lee Trench is open and cannot close."
+			pressure_color = Color("#ef8375")
 	else:
 		if pressure_band == "closing":
 			pressure_effect = "Break begins at 5 and can close Signal Causeway without forecasting."
@@ -3921,6 +3953,10 @@ func _refresh_campaign_controls() -> void:
 		campaign_path_label.text = "Dynamo contract: %s · Generator: %s" % [active_contract_status.replace("_", " ").capitalize(), "READY" if state.operational("generator_core") else "AT RISK"]
 		if state.has_regional_development("cinder_communal_lift_plan"):
 			campaign_path_label.text += "\nRegional development: Communal Lift Plan · Slag Tunnel contacts known"
+	elif state.campaign_region_id == "white_salt_expanse":
+		campaign_path_label.text = "Beacon escort: %s · Chassis: %s" % [active_contract_status.replace("_", " ").capitalize(), state.chassis_template_id.replace("_", " ").capitalize()]
+		if state.has_regional_development("salt_public_beacons"):
+			campaign_path_label.text += "\nRegional development: Public Salt Beacons · Salt Mine contacts known"
 	else:
 		campaign_path_label.text = "Guard contract: %s · Specialist: %s" % [active_contract_status.replace("_", " ").capitalize(), state.specialist_name()]
 
@@ -3951,6 +3987,12 @@ func _refresh_campaign_controls() -> void:
 		contract_accept_button.disabled = not state.operational("generator_core")
 		contract_decline_button.text = "TRAVEL LIGHT\nNO GUILD HEAT LOAD · MOBILITY +1\nONE CAMP ACTION · NO DELIVERY REWARD"
 		contract_decline_button.tooltip_text = "Keep the fortress cooler and lighter in purpose, but give up the powered-lift reward."
+	elif state.campaign_region_id == "white_salt_expanse":
+		contract_title.text = "SALTGLASS BEACON ESCORT"
+		contract_label.text = "Guide the Refugee Compact across open salt. The visible beacon line draws tougher scouts but earns trust, payment, and a second Windbreak service."
+		contract_accept_button.text = "LIGHT THE ESCORT BEACONS\nREQUIRES READY SIGNAL · SCOUTS +1 HP\nDELIVERY · +26 ASHMARKS · +2 TRUST"
+		contract_accept_button.disabled = not state._has_ready_tag("forecast")
+		contract_decline_button.text = "CROSS WITHOUT THE COMPACT\nMOBILITY +1 · NORMAL SCOUTS\nONE WINDBREAK SERVICE · NO DELIVERY REWARD"
 	else:
 		contract_title.text = "ASHGATE CONTRACT"
 		contract_label.text = "Morrowline's parts wagon is exposed. Decide whether its payment and trust are worth a harder camp approach."
@@ -4357,7 +4399,7 @@ func _refresh_ui() -> void:
 		if not state.campaign_event_pending.is_empty():
 			_set_route_preview("A local decision blocks departure. Resolve it before choosing the next road.", "warning")
 		elif _active_contract_status() == "offered":
-			var contract_name := "Lantern Quay medicine" if state.campaign_region_id == "flooded_veyru" else ("Blackkiln dynamo" if state.campaign_region_id == "cinder_spine" else "Ashgate convoy")
+			var contract_name := "Lantern Quay medicine" if state.campaign_region_id == "flooded_veyru" else ("Blackkiln dynamo" if state.campaign_region_id == "cinder_spine" else ("Saltglass beacon" if state.campaign_region_id == "white_salt_expanse" else "Ashgate convoy"))
 			_set_route_preview("The first map branches are visible after the %s contract is answered." % contract_name)
 		elif not selected_campaign_node_id.is_empty():
 			_show_selected_route_preview(selected_campaign_node_id)
@@ -4440,7 +4482,7 @@ func _refresh_ui() -> void:
 		encounter_label.add_theme_color_override("font_color", Color("#9fd2c2"))
 	else:
 		if _active_contract_status() == "offered":
-			var contract_kind := "medicine" if state.campaign_region_id == "flooded_veyru" else ("dynamo" if state.campaign_region_id == "cinder_spine" else "convoy")
+			var contract_kind := "medicine" if state.campaign_region_id == "flooded_veyru" else ("dynamo" if state.campaign_region_id == "cinder_spine" else ("beacon escort" if state.campaign_region_id == "white_salt_expanse" else "convoy"))
 			encounter_label.text = "%s PREPARATION\nAnswer the %s contract to open the first roads." % [state.campaign_region_name().to_upper(), contract_kind]
 		elif state.phase == "settlement":
 			encounter_label.text = "%s RECOVERY\n%s. Refit freely, then prepare for the next road." % [_recovery_location_name().to_upper(), _service_action_status_text()]
@@ -4558,6 +4600,8 @@ func _current_guidance() -> String:
 			return "CURRENT ORDER · Decide whether to carry Lantern Quay's sealed medicines. This unlocks the first roads."
 		if state.campaign_region_id == "cinder_spine":
 			return "CURRENT ORDER · Decide whether to carry Blackkiln's dynamo pattern. This unlocks the first roads."
+		if state.campaign_region_id == "white_salt_expanse":
+			return "CURRENT ORDER · Decide whether to guide the Refugee Compact under public beacons. This unlocks the first roads."
 		return "CURRENT ORDER · Decide whether to guard Morrowline's parts convoy. This unlocks the first roads."
 	if not selected_campaign_node_id.is_empty():
 		var node_name := String(LongMarchState.CAMPAIGN_NODES.get(selected_campaign_node_id, {}).get("name", selected_campaign_node_id))
@@ -4679,6 +4723,18 @@ func _result_summary_text() -> String:
 			if state.hull_condition <= 0:
 				return "VEYRU LOST · The fortress hull reached zero at the Dry Archive."
 			return "VEYRU LOST · %s at the Dry Archive." % String(_movement_failure_diagnosis().get("cause", "No operational, fuel-connected engine remained"))
+		"spine_powered":
+			return "SPINE POWERED · The fortress delivered Blackkiln's dynamo and raised the old lift with %d/10 hull." % state.hull_condition
+		"spine_bypassed":
+			return "SPINE BYPASSED · The fortress reached Switchback Commune by a hand-cut road, carrying its unfinished obligations forward."
+		"cinder_lost":
+			return "CINDER LOST · The fortress lost hull or movement below Switchback Commune."
+		"expanse_allied":
+			return "EXPANSE ALLIED · The Compact reached the Salt Citadel under the fortress beacons with %d/10 hull." % state.hull_condition
+		"expanse_crossed":
+			return "EXPANSE CROSSED · The fortress reached the water towers without completing the Compact alliance."
+		"salt_lost":
+			return "SALT LOST · The fortress lost hull or movement below the Salt Citadel."
 		"decisive_march":
 			var contract_note := "the guard contract was completed" if state.guard_contract_status == "completed" else ("the fortress travelled without the guard contract" if state.guard_contract_status == "declined" else "the guard contract was not completed")
 			return "DECISIVE MARCH · Meridian Pass is open. Every final contact was defeated, the fortress retained %d/10 hull, and %s." % [state.hull_condition, contract_note]
@@ -4697,6 +4753,10 @@ func _result_summary_text() -> String:
 	return "UNCLASSIFIED DEBRIEF · The completed run has no recognized outcome."
 
 func _result_replay_text() -> String:
+	if state.final_result in ["expanse_allied", "expanse_crossed", "salt_lost"]:
+		return "NEXT RUN · Change the chassis, beacon obligation, or rival doctrine and compare the surviving redundancy."
+	if state.final_result in ["spine_powered", "spine_bypassed", "cinder_lost"]:
+		return "NEXT RUN · Change the dynamo obligation, grade route, or lift decision and compare the heat margin."
 	if state.final_result == "archive_kept":
 		return "NEXT RUN · Test the other archive commitment or take the Registry shortcut under higher water."
 	if state.final_result == "archive_scarred":
@@ -4775,7 +4835,7 @@ func _result_record_text() -> String:
 	var dependencies: Dictionary = state.dependency_summary()
 	var specialist_name := state.specialist_name()
 	var stopping_line := ""
-	if state.final_result in ["march_failed", "veyru_lost", "cinder_lost"] and state.current_location not in state.campaign_path:
+	if state.final_result in ["march_failed", "veyru_lost", "cinder_lost", "salt_lost"] and state.current_location not in state.campaign_path:
 		stopping_line = "\nStopped at: %s · %d/5 encounters secured" % [String(LongMarchState.CAMPAIGN_NODES.get(state.current_location, {}).get("name", state.current_location)), state.campaign_encounters_completed]
 	var mara_line := "\n%s" % state.mara_debrief_line() if state.campaign_decisions.has("mara_meeting") else ""
 	var occurrence_lines := state.occurrence_debrief_lines()
@@ -4786,6 +4846,8 @@ func _result_record_text() -> String:
 		development_record = "\nRegional development: PUBLIC ARCHIVE SIGNAL · future Veyru runs reveal Drowned Registry contacts"
 	elif state.earned_regional_development() == "cinder_communal_lift_plan":
 		development_record = "\nRegional development: COMMUNAL LIFT PLAN · future Cinder runs reveal Slag Tunnel contacts"
+	elif state.earned_regional_development() == "salt_public_beacons":
+		development_record = "\nRegional development: PUBLIC SALT BEACONS · future Salt runs reveal Salt Mine contacts"
 	return "RUN RECORD · %s · %s%s\n%s: %s %d · Contract: %s%s · Specialist: %s\nKey decisions: %s%s%s%s\n%s recovery: %s\nFinal doctrine: %s\nSystems: %d ready · %d strained · %d offline\n%s" % [
 		current_run_code(),
 		" → ".join(path_names),
@@ -4810,7 +4872,7 @@ func _result_record_text() -> String:
 	]
 
 func current_run_code() -> String:
-	var region_code := "VEY" if state.campaign_region_id == "flooded_veyru" else ("CIN" if state.campaign_region_id == "cinder_spine" else "ASH")
+	var region_code := "VEY" if state.campaign_region_id == "flooded_veyru" else ("CIN" if state.campaign_region_id == "cinder_spine" else ("SLT" if state.campaign_region_id == "white_salt_expanse" else "ASH"))
 	return "%s-%d" % [region_code, state.seed]
 
 func current_run_record_text() -> String:
@@ -4877,6 +4939,12 @@ func _campaign_decision_record_text() -> String:
 			decisions.append("Lift Engine — %s" % ("powered the industrial lift" if String(recorded.lift_engine_choice) == "power_lift" else "cut a human switchback"))
 		if recorded.has("commune_design"):
 			decisions.append("Switchback Commune — %s" % ("shared the lift plan" if String(recorded.commune_design) == "share_lift_plan" else "kept the guild pattern"))
+		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
+	if state.campaign_region_id == "white_salt_expanse":
+		if recorded.has("observatory_signal"):
+			decisions.append("Buried Observatory — %s" % ("broadcast public beacons" if String(recorded.observatory_signal) == "broadcast_beacons" else "sold the private coordinates"))
+		if recorded.has("rival_terms"):
+			decisions.append("Rival Approach — %s" % ("escorted the Compact" if String(recorded.rival_terms) == "escort_compact" else "raced for the towers"))
 		return "; ".join(decisions) if not decisions.is_empty() else "no regional decisions recorded"
 	if "soot_orchard" in state.campaign_path:
 		var orchard_choice := String(recorded.get("salvage_choice", "rescue_workers" if state.workers_rescued else "take_fuel"))
@@ -5037,7 +5105,7 @@ class FortressPanel extends Control:
 		return count
 
 	func interaction_heading() -> String:
-		var mount_status := "MOUNTS %d/%d" % [exterior_mount_count(), LongMarchState.MAX_EXTERIOR_MOUNTS]
+		var mount_status := "MOUNTS %d/%d" % [exterior_mount_count(), state.chassis_exterior_limit()]
 		if not has_focus():
 			if state != null and state.phase in ["battle", "final_battle"]:
 				return "CHASSIS OVERVIEW · %s — Inspect Chassis chooses a seal target" % mount_status
@@ -5220,6 +5288,15 @@ class FortressPanel extends Control:
 				draw_rect(Rect2(ORIGIN + Vector2(x * CELL, y * CELL), Vector2(CELL - 3, CELL - 3)), Color("#4a5c61"), false, 1.0)
 		if state == null:
 			return
+		for y in range(LongMarchState.GRID_HEIGHT):
+			for x in range(LongMarchState.GRID_WIDTH):
+				var cell := Vector2i(x, y)
+				if state.chassis_cell_available(cell):
+					continue
+				var cutaway := Rect2(ORIGIN + Vector2(x * CELL, y * CELL), Vector2(CELL - 3, CELL - 3))
+				draw_rect(cutaway, Color("#0c1114"), true)
+				draw_line(cutaway.position + Vector2(6, 6), cutaway.end - Vector2(6, 6), Color("#d8c389"), 2.0)
+				draw_line(Vector2(cutaway.end.x - 6, cutaway.position.y + 6), Vector2(cutaway.position.x + 6, cutaway.end.y - 6), Color("#d8c389"), 2.0)
 		if hull_under_threat:
 			draw_rect(_grid_rect().grow(5), Color("#ff806f"), false, 4.0)
 			draw_string(ThemeDB.fallback_font, Vector2(size.x - 152, 14), "HULL TARGETED", HORIZONTAL_ALIGNMENT_RIGHT, 128, 12, Color("#ff9d8f"))

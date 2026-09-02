@@ -1298,3 +1298,7 @@ The third chapter binds its optional guild contract to an operational Generator 
 ## 2026-09-02 — Regional developments reveal information without lowering risk
 
 Sharing the lift design after a surviving Cinder result unlocks Communal Lift Plan. Later Cinder runs see Slag Tunnel contacts as Known, but receive no risk discount. This mirrors Public Archive Signal's information-first contract: memory changes planning evidence while preserving the danger and preventing a permanent upgrade from becoming a universal best answer.
+
+## 2026-09-02 — Alternate chassis change geometry and capacity together
+
+The Salt Skimmer preserves the shared 6×4 workbench but removes both lower-corner cells, lowers mass capacity to 13, and permits a third exterior mount. The cutaways remain visible and reject placement in both live commands and save validation. This was chosen over a numerical preset because an alternate chassis should change spatial planning while retaining the established interface grammar.

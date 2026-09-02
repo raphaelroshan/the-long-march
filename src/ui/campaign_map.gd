@@ -109,6 +109,35 @@ const REGION_LAYOUTS := {
 		},
 		"final_nodes": ["switchback_commune"],
 		"closed_reason": "Closed by the inferno. Ash Chapel Bypass remains available as the recovery road."
+	},
+	"white_salt_expanse": {
+		"node_order": ["saltglass_haven", "buried_observatory", "quiet_caravan", "windbreak", "salt_mine", "empty_mile", "beacon_road", "lee_trench", "rival_approach", "salt_citadel"],
+		"node_positions": {
+			"saltglass_haven": Vector2(94, 8),
+			"buried_observatory": Vector2(4, 56),
+			"quiet_caravan": Vector2(184, 56),
+			"windbreak": Vector2(94, 104),
+			"salt_mine": Vector2(4, 152),
+			"empty_mile": Vector2(184, 152),
+			"beacon_road": Vector2(4, 200),
+			"lee_trench": Vector2(184, 200),
+			"rival_approach": Vector2(94, 248),
+			"salt_citadel": Vector2(94, 296)
+		},
+		"short_names": {
+			"saltglass_haven": "Saltglass Haven",
+			"buried_observatory": "Buried Observatory",
+			"quiet_caravan": "Quiet Caravan",
+			"windbreak": "The Windbreak",
+			"salt_mine": "Salt Mine",
+			"empty_mile": "Empty Mile",
+			"beacon_road": "Beacon Road",
+			"lee_trench": "Lee Trench",
+			"rival_approach": "Rival Approach",
+			"salt_citadel": "Salt Citadel"
+		},
+		"final_nodes": ["salt_citadel"],
+		"closed_reason": "Closed by the ash-front whiteout. Lee Trench remains available as the recovery road."
 	}
 }
 
