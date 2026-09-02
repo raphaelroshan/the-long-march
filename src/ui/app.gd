@@ -2303,8 +2303,9 @@ func _record_campaign_progress() -> void:
 	var run_state = game_view.get("state")
 	var errors: Array[String] = []
 	var attempted_write := false
-	var development_id := String(run_state.call("earned_regional_development"))
-	if not development_id.is_empty():
+	var earned_developments: Array = run_state.call("earned_regional_developments")
+	for raw_development_id in earned_developments:
+		var development_id := String(raw_development_id)
 		attempted_write = true
 		var development_result := campaign_progress.unlock(development_id)
 		if not bool(development_result.get("ok", false)):

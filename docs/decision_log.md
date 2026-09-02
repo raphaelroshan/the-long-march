@@ -1310,3 +1310,11 @@ Sela Vonn and Dr. Nera Quill can only be assigned when their Command Deck or Fie
 ## 2026-09-02 — New threats attack dependency surfaces, not larger health bars
 
 Signal Hunters pressure command, signal, and exterior systems while Bridgebreakers pressure engines, armor, and the lower hull. Each has readable counter modules from multiple families, including the exterior Salvage Crane. This was chosen so LM-EA-4 expands planning questions without relying on inflated damage or a mandatory single answer.
+
+## 2026-09-02 — Failure roads can become public infrastructure
+
+Ash Chapel Bypass and Lee Trench now contain choices that can establish a Refuge Chain or Shared Cistern Network. A surviving run records that choice, and a later run exposes it as a third option in an earlier regional event. The effect is visible and situated rather than a silent permanent statistic, while private salvage remains a valid competing choice.
+
+## 2026-09-02 — Endings are composed from independent causes
+
+The chapter result remains the concrete terminal outcome, while Debrief also combines survival condition, the strongest regional tendency, and contract state. This produces a bounded vocabulary of endings with explicit cause lines instead of dozens of hand-written permutations or a single score that hides what the player valued.

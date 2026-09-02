@@ -43,6 +43,26 @@ static func build(state: LongMarchState, snapshot: Dictionary, fortress: Diction
 			"primary": {"id": "select_experiment_quarry", "label": "FIELD ORDER · QUARRY", "enabled": true, "tooltip": "Secure Cinder Quarry with Run Hot speed or Protect Cargo plus lower-hull armor."},
 			"secondary": {"id": "select_experiment_signal", "label": "FIELD ORDER · SIGNAL", "enabled": true, "tooltip": "Secure Signal Causeway with Iven Pell or an operational Wall Lamp."}
 		}
+	elif is_cinder:
+		var experiment := state.mastery_experiment_details()
+		assignment_station = {
+			"title": "Marchmaster's Orders",
+			"status": String(experiment.get("status", "UNASSIGNED")),
+			"button_status": String(experiment.get("title", "REDUNDANT LIFT")).to_upper(),
+			"body": "Optional replay order: resolve the Lift Engine choice with movement intact. Power the lift with a working Generator Core or cut the switchback while preserving another engine. No reward or unlock is attached.",
+			"tone": "safe" if bool(experiment.get("proven", false)) else "neutral",
+			"primary": {"id": "select_experiment_cinder", "label": "FIELD ORDER · REDUNDANT LIFT", "enabled": true, "tooltip": "A bounded replay goal with two valid solutions and no permanent reward."}
+		}
+	elif is_salt:
+		var experiment := state.mastery_experiment_details()
+		assignment_station = {
+			"title": "Marchmaster's Orders",
+			"status": String(experiment.get("status", "UNASSIGNED")),
+			"button_status": String(experiment.get("title", "DEPENDENCY WATCH")).to_upper(),
+			"body": "Optional replay order: secure Salt Mine with a Ready Command Deck or Empty Mile with a Ready Salvage Crane. No reward or unlock is attached.",
+			"tone": "safe" if bool(experiment.get("proven", false)) else "neutral",
+			"primary": {"id": "select_experiment_salt", "label": "FIELD ORDER · DEPENDENCY WATCH", "enabled": true, "tooltip": "A bounded replay goal with two physical counter solutions and no permanent reward."}
+		}
 	var departure_ready := contract_status != "offered"
 	var settlement_context := "%s · Choose an assignment or inspect a bazaar station." % ("LANTERN QUAY FLOOD MARKET" if is_veyru else ("BLACKKILN FORGE BAZAAR" if is_cinder else ("SALTGLASS SIGNAL MARKET" if is_salt else "ASHGATE RAIL DEPOT")))
 	if contract_status == "accepted":
