@@ -286,14 +286,15 @@ class RecoveryCanvas extends Control:
 		var region_id := String(current_view.get("region_id", "ashgate_lowlands"))
 		var flooded := region_id == "flooded_veyru"
 		var cinder := region_id == "cinder_spine"
+		var salt := region_id == "white_salt_expanse"
 		var location_id := String(current_view.get("location_id", ""))
-		var sky := Color("#071013") if high_contrast_enabled else (Color("#41251f") if cinder else (Color("#17373e") if flooded else Color("#333a3b")))
-		var ground := Color("#392019") if cinder else (Color("#10282c") if flooded else Color("#30271f"))
+		var sky := Color("#071013") if high_contrast_enabled else (Color("#58646a") if salt else (Color("#41251f") if cinder else (Color("#17373e") if flooded else Color("#333a3b"))))
+		var ground := Color("#8a8067") if salt else (Color("#392019") if cinder else (Color("#10282c") if flooded else Color("#30271f")))
 		draw_rect(Rect2(Vector2.ZERO, size), sky, true)
 		draw_circle(Vector2(size.x * 0.78, size.y * 0.17), 52.0, Color(0.95, 0.75, 0.43, 0.16))
 		for ridge in range(4):
 			var y := size.y * (0.30 + float(ridge) * 0.05)
-			draw_line(Vector2(0, y), Vector2(size.x, y - 22.0 + float(ridge) * 7.0), Color("#78442f") if cinder else (Color("#39565b") if flooded else Color("#665c4e")), 24.0)
+			draw_line(Vector2(0, y), Vector2(size.x, y - 22.0 + float(ridge) * 7.0), Color("#a8a184") if salt else (Color("#78442f") if cinder else (Color("#39565b") if flooded else Color("#665c4e"))), 24.0)
 		draw_rect(Rect2(Vector2(0, size.y * 0.66), Vector2(size.x, size.y * 0.34)), ground, true)
 		if location_id == "morrowline_camp":
 			_draw_morrowline_shelter()
@@ -301,6 +302,8 @@ class RecoveryCanvas extends Control:
 			_draw_veyru_evacuation_platform()
 		elif location_id == "old_lift_station":
 			_draw_old_lift_station()
+		elif location_id == "windbreak":
+			_draw_windbreak()
 		_draw_route_sign(location_id)
 		var view: Dictionary = current_view.get("fortress", {}).duplicate(true)
 		view["mode"] = "rest"
@@ -379,16 +382,43 @@ class RecoveryCanvas extends Control:
 		for spark_index in range(4):
 			draw_circle(Vector2(size.x * (0.83 + float(spark_index) * 0.022), size.y * (0.43 - float(spark_index % 2) * 0.035)), 4.0, ember)
 
+	func _draw_windbreak() -> void:
+		var stone := Color.WHITE if high_contrast_enabled else Color("#b9b092")
+		var shadow := Color("#242f32")
+		var beacon_color := Color("#bff4ee") if high_contrast_enabled else Color("#79c8c0")
+		var wall_points := PackedVector2Array([
+			Vector2(size.x * 0.03, size.y * 0.61),
+			Vector2(size.x * 0.18, size.y * 0.40),
+			Vector2(size.x * 0.33, size.y * 0.56),
+			Vector2(size.x * 0.47, size.y * 0.36),
+			Vector2(size.x * 0.63, size.y * 0.54),
+			Vector2(size.x * 0.78, size.y * 0.38),
+			Vector2(size.x * 0.97, size.y * 0.60)
+		])
+		draw_polyline(wall_points, shadow, 18.0)
+		draw_polyline(wall_points, stone, 10.0)
+		for beacon_x in [size.x * 0.12, size.x * 0.88]:
+			draw_line(Vector2(beacon_x, size.y * 0.29), Vector2(beacon_x, size.y * 0.57), shadow, 5.0)
+			draw_circle(Vector2(beacon_x, size.y * 0.27), 13.0, shadow)
+			draw_circle(Vector2(beacon_x, size.y * 0.27), 9.0, beacon_color, false, 3.0)
+			draw_line(Vector2(beacon_x - 7.0, size.y * 0.27), Vector2(beacon_x + 7.0, size.y * 0.27), beacon_color, 2.0)
+		var sledge := Rect2(Vector2(size.x * 0.80, size.y * 0.59), Vector2(size.x * 0.14, size.y * 0.07))
+		draw_rect(sledge, shadow, true)
+		draw_rect(sledge, stone, false, 3.0)
+		for cask_x in [sledge.position.x + 20.0, sledge.position.x + 48.0, sledge.position.x + 76.0]:
+			draw_circle(Vector2(cask_x, sledge.position.y + 16.0), 9.0, beacon_color, false, 3.0)
+
 	func _draw_route_sign(location_id: String) -> void:
 		var flooded := location_id == "veyru_evacuation_camp"
 		var cinder := location_id == "old_lift_station"
-		var color := Color("#efb176") if cinder else (Color("#bfe5df") if flooded else Color("#d9b87c"))
+		var salt := location_id == "windbreak"
+		var color := Color("#e9e2bd") if salt else (Color("#efb176") if cinder else (Color("#bfe5df") if flooded else Color("#d9b87c")))
 		var center := Vector2(size.x * 0.50, size.y * 0.10)
 		draw_line(center, center + Vector2(0, 56), color.darkened(0.25), 4.0)
 		var sign_rect := Rect2(center + Vector2(-150, 5), Vector2(300, 27))
 		draw_rect(sign_rect, Color("#14262a") if flooded else Color("#33281f"), true)
 		draw_rect(sign_rect, color, false, 2.0)
-		var sign_text := "SLOPE · SLAG TUNNEL · ASH CHAPEL" if cinder else ("CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL · QUARRY")
+		var sign_text := "MINE · EMPTY MILE · BEACON · LEE" if salt else ("SLOPE · SLAG TUNNEL · ASH CHAPEL" if cinder else ("CAUSEWAY · REGISTRY · GANTRY" if flooded else "LOWER ASH · CISTERN · SIGNAL · QUARRY"))
 		draw_string(ThemeDB.fallback_font, sign_rect.position + Vector2(6, 18), sign_text, HORIZONTAL_ALIGNMENT_CENTER, sign_rect.size.x - 12, 9, color)
 
 	func presentation_signature() -> String:
@@ -399,8 +429,10 @@ class RecoveryCanvas extends Control:
 				return "EVACUATION CAMP · RAISED PLATFORM · WATER PUMP · SEALED CASES"
 			"old_lift_station":
 				return "OLD LIFT STATION · CHAIN HOISTS · COOLING TROUGHS · FORGE CREWS"
+			"windbreak":
+				return "THE WINDBREAK · STONE LEE WALL · MIRROR POSTS · WATER SLEDGES"
 		return "FIELD RECOVERY · TEMPORARY ROAD STOP"
 
 	func route_signature() -> String:
 		var location_id := String(current_view.get("location_id", ""))
-		return "SLOPE · SLAG TUNNEL · ASH CHAPEL" if location_id == "old_lift_station" else ("CAUSEWAY · REGISTRY · GANTRY" if location_id == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL · QUARRY")
+		return "MINE · EMPTY MILE · BEACON · LEE" if location_id == "windbreak" else ("SLOPE · SLAG TUNNEL · ASH CHAPEL" if location_id == "old_lift_station" else ("CAUSEWAY · REGISTRY · GANTRY" if location_id == "veyru_evacuation_camp" else "LOWER ASH · CISTERN · SIGNAL · QUARRY"))

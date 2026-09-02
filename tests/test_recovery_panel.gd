@@ -119,6 +119,24 @@ func _run() -> void:
 	_expect(panel.local_stake_label.text.contains("medicine carrier") and panel.route_outlook_label.text.contains("Archive Causeway") and panel.route_outlook_label.text.contains("Drowned Registry") and panel.route_outlook_label.text.contains("Pilgrim Gantry"), "Evacuation Camp should connect the medicine stake to three materially different archive roads")
 	_expect(panel.recovery_canvas.route_signature() == "CAUSEWAY · REGISTRY · GANTRY", "Evacuation Camp should place its three-road sign in the recovery tableau")
 	await _capture("04_evacuation_camp")
+	var salt_view: Dictionary = view.duplicate(true)
+	salt_view["region_id"] = "white_salt_expanse"
+	salt_view["location_id"] = "windbreak"
+	salt_view["location_name"] = "The Windbreak"
+	salt_view["context"] = "The Windbreak offers 2 finite service opportunities before the next road."
+	salt_view["place_identity"] = "THE WINDBREAK · Mirrored screens, water sledges, and beacon crews sheltering behind packed salt."
+	salt_view["service_priority"] = "PRIORITY · Preserve signal, water, and hull margin before the open salt crossing."
+	salt_view["local_stake"] = "STAKE · The guided beacon caravan preserves 2 service actions before the exposed salt roads."
+	salt_view["route_outlook"] = "OUTBOUND ROADS · Salt Mine strains water; Empty Mile tests fuel; Beacon Road rewards signal; Lee Trench opens as the failure-forward cistern route."
+	salt_view["caption"] = "THE WINDBREAK · WATER SERVICE UNDER THE WHITE HORIZON"
+	salt_view["values"]["pressure"] = "APPROACHING 4"
+	panel.configure(salt_view)
+	await _settle_ui()
+	_expect(panel.place_label.text.contains("Mirrored screens") and panel.priority_label.text.contains("signal, water, and hull"), "The Windbreak should present its salt-specific identity and service priorities")
+	_expect(panel.recovery_canvas.presentation_signature().contains("STONE LEE WALL") and panel.recovery_canvas.presentation_signature().contains("MIRROR POSTS") and panel.recovery_canvas.presentation_signature().contains("WATER SLEDGES"), "The Windbreak recovery canvas should expose its authored shelter-and-signal motif")
+	_expect(panel.local_stake_label.text.contains("beacon caravan") and panel.route_outlook_label.text.contains("Salt Mine") and panel.route_outlook_label.text.contains("Empty Mile") and panel.route_outlook_label.text.contains("Beacon Road") and panel.route_outlook_label.text.contains("Lee Trench"), "The Windbreak should connect the beacon stake to four materially different upper roads")
+	_expect(panel.recovery_canvas.route_signature() == "MINE · EMPTY MILE · BEACON · LEE", "The Windbreak should place its four-road sign in the recovery tableau")
+	await _capture("05_windbreak")
 	panel.queue_free()
 	scaler.queue_free()
 	await process_frame

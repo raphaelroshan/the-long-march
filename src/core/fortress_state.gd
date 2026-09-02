@@ -4469,6 +4469,10 @@ func _finish_encounter() -> Dictionary:
 	encounter_active = false
 	encounter_progress = 1.0
 	vent_exposure = false
+	# Sealed compartments return to service before arrival viability is evaluated.
+	# The intervention protects a system for the encounter; it must not make an
+	# otherwise working engine count as a terminal movement failure afterward.
+	_clear_temporary_seals()
 	var engine_alive: bool = _has_engine()
 	if campaign_active:
 		return _finish_campaign_encounter(engine_alive)

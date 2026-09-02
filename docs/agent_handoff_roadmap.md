@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.358`
+**Current code baseline:** `0.3.0-alpha.359`
 **Current playable slices:** Ashgate Lowlands, Flooded Veyru, The Cinder Spine, and The White Salt Expanse
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current stacked baseline:** `0.3.0-alpha.358`, completing LM-EA-1 through LM-EA-6 and LM-I1 through LM-I2 across four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, native Linux cohort verification, and complete Ashgate/Cinder evaluation journeys.
-**Next build target:** **LM-I3** — prove White Salt and the Salt Skimmer produce materially different viable loadouts, route priorities, checkpoints, and Debrief outcomes.
+**Current stacked baseline:** `0.3.0-alpha.359`, completing LM-EA-1 through LM-EA-6 and LM-I1 through LM-I3 across four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, native Linux cohort verification, and complete Ashgate/Cinder/White Salt evaluation journeys.
+**Next build target:** **LM-I4** — verify the expanded module, specialist, and threat roster as meaningful dependency choices through complete journeys.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -19,7 +19,7 @@ This document is the current handoff contract for GPT development agents. It sup
 
 ## 1. Current implementation baseline
 
-The current code proves two isolated five-encounter journeys: Ashgate Lowlands and Flooded Veyru. The player configures a 6×4 fortress chassis with two exterior mounts, accepts or declines a regional contract, selects routes and travel doctrines, resolves automatic battles, uses explicit interventions, recovers mid-run, refits the fortress, and reaches a distinct final contact and debrief in each chapter.
+The current code proves four standalone five-encounter journeys: Ashgate Lowlands, Flooded Veyru, the Cinder Spine, and the White Salt Expanse. Across three physical chassis templates, the player accepts or declines regional contracts, selects routes and travel doctrines, resolves automatic battles, uses explicit interventions, recovers mid-run, refits the fortress, and reaches chapter-specific final contacts and Debriefs.
 
 The implemented slice includes the following capabilities:
 
@@ -1082,4 +1082,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds Linux cohorts, `0.3.0-alpha.357` locks LM-I1, and `0.3.0-alpha.358` locks LM-I2 with three complete Cinder route fixtures, a full player-command journey, failure-forward/no-dead-end coverage, and an accessible Old Lift workbench. See [`lm_i2_cinder_gate_report.md`](lm_i2_cinder_gate_report.md). The repository's next gate is LM-I3 evidence for White Salt and its chassis comparison, followed by consented uncoached testing. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.
+LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds Linux cohorts, `0.3.0-alpha.357` locks LM-I1, `0.3.0-alpha.358` locks LM-I2, and `0.3.0-alpha.359` locks LM-I3 with two viable White Salt builds, explicit chassis/dependency tradeoffs, prior-version checkpoint migration, a full player-command journey, and distinct Windbreak recovery. See [`lm_i3_white_salt_gate_report.md`](lm_i3_white_salt_gate_report.md). The repository's next implementation gate is LM-I4 breadth evidence, followed by consented uncoached testing. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.
