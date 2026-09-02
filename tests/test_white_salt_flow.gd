@@ -54,6 +54,7 @@ func _run() -> void:
 			print("PASS: The Long March responsive White Salt profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March White Salt UI flow")
 		quit(0)
+		return
 	for failure in failures:
 		push_error(failure)
 	quit(1)
