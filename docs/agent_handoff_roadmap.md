@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.361`
+**Current code baseline:** `0.3.0-alpha.362`
 **Current playable slices:** Ashgate Lowlands, Flooded Veyru, The Cinder Spine, and The White Salt Expanse
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current stacked baseline:** `0.3.0-alpha.361`, completing LM-EA-1 through LM-EA-6 and LM-I1 through LM-I5 across four regions, three chassis, dependency breadth, causal obligation memory, composable endings, candidate hardening, native Linux cohort verification, and complete Ashgate/Cinder/White Salt evaluation journeys.
-**Next build target:** **LM-I6** — harden the complete Early Access package, recovery boundary, and release cohort.
+**Current stacked baseline:** `0.3.0-alpha.362`, completing LM-EA-1 through LM-EA-6 and LM-I1 through LM-I6 across four regions, three chassis, dependency breadth, causal obligation memory, composable endings, visible save health and recovery, candidate hardening, native Linux cohort verification, and complete Ashgate/Cinder/White Salt evaluation journeys.
+**Next validation target:** Run a consented, uncoached private-alpha cohort on one checksummed candidate and turn the first repeated finding into a narrow repository issue.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.
@@ -1082,4 +1082,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds Linux cohorts, `0.3.0-alpha.357` locks LM-I1, `0.3.0-alpha.358` locks LM-I2, `0.3.0-alpha.359` locks LM-I3, `0.3.0-alpha.360` locks LM-I4, and `0.3.0-alpha.361` locks LM-I5 with three persistent Ashgate obligation outcomes that visibly and mechanically alter Flooded Veyru and its ending network. See [`lm_i5_memory_gate_report.md`](lm_i5_memory_gate_report.md). The repository's next implementation gate is LM-I6 Early Access hardening, followed by consented uncoached testing. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.
+LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds Linux cohorts, `0.3.0-alpha.357` locks LM-I1, `0.3.0-alpha.358` locks LM-I2, `0.3.0-alpha.359` locks LM-I3, `0.3.0-alpha.360` locks LM-I4, `0.3.0-alpha.361` locks LM-I5, and `0.3.0-alpha.362` locks LM-I6 with visible save health, explicit recovery, full schema-window checks, and compatibility metadata inside every release manifest. See [`lm_i6_hardening_gate_report.md`](lm_i6_hardening_gate_report.md). The repository roadmap is complete through LM-I6; the next evidence must come from a consented uncoached cohort. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.

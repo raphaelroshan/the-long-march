@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate the bounded, non-public LM-EA-6 candidate contract."""
 import json
+import re
 from pathlib import Path
 
 
@@ -8,6 +9,7 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     data = json.loads((root / "content/early_access_candidate.json").read_text(encoding="utf-8"))
     manifest = json.loads((root / "tools/ci_manifest.json").read_text(encoding="utf-8"))
+    state_source = (root / "src/core/fortress_state.gd").read_text(encoding="utf-8")
     errors = []
     scope = data.get("scope", {})
     floors = {
@@ -34,8 +36,16 @@ def main() -> int:
         errors.append("candidate must not claim owner approval or public-release readiness")
     if compatibility.get("candidate_platforms") != ["windows", "macos", "linux"] or compatibility.get("offline_runtime") is not True:
         errors.append("candidate platform and offline boundaries must remain explicit")
-    if compatibility.get("save_versions") != {"minimum": 4, "current": 16}:
+    current_match = re.search(r"^const SAVE_VERSION := (\d+)$", state_source, re.MULTILINE)
+    minimum_match = re.search(r"^const MIN_SUPPORTED_SAVE_VERSION := (\d+)$", state_source, re.MULTILINE)
+    authoritative_window = {
+        "minimum": int(minimum_match.group(1)) if minimum_match else -1,
+        "current": int(current_match.group(1)) if current_match else -1,
+    }
+    if compatibility.get("save_versions") != authoritative_window:
         errors.append("save compatibility window must match the authoritative state")
+    if manifest.get("save_compatibility") != authoritative_window:
+        errors.append("package manifest save compatibility must match the authoritative state")
     required_docs = [
         root / "docs/early_access_candidate.md",
         root / "docs/early_access_known_limitations.md",

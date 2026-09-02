@@ -20,6 +20,8 @@ def main() -> int:
         errors.append("private alpha must not claim public release readiness")
     if manifest.get("release_candidate_platforms") != ["windows", "macos", "linux"]:
         errors.append("candidate platforms must stay explicitly bounded to Windows, macOS, and Linux")
+    if manifest.get("save_compatibility") != {"minimum": 4, "current": 16}:
+        errors.append("candidate manifest must declare the tested save compatibility window")
 
     verify = (root / "scripts/verify.sh").read_text(encoding="utf-8")
     for marker in (

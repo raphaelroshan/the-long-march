@@ -370,3 +370,14 @@ SHA-256: `e5ddd16b0b7d9b030cf11803d3fd5cd8533698fe904cbd883d10da5a6fec543c`
 | Failed | [Wreckers' warning reduces risk](visual_evidence/v0.3.0-alpha.361-memory-gate/03_failed_pump_warning.png) | `800eac7430fad5009c0abdad7c6efaa8fc42a855e0d1f8b343502924e60ae5cd` |
 
 These captures verify that three earlier obligation outcomes are attributed before a later route commitment and change exact route or recovery values. They do not establish uncoached recognition, perceived fairness, or preference balance.
+
+## `v0.3.0-alpha.362` — Candidate save health and recovery
+
+| Recovery state | Evidence | SHA-256 |
+|---|---|---|
+| Clean install | [No checkpoint is distinguished from corruption](visual_evidence/v0.3.0-alpha.362-hardening-gate/00_clean_install_health.png) | `4c62396f80116c4980dccf26ed3c84257a18320b19c6214033a1457c203d3a56` |
+| Recoverable corruption | [Unusable primary and valid backup](visual_evidence/v0.3.0-alpha.362-hardening-gate/01_recoverable_save_health.png) | `e40cbad22bbec89619a51d2c98cb1ebc60ee1215940386c1e399e7a00e127158` |
+| Explicit recovery | [Restore confirmation and cancel path](visual_evidence/v0.3.0-alpha.362-hardening-gate/02_restore_confirmation.png) | `425493d2ca214f649329309220ad37f9f1a5a6b2a06aa0836f41f118516cf9b5` |
+| Restored | [Both checkpoints validated after recovery](visual_evidence/v0.3.0-alpha.362-hardening-gate/03_restored_save_health.png) | `6cebca4bfba8005b3fa382d41a7919687c3537b5a2dfd8661fb2b253203df97b` |
+
+The captures verify player-facing diagnosis and explicit recovery at the declared build. They do not replace real suspend/resume testing on supported consumer hardware.

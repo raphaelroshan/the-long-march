@@ -38,6 +38,20 @@ def verify_manifest(manifest: dict[str, Any], root: Path) -> list[str]:
 	toolchain = manifest.get("toolchain")
 	if not isinstance(toolchain, dict) or not str(toolchain.get("godot", "")).strip():
 		errors.append("manifest is missing the Godot toolchain version")
+	compatibility = manifest.get("compatibility")
+	if not isinstance(compatibility, dict):
+		errors.append("manifest is missing compatibility data")
+	else:
+		save_versions = compatibility.get("save_versions")
+		if not isinstance(save_versions, dict):
+			errors.append("manifest is missing the save compatibility window")
+		else:
+			minimum = save_versions.get("minimum")
+			current = save_versions.get("current")
+			if not isinstance(minimum, int) or not isinstance(current, int) or minimum < 1 or current < minimum:
+				errors.append("manifest has an invalid save compatibility window")
+		if compatibility.get("offline_runtime") is not True:
+			errors.append("manifest must declare the offline runtime boundary")
 	verification = manifest.get("verification")
 	if not isinstance(verification, list) or not verification or any(not str(item).strip() for item in verification):
 		errors.append("manifest verification record must be a non-empty list")

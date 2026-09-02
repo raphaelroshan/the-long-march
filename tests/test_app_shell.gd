@@ -148,7 +148,7 @@ func _run() -> void:
 	await process_frame
 	_expect(app.data_info_view.visible and not app.settings_view.visible and app.data_info_close_button.has_focus(), "Build & Local Data should open as a focused modal above Settings")
 	_expect(app.data_info_context_label.text.begins_with("TITLE MENU") and app.data_info_summary_label.text.contains(String(ProjectSettings.get_setting("application/config/version"))) and app.data_info_summary_label.text.contains(OS.get_name()) and app.data_info_summary_label.text.contains("No account login, telemetry SDK, or automatic upload"), "the data panel should identify the build, platform, and offline boundary in visible copy")
-	_expect(app.data_info_summary_label.text.contains("Continue: NOT CREATED") and app.data_info_summary_label.text.contains("Preferences: AVAILABLE") and app.data_info_summary_label.text.contains("Exported feedback reports:"), "the data panel should report each local state category without claiming every file exists")
+	_expect(app.data_info_summary_label.text.contains("SAVE HEALTH · SCHEMA 16 · READS 4–16") and app.data_info_summary_label.text.contains("Continue: NOT CREATED") and app.data_info_summary_label.text.contains("Preferences: AVAILABLE") and app.data_info_summary_label.text.contains("Exported feedback reports:"), "the data panel should report the compatibility window and each local state category without claiming every file exists")
 	_expect(app.data_info_path_label.text.contains(ProjectSettings.globalize_path("user://")) and app.data_info_close_button.get_node_or_null(app.data_info_close_button.focus_neighbor_right) == app.data_info_copy_button, "the data panel should expose the exact local folder and a closed controller action pair")
 	app.data_info_copy_button.pressed.emit()
 	await process_frame
@@ -700,6 +700,8 @@ func _run() -> void:
 	corrupt_primary.close()
 	app._refresh_title_state()
 	_expect(app.save_recovery_button.visible and app.save_recovery_button.text.begins_with("RESTORE BACKUP") and app.save_status_label.text.contains("Valid backup available"), "a corrupt primary save should offer its valid backup instead of only deletion")
+	app._refresh_data_info()
+	_expect(app.data_info_summary_label.text.contains("Campaign Continue: UNUSABLE") and app.data_info_summary_label.text.contains("Campaign backup: VALID"), "build information should distinguish an unusable primary from its validated recovery checkpoint")
 	app.save_recovery_button.pressed.emit()
 	await process_frame
 	_expect(app.confirmation_title_label.text == "Restore the backup?" and app.confirmation_body_label.text.contains("broken file will be discarded") and app.confirmation_cancel_button.text == "KEEP FILES", "backup recovery should require a precise replacement confirmation")
@@ -712,6 +714,8 @@ func _run() -> void:
 	await process_frame
 	var restored_backup_payload = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	_expect(restored_backup_payload == backup_payload and app.continue_button.visible and app.continue_button.has_focus(), "confirmed backup recovery should restore the exact validated predecessor and re-enable Continue")
+	app._refresh_data_info()
+	_expect(app.data_info_summary_label.text.contains("Campaign Continue: VALID") and app.data_info_summary_label.text.contains("Campaign backup: VALID"), "build information should report both checkpoints as valid after recovery")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	app._refresh_title_state()
 	_expect(app.save_recovery_button.visible and app.save_recovery_button.text.begins_with("RESTORE BACKUP") and not app.continue_button.visible, "a missing primary should also expose the validated backup without silently enabling Continue")

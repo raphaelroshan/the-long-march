@@ -1502,12 +1502,15 @@ func _refresh_data_info(message: String = "") -> void:
 	var data_folder := ProjectSettings.globalize_path("user://")
 	var feedback_count := _feedback_export_count()
 	data_info_context_label.text = "PAUSED MARCH · BUILD & LOCAL DATA" if settings_opened_from_pause else "TITLE MENU · BUILD & LOCAL DATA"
-	data_info_summary_label.text = "BUILD IDENTITY\n%s · %s desktop build\n\nOFFLINE BOUNDARY\nNo account login, telemetry SDK, or automatic upload is included. Feedback moves only when you explicitly share an exported JSON report.\n\nLOCAL FILES\nCampaign Continue: %s   ·   Campaign backup: %s\nTutorial checkpoint: %s   ·   Tutorial completed: %s\nMarch Charter: %s   ·   Preferences: %s\nBriefing record: %s   ·   Playtest journal: %s\nExported feedback reports: %d tester-owned file%s" % [
+	data_info_summary_label.text = "BUILD IDENTITY\n%s · %s desktop build\n\nOFFLINE BOUNDARY\nNo account login, telemetry SDK, or automatic upload is included. Feedback moves only when you explicitly share an exported JSON report.\n\nSAVE HEALTH · SCHEMA %d · READS %d–%d\nCampaign Continue: %s   ·   Campaign backup: %s\nTutorial checkpoint: %s   ·   Tutorial completed: %s\n\nLOCAL FILES\nMarch Charter: %s   ·   Preferences: %s\nBriefing record: %s   ·   Playtest journal: %s\nExported feedback reports: %d tester-owned file%s" % [
 		_build_version(),
 		OS.get_name(),
-		_file_presence(SAVE_PATH),
-		_file_presence(SAVE_BACKUP_PATH),
-		_file_presence(TUTORIAL_SAVE_PATH),
+		LongMarchState.SAVE_VERSION,
+		LongMarchState.MIN_SUPPORTED_SAVE_VERSION,
+		LongMarchState.SAVE_VERSION,
+		_save_health_label(SAVE_PATH),
+		_save_health_label(SAVE_BACKUP_PATH),
+		_save_health_label(TUTORIAL_SAVE_PATH),
 		_file_presence(TUTORIAL_COMPLETE_PATH),
 		_file_presence(PROGRESS_PATH),
 		_file_presence(SETTINGS_PATH),
@@ -1529,6 +1532,14 @@ func _copy_data_folder_path() -> void:
 
 func _file_presence(path: String) -> String:
 	return "AVAILABLE" if FileAccess.file_exists(path) else "NOT CREATED"
+
+func _save_health_label(path: String) -> String:
+	var info := _saved_run_info_at(path)
+	if not bool(info.get("exists", false)):
+		return "NOT CREATED"
+	if bool(info.get("valid", false)):
+		return "VALID · DAY %d" % int(info.get("day", 1))
+	return "UNUSABLE"
 
 func _feedback_export_count() -> int:
 	var directory := DirAccess.open("user://")
