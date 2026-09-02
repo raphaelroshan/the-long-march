@@ -214,6 +214,7 @@
       "available_events": [
         "convoy_request",
         "morrowline_parts_guard",
+        "mara_berth_choice",
         "mara_meeting",
         "mara_workbench_choice",
         "the_last_dry_room",
@@ -980,6 +981,46 @@
       ]
     },
     {
+      "id": "mara_berth_choice",
+      "title": "Two Hands, One Berth",
+      "type": "specialist",
+      "chapter": "chapter_1_the_road_out",
+      "locations": [
+        "morrowline_camp"
+      ],
+      "trigger": "morrowline_arrival and iven_pell_assigned",
+      "setup": "Iven can remain aboard to read the road, or join Morrowline's relay crews while Mara takes the fortress's only specialist berth.",
+      "choices": [
+        {
+          "id": "keep_iven",
+          "label": "Keep Iven on signal watch.",
+          "requirements": [
+            "iven_pell_assigned"
+          ],
+          "effects": [
+            "specialist:iven_pell",
+            "immediate_forecasts:exact"
+          ],
+          "visible_result": "Iven keeps the road legible; Mara remains with Morrowline's repair crews."
+        },
+        {
+          "id": "replace_iven_with_mara",
+          "label": "Give the berth to Mara.",
+          "requirements": [
+            "field_workshop_operational",
+            "crew_quarters_operational"
+          ],
+          "effects": [
+            "specialist:mara_flint",
+            "immediate_forecasts:estimated",
+            "workshop_repair:+1"
+          ],
+          "visible_result": "Iven joins Morrowline's relays; Mara boards and opens the forge-core decision."
+        }
+      ],
+      "follow_up": "mara_workbench_choice"
+    },
+    {
       "id": "mara_meeting",
       "title": "The Forge Without a Roof",
       "type": "specialist",
@@ -1062,7 +1103,8 @@
       "locations": [
         "lower_ash_road",
         "dry_cistern_cut",
-        "signal_causeway"
+        "signal_causeway",
+        "cinder_quarry"
       ],
       "trigger": "fourth_encounter_secured and mara_workbench_choice_resolved",
       "setup": "Mara checks the earlier workbench commitment against the system or shelter space that actually survived the road.",

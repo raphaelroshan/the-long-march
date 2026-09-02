@@ -8,7 +8,9 @@ The game should feel like an original fortress-crawler about logistics, people, 
 
 ## Verified baseline
 
-The current main branch is `0.3.0-alpha.356`. It contains four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. The automated suite passes.
+The current implementation baseline is `0.3.0-alpha.357`. It contains four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. The automated suite passes.
+
+**LM-I1 repository gate: complete.** The canonical Ashgate evaluation fixture now performs a legal chassis refit, recruits Iven Pell, forces an explicit signal-versus-repair specialist decision with Mara Flint, resolves the resulting forge-core dilemma, checks that promise after the fourth road, and carries the causal record into Debrief. The fixture covers save/resume at the unresolved crossroads, standard 1600×900 presentation, and a 1280×720 large-text/high-contrast/reduced-motion/alternate-controller profile. Evidence and remaining human questions are recorded in [`lm_i1_creative_vertical_report.md`](lm_i1_creative_vertical_report.md).
 
 The investment risk is not prototype fragility; it is whether the game currently offers enough **complete, varied, legible journey content** to feel like an Early Access product instead of a high-quality systems demonstration. The next roadmap must make the full creative vertical obvious and make every additional region contribute a new operational question.
 

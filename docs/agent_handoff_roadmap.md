@@ -2,12 +2,12 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.356`
+**Current code baseline:** `0.3.0-alpha.357`
 **Current playable slices:** Ashgate Lowlands, Flooded Veyru, The Cinder Spine, and The White Salt Expanse
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current stacked baseline:** `0.3.0-alpha.356`, completing LM-EA-1 through LM-EA-6 across four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, and native Linux cohort verification.
+**Current stacked baseline:** `0.3.0-alpha.357`, completing LM-EA-1 through LM-EA-6 and LM-I1 across four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, native Linux cohort verification, and a complete investment-evaluation journey.
 **Next build target:** **LM-EA-4** — add two module families, two specialists, and two threat families that create new dependency questions.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
@@ -1082,4 +1082,4 @@ Complete the existing technical matrix for Windows and macOS packaging, offline 
 
 ## 10.10 Recommended next task
 
-LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds a native, checksummed Linux cohort to the Windows/macOS release pipeline. See the linked reports in [`early_access_requirements.md`](early_access_requirements.md). The repository's next gate is human: retain exact Windows, macOS, and Linux candidate artifacts, run consented uncoached sessions from [`early_access_test_matrix.md`](early_access_test_matrix.md), turn repeated observations into narrow issues, and require owner approval before public promotion. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.
+LM-EA-1 through LM-EA-6 are implemented through `0.3.0-alpha.355`; `0.3.0-alpha.356` adds a native, checksummed Linux cohort, and `0.3.0-alpha.357` locks the LM-I1 creative vertical with a visible Iven-versus-Mara specialist tradeoff, forge-core consequence, deterministic full-flow fixture, responsive coverage, and 1600×900 evidence. See [`lm_i1_creative_vertical_report.md`](lm_i1_creative_vertical_report.md). The repository's next gate is human: run consented uncoached sessions from [`early_access_test_matrix.md`](early_access_test_matrix.md), turn repeated observations into narrow issues, and require owner approval before public promotion. Automation does not establish comprehension, balance, accessibility for a particular player, or commercial readiness.

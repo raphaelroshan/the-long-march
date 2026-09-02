@@ -752,9 +752,10 @@ func _test_mastery_experiments() -> void:
 	state.campaign_encounters_completed = 1
 	_expect(not bool(state.choose_mastery_experiment("ashgate_signal_discipline").get("ok", false)), "a field order should not be changed after the first road begins")
 
-func _arrive_at_morrowline_for_mara(state: LongMarchState) -> void:
+func _arrive_at_morrowline_for_mara(state: LongMarchState, assigned_specialist: String = "") -> void:
 	state.start_campaign()
 	state.choose_guard_contract(false)
+	state.specialist_id = assigned_specialist
 	state.campaign_path = ["ashgate_depot", "rill_crossing", "broken_relay"]
 	state.campaign_last_safe_node = "broken_relay"
 	state.current_location = "broken_relay"
@@ -775,6 +776,26 @@ func _test_mara_flint_event_chain() -> void:
 	var locked_offer := unqualified.campaign_event_details()
 	_expect(not bool(locked_offer.choices[0].enabled) and String(locked_offer.choices[0].reason).contains("Field Workshop"), "Mara's offer should name the missing operational workshop requirement")
 	_expect(bool(unqualified.resolve_campaign_event("decline_mara").get("ok", false)) and unqualified.specialist_id.is_empty() and unqualified.campaign_event_pending.is_empty(), "declining Mara should keep the specialist berth open and end her chain")
+
+	var signal_state := LongMarchState.new(1107)
+	_install_mara_loadout(signal_state)
+	_arrive_at_morrowline_for_mara(signal_state, "iven_pell")
+	_expect(signal_state.campaign_event_pending == "mara_berth_choice", "arriving with Iven should expose the specialist crossroads instead of silently bypassing Mara")
+	var crossroads := signal_state.campaign_event_details()
+	_expect(String(crossroads.title) == "Two Hands, One Berth" and crossroads.choices.size() == 2 and bool(crossroads.choices[1].enabled), "the specialist crossroads should name both mutually exclusive operational roles before selection")
+	var crossroads_restore := LongMarchState.new(0)
+	_expect(bool(crossroads_restore.load_serialized(signal_state.serialize()).get("ok", false)) and crossroads_restore.campaign_event_pending == "mara_berth_choice" and crossroads_restore.specialist_id == "iven_pell", "the unresolved specialist crossroads should survive save/load")
+	_expect(bool(signal_state.resolve_campaign_event("keep_iven").get("ok", false)) and signal_state.specialist_id == "iven_pell" and String(signal_state.campaign_decisions.get("mara_meeting", "")) == "decline_mara", "keeping Iven should retain exact forecasting and close Mara's recruitment path")
+	var kept_restore := LongMarchState.new(0)
+	_expect(bool(kept_restore.load_serialized(signal_state.serialize()).get("ok", false)) and kept_restore.specialist_id == "iven_pell" and String(kept_restore.campaign_decisions.get("mara_berth_choice", "")) == "keep_iven", "the retained-Iven outcome should survive save/load")
+
+	var reassigned_state := LongMarchState.new(1107)
+	_install_mara_loadout(reassigned_state)
+	_arrive_at_morrowline_for_mara(reassigned_state, "iven_pell")
+	var reassigned := reassigned_state.resolve_campaign_event("replace_iven_with_mara")
+	_expect(bool(reassigned.get("ok", false)) and reassigned_state.specialist_id == "mara_flint" and reassigned_state.campaign_event_pending == "mara_workbench_choice", "reassigning the only berth should exchange Iven's forecast for Mara's repair chain")
+	var reassigned_restore := LongMarchState.new(0)
+	_expect(bool(reassigned_restore.load_serialized(reassigned_state.serialize()).get("ok", false)) and reassigned_restore.specialist_id == "mara_flint" and reassigned_restore.campaign_event_pending == "mara_workbench_choice", "the Mara reassignment and chained forge-core decision should survive save/load")
 
 	var repair_state := LongMarchState.new(1107)
 	_install_mara_loadout(repair_state)
@@ -1476,6 +1497,7 @@ func _test_complete_five_encounter_campaign() -> void:
 	state.recruit_iven_pell()
 	_campaign_battle(state, "morrowline_camp", "protect_cargo")
 	_expect(state.phase == "settlement" and state.guard_contract_status == "completed", "surviving the third encounter should complete the guard contract at Morrowline")
+	_expect(bool(state.resolve_campaign_event("keep_iven").get("ok", false)), "the complete signal route should explicitly retain Iven at the Morrowline crossroads")
 	state.settlement_refuel()
 	state.remove_module_at(Vector2i(3, 2))
 	state.remove_module_at(Vector2i(5, 1))

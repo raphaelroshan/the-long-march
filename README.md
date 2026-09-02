@@ -118,4 +118,4 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 
 ## Investment evaluation roadmap
 
-The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). The current investment gate is LM-I1: lock one complete journey from First Watch through terminal Debrief before expanding the campaign further.
+The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit is in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md), and the implemented LM-I1 evidence is in [`docs/lm_i1_creative_vertical_report.md`](docs/lm_i1_creative_vertical_report.md). The repository gate now covers one complete journey from First Watch through a causal terminal Debrief; uncoached human evaluation remains the next evidence gate.
