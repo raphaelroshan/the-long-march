@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "candidate_not_public_release",
-  "version": "0.3.0-alpha.362",
+  "version": "0.3.0-alpha.363",
   "scope": {
     "regions": 4,
     "chassis_templates": 3,
@@ -30,6 +30,11 @@
     "candidate_platforms": ["windows", "macos", "linux"],
     "offline_runtime": true,
     "storefront_adapters": false
+  },
+  "session_contract": {
+    "target_minutes": {"minimum": 30, "maximum": 90},
+    "timing_evidence": "authored_target_not_human_observation",
+    "first_journey_authored_minutes": {"minimum": 35, "maximum": 55}
   },
   "required_gates": [
     "content_validation",

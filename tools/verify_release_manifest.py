@@ -52,6 +52,20 @@ def verify_manifest(manifest: dict[str, Any], root: Path) -> list[str]:
 				errors.append("manifest has an invalid save compatibility window")
 		if compatibility.get("offline_runtime") is not True:
 			errors.append("manifest must declare the offline runtime boundary")
+	campaign = manifest.get("campaign")
+	if not isinstance(campaign, dict):
+		errors.append("manifest is missing the campaign contract")
+	else:
+		session_minutes = campaign.get("session_minutes")
+		if not isinstance(session_minutes, dict) or session_minutes.get("minimum") != 30 or session_minutes.get("maximum") != 90:
+			errors.append("manifest must declare the 30–90 minute campaign target")
+		if not isinstance(campaign.get("regions"), int) or campaign.get("regions", 0) < 4:
+			errors.append("manifest must declare at least four campaign regions")
+		if campaign.get("timing_evidence") != "authored_target_not_human_observation":
+			errors.append("manifest must distinguish the authored timing target from human observation")
+		expected_packets = [f"LM-GPT56-{index}" for index in range(1, 6)]
+		if campaign.get("completed_packets") != expected_packets:
+			errors.append("manifest must identify all completed GPT56 execution packets")
 	verification = manifest.get("verification")
 	if not isinstance(verification, list) or not verification or any(not str(item).strip() for item in verification):
 		errors.append("manifest verification record must be a non-empty list")

@@ -8,7 +8,7 @@ The game should feel like an original fortress-crawler about logistics, people, 
 
 ## Verified baseline
 
-The current implementation baseline is `0.3.0-alpha.362`. It contains four regions, three chassis, dependency breadth, causal obligation memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. The automated suite passes.
+The current implementation baseline is `0.3.0-alpha.363`. It contains four regions, three chassis, dependency breadth, causal obligation memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. LM-GPT56-1 through LM-GPT56-5 add the full creative-journey proof, shared fortress presentation contract, regional campaign skeleton, people-and-promises contract, and checksummed 30–90 minute candidate target. The automated suite passes; duration remains authored rather than human-observed.
 
 **LM-I1 repository gate: complete.** The canonical Ashgate evaluation fixture now performs a legal chassis refit, recruits Iven Pell, forces an explicit signal-versus-repair specialist decision with Mara Flint, resolves the resulting forge-core dilemma, checks that promise after the fourth road, and carries the causal record into Debrief. The fixture covers save/resume at the unresolved crossroads, standard 1600×900 presentation, and a 1280×720 large-text/high-contrast/reduced-motion/alternate-controller profile. Evidence and remaining human questions are recorded in [`lm_i1_creative_vertical_report.md`](lm_i1_creative_vertical_report.md).
 
@@ -63,7 +63,7 @@ Do not add multiplayer, a huge procedural continent, a generic loot rarity syste
 
 Each task must name one player-facing journey or operational behavior, identify the authoritative state owner, define the presentation read model, add deterministic tests, cover save/resume and controller/scaling behavior, and capture the affected state at the exact build version. The final report must list changed files, verification output, screenshots, known limitations, and exactly one next task.
 
-LM-I1 through LM-I6 are complete. The next milestone is a consented, uncoached private-alpha cohort using the exact checksummed candidate. Human validation is now needed to calibrate pacing, comprehension, accessibility, and recognition; it is not replaced by repository automation.
+LM-I1 through LM-I6 and LM-GPT56-1 through LM-GPT56-5 are complete. The sole next packet is LM-H1: a consented, uncoached private-alpha cohort using the exact checksummed candidate. Human validation is now needed to calibrate pacing, comprehension, accessibility, and recognition; it is not replaced by repository automation.
 
 ## Decision
 

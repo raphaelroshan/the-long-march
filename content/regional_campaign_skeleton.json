@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "campaign_id": "early_access_four_region_march",
+  "totals": {
+    "encounters": 20,
+    "chassis": 3,
+    "modules": 20,
+    "specialists": 6,
+    "threat_pressure_families": 10,
+    "threat_ids": 15,
+    "routes": 16,
+    "settlements": 8,
+    "events": 21,
+    "regional_developments": 5,
+    "composable_endings": 60
+  },
+  "threat_pressure_families": [
+    {"id": "convoy_raiders", "threats": ["road_raiders", "rival_scouts"]},
+    {"id": "vertical_boarders", "threats": ["climbers", "signal_hunters"]},
+    {"id": "undercarriage_breakers", "threats": ["burrowers", "bridgebreakers"]},
+    {"id": "weather_fronts", "threats": ["storm_front", "salt_storm"]},
+    {"id": "flood_pressure", "threats": ["flood_surge"]},
+    {"id": "fortress_breakers", "threats": ["siege_beast", "rival_fortress"]},
+    {"id": "civic_machines", "threats": ["civic_guardian"]},
+    {"id": "ember_predators", "threats": ["ember_drakes"]},
+    {"id": "industrial_saboteurs", "threats": ["lift_saboteurs"]},
+    {"id": "lift_wardens", "threats": ["elevator_warden"]}
+  ],
+  "regions": [
+    {
+      "id": "ashgate_lowlands",
+      "operational_promise": "Carry a named obligation while a blockade closes the road behind the fortress.",
+      "settlement_tradeoff": "A kept convoy promise funds two Morrowline services; refusal leaves one.",
+      "route_hazard": "Blockade pressure changes visibility and can close the exposed signal road.",
+      "threat_lesson": "Cargo access and spatial dependency exposure.",
+      "recovery_implication": "Morrowline service capacity depends on the convoy outcome.",
+      "failure_forward_development": "wreckers_warning",
+      "settlements": ["ashgate_depot", "morrowline_camp"],
+      "route_families": ["direct_convoy", "orchard_salvage", "relay_or_toll", "morrowline_finale"],
+      "teaching_contact": {"node": "rill_crossing", "threats": ["road_raiders"]},
+      "combined_contact": {"node": "cinder_quarry", "threats": ["road_raiders", "burrowers"]},
+      "viable_loadouts": ["ashgate_reliable", "ashgate_exposed"]
+    },
+    {
+      "id": "flooded_veyru",
+      "operational_promise": "Carry medicine through rising water while protecting lower-hull integrity.",
+      "settlement_tradeoff": "An operational medicine carrier earns a second Evacuation Camp service.",
+      "route_hazard": "Water pressure closes Drowned Registry but opens a guaranteed gantry recovery road.",
+      "threat_lesson": "Flood control, mass, and lower-hull protection.",
+      "recovery_implication": "Evacuation Camp service capacity depends on the medicine carrier.",
+      "failure_forward_development": "veyru_public_archive_signal",
+      "settlements": ["lantern_quay", "veyru_evacuation_camp"],
+      "route_families": ["managed_waterworks", "submerged_tram", "archive_approach", "gantry_recovery"],
+      "teaching_contact": {"node": "pump_gallery", "threats": ["flood_surge"]},
+      "combined_contact": {"node": "drowned_registry", "threats": ["flood_surge", "climbers"]},
+      "viable_loadouts": ["veyru_reliable", "veyru_salvage"]
+    },
+    {
+      "id": "cinder_spine",
+      "operational_promise": "Climb volcanic grades while mass, heat, and a forge dynamo compete for margin.",
+      "settlement_tradeoff": "Delivering the dynamo earns two Old Lift services; refusal preserves flexibility but leaves one.",
+      "route_hazard": "Inferno pressure closes Slag Tunnel and opens Ash Chapel Bypass.",
+      "threat_lesson": "Heat control and engine-versus-generator redundancy.",
+      "recovery_implication": "Old Lift refit must shed mass or strengthen the upper-grade counter.",
+      "failure_forward_development": "cinder_refuge_chain",
+      "settlements": ["blackkiln", "old_lift_station"],
+      "route_families": ["monastery_grade", "red_cut", "upper_lift", "ash_chapel_recovery"],
+      "teaching_contact": {"node": "charcoal_monastery", "threats": ["ember_drakes"]},
+      "combined_contact": {"node": "slag_tunnel", "threats": ["ember_drakes", "lift_saboteurs"]},
+      "viable_loadouts": ["cinder_powered", "cinder_bypass"]
+    },
+    {
+      "id": "white_salt_expanse",
+      "operational_promise": "Cross open salt with an exposed signal line and a visible rival convoy.",
+      "settlement_tradeoff": "Windbreak recovery trades scarce water, contract trust, and chassis geometry.",
+      "route_hazard": "The ash front changes open routes and makes visibility itself a target.",
+      "threat_lesson": "Signal, command, medical, ammunition, and lower-hull counter chains.",
+      "recovery_implication": "Windbreak refit commits the Salt Skimmer to a signal, medical, or demolition answer.",
+      "failure_forward_development": "salt_shared_cisterns",
+      "settlements": ["saltglass_haven", "windbreak"],
+      "route_families": ["observatory_signal", "quiet_convoy", "mine_or_empty_mile", "beacon_or_trench"],
+      "teaching_contact": {"node": "buried_observatory", "threats": ["salt_storm"]},
+      "combined_contact": {"node": "salt_mine", "threats": ["salt_storm", "signal_hunters"]},
+      "viable_loadouts": ["command_feint", "medical_watch"]
+    }
+  ]
+}

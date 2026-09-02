@@ -2,13 +2,13 @@
 
 **Project repository:** The Long March
 **Game identity:** The Long March, a moving-fortress strategy roguelite
-**Current code baseline:** `0.3.0-alpha.362`
+**Current code baseline:** `0.3.0-alpha.363`
 **Current playable slices:** Ashgate Lowlands, Flooded Veyru, The Cinder Spine, and The White Salt Expanse
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player desktop strategy game
 **Development posture:** Agent-first, deterministic, public source with owner-controlled alpha merges
-**Current stacked baseline:** `0.3.0-alpha.362`, completing LM-EA-1 through LM-EA-6 and LM-I1 through LM-I6 across four regions, three chassis, dependency breadth, causal obligation memory, composable endings, visible save health and recovery, candidate hardening, native Linux cohort verification, and complete Ashgate/Cinder/White Salt evaluation journeys.
-**Next validation target:** Run a consented, uncoached private-alpha cohort on one checksummed candidate and turn the first repeated finding into a narrow repository issue.
+**Current stacked baseline:** `0.3.0-alpha.363`, completing LM-EA-1 through LM-EA-6, LM-I1 through LM-I6, and LM-GPT56-1 through LM-GPT56-5 across the full creative journey, shared fortress modes, four-region campaign skeleton, specialist/promise consequences, and checksummed Windows/macOS/Linux candidate contracts.
+**Next validation target:** Run exactly one consented, uncoached LM-H1 private-alpha observation packet on one checksummed candidate and turn the first repeated finding into a narrow repository issue.
 **Visual layout contract:** Keep values in a stable left rail, the fortress/map in the center stage, and one selected subject in the right dock according to [`design/fortress_visual_modes.md`](../design/fortress_visual_modes.md)
 
 > **Core promise:** Build a moving fortress that is simultaneously a vehicle, settlement, workshop, refuge, and weapon. Every journey should make the player decide what the fortress is willing to carry, protect, expose, repair, or leave behind.

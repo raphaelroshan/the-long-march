@@ -123,5 +123,6 @@ The full creative vertical and skeletal Early Access campaign requirements are d
 
 ## GPT-5.6 investment execution packets
 
-For a complete moving-fortress creative vertical and credible Early Access campaign skeleton, issue the larger dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). The current first gate is LM-GPT56-1 after the latest automated and visual audit.
+The dependency-aware execution program in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md) is complete through LM-GPT56-5. It proves the full creative journey, one shared fortress identity, the four-region skeleton, mechanically consequential people and promises, and a checksummed Early Access package contract. The sole next packet is a consented, uncoached LM-H1 observation cohort; the repository does not present authored pacing as human evidence.
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-audit verification, visual evidence, strong-opening assessment, and next complete-journey task. |
+| `docs/lm_gpt56_5_early_access_package_report.md` | Final GPT56 package scope, platform and timing contract, verification evidence, and honest release boundary. |

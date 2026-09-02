@@ -26,6 +26,7 @@ def main() -> int:
 					"display_name": "The Long March",
 					"prototype_version": "0.3.0-alpha.test",
 					"save_compatibility": {"minimum": 4, "current": 16},
+					"campaign_contract": {"regions": 4, "session_minutes": {"minimum": 30, "maximum": 90}, "timing_evidence": "authored_target_not_human_observation", "completed_packets": [f"LM-GPT56-{index}" for index in range(1, 6)]},
 					"playtest_ready": True,
 					"release_ready": False,
 					"primary_repo": "example/the-long-march",
@@ -54,6 +55,7 @@ def main() -> int:
 		assert manifest["cohort"] == {"id": "0.3.0-alpha.test@head-sha", "platform": "windows"}
 		assert manifest["toolchain"] == {"godot": "4.4.1.stable.official"}
 		assert manifest["compatibility"] == {"save_versions": {"minimum": 4, "current": 16}, "offline_runtime": True}
+		assert manifest["campaign"] == {"regions": 4, "session_minutes": {"minimum": 30, "maximum": 90}, "timing_evidence": "authored_target_not_human_observation", "completed_packets": [f"LM-GPT56-{index}" for index in range(1, 6)]}
 		assert manifest["verification"] == ["deterministic_tests", "windows_export"]
 		assert [entry["role"] for entry in manifest["files"]] == ["observer_brief", "windows_executable"]
 		game_entry = manifest["files"][1]
@@ -83,6 +85,12 @@ def main() -> int:
 		invalid_window = json.loads(json.dumps(manifest))
 		invalid_window["compatibility"]["save_versions"] = {"minimum": 16, "current": 4}
 		assert any("save compatibility window" in error for error in verify_manifest(invalid_window, root))
+		invalid_campaign = json.loads(json.dumps(manifest))
+		invalid_campaign["campaign"]["session_minutes"] = {"minimum": 10, "maximum": 180}
+		assert any("30–90 minute" in error for error in verify_manifest(invalid_campaign, root))
+		unobserved_boundary = json.loads(json.dumps(manifest))
+		unobserved_boundary["campaign"]["timing_evidence"] = "human_observed"
+		assert any("human observation" in error for error in verify_manifest(unobserved_boundary, root))
 		(root / "build/game.exe").write_bytes(b"changed build")
 		verification_errors = verify_manifest(manifest, root)
 		assert any("size mismatch" in error for error in verification_errors)
