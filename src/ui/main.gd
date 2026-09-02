@@ -301,6 +301,7 @@ var tutorial_director_snapshots: Dictionary = {}
 var starting_region_id: String = "ashgate_lowlands"
 var starting_regional_developments: Array[String] = []
 var starting_region_results: Dictionary = {}
+var starting_obligation_records: Dictionary = {}
 var high_contrast_enabled: bool = false
 var reduced_motion_enabled: bool = false
 var controller_layout_id: String = ControllerLayout.DEFAULT_LAYOUT
@@ -679,6 +680,7 @@ func _reset_state() -> void:
 		else:
 			state.start_campaign()
 	state.set_regional_developments(starting_regional_developments)
+	state.set_prior_obligations(starting_obligation_records)
 	selected_campaign_node_id = ""
 	selected_module_cell = Vector2i(-1, -1)
 	placement_rotated = false
@@ -4008,6 +4010,9 @@ func _refresh_campaign_controls() -> void:
 	if state.campaign_region_id == "flooded_veyru":
 		var carrier_name := String(state.module_definition(state.veyru_medicine_carrier_id).get("name", "none")) if not state.veyru_medicine_carrier_id.is_empty() else "none"
 		campaign_path_label.text = "Medicine contract: %s · Carrier: %s" % [active_contract_status.replace("_", " ").capitalize(), carrier_name]
+		var prior_ashgate := state.prior_obligation_summary("ashgate_lowlands")
+		if not prior_ashgate.is_empty():
+			campaign_path_label.text += "\nPrior obligation: " + prior_ashgate
 		if state.has_regional_development("veyru_public_archive_signal"):
 			campaign_path_label.text += "\nRegional development: Public Archive Signal · Drowned Registry contacts known"
 	elif state.campaign_region_id == "cinder_spine":

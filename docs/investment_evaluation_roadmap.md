@@ -8,7 +8,7 @@ The game should feel like an original fortress-crawler about logistics, people, 
 
 ## Verified baseline
 
-The current implementation baseline is `0.3.0-alpha.360`. It contains four regions, three chassis, dependency breadth, campaign memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. The automated suite passes.
+The current implementation baseline is `0.3.0-alpha.361`. It contains four regions, three chassis, dependency breadth, causal obligation memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. The automated suite passes.
 
 **LM-I1 repository gate: complete.** The canonical Ashgate evaluation fixture now performs a legal chassis refit, recruits Iven Pell, forces an explicit signal-versus-repair specialist decision with Mara Flint, resolves the resulting forge-core dilemma, checks that promise after the fourth road, and carries the causal record into Debrief. The fixture covers save/resume at the unresolved crossroads, standard 1600×900 presentation, and a 1280×720 large-text/high-contrast/reduced-motion/alternate-controller profile. Evidence and remaining human questions are recorded in [`lm_i1_creative_vertical_report.md`](lm_i1_creative_vertical_report.md).
 
@@ -17,6 +17,8 @@ The current implementation baseline is `0.3.0-alpha.360`. It contains four regio
 **LM-I3 repository gate: complete.** White Salt now has two viable deterministic loadouts with different ammunition-versus-armor dependencies, upper-road priorities, contract choices, and terminal Debriefs. The Salt Skimmer comparison names its third exterior mount, lower mass ceiling, and paired cut-away against the Road Keep; previous-version Windbreak checkpoints preserve the chosen layout exactly. The complete UI fixture runs from Saltglass Haven through the Windbreak and Rival Approach to Salt Citadel. Evidence is recorded in [`lm_i3_white_salt_gate_report.md`](lm_i3_white_salt_gate_report.md).
 
 **LM-I4 repository gate: complete.** The 20-module, six-specialist, and 15-threat candidate counts now resolve through one validated cross-content contract. Three complete White Salt journeys prove Sela/Command Deck, Nera/Infirmary, and Salvage Crane plans with distinct sacrifices, isolated and combined threat contacts, exact deterministic replay, and visible recovery consequences. Evidence is recorded in [`lm_i4_breadth_gate_report.md`](lm_i4_breadth_gate_report.md).
+
+**LM-I5 repository gate: complete.** Ashgate's completed, declined, and failed Morrowline guard obligations now persist independently from best-result progression and create three attributed consequences in Flooded Veyru: an extra Evacuation Camp service action, a lower-pressure Sunken Tramworks route, or a lower-risk Pump Gallery approach. The histories survive exact save round trips, migrate safely from prior schemas, appear in route and Debrief presentation, and compose into three distinct ending networks. Evidence is recorded in [`lm_i5_memory_gate_report.md`](lm_i5_memory_gate_report.md).
 
 The investment risk is not prototype fragility; it is whether the game currently offers enough **complete, varied, legible journey content** to feel like an Early Access product instead of a high-quality systems demonstration. The next roadmap must make the full creative vertical obvious and make every additional region contribute a new operational question.
 
@@ -59,7 +61,7 @@ Do not add multiplayer, a huge procedural continent, a generic loot rarity syste
 
 Each task must name one player-facing journey or operational behavior, identify the authoritative state owner, define the presentation read model, add deterministic tests, cover save/resume and controller/scaling behavior, and capture the affected state at the exact build version. The final report must list changed files, verification output, screenshots, known limitations, and exactly one next task.
 
-The active sequence is **LM-I1 Creative vertical**, **LM-I2 Region three**, **LM-I3 Region four/chassis**, **LM-I4 module/specialist/threat breadth**, **LM-I5 campaign memory/endings**, and **LM-I6 Early Access hardening**. Human validation may later calibrate pacing and recognition but is not a prerequisite for implementation.
+LM-I1 through LM-I5 are complete. The active implementation gate is **LM-I6 Early Access hardening**. Human validation may later calibrate pacing and recognition but is not a prerequisite for implementation.
 
 ## Decision
 

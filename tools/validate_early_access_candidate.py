@@ -34,7 +34,7 @@ def main() -> int:
         errors.append("candidate must not claim owner approval or public-release readiness")
     if compatibility.get("candidate_platforms") != ["windows", "macos", "linux"] or compatibility.get("offline_runtime") is not True:
         errors.append("candidate platform and offline boundaries must remain explicit")
-    if compatibility.get("save_versions") != {"minimum": 4, "current": 15}:
+    if compatibility.get("save_versions") != {"minimum": 4, "current": 16}:
         errors.append("save compatibility window must match the authoritative state")
     required_docs = [
         root / "docs/early_access_candidate.md",

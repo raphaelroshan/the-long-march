@@ -2083,6 +2083,7 @@ func _open_stage(load_saved: bool, show_briefing: bool, region_id: String = "ash
 	game_view.set("starting_region_id", region_id)
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
+	game_view.set("starting_obligation_records", campaign_progress.obligation_records.duplicate(true))
 	game_view.set("high_contrast_enabled", high_contrast_enabled)
 	game_view.set("reduced_motion_enabled", reduced_motion)
 	game_view.set("controller_layout_id", controller_layout_id)
@@ -2312,14 +2313,31 @@ func _record_campaign_progress() -> void:
 			errors.append(String(development_result.get("reason", "regional development could not be saved")))
 	if String(run_state.get("phase")) == "results":
 		attempted_write = true
-		var chapter_result := campaign_progress.record_region_result(String(run_state.get("campaign_region_id")), String(run_state.get("final_result")))
+		var region_id := String(run_state.get("campaign_region_id"))
+		var chapter_result := campaign_progress.record_region_result(region_id, String(run_state.get("final_result")))
 		if not bool(chapter_result.get("ok", false)):
 			errors.append(String(chapter_result.get("reason", "chapter result could not be saved")))
+		var obligation_status := ""
+		match region_id:
+			"ashgate_lowlands":
+				obligation_status = String(run_state.get("guard_contract_status"))
+			"flooded_veyru":
+				obligation_status = String(run_state.get("veyru_contract_status"))
+			"cinder_spine":
+				obligation_status = String(run_state.get("cinder_contract_status"))
+			"white_salt_expanse":
+				obligation_status = String(run_state.get("salt_contract_status"))
+		if obligation_status in CampaignProgress.VALID_OBLIGATION_STATES:
+			var obligation_result := campaign_progress.record_obligation(region_id, obligation_status)
+			if not bool(obligation_result.get("ok", false)):
+				errors.append(String(obligation_result.get("reason", "obligation record could not be saved")))
 	if attempted_write:
 		campaign_progress_error = "; ".join(errors)
 	run_state.call("set_regional_developments", campaign_progress.developments)
+	run_state.call("set_prior_obligations", campaign_progress.obligation_records)
 	game_view.set("starting_regional_developments", campaign_progress.developments.duplicate())
 	game_view.set("starting_region_results", campaign_progress.region_results.duplicate(true))
+	game_view.set("starting_obligation_records", campaign_progress.obligation_records.duplicate(true))
 
 func _show_checkpoint_toast(reason: String, play_audio: bool = true) -> void:
 	if checkpoint_toast_tween != null and checkpoint_toast_tween.is_valid():

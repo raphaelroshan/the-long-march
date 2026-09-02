@@ -7,7 +7,7 @@ extends RefCounted
 const GRID_WIDTH := 6
 const GRID_HEIGHT := 4
 const MAX_EXTERIOR_MOUNTS := 2
-const SAVE_VERSION := 15
+const SAVE_VERSION := 16
 const MIN_SUPPORTED_SAVE_VERSION := 4
 const VALID_CAMPAIGN_REGIONS := ["ashgate_lowlands", "flooded_veyru", "cinder_spine", "white_salt_expanse"]
 const VALID_REGIONAL_DEVELOPMENTS := ["veyru_public_archive_signal", "cinder_communal_lift_plan", "cinder_refuge_chain", "salt_public_beacons", "salt_shared_cisterns"]
@@ -16,6 +16,7 @@ const VALID_CHASSIS_TEMPLATES := ["road_keep", "salt_skimmer", "ridge_crawler"]
 const VALID_PHASES := ["refit", "map", "battle", "final_battle", "road_event", "settlement", "results"]
 const VALID_SPECIALIST_IDS := ["", "iven_pell", "mara_flint", "sela_vonn", "nera_quill", "orla_nine", "tomas_reed"]
 const VALID_CONTRACT_STATUSES := ["unoffered", "offered", "accepted", "declined", "completed", "failed"]
+const VALID_PRIOR_OBLIGATION_STATUSES := ["completed", "declined", "failed"]
 const MASTERY_EXPERIMENTS := {
 	"ashgate_quarry_adaptation": {
 		"region_id": "ashgate_lowlands",
@@ -372,6 +373,7 @@ var mara_repaired_module_id: String = ""
 var relay_repaired: bool = false
 var workers_rescued: bool = false
 var regional_developments: Array[String] = []
+var prior_obligations: Dictionary = {}
 var mastery_experiment_id: String = ""
 var acquired_intel_ids: Array[String] = []
 var purchased_market_offer_ids: Array[String] = []
@@ -1039,6 +1041,47 @@ func set_regional_developments(developments: Array) -> Dictionary:
 func has_regional_development(development_id: String) -> bool:
 	return development_id in regional_developments
 
+func set_prior_obligations(records: Dictionary) -> Dictionary:
+	var validated := {}
+	for raw_region_id in records:
+		var region_id := String(raw_region_id)
+		var status := String(records[raw_region_id])
+		if region_id not in VALID_CAMPAIGN_REGIONS or status not in VALID_PRIOR_OBLIGATION_STATUSES:
+			return {"ok": false, "reason": "prior obligation contains an unknown region or state"}
+		validated[region_id] = status
+	prior_obligations = validated
+	return {"ok": true, "obligations": prior_obligations.duplicate(true)}
+
+func prior_obligation_status(region_id: String) -> String:
+	return String(prior_obligations.get(region_id, ""))
+
+func prior_obligation_summary(region_id: String) -> String:
+	var status := prior_obligation_status(region_id)
+	if region_id == "ashgate_lowlands":
+		match status:
+			"completed":
+				return "Morrowline supply line · Evacuation Camp service +1"
+			"declined":
+				return "Free Carters' chart · Sunken Tramworks pressure -1"
+			"failed":
+				return "Wreckers' warning · Pump Gallery risk -6pt"
+	return ""
+
+func prior_obligation_effect(node_id: String) -> Dictionary:
+	if campaign_region_id != "flooded_veyru":
+		return {}
+	match prior_obligation_status("ashgate_lowlands"):
+		"completed":
+			if node_id == "veyru_evacuation_camp":
+				return {"id": "morrowline_supply_line", "name": "Morrowline Supply Line", "service_actions": 1, "detail": "Morrowline's delivered parts add 1 recovery action at Evacuation Camp."}
+		"declined":
+			if node_id == "sunken_tramworks":
+				return {"id": "free_carters_chart", "name": "Free Carters' Chart", "pressure_discount": 1, "detail": "The unbound convoy's chart reduces Sunken Tramworks pressure by 1."}
+		"failed":
+			if node_id == "pump_gallery":
+				return {"id": "wreckers_warning", "name": "Wreckers' Warning", "risk_discount": 0.06, "detail": "Survivors of the failed guard warn the Pump Gallery approach, reducing risk by 6 points."}
+	return {}
+
 func earned_regional_development() -> String:
 	var earned := earned_regional_developments()
 	return String(earned[0]) if not earned.is_empty() else ""
@@ -1076,6 +1119,12 @@ func composable_ending() -> Dictionary:
 		network = "industrial_corridor"
 	elif mobility_tendency > 0:
 		network = "fast_corridor"
+	elif prior_obligation_status("ashgate_lowlands") == "completed":
+		network = "industrial_corridor"
+	elif prior_obligation_status("ashgate_lowlands") == "declined":
+		network = "fast_corridor"
+	elif prior_obligation_status("ashgate_lowlands") == "failed":
+		network = "shelter_chain"
 	var contract_status := guard_contract_status
 	if campaign_region_id == "flooded_veyru":
 		contract_status = veyru_contract_status
@@ -1109,7 +1158,7 @@ func composable_ending() -> Dictionary:
 		"network": network,
 		"promise": promise,
 		"title": "%s · %s · %s" % [titles[survival], titles[network], titles[promise]],
-		"causes": ["Hull %d/10 and %d secured contacts" % [hull_condition, campaign_encounters_completed], "Tendencies M%d S%d K%d I%d" % [mobility_tendency, shelter_tendency, knowledge_tendency, industry_tendency], "Contract %s" % contract_status.replace("_", " ")]
+		"causes": ["Hull %d/10 and %d secured contacts" % [hull_condition, campaign_encounters_completed], "Tendencies M%d S%d K%d I%d" % [mobility_tendency, shelter_tendency, knowledge_tendency, industry_tendency], "Contract %s" % contract_status.replace("_", " "), "Prior Ashgate obligation %s" % prior_obligation_status("ashgate_lowlands").replace("_", " ") if not prior_obligation_status("ashgate_lowlands").is_empty() else "No prior Ashgate obligation"]
 	}
 
 func campaign_pressure_name() -> String:
@@ -1214,7 +1263,9 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var mass_penalty := 1 if (bool(node.get("mass_sensitive", false)) or cinder_grade) and total_mass() > BASE_MASS_LIMIT - 2 else 0
 	var condenser_discount := 1 if node_id == "dry_cistern_cut" and _has_ready_tag("water") else 0
 	var orla_discount := 1 if specialist_id == "orla_nine" and int(node.get("days", 0)) >= 2 else 0
-	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount - orla_discount)
+	var obligation_effect := prior_obligation_effect(node_id)
+	var obligation_fuel_discount := int(obligation_effect.get("fuel_discount", 0))
+	var fuel_cost := maxi(1, int(node.get("fuel", 0)) + mass_penalty - condenser_discount - orla_discount - obligation_fuel_discount)
 	var sela_fast_line := specialist_id == "sela_vonn" and doctrine == "run_hot"
 	var route_days := maxi(1, int(node.get("days", 0)) - (1 if sela_fast_line else 0))
 	var contract_heat := 1 if campaign_region_id == "cinder_spine" and cinder_contract_status == "accepted" else 0
@@ -1234,10 +1285,13 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 	var base_risk := float(node.get("risk", 0.0))
 	var blockade_risk := campaign_pressure * (0.025 if campaign_region_id == "cinder_spine" else 0.02)
 	var mass_risk := float(mass_penalty) * 0.05
-	var risk := clampf(base_risk + route_risk_modifier + blockade_risk + mass_risk + heat_penalty - signal_discount, 0.0, 0.95)
+	var obligation_risk_discount := float(obligation_effect.get("risk_discount", 0.0))
+	var risk := clampf(base_risk + route_risk_modifier + blockade_risk + mass_risk + heat_penalty - signal_discount - obligation_risk_discount, 0.0, 0.95)
 	if sela_fast_line:
 		risk = clampf(risk + 0.04, 0.0, 0.95)
 	var pressure_gain := int(node.get("pressure", 1))
+	var obligation_pressure_discount := int(obligation_effect.get("pressure_discount", 0))
+	pressure_gain = maxi(0, pressure_gain - obligation_pressure_discount)
 	var encounter_difficulty := maxi(0, pressure_gain - (1 if informed else 0))
 	if predicted_heat > BASE_HEAT_LIMIT:
 		encounter_difficulty += 1
@@ -1262,6 +1316,12 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		risk_factors.append("Sela fast line -1 day, +4pt")
 	if orla_discount > 0:
 		risk_factors.append("Orla fuel line -1 fuel, +1 heat")
+	if obligation_fuel_discount > 0:
+		risk_factors.append("prior obligation -%d fuel" % obligation_fuel_discount)
+	if obligation_pressure_discount > 0:
+		risk_factors.append("prior obligation -%d pressure" % obligation_pressure_discount)
+	if obligation_risk_discount > 0.0:
+		risk_factors.append("prior obligation -%dpt" % roundi(obligation_risk_discount * 100.0))
 	if visibility != "unscouted":
 		risk_factors.append("baseline %.0f%%" % (base_risk * 100.0))
 	if blockade_risk > 0.0:
@@ -1291,7 +1351,8 @@ func campaign_node_preview(node_id: String, doctrine: String = "protect_cargo") 
 		"encounter_pressure": encounter_difficulty,
 		"predicted_heat": predicted_heat,
 		"reward": int(node.get("reward", 0)),
-		"route_effect": String(node.get("route_effect", "")),
+		"route_effect": " · ".join(Array([String(node.get("route_effect", "")), String(obligation_effect.get("detail", ""))]).filter(func(text: String) -> bool: return not text.is_empty())),
+		"obligation_effect": obligation_effect.duplicate(true),
 		"threat_hint": String(node.get("threat_hint", "uncertain road pressure")),
 		"threats": threat_names,
 		"counter_hints": counter_hints,
@@ -2665,6 +2726,7 @@ func summary() -> Dictionary:
 		"relay_repaired": relay_repaired,
 		"workers_rescued": workers_rescued,
 		"regional_developments": regional_developments.duplicate(),
+		"prior_obligations": prior_obligations.duplicate(true),
 		"mastery_experiment_id": mastery_experiment_id,
 		"acquired_intel_ids": acquired_intel_ids.duplicate(),
 		"purchased_market_offer_ids": purchased_market_offer_ids.duplicate()
@@ -2741,6 +2803,7 @@ func serialize() -> Dictionary:
 		"workers_rescued": workers_rescued,
 		"mastery_experiment_id": mastery_experiment_id,
 		"regional_developments": regional_developments.duplicate(),
+		"prior_obligations": prior_obligations.duplicate(true),
 		"acquired_intel_ids": acquired_intel_ids.duplicate(),
 		"purchased_market_offer_ids": purchased_market_offer_ids.duplicate(),
 		"modules": _serialized_modules(),
@@ -2958,6 +3021,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var restored_salt_contract_status := String(data.get("salt_contract_status", "unoffered"))
 	var restored_mastery_experiment_id := String(data.get("mastery_experiment_id", ""))
 	var raw_regional_developments: Variant = data.get("regional_developments", [])
+	var raw_prior_obligations: Variant = data.get("prior_obligations", {})
 	var raw_acquired_intel_ids: Variant = data.get("acquired_intel_ids", [])
 	var raw_purchased_market_offer_ids: Variant = data.get("purchased_market_offer_ids", [])
 	var raw_campaign_path: Variant = data.get("campaign_path", [])
@@ -2978,6 +3042,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "checkpoint contains a duplicate regional development"}
 		restored_regional_developments.append(development_id)
 	restored_regional_developments.sort()
+	if not raw_prior_obligations is Dictionary or raw_prior_obligations.size() > VALID_CAMPAIGN_REGIONS.size():
+		return {"ok": false, "reason": "checkpoint prior obligation record is malformed"}
+	var restored_prior_obligations := {}
+	for raw_region_id in raw_prior_obligations:
+		var region_id := String(raw_region_id)
+		var obligation_status := String(raw_prior_obligations[raw_region_id])
+		if region_id not in VALID_CAMPAIGN_REGIONS or obligation_status not in VALID_PRIOR_OBLIGATION_STATUSES:
+			return {"ok": false, "reason": "checkpoint contains an unknown prior obligation"}
+		restored_prior_obligations[region_id] = obligation_status
 	if not raw_acquired_intel_ids is Array or raw_acquired_intel_ids.size() > INTEL_OFFERS.size():
 		return {"ok": false, "reason": "checkpoint acquired intel list is malformed"}
 	var restored_acquired_intel_ids: Array[String] = []
@@ -3186,6 +3259,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	workers_rescued = bool(data.get("workers_rescued", workers_rescued))
 	mastery_experiment_id = restored_mastery_experiment_id
 	regional_developments = restored_regional_developments
+	prior_obligations = restored_prior_obligations
 	acquired_intel_ids = restored_acquired_intel_ids
 	purchased_market_offer_ids = restored_market_offer_ids
 	modules = restored_modules_result.get("modules", []).duplicate(true)
@@ -4339,11 +4413,15 @@ func _finish_veyru_encounter(engine_alive: bool) -> Dictionary:
 
 	if arrived_node == "veyru_evacuation_camp":
 		phase = "settlement"
-		settlement_actions_remaining = 2 if veyru_contract_carrier_operational() else 1
+		settlement_actions_remaining = (2 if veyru_contract_carrier_operational() else 1) + int(prior_obligation_effect("veyru_evacuation_camp").get("service_actions", 0))
 		settlement_report.clear()
 		encounter_outcome = "protected_arrival" if hull_condition >= 7 else "damaged_arrival"
 		var action_text := "Two service actions are" if settlement_actions_remaining == 2 else "One service action is"
+		if settlement_actions_remaining == 3:
+			action_text = "Three service actions are"
 		_encounter_log("Outcome: %s at Evacuation Camp. %s available with a full refit window." % [encounter_outcome.replace("_", " "), action_text])
+		if int(prior_obligation_effect("veyru_evacuation_camp").get("service_actions", 0)) > 0:
+			_encounter_log("Prior obligation: Morrowline's delivered parts add 1 Evacuation Camp service action.")
 	elif arrived_node == "dry_archive":
 		journey_complete = true
 		run_complete = true

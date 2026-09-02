@@ -359,3 +359,14 @@ SHA-256: `ea2440e3bf4158588ddd322543447c72a61401687f37a494f7801fa8c32e7694`
 When the Road Raider first assigns the Coal Cell as its target, focus moves from Resolve Contact to Inspect Chassis. The player can still advance immediately, but a repeated confirm no longer resolves another beat before the new target is reviewed.
 
 SHA-256: `e5ddd16b0b7d9b030cf11803d3fd5cd8533698fe904cbd883d10da5a6fec543c`
+
+## `v0.3.0-alpha.361` — Cross-region obligation memory
+
+| Prior Ashgate outcome | Later Veyru evidence | SHA-256 |
+|---|---|---|
+| Completed | [Morrowline service disclosed before commitment](visual_evidence/v0.3.0-alpha.361-memory-gate/00_completed_camp_dossier.png) | `2cf2be81dcf254b7b8e916489d21f8fd84711556c3f34f251cc3f316b23c5d2b` |
+| Completed | [Extra Evacuation Camp service available](visual_evidence/v0.3.0-alpha.361-memory-gate/01_completed_camp_service.png) | `15718dc39093dc81efb4a04a3c6b7df0b70ae50ba7696a49f1296fbf96b0a496` |
+| Declined | [Free Carters' chart reduces pressure](visual_evidence/v0.3.0-alpha.361-memory-gate/02_declined_tram_chart.png) | `d2f4e6c8e096a647ddd7bb02f82101986010b47e1e89ccc533b97e313c4a316f` |
+| Failed | [Wreckers' warning reduces risk](visual_evidence/v0.3.0-alpha.361-memory-gate/03_failed_pump_warning.png) | `800eac7430fad5009c0abdad7c6efaa8fc42a855e0d1f8b343502924e60ae5cd` |
+
+These captures verify that three earlier obligation outcomes are attributed before a later route commitment and change exact route or recovery values. They do not establish uncoached recognition, perceived fairness, or preference balance.

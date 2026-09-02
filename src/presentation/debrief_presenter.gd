@@ -67,6 +67,9 @@ static func build(state: LongMarchState, fortress: Dictionary, context: Dictiona
 		promises.append("Field order · %s · %s" % [String(mastery.get("title", "Experiment")), String(mastery.get("status", "ACTIVE"))])
 	for occurrence_line in state.occurrence_debrief_lines():
 		promises.append(String(occurrence_line).replace("Road occurrence — ", "Occurrence · "))
+	var prior_ashgate := state.prior_obligation_summary("ashgate_lowlands")
+	if not prior_ashgate.is_empty() and state.campaign_region_id != "ashgate_lowlands":
+		promises.append("Prior obligation · " + prior_ashgate)
 	var ending := state.composable_ending()
 	promises.append("Ending facets · %s" % String(ending.get("title", "Unrecorded")))
 	var next_region_id := "ashgate_lowlands" if state.campaign_region_id == "flooded_veyru" else "flooded_veyru"

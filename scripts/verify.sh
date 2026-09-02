@@ -62,6 +62,9 @@ run_checked "PASS: The Long March White Salt Expanse" "$GODOT_BIN" --headless --
 run_checked "PASS: The Long March Early Access systems" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_systems.gd
 run_checked "PASS: The Long March LM-I4 breadth gate" "$GODOT_BIN" --headless --path . --script res://tests/test_breadth_gate.gd
 run_checked "PASS: The Long March campaign memory and endings" "$GODOT_BIN" --headless --path . --script res://tests/test_campaign_memory.gd
+run_checked "PASS: The Long March LM-I5 memory gate" "$GODOT_BIN" --headless --path . --script res://tests/test_memory_gate.gd
+run_checked "PASS: The Long March LM-I5 memory UI flow" "$GODOT_BIN" --headless --path . --script res://tests/test_memory_flow.gd
+run_checked "PASS: The Long March LM-I5 memory UI flow 1280x720" env LONG_MARCH_VIEWPORT_WIDTH=1280 LONG_MARCH_VIEWPORT_HEIGHT=720 LONG_MARCH_RESPONSIVE_PROFILE=1 "$GODOT_BIN" --headless --path . --script res://tests/test_memory_flow.gd
 run_checked "PASS: The Long March Early Access hardening" "$GODOT_BIN" --headless --path . --script res://tests/test_early_access_hardening.gd
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
