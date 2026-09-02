@@ -114,3 +114,8 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 - [Early Access decision record](docs/early_access_decision.md) — breadth-versus-final-art and complexity-versus-comprehension trade-offs.
 - [Early Access candidate](docs/early_access_candidate.md) — implemented scope, verification, save compatibility, rollback, and approval boundary.
 - [Known limitations](docs/early_access_known_limitations.md) — temporary content, unsupported features, and human validation still required.
+
+
+## Investment evaluation roadmap
+
+The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). The current investment gate is LM-I1: lock one complete journey from First Watch through terminal Debrief before expanding the campaign further.

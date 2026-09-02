@@ -428,3 +428,10 @@ Before adding broader content, read [`early_access_requirements.md`](early_acces
 Do not make human testing a prerequisite. Use deterministic replay, complete-journey launches, responsive layout checks, controller/scaling/reduced-motion checks, save boundaries, screenshots, package validation, and known-limitations notes as the active gates. New regions must create real operational questions rather than merely adding a background or repeating the existing encounter table.
 
 The recommended feeds are **LM-EA-1** anchor completion, **LM-EA-2** third region, **LM-EA-3** fourth region and alternate chassis, **LM-EA-4** module/specialist/threat breadth, **LM-EA-5** events, regional memory, replay, and endings, and **LM-EA-6** release hardening.
+
+
+## Investment-evaluation feed
+
+Read [`investment_evaluation_roadmap.md`](investment_evaluation_roadmap.md) before expanding the campaign. The investment standard requires a complete moving-fortress fantasy: First Watch, refit, route commitment, travel, contact or event, damage, recovery, settlement consequence, next decision, and terminal Debrief.
+
+Issue the feeds in order: **LM-I1** lock one complete creative journey; **LM-I2** add a third region with a new route promise and failure-forward development; **LM-I3** add a fourth region and alternate chassis; **LM-I4** expand modules, specialists, and threat questions; **LM-I5** deepen campaign memory and endings; **LM-I6** harden the Early Access package. Do not add background-only regions or generic encounters. Human testing is optional and must not block implementation.
