@@ -123,8 +123,11 @@ The full creative vertical and skeletal Early Access campaign requirements are d
 
 ## GPT-5.6 investment execution packets
 
-The dependency-aware execution program in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md) is complete through LM-GPT56-5. It proves the full creative journey, one shared fortress identity, the four-region skeleton, mechanically consequential people and promises, and a checksummed Early Access package contract. The sole next packet is a consented, uncoached LM-H1 observation cohort; the repository does not present authored pacing as human evidence.
+The dependency-aware execution program in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md) is complete from LM-GPT56-0 through LM-GPT56-5. It rejects invalid screenshot evidence, proves the full creative journey, preserves one shared fortress identity, defines the four-region skeleton and consequential people/promises, and carries those claims into a checksummed Early Access package contract. The sole next packet is a consented, uncoached LM-H1 observation cohort; the repository does not present authored pacing as human evidence.
+| `docs/lm_gpt56_0_rendered_frame_gate_report.md` | Godot-controlled capture readiness, exact grey-frame regression, and accepted journey evidence. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-audit verification, visual evidence, strong-opening assessment, and next complete-journey task. |
 | `docs/lm_gpt56_5_early_access_package_report.md` | Final GPT56 package scope, platform and timing contract, verification evidence, and honest release boundary. |
-| `docs/latest_review_2026-09-03.md` | Current main-branch review, verification result, and invalid grey-frame capture diagnosis. |
-| `docs/visual_evidence/v0.3.0-alpha.363-review-2026-09-03/` | Fresh capture-cycle evidence; manifest records that the three uniform-grey frames are invalid for visual claims. |
+| `docs/latest_review_2026-09-03.md` | Grey-frame capture diagnosis and the alpha.364 rendered-frame-gate resolution. |
+| `docs/visual_evidence/v0.3.0-alpha.363-review-2026-09-03/` | Historical failed capture-cycle evidence retained as a negative regression fixture. |
+| `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/` | Complete accessible journey recaptured through the rendered-frame quality gate. |
+| `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1600x900/` | Complete standard journey recaptured through the rendered-frame quality gate. |

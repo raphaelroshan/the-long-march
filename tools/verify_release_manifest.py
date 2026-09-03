@@ -63,7 +63,7 @@ def verify_manifest(manifest: dict[str, Any], root: Path) -> list[str]:
 			errors.append("manifest must declare at least four campaign regions")
 		if campaign.get("timing_evidence") != "authored_target_not_human_observation":
 			errors.append("manifest must distinguish the authored timing target from human observation")
-		expected_packets = [f"LM-GPT56-{index}" for index in range(1, 6)]
+		expected_packets = [f"LM-GPT56-{index}" for index in range(0, 6)]
 		if campaign.get("completed_packets") != expected_packets:
 			errors.append("manifest must identify all completed GPT56 execution packets")
 	verification = manifest.get("verification")

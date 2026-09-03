@@ -25,3 +25,9 @@ The first mandatory task is now **LM-GPT56-0**: repair the screenshot harness an
 - `01_title.png` — grey frame; capture invalid.
 - `02_first_action.png` — grey frame; capture invalid.
 - `03_followup.png` — grey frame; capture invalid.
+
+## Resolution — `0.3.0-alpha.364`
+
+LM-GPT56-0 replaces the desktop ImageGrab path for repository evidence with a Godot-controlled viewport capture after `RenderingServer.frame_post_draw`. The gate checks exact dimensions, sampled color diversity, luminance range, and checksum before accepting a frame. Its regression test rejects `01_title.png` from this review as visually uniform.
+
+LM-GPT56-1 was then rerun from a clean save at 1280×720 and 1600×900. The resulting 22-state and 24-state sequences are valid, checksummed, and listed in their capture manifests under `v0.3.0-alpha.364-gpt56-journey-*`. This resolves the evidence-harness blocker; it does not turn the old grey frames into valid evidence.

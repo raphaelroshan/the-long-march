@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "candidate_not_public_release",
-  "version": "0.3.0-alpha.363",
+  "version": "0.3.0-alpha.364",
   "scope": {
     "regions": 4,
     "chassis_templates": 3,
@@ -44,6 +44,7 @@
     "large_text_high_contrast_reduced_motion",
     "performance_budget",
     "semantic_audio_with_visual_equivalents",
+    "rendered_frame_visual_evidence",
     "platform_package_manifest_and_checksum",
     "owner_release_approval"
   ],

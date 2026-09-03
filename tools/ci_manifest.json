@@ -1,13 +1,13 @@
 {
   "slug": "the-long-march",
   "display_name": "The Long March",
-  "prototype_version": "0.3.0-alpha.363",
+  "prototype_version": "0.3.0-alpha.364",
 	"save_compatibility": {"minimum": 4, "current": 16},
 	"campaign_contract": {
 		"regions": 4,
 		"session_minutes": {"minimum": 30, "maximum": 90},
 		"timing_evidence": "authored_target_not_human_observation",
-		"completed_packets": ["LM-GPT56-1", "LM-GPT56-2", "LM-GPT56-3", "LM-GPT56-4", "LM-GPT56-5"]
+		"completed_packets": ["LM-GPT56-0", "LM-GPT56-1", "LM-GPT56-2", "LM-GPT56-3", "LM-GPT56-4", "LM-GPT56-5"]
 	},
 	"early_access_candidate": true,
   "playtest_ready": true,

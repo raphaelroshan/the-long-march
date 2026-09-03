@@ -11,6 +11,7 @@ const LOCAL_PATHS := [
 	"user://the_long_march_progress.json",
 	"user://the_long_march_playtest_journal.json",
 ]
+const RenderCapture = preload("res://tests/support/rendered_frame_capture.gd")
 
 var failures: Array[String] = []
 var app: Control
@@ -26,6 +27,7 @@ var gpt56_journey_profile := false
 var pre_contact_resume_tested := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
+var capture_records: Array[Dictionary] = []
 
 
 func _expect(condition: bool, message: String) -> void:
@@ -74,13 +76,29 @@ func _capture(name: String) -> void:
 	if not capture_filter.is_empty() and name not in capture_filter:
 		return
 	DirAccess.make_dir_recursive_absolute(capture_dir)
-	await RenderingServer.frame_post_draw
-	var image := root.get_texture().get_image()
-	if image == null:
-		_expect(false, "capture requires a rendering display: " + name)
+	var result: Dictionary = await RenderCapture.capture(self, capture_dir.path_join(name + ".png"), viewport_size)
+	_expect(bool(result.get("ok", false)), "capture should contain a ready rendered frame for %s: %s" % [name, result.get("reason", "unknown error")])
+	if bool(result.get("ok", false)):
+		capture_records.append(result)
+
+
+func _write_capture_manifest() -> void:
+	if capture_dir.is_empty() or capture_records.is_empty():
 		return
-	var result := image.save_png(capture_dir.path_join(name + ".png"))
-	_expect(result == OK, "capture should be written: " + name)
+	var manifest := {
+		"schema_version": 1,
+		"game": "The Long March",
+		"build": String(ProjectSettings.get_setting("application/config/version", "unknown")),
+		"viewport": {"width": viewport_size.x, "height": viewport_size.y},
+		"capture_method": "godot_viewport_after_rendered_frame_gate",
+		"quality_result": "validated_rendered_frames",
+		"states": capture_records,
+	}
+	var file := FileAccess.open(capture_dir.path_join("capture-manifest.json"), FileAccess.WRITE)
+	_expect(file != null, "capture evidence manifest should be writable")
+	if file != null:
+		file.store_string(JSON.stringify(manifest, "  ") + "\n")
+		file.close()
 
 
 func _rect_encloses(outer: Rect2, inner: Rect2) -> bool:
@@ -587,6 +605,7 @@ func _run() -> void:
 	await _capture("00_title")
 	await _complete_first_watch()
 	await _run_ashgate_journey()
+	_write_capture_manifest()
 	app.queue_free()
 	await _settle()
 	_remove_local_state()

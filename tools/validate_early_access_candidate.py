@@ -56,7 +56,7 @@ def main() -> int:
         errors.append("package campaign region count must match the candidate scope")
     if session_contract.get("timing_evidence") != "authored_target_not_human_observation" or campaign_contract.get("timing_evidence") != session_contract.get("timing_evidence"):
         errors.append("campaign timing must remain an authored target, not a human-observation claim")
-    if campaign_contract.get("completed_packets") != [f"LM-GPT56-{index}" for index in range(1, 6)]:
+    if campaign_contract.get("completed_packets") != [f"LM-GPT56-{index}" for index in range(0, 6)]:
         errors.append("package campaign contract must list all completed GPT56 packets")
     required_docs = [
         root / "docs/early_access_candidate.md",
@@ -66,8 +66,10 @@ def main() -> int:
     for path in required_docs:
         if not path.exists() or len(path.read_text(encoding="utf-8").strip()) < 200:
             errors.append(f"missing substantive release document: {path.name}")
+    if "rendered_frame_visual_evidence" not in data.get("required_gates", []):
+        errors.append("candidate must require validated rendered-frame visual evidence")
     verify = (root / "scripts/verify.sh").read_text(encoding="utf-8")
-    for gate in ("test_early_access_hardening.gd", "test_interface_audio.gd", "test_performance_budget.gd", "test_release_manifest.py"):
+    for gate in ("test_early_access_hardening.gd", "test_interface_audio.gd", "test_performance_budget.gd", "test_rendered_frame_capture.gd", "test_release_manifest.py"):
         if gate not in verify:
             errors.append(f"verification does not run {gate}")
     if errors:

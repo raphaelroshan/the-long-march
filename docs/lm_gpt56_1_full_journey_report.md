@@ -1,8 +1,8 @@
 # LM-GPT56-1 — Full Creative Journey
 
-**Build:** `0.3.0-alpha.363`
+**Build:** `0.3.0-alpha.364`
 
-**Status:** Complete as a deterministic repository gate.
+**Status:** Revalidated as a deterministic repository and rendered-frame gate.
 
 ## Journey proved
 
@@ -28,12 +28,12 @@ The run saves and relaunches at committed departure, secured arrival, and the un
 
 ## Visual evidence
 
-The complete state sequence is stored in:
+The complete state sequence has been recaptured through the LM-GPT56-0 Godot viewport gate. Every image has an exact-size, non-uniform-content, readiness-attempt, and SHA-256 record in its adjacent manifest:
 
-- [`v0.3.0-alpha.363-gpt56-1-1600x900/`](visual_evidence/v0.3.0-alpha.363-gpt56-1-1600x900/)
-- [`v0.3.0-alpha.363-gpt56-1-1280x720/`](visual_evidence/v0.3.0-alpha.363-gpt56-1-1280x720/)
+- [`v0.3.0-alpha.364-gpt56-journey-1600x900/`](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1600x900/)
+- [`v0.3.0-alpha.364-gpt56-journey-1280x720/`](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/)
 
-Both sets include First Watch, live refit, route commitment, travel, contact, arrival, specialist conflict, Morrowline recovery, the changed next road, the later promise callback, and terminal Debrief.
+The 1280×720 set contains 22 accepted states and the 1600×900 set contains 24. Both include the title, First Watch, live refit, route commitment, travel, contact, arrival, specialist conflict, Morrowline recovery, changed next road, later promise callback, and terminal Debrief. The uniform-grey desktop frames from the superseded review are explicitly rejected by the same test.
 
 ## Ownership
 
@@ -45,4 +45,4 @@ The fixture proves reachability, deterministic replay, persistence, focus, layou
 
 ## Next packet
 
-Execute **LM-GPT56-2 — Fortress identity across modes** by declaring and validating the shared presentation registry and proving one unchanged fortress snapshot remains recognizable through rest, travel, contact, recovery, and Debrief.
+Run exactly one **LM-H1 — consented private-alpha observation packet** against a retained checksummed candidate; LM-GPT56-2 through LM-GPT56-5 remain complete.

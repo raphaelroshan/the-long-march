@@ -392,3 +392,16 @@ The captures verify player-facing diagnosis and explicit recovery at the declare
 | Restored cohort state | [Both checkpoints validate](visual_evidence/v0.3.0-alpha.363-gpt56-5-package/03_restored_save_health.png) | `87dbbbca4c9e13268d586ee92602fc4633afb7d85e55da2ea3948bdc4b9751b4` |
 
 These are exact-build recovery captures for LM-GPT56-5. They verify clean-install and rollback presentation, not cross-platform consumer hardware behavior or human confidence in the recovery wording.
+
+## `v0.3.0-alpha.364` — Rendered-frame gate and complete journey
+
+| Validated state | 1280×720 evidence | SHA-256 |
+|---|---|---|
+| Title | [Clean-save title](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/00_title.png) | `afcd7dcd3aaa0fc94697ef15b81470dd7b2c2d0ca9060fd4addf81e02ab83919` |
+| First Watch | [Moving-settlement prologue](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/01_first_watch_prologue.png) | `80650c673cb8c52866031a204f9e1f11d5e71e73a6b3e0028ccb473939617c2e` |
+| Live refit | [Dependency-preserving chassis change](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/05a_live_refit.png) | `a6c8bf253b9ad3cd1445ab19a66e2a57ae3d5a8e8b6d41c5d4457c1798aa911c` |
+| Contact | [Road Raider forecast and response](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/08_road_contact.png) | `f173122bbec700a94da0f90f3f9c6e018d379871e8a848f79cc2fcf35ed4db9c` |
+| Recovery | [Finite Morrowline service choice](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/11_morrowline_recovery.png) | `5ffd53add4723aad2837e9e9cae7bcfddc65a1e27c116de3e6f782e5cb9977d8` |
+| Debrief | [Causal terminal result](visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/13_debrief.png) | `01891874c88edb00f693f730d9a3cc4e54765dc19e8903c1ee867d7131843f85` |
+
+The adjacent manifests cover all 22 accessible-layout and 24 standard-layout states with exact size, readiness attempt, sampled color diversity, luminance range, and checksum. The validator also rejects the uniform-grey title capture from the prior review. This proves rendered evidence integrity and complete-flow reachability, not final-art quality or uncoached comprehension.

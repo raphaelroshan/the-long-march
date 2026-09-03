@@ -1,12 +1,12 @@
 # LM-GPT56-5 — Early Access Package
 
-**Build:** `0.3.0-alpha.363`
+**Build:** `0.3.0-alpha.364`
 
 **Status:** Complete as a checksummed private-alpha candidate contract. Public release remains unapproved.
 
 ## Candidate contract
 
-Every generated cohort manifest now carries the four-region campaign scope, a 30–90 minute target, the completed LM-GPT56-1 through LM-GPT56-5 packet set, and the explicit fact that the timing range is an authored target rather than human-observed evidence. This travels beside the existing exact source and head commits, Godot version, platform, verification stages, file sizes and SHA-256 hashes, save-schema window, and offline-runtime boundary.
+Every generated cohort manifest now carries the four-region campaign scope, a 30–90 minute target, the completed LM-GPT56-0 through LM-GPT56-5 packet set, and the explicit fact that the timing range is an authored target rather than human-observed evidence. This travels beside the existing exact source and head commits, Godot version, platform, verification stages, file sizes and SHA-256 hashes, save-schema window, and offline-runtime boundary.
 
 Windows and Linux pull-request candidates are exported, launched headlessly, checksummed, downloaded into clean CI jobs, reverified, and passed through the local evidence-workflow smoke. Owner-created version tags repeat the deterministic suite and candidate checks for Windows, unsigned macOS, and Linux before prerelease publication. The campaign contract and this execution report are included in—and checked by—each platform cohort.
 
@@ -30,6 +30,7 @@ repository content manifest: PASS (the-long-march, 17 events, 4 endings)
 
 env PATH=/Users/raphaelroshan/Applications/Godot.app/Contents/MacOS:$PATH bash scripts/verify.sh
 PASS: The Long March LM-GPT56-5 Early Access package contract
+PASS: The Long March LM-GPT56-0 rendered-frame evidence gate
 PASS: The Long March Early Access hardening
 PASS: The Long March LM-I6 candidate recovery flow 1280x720
 PASS: The Long March LM-GPT56-1 full creative journey
@@ -48,6 +49,8 @@ Visual evidence for this exact build is stored under:
 - `docs/visual_evidence/v0.3.0-alpha.363-gpt56-2-accessible/`
 - `docs/visual_evidence/v0.3.0-alpha.363-gpt56-4-people-promises/`
 - `docs/visual_evidence/v0.3.0-alpha.363-gpt56-5-package/`
+- `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/`
+- `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1600x900/`
 
 ## Asset boundary and pacing risk
 
