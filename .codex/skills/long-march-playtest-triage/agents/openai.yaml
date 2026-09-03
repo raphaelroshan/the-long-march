@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long March Playtest Triage"
+  short_description: "Turn verified playtests into narrow fixes"
+  default_prompt: "Use $long-march-playtest-triage to analyze verified Long March session packets and propose evidence-backed priorities without inferring player understanding."

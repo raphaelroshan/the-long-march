@@ -17,6 +17,12 @@ EXPECTED_SKILLS = {
         "references/review-rubric.md",
         "references/continuity-checklist.md",
     },
+    "long-march-visual-reviewer": {
+        "references/screen-review-grid.md",
+    },
+    "long-march-playtest-triage": {
+        "references/evidence-and-severity.md",
+    },
 }
 CANONICAL_SOURCES = (
     "AGENTS.md",

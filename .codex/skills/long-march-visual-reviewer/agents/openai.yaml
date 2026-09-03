@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long March Visual Reviewer"
+  short_description: "Audit game screens for hierarchy and continuity"
+  default_prompt: "Use $long-march-visual-reviewer to inspect this Long March evidence cohort and report objective visual issues without claiming human comprehension."

@@ -8,8 +8,10 @@ The repository carries two Codex skills under `.codex/skills/` so its narrative 
 
 - Invoke `$long-march-writer` to draft or revise events, choices, specialist lines, route and settlement copy, tutorials, tooltips, and Debrief text. It requires an implementation-backed mechanical spine before prose.
 - Invoke `$long-march-content-reviewer` for the adversarial final pass. It checks mechanical truth, meaningful choice, continuity, regional identity, UI fit, accessibility, and generic AI-like phrasing; it reports findings rather than silently rewriting by default.
+- Invoke `$long-march-visual-reviewer` against a validated screenshot cohort to find hierarchy, overlap, continuity, and accessibility defects without claiming that screenshots prove human comprehension.
+- Invoke `$long-march-playtest-triage` only after verified observer/feedback packets exist. It separates observation, self-report, telemetry, and inference before proposing roadmap work.
 
-For substantive new copy, use the writer first and the reviewer second. The project validator checks that both skills, their metadata, and their internal references remain complete; the normal verification script runs that check automatically.
+For substantive new copy, use the writer first and the content reviewer second. Use the visual reviewer before presentation changes and again on the resulting cohort. Use playtest triage only for genuine human evidence. The project validator checks that all skills, their metadata, and their internal references remain complete; the normal verification script runs that check automatically.
 
 ## Current post-alpha feed order
 

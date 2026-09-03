@@ -228,8 +228,18 @@ func _layout_node_buttons() -> void:
 			button.position = Vector2(node_positions.get(node_id, Vector2.ZERO)) + offset
 			var marker := marker_labels.get(node_id) as Label
 			if marker != null:
-				marker.position = button.position + Vector2(NODE_SIZE.x - marker.custom_minimum_size.x - 4.0, -7.0)
+				marker.position = _assignment_marker_position(button, marker)
 	queue_redraw()
+
+func _assignment_marker_position(button: Button, marker: Label) -> Vector2:
+	var marker_size := marker.custom_minimum_size
+	var right_position := button.position + Vector2(NODE_SIZE.x + 4.0, (NODE_SIZE.y - marker_size.y) * 0.5)
+	if right_position.x + marker_size.x <= size.x - 4.0:
+		return right_position
+	var left_position := button.position + Vector2(-marker_size.x - 4.0, (NODE_SIZE.y - marker_size.y) * 0.5)
+	if left_position.x >= 4.0:
+		return left_position
+	return button.position + Vector2(NODE_SIZE.x - marker_size.x - 4.0, -marker_size.y - 2.0)
 
 func _apply_region_layout(next_region_id: String) -> void:
 	var layout: Dictionary = REGION_LAYOUTS.get(next_region_id, REGION_LAYOUTS["ashgate_lowlands"])
