@@ -15,7 +15,7 @@ def main() -> int:
     errors: list[str] = []
     manifest = json.loads((root / "tools/ci_manifest.json").read_text(encoding="utf-8"))
     candidate = json.loads((root / "content/early_access_candidate.json").read_text(encoding="utf-8"))
-    expected_packets = [f"LM-GPT56-{index}" for index in range(1, 6)]
+    expected_packets = [f"LM-GPT56-{index}" for index in range(0, 6)]
     campaign = manifest.get("campaign_contract", {})
     if campaign.get("regions") != 4:
         errors.append("candidate campaign contract must declare four regions")
@@ -24,7 +24,7 @@ def main() -> int:
     if campaign.get("timing_evidence") != "authored_target_not_human_observation":
         errors.append("candidate must not present authored pacing as human evidence")
     if campaign.get("completed_packets") != expected_packets:
-        errors.append("candidate campaign contract must list all five completed GPT56 packets")
+        errors.append("candidate campaign contract must list all six completed GPT56 packets")
     if candidate.get("session_contract", {}).get("target_minutes") != campaign.get("session_minutes"):
         errors.append("content and package duration contracts must match")
     if manifest.get("release_candidate_platforms") != ["windows", "macos", "linux"]:
@@ -33,6 +33,7 @@ def main() -> int:
         errors.append("GPT56 completion must not imply owner approval or public readiness")
 
     reports = [root / f"docs/lm_gpt56_{index}_{name}.md" for index, name in (
+        (0, "rendered_frame_gate_report"),
         (1, "full_journey_report"),
         (2, "fortress_identity_report"),
         (3, "regional_campaign_report"),
@@ -51,6 +52,7 @@ def main() -> int:
         "test_fortress_presentation_registry.gd",
         "test_regional_campaign_skeleton.gd",
         "test_people_promises.gd",
+        "test_rendered_frame_capture.gd",
         "LONG_MARCH_GPT56_1_PROFILE=1",
         "test_gpt56_package_contract.py",
         "test_early_access_hardening.gd",

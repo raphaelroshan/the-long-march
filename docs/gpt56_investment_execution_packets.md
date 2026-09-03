@@ -1,9 +1,13 @@
 # The Long March — GPT-5.6 Investment Execution Packets
 
-**Baseline:** `0.3.0-alpha.363` on the GPT56 execution branch.
-**Latest audit:** all five packets have deterministic repository evidence. The remaining investment risk is human calibration of comprehension, pacing, accessibility, and replay appetite on one retained candidate—not an unimplemented packet.
+**Baseline:** `0.3.0-alpha.364` on current `main` after merge.
+**Latest audit:** LM-GPT56-0 rejects the failed uniform-grey review frames and validates exact Godot-controlled captures for the full journey. All implementation packets now have deterministic repository and trustworthy rendered-frame evidence. The remaining investment risk is human calibration of comprehension, pacing, accessibility, and replay appetite on one retained candidate.
 
-**Execution status:** LM-GPT56-1 through LM-GPT56-5 are complete in `0.3.0-alpha.363`; see the packet reports from [`lm_gpt56_1_full_journey_report.md`](lm_gpt56_1_full_journey_report.md) through [`lm_gpt56_5_early_access_package_report.md`](lm_gpt56_5_early_access_package_report.md). The only next packet is the consented LM-H1 human observation packet.
+**Execution status:** LM-GPT56-0 through LM-GPT56-5 are complete in `0.3.0-alpha.364`; see [`lm_gpt56_0_rendered_frame_gate_report.md`](lm_gpt56_0_rendered_frame_gate_report.md) and the packet reports through [`lm_gpt56_5_early_access_package_report.md`](lm_gpt56_5_early_access_package_report.md). The only next packet is the consented LM-H1 human observation packet.
+
+## Packet LM-GPT56-0 — Rendered-frame evidence gate
+
+Capture through the Godot viewport after a rendered-frame readiness handshake. Reject null, wrong-size, blank, or visually uniform frames; record exact dimensions, bounded readiness attempts, quality metrics, and SHA-256 digests. Preserve the failed grey captures as negative evidence. Acceptance requires a valid title and First Watch capture plus a deterministic gate that fails on the known invalid frame.
 
 ## Packet LM-GPT56-1 — Full creative journey
 

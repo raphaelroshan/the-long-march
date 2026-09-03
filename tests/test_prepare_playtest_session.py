@@ -26,7 +26,7 @@ def main() -> int:
                     "display_name": "The Long March",
                     "prototype_version": "0.3.0-alpha.test",
                     "save_compatibility": {"minimum": 4, "current": 16},
-                    "campaign_contract": {"regions": 4, "session_minutes": {"minimum": 30, "maximum": 90}, "timing_evidence": "authored_target_not_human_observation", "completed_packets": [f"LM-GPT56-{index}" for index in range(1, 6)]},
+                    "campaign_contract": {"regions": 4, "session_minutes": {"minimum": 30, "maximum": 90}, "timing_evidence": "authored_target_not_human_observation", "completed_packets": [f"LM-GPT56-{index}" for index in range(0, 6)]},
                     "playtest_ready": True,
                     "release_ready": False,
                     "primary_repo": "example/the-long-march",

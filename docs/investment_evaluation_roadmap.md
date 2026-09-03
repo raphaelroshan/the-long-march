@@ -8,7 +8,7 @@ The game should feel like an original fortress-crawler about logistics, people, 
 
 ## Verified baseline
 
-The current implementation baseline is `0.3.0-alpha.363`. It contains four regions, three chassis, dependency breadth, causal obligation memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. LM-GPT56-1 through LM-GPT56-5 add the full creative-journey proof, shared fortress presentation contract, regional campaign skeleton, people-and-promises contract, and checksummed 30–90 minute candidate target. The automated suite passes; duration remains authored rather than human-observed.
+The current implementation baseline is `0.3.0-alpha.364`. It contains four regions, three chassis, dependency breadth, causal obligation memory, composable endings, candidate hardening, native Linux cohorts, a title/First Watch tutorial, authored settlement and fortress modes, battle/contact presentation, recovery, Debrief, local evidence workflow, and extensive deterministic verification. LM-GPT56-0 through LM-GPT56-5 add rendered-frame evidence validation, the full creative-journey proof, shared fortress presentation contract, regional campaign skeleton, people-and-promises contract, and checksummed 30–90 minute candidate target. The automated suite passes; duration remains authored rather than human-observed.
 
 **LM-I1 repository gate: complete.** The canonical Ashgate evaluation fixture now performs a legal chassis refit, recruits Iven Pell, forces an explicit signal-versus-repair specialist decision with Mara Flint, resolves the resulting forge-core dilemma, checks that promise after the fourth road, and carries the causal record into Debrief. The fixture covers save/resume at the unresolved crossroads, standard 1600×900 presentation, and a 1280×720 large-text/high-contrast/reduced-motion/alternate-controller profile. Evidence and remaining human questions are recorded in [`lm_i1_creative_vertical_report.md`](lm_i1_creative_vertical_report.md).
 
@@ -63,7 +63,7 @@ Do not add multiplayer, a huge procedural continent, a generic loot rarity syste
 
 Each task must name one player-facing journey or operational behavior, identify the authoritative state owner, define the presentation read model, add deterministic tests, cover save/resume and controller/scaling behavior, and capture the affected state at the exact build version. The final report must list changed files, verification output, screenshots, known limitations, and exactly one next task.
 
-LM-I1 through LM-I6 and LM-GPT56-1 through LM-GPT56-5 are complete. The sole next packet is LM-H1: a consented, uncoached private-alpha cohort using the exact checksummed candidate. Human validation is now needed to calibrate pacing, comprehension, accessibility, and recognition; it is not replaced by repository automation.
+LM-I1 through LM-I6 and LM-GPT56-0 through LM-GPT56-5 are complete. The sole next packet is LM-H1: a consented, uncoached private-alpha cohort using the exact checksummed candidate. Human validation is now needed to calibrate pacing, comprehension, accessibility, and recognition; it is not replaced by repository automation.
 
 ## Decision
 
@@ -72,10 +72,14 @@ The investment target is a compact but complete campaign of moving-fortress jour
 
 ## 2026-09-03 review checkpoint — evidence harness gate
 
-The current `0.3.0-alpha.363` main build passes the full verification suite after the repository-owned version validator is made available at the wrapper’s expected sandbox path. The automated suite covers the creative vertical, complete journey handoff, responsive profiles, regional flows, breadth, memory, recovery, controller, accessibility, audio, performance, and hardening.
+The then-current `0.3.0-alpha.363` main build passed the full verification suite after the repository-owned version validator was made available at the wrapper’s expected sandbox path. The automated suite covered the creative vertical, complete journey handoff, responsive profiles, regional flows, breadth, memory, recovery, controller, accessibility, audio, performance, and hardening.
 
 The three fresh 1280×720 smoke captures from this cycle are uniform grey frames. This is an invalid visual-evidence result, not a verified game-rendering failure. Therefore **LM-I1 is not complete for investment-evaluation scope** until the capture harness has a rendered-frame readiness handshake or a Godot-controlled viewport capture. The next agent must execute **LM-GPT56-0**: repair the evidence harness, capture a real title/First Watch state, and fail clearly when no rendered frame is available.
 
 Once valid evidence exists, execute **LM-GPT56-1**: prove one clean-save journey through First Watch, refit, route, travel, contact/event, visible consequence, recovery, arrival, next route, and terminal Debrief. Do not add another region until the complete journey is visually and causally proven. The dated evidence is in `docs/latest_review_2026-09-03.md` and `docs/visual_evidence/v0.3.0-alpha.363-review-2026-09-03/`.
 
-The prior statement that LM-I1 through LM-I6 and LM-GPT56-1 through LM-GPT56-5 were complete applies to automated repository scope only. This checkpoint supersedes it for investment evaluation because visual proof is currently invalid and the full journey remains unconfirmed by this cycle.
+At that checkpoint, the prior statement that LM-I1 through LM-I6 and LM-GPT56-1 through LM-GPT56-5 were complete applied to automated repository scope only. The grey-frame finding temporarily superseded it for investment evaluation until the resolution below.
+
+### Resolution
+
+LM-GPT56-0 is complete in `0.3.0-alpha.364`. The exact failed grey frame is a negative regression fixture, and the new Godot viewport gate refuses null, wrong-size, blank, or visually uniform captures. LM-GPT56-1 was rerun through the gate at 1280×720 and 1600×900, producing complete checksummed state sequences. The evidence blocker above is closed; LM-H1 human observation is again the sole next packet.

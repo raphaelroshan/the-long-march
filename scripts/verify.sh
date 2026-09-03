@@ -75,6 +75,7 @@ run_checked "PASS: The Long March LM-I6 candidate recovery flow 1280x720" env LO
 run_checked "PASS: The Long March interface audio" "$GODOT_BIN" --headless --path . --script res://tests/test_interface_audio.gd
 run_checked "PASS: The Long March visual contrast" "$GODOT_BIN" --headless --path . --script res://tests/test_visual_contrast.gd
 run_checked "PASS: The Long March fortress silhouette" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_silhouette.gd
+run_checked "PASS: The Long March LM-GPT56-0 rendered-frame evidence gate" "$GODOT_BIN" --headless --path . --script res://tests/test_rendered_frame_capture.gd
 run_checked "PASS: The Long March LM-GPT56-2 fortress presentation registry" "$GODOT_BIN" --headless --path . --script res://tests/test_fortress_presentation_registry.gd
 run_checked "PASS: The Long March LM-GPT56-3 regional campaign skeleton" "$GODOT_BIN" --headless --path . --script res://tests/test_regional_campaign_skeleton.gd
 run_checked "PASS: The Long March LM-GPT56-4 people and promises" "$GODOT_BIN" --headless --path . --script res://tests/test_people_promises.gd
