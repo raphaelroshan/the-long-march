@@ -32,6 +32,7 @@ run_checked() {
 }
 
 python3 tools/validate_versions.py --repo .
+python3 tools/validate_project_skills.py
 python3 tools/validate_flooded_veyru.py --data content/flooded_veyru.json
 python3 tools/validate_cinder_spine.py --data content/cinder_spine.json
 python3 tools/validate_white_salt.py --data content/white_salt_expanse.json

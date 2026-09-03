@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long March Writer"
+  short_description: "Write mechanically grounded Long March narrative"
+  default_prompt: "Use $long-march-writer to draft or revise this Long March game text against the implemented mechanics and established voice."
