@@ -165,6 +165,9 @@ func _run() -> void:
 	var opening_focus := game.get_viewport().gui_get_focus_owner()
 	_expect(opening_focus in game.campaign_node_buttons and game.journey_planner.map_host.get_global_rect().encloses(opening_focus.get_global_rect()), "opening the Veyru route table should focus a visible opening road")
 	_expect(game.campaign_map.assignment_marker_for("dry_archive") == "accepted" and game.campaign_map.marker_labels["dry_archive"].text == "ACCEPTED", "the Veyru route map should carry the medicine obligation onto the Dry Archive destination")
+	var carrier_marker: Label = game.campaign_map.marker_labels.get("dry_archive") as Label
+	var carrier_destination: Button = game.campaign_map.button_for("dry_archive") as Button
+	_expect(carrier_marker != null and carrier_destination != null and not carrier_marker.get_global_rect().intersects(carrier_destination.get_global_rect()) and game.campaign_map.get_global_rect().encloses(carrier_marker.get_global_rect()), "the medicine assignment badge should remain beside the Dry Archive node without obscuring its destination label")
 	_expect_visible_inside(game.journey_planner, [game.journey_planner.map_host, opening_focus, game.campaign_commit_button], "Veyru route planner")
 
 	await _press_route("pump_gallery")

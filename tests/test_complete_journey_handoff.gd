@@ -399,6 +399,12 @@ func _run_ashgate_journey() -> void:
 	game.settlement_hub.primary_action_button.pressed.emit()
 	await _settle()
 	_expect(game.journey_planner.visible and game.campaign_map.button_for("rill_crossing").has_focus(), "departure should open route planning at the first available road")
+	var assignment_marker: Label = game.campaign_map.marker_labels.get("morrowline_camp") as Label
+	var assignment_destination: Button = game.campaign_map.button_for("morrowline_camp") as Button
+	if declined_convoy_profile:
+		_expect(assignment_marker != null and not assignment_marker.visible, "declining the convoy assignment should leave no accepted marker on Morrowline")
+	else:
+		_expect(assignment_marker != null and assignment_marker.visible and assignment_destination != null and not assignment_marker.get_global_rect().intersects(assignment_destination.get_global_rect()) and game.campaign_map.get_global_rect().encloses(assignment_marker.get_global_rect()), "the accepted assignment badge should remain beside its destination without covering the node label or leaving the route chart")
 	_expect(game.journey_planner.detail_heading.text == "ROAD DOSSIER" and game.journey_planner.route_stage_label.text.contains("NO COST"), "opening the route map should frame focus as reversible browsing rather than a selected commitment")
 	game.campaign_map.button_for("rill_crossing").pressed.emit()
 	await _settle()
