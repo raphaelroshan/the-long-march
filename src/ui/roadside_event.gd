@@ -583,6 +583,10 @@ class ScenarioCanvas extends Control:
 			return "PROMISE CHECK · %s · %s" % ["HELD" if bool(story.get("held", false)) else "FAILED", String(story.get("target_name", "promise")).to_upper()]
 		if motif == "pump_gallery_choice":
 			return "OLD DRAIN · ONE DAY OR TWO WATER"
+		if motif == "registry_salvage_choice":
+			return "RECORD CHESTS · SALVAGE OR HIGH EXIT"
+		if motif == "archive_signal_choice":
+			return "ROOF RELAY · PUBLIC HEADINGS OR CARRIER COVER"
 		if motif == "dry_room_choice":
 			return "ONE DRY ROOM · FAMILIES OR PARTS"
 		if motif == "soot_orchard_choice":

@@ -1817,19 +1817,23 @@ func campaign_event_details() -> Dictionary:
 				{"id": "keep_moving", "label": "Keep the column moving", "effect": "Pressure -1 · Trust -1", "enabled": true, "reason": ""}
 			]}
 		"drain_pumps":
-			return {"id": "drain_pumps", "title": "The Gallery Still Turns", "body": "The old pumps can pull water out of the lower roads, but only if the fortress holds position long enough to wake them.", "choices": [
-				{"id": "drain_gallery", "label": "Restart the gallery pumps", "effect": "Day +1 · Rising water -2", "enabled": true, "reason": ""},
-				{"id": "leave_gallery", "label": "Keep the column moving", "effect": "No delay · Water unchanged", "enabled": true, "reason": ""}
+			var drained_water := maxi(0, campaign_pressure - 2)
+			return {"id": "drain_pumps", "title": "The Gallery Still Turns", "body": "The gallery's scoop wheels still turn beneath the flood. A full day on the starter crank will draw water off the lower roads; leave now and the current floodline follows the column.", "choices": [
+				{"id": "drain_gallery", "label": "Wake the gallery pumps", "effect": "Day %d→%d · Rising water %d→%d" % [day, day + 1, campaign_pressure, drained_water], "enabled": true, "reason": ""},
+				{"id": "leave_gallery", "label": "Take the high exit now", "effect": "Day unchanged · Rising water remains %d" % campaign_pressure, "enabled": true, "reason": ""}
 			]}
 		"registry_salvage":
-			return {"id": "registry_salvage", "title": "Names Beneath the Water", "body": "Six Ashmarks of sealed records remain within reach. Recovering them means opening the flooded stacks again.", "choices": [
-				{"id": "recover_records", "label": "Recover the sealed records", "effect": "Ashmarks +6 · Rising water +1", "enabled": true, "reason": ""},
-				{"id": "abandon_records", "label": "Mark the stacks and leave", "effect": "Rising water -1 · No salvage", "enabled": true, "reason": ""}
+			return {"id": "registry_salvage", "title": "Names Beneath the Water", "body": "Brass record chests remain chained above the water. They are worth six Ashmarks in salvage, but cutting them loose opens the flooded stacks to another surge.", "choices": [
+				{"id": "recover_records", "label": "Haul out the record chests", "effect": "Ashmarks %d→%d · Rising water %d→%d" % [money, money + 6, campaign_pressure, campaign_pressure + 1], "enabled": true, "reason": ""},
+				{"id": "abandon_records", "label": "Mark the high exit and leave", "effect": "No salvage · Rising water %d→%d" % [campaign_pressure, maxi(0, campaign_pressure - 1)], "enabled": true, "reason": ""}
 			]}
 		"archive_broadcast":
-			return {"id": "archive_broadcast", "title": "What the Archive Broadcasts", "body": "The gate can open its civic signal to every flooded district, or seal the archive and hide the medicine carrier's approach.", "choices": [
-				{"id": "broadcast_archive", "label": "Broadcast the archive", "effect": "Knowledge +1 · Trust +1\nClimbers join the final contact", "enabled": true, "reason": ""},
-				{"id": "seal_archive", "label": "Seal the archive", "effect": "Rising water -1 · Carrier damage -1\nFinal targeting stays forecast", "enabled": true, "reason": ""}
+			var carries_medicine := not veyru_medicine_carrier_id.is_empty()
+			var covered_subject := "medicine carrier" if carries_medicine else "fortress"
+			var cover_effect := "Carrier damage -1" if carries_medicine else "No medicine carrier aboard"
+			return {"id": "archive_broadcast", "title": "What the Archive Broadcasts", "body": "The roof relay still holds every district frequency. Broadcasting gives Veyru the safe headings and exposes the mast to Climbers; shuttering it hides the %s for the final approach." % covered_subject, "choices": [
+				{"id": "broadcast_archive", "label": "Broadcast the safe headings", "effect": "Knowledge %d→%d · Trust %d→%d\nClimbers join the final contact" % [knowledge_tendency, knowledge_tendency + 1, settlement_trust, settlement_trust + 1], "enabled": true, "reason": ""},
+				{"id": "seal_archive", "label": "Shutter the archive relay", "effect": "Rising water %d→%d · %s\nFinal targeting stays forecast" % [campaign_pressure, maxi(0, campaign_pressure - 1), cover_effect], "enabled": true, "reason": ""}
 			]}
 		"charcoal_vow":
 			var charcoal_choices: Array[Dictionary] = [
@@ -2049,31 +2053,39 @@ func resolve_campaign_event(choice_id: String) -> Dictionary:
 			return {"ok": false, "reason": "that roadside response is not available"}
 	elif resolved_event == "drain_pumps":
 		if choice_id == "drain_gallery":
+			var water_before := campaign_pressure
 			day += 1
 			campaign_pressure = maxi(0, campaign_pressure - 2)
-			result_message = "The gallery pumps wake for one full day. Rising water falls by 2 before the fortress leaves."
+			result_message = "The starter crank bites and the scoop wheels lift black water for a full day. Day +1; rising water %d→%d before departure." % [water_before, campaign_pressure]
 		elif choice_id == "leave_gallery":
-			result_message = "The fortress leaves the old pumps quiet and keeps its place in the moving column."
+			result_message = "The fortress takes the high exit while the scoop wheels turn empty. The departure day does not change; rising water remains at %d." % campaign_pressure
 		else:
 			return {"ok": false, "reason": "that pump-gallery response is not available"}
 	elif resolved_event == "registry_salvage":
 		if choice_id == "recover_records":
+			var money_before := money
+			var water_before := campaign_pressure
 			money += 6
 			campaign_pressure += 1
-			result_message = "The crew recovers six Ashmarks of sealed records while rising water gains 1."
+			result_message = "The brass record chests come aboard. Ashmarks %d→%d; water through the opened stacks raises the flood %d→%d." % [money_before, money, water_before, campaign_pressure]
 		elif choice_id == "abandon_records":
+			var water_before := campaign_pressure
 			campaign_pressure = maxi(0, campaign_pressure - 1)
-			result_message = "The flooded stacks are marked and abandoned; rising water falls by 1 as the column takes the high exit."
+			result_message = "The crew chalks the high exit and leaves the record chests chained below. Rising water %d→%d as the column gains ground." % [water_before, campaign_pressure]
 		else:
 			return {"ok": false, "reason": "that registry response is not available"}
 	elif resolved_event == "archive_broadcast":
 		if choice_id == "broadcast_archive":
+			var knowledge_before := knowledge_tendency
+			var trust_before := settlement_trust
 			knowledge_tendency += 1
 			settlement_trust += 1
-			result_message = "The Dry Archive broadcasts across Veyru. Knowledge and trust rise by 1, and Climbers answer the exposed signal."
+			result_message = "The roof relay lights every district frequency. Knowledge %d→%d and trust %d→%d; Climbers follow the open signal into the final contact." % [knowledge_before, knowledge_tendency, trust_before, settlement_trust]
 		elif choice_id == "seal_archive":
+			var water_before := campaign_pressure
 			campaign_pressure = maxi(0, campaign_pressure - 1)
-			result_message = "The archive seals its signal. Rising water falls by 1 and the medicine carrier gains cover for the final approach."
+			var cover_receipt := "the hidden medicine carrier takes 1 less damage if the Civic Guardian targets it" if not veyru_medicine_carrier_id.is_empty() else "final targeting remains at forecast confidence; no medicine carrier is aboard"
+			result_message = "Steel shutters close around the relay mast. Rising water %d→%d; %s." % [water_before, campaign_pressure, cover_receipt]
 		else:
 			return {"ok": false, "reason": "that archive commitment is not available"}
 	elif resolved_event == "charcoal_vow":

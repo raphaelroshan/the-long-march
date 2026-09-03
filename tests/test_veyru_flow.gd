@@ -172,7 +172,7 @@ func _run() -> void:
 	_expect_visible_inside(game.road_contact, [game.road_contact.contact_canvas, game.advance_encounter_button, game.road_contact.intervention_buttons[0]], "Veyru contact")
 	await _finish_battle()
 	_expect(game.state.campaign_event_pending == "drain_pumps" and game.campaign_event_title.text == "THE GALLERY STILL TURNS", "Pump Gallery should hand off to the authored drain decision")
-	_expect(game.roadside_event.story_label.text.contains("ONE DAY AGAINST TWO WATER") and game.roadside_event.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER", "the Pump Gallery should frame its delay as a visible choice against the flood clock")
+	_expect(game.roadside_event.body_label.text.contains("scoop wheels") and game.roadside_event.story_label.text.contains("ONE DAY AGAINST TWO WATER") and game.roadside_event.choice_buttons[0].text.contains("Rising water") and game.roadside_event.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER", "the Pump Gallery should tie its exact delay-versus-water choice to the working drain machinery")
 	var pump_briefing_state: Dictionary = game.state.serialize()
 	game._show_onboarding(true)
 	await process_frame
@@ -206,6 +206,7 @@ func _run() -> void:
 	await _press_route("dry_archive_gate")
 	await _finish_battle()
 	_expect(game.state.campaign_event_pending == "archive_broadcast" and game.campaign_event_title.text == "WHAT THE ARCHIVE BROADCASTS", "the fourth encounter should present the final archive commitment in the shared event card")
+	_expect(game.roadside_event.body_label.text.contains("district frequency") and game.roadside_event.story_label.text.contains("PUBLIC HEADINGS OR CARRIER COVER") and game.roadside_event.tableau.presentation_signature() == "ROOF RELAY · PUBLIC HEADINGS OR CARRIER COVER", "the archive commitment should connect its public signal to the medicine carrier's physical exposure")
 	game._show_onboarding(true)
 	await process_frame
 	_expect(game.onboarding_step == 6 and game.onboarding_title_label.text == "Choose what the archive says", "the archive commitment should reopen Field Briefing at its authored finale topic")

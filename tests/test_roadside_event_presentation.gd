@@ -195,6 +195,40 @@ func _run() -> void:
 	await _settle_ui()
 	_expect(event_view.story_label.text.contains("ONE DAY AGAINST TWO WATER") and event_view.choice_buttons[0].text.contains("Rising water -2") and event_view.choice_buttons[1].text.contains("Water unchanged"), "the Pump Gallery should expose the exact time-versus-flood tradeoff before commitment")
 	_expect(event_view.tableau.presentation_signature() == "OLD DRAIN · ONE DAY OR TWO WATER" and view_rect.encloses(event_view.choice_buttons[1].get_global_rect()), "the Pump Gallery should retain a distinct pump-and-water motif within the large-text viewport")
+	var registry_view: Dictionary = common.duplicate(true)
+	registry_view["region_id"] = "flooded_veyru"
+	registry_view["location_name"] = "Drowned Registry"
+	registry_view.merge({
+		"event_id": "registry_salvage",
+		"title": "Names Beneath the Water",
+		"body": "Brass record chests remain chained above the water. They are worth six Ashmarks in salvage, but cutting them loose opens the flooded stacks to another surge.",
+		"story": {"motif": "registry_salvage_choice", "heading": "RECORD CHESTS · SALVAGE OR HIGH EXIT", "detail": "Chests: Ashmarks 24→30 · Rising water 3→4. High exit: No salvage · Rising water 3→2."},
+		"choices": [
+			{"id": "recover_records", "label": "Haul out the record chests", "effect": "Ashmarks 24→30 · Rising water 3→4", "enabled": true, "reason": ""},
+			{"id": "abandon_records", "label": "Mark the high exit and leave", "effect": "No salvage · Rising water 3→2", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(registry_view)
+	await _settle_ui()
+	_expect(event_view.story_label.text.contains("RECORD CHESTS") and event_view.tableau.presentation_signature() == "RECORD CHESTS · SALVAGE OR HIGH EXIT", "the Drowned Registry should stage physical salvage against a named escape route")
+	_expect(event_view.choice_buttons[0].text.contains("Ashmarks 24→30") and event_view.choice_buttons[1].text.contains("Rising water 3→2") and view_rect.encloses(event_view.choice_buttons[1].get_global_rect()), "the Drowned Registry should disclose both state transitions within the large-text viewport")
+	var archive_view: Dictionary = common.duplicate(true)
+	archive_view["region_id"] = "flooded_veyru"
+	archive_view["location_name"] = "Dry Archive Gate"
+	archive_view.merge({
+		"event_id": "archive_broadcast",
+		"title": "What the Archive Broadcasts",
+		"body": "The roof relay still holds every district frequency. Broadcasting gives Veyru the safe headings and exposes the mast to Climbers; shuttering it hides the medicine carrier for the final approach.",
+		"story": {"motif": "archive_signal_choice", "heading": "ROOF RELAY · PUBLIC HEADINGS OR CARRIER COVER", "detail": "Broadcast: Knowledge 0→1 · Trust 2→3 · Climbers join. Shutter: Rising water 3→2 · Carrier damage -1."},
+		"choices": [
+			{"id": "broadcast_archive", "label": "Broadcast the safe headings", "effect": "Knowledge 0→1 · Trust 2→3\nClimbers join the final contact", "enabled": true, "reason": ""},
+			{"id": "seal_archive", "label": "Shutter the archive relay", "effect": "Rising water 3→2 · Carrier damage -1\nFinal targeting stays forecast", "enabled": true, "reason": ""}
+		]
+	})
+	event_view.configure(archive_view)
+	await _settle_ui()
+	_expect(event_view.story_label.text.contains("PUBLIC HEADINGS OR CARRIER COVER") and event_view.tableau.presentation_signature() == "ROOF RELAY · PUBLIC HEADINGS OR CARRIER COVER", "the Dry Archive should frame its final commitment as public information against physical carrier cover")
+	_expect(event_view.choice_buttons[0].text.contains("Climbers join") and event_view.choice_buttons[1].text.contains("Carrier damage -1") and view_rect.encloses(event_view.choice_buttons[1].get_global_rect()), "the Dry Archive should retain both final-contact consequences within the large-text viewport")
 	var dry_room_view: Dictionary = common.duplicate(true)
 	dry_room_view.merge({
 		"event_id": "the_last_dry_room",
