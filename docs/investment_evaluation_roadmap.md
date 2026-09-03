@@ -68,3 +68,14 @@ LM-I1 through LM-I6 and LM-GPT56-1 through LM-GPT56-5 are complete. The sole nex
 ## Decision
 
 The investment target is a compact but complete campaign of moving-fortress journeys. We prefer four regions with real operational identities over a large empty continent, and a small number of consequences that visibly alter later play over a sprawling narrative layer with no mechanical memory.
+
+
+## 2026-09-03 review checkpoint — evidence harness gate
+
+The current `0.3.0-alpha.363` main build passes the full verification suite after the repository-owned version validator is made available at the wrapper’s expected sandbox path. The automated suite covers the creative vertical, complete journey handoff, responsive profiles, regional flows, breadth, memory, recovery, controller, accessibility, audio, performance, and hardening.
+
+The three fresh 1280×720 smoke captures from this cycle are uniform grey frames. This is an invalid visual-evidence result, not a verified game-rendering failure. Therefore **LM-I1 is not complete for investment-evaluation scope** until the capture harness has a rendered-frame readiness handshake or a Godot-controlled viewport capture. The next agent must execute **LM-GPT56-0**: repair the evidence harness, capture a real title/First Watch state, and fail clearly when no rendered frame is available.
+
+Once valid evidence exists, execute **LM-GPT56-1**: prove one clean-save journey through First Watch, refit, route, travel, contact/event, visible consequence, recovery, arrival, next route, and terminal Debrief. Do not add another region until the complete journey is visually and causally proven. The dated evidence is in `docs/latest_review_2026-09-03.md` and `docs/visual_evidence/v0.3.0-alpha.363-review-2026-09-03/`.
+
+The prior statement that LM-I1 through LM-I6 and LM-GPT56-1 through LM-GPT56-5 were complete applies to automated repository scope only. This checkpoint supersedes it for investment evaluation because visual proof is currently invalid and the full journey remains unconfirmed by this cycle.
