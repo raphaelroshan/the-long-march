@@ -2,6 +2,15 @@
 
 Feed the implementation agent one slice at a time. Each prompt assumes the agent has read `AGENTS.md`, `design/design_prompt.md`, and `design/gameplay_framework.md`. The current post-alpha handoff contract is [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md); use it before issuing a new task so the agent starts from the implemented Ashgate Lowlands and Flooded Veyru baseline rather than the historical prototype sequence.
 
+## Repository writing skills
+
+The repository carries two Codex skills under `.codex/skills/` so its narrative workflow travels with the project:
+
+- Invoke `$long-march-writer` to draft or revise events, choices, specialist lines, route and settlement copy, tutorials, tooltips, and Debrief text. It requires an implementation-backed mechanical spine before prose.
+- Invoke `$long-march-content-reviewer` for the adversarial final pass. It checks mechanical truth, meaningful choice, continuity, regional identity, UI fit, accessibility, and generic AI-like phrasing; it reports findings rather than silently rewriting by default.
+
+For substantive new copy, use the writer first and the reviewer second. The project validator checks that both skills, their metadata, and their internal references remain complete; the normal verification script runs that check automatically.
+
 ## Current post-alpha feed order
 
 The original prompts below describe the build-up of the prototype and are retained as historical context. The current implementation baseline is `0.3.0-alpha.364`; Feeds A through AT, **LM-EA-1** through **LM-EA-6**, **LM-I1** through **LM-I6**, and **LM-GPT56-0** through **LM-GPT56-5** are complete. Four five-contact chapters, three physical chassis templates, twenty modules, six specialists, causal obligation memory, composable endings, verified Windows/macOS/Linux release cohorts, explicit save-health and recovery UI, rendered-frame evidence validation, and the full GPT56 creative-journey/package contract meet repository automation gates. The next required milestone is exactly one consented, uncoached **LM-H1** private-alpha observation packet using [`early_access_test_matrix.md`](early_access_test_matrix.md) and [`private_alpha_session_sheet.md`](private_alpha_session_sheet.md) for calibration, not as a claim that the game is commercially finished.

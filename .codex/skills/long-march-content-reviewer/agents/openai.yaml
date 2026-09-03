@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long March Content Reviewer"
+  short_description: "Audit Long March copy for truth, choice, and voice"
+  default_prompt: "Use $long-march-content-reviewer to review this Long March content for mechanical truth, continuity, player choice, UI fit, and generic writing."
