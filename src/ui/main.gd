@@ -3340,10 +3340,25 @@ func _roadside_event_story(event_id: String, event: Dictionary) -> Dictionary:
 			"held": bool(preview.get("held", false))
 		}
 	if event_id == "drain_pumps":
+		var choices: Array = event.get("choices", [])
 		return {
 			"motif": "pump_gallery_choice",
 			"heading": "OLD DRAIN · ONE DAY AGAINST TWO WATER",
-			"detail": "Hold: spend 1 day to lower rising water by 2. Leave: spend no time and carry the current flood clock into every remaining road."
+			"detail": "Pumps: %s. High exit: %s." % [String(choices[0].get("effect", "spend one day to lower the flood")) if choices.size() > 0 else "spend one day to lower the flood", String(choices[1].get("effect", "leave now with the current waterline")) if choices.size() > 1 else "leave now with the current waterline"]
+		}
+	if event_id == "registry_salvage":
+		var choices: Array = event.get("choices", [])
+		return {
+			"motif": "registry_salvage_choice",
+			"heading": "RECORD CHESTS · SALVAGE OR HIGH EXIT",
+			"detail": "Chests: %s. High exit: %s." % [String(choices[0].get("effect", "recover the records while the water rises")) if choices.size() > 0 else "recover the records while the water rises", String(choices[1].get("effect", "leave the salvage and lower the flood")) if choices.size() > 1 else "leave the salvage and lower the flood"]
+		}
+	if event_id == "archive_broadcast":
+		var choices: Array = event.get("choices", [])
+		return {
+			"motif": "archive_signal_choice",
+			"heading": "ROOF RELAY · PUBLIC HEADINGS OR CARRIER COVER",
+			"detail": "Broadcast: %s. Shutter: %s." % [String(choices[0].get("effect", "share the headings and expose the mast")) if choices.size() > 0 else "share the headings and expose the mast", String(choices[1].get("effect", "hide the carrier and keep final targeting uncertain")) if choices.size() > 1 else "hide the carrier and keep final targeting uncertain"]
 		}
 	if event_id == "the_last_dry_room":
 		var choices: Array = event.get("choices", [])

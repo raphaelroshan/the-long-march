@@ -1299,6 +1299,15 @@ func _test_complete_flooded_veyru_campaign() -> void:
 
 	var pressure_before_seal := state.campaign_pressure
 	_expect(bool(state.resolve_campaign_event("seal_archive").get("ok", false)) and state.campaign_pressure == maxi(0, pressure_before_seal - 1), "sealing the archive should lower rising water before the final approach")
+	var no_carrier := LongMarchState.new(2205)
+	_install_veyru_loadout(no_carrier)
+	no_carrier.start_flooded_veyru()
+	no_carrier.choose_veyru_medicine_contract(false)
+	no_carrier.campaign_event_pending = "archive_broadcast"
+	var no_carrier_event := no_carrier.campaign_event_details()
+	_expect(String(no_carrier_event.get("body", "")).contains("hides the fortress") and String(no_carrier_event.choices[1].effect).contains("No medicine carrier aboard"), "the archive choice should not promise carrier protection after the medicine contract was declined")
+	var no_carrier_result := no_carrier.resolve_campaign_event("seal_archive")
+	_expect(bool(no_carrier_result.get("ok", false)) and String(no_carrier_result.get("message", "")).contains("no medicine carrier is aboard"), "the sealed-archive receipt should report the actual no-carrier state")
 	var final_preview := state.campaign_node_preview("dry_archive")
 	_expect(String(final_preview.get("visibility", "")) == "forecast" and Array(final_preview.get("threats", [])).is_empty(), "the sealed archive approach should keep exact final targeting at forecast confidence")
 	var fifth := _veyru_battle(state, "dry_archive", "protect_cargo")
