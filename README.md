@@ -131,3 +131,5 @@ The dependency-aware execution program in [`docs/gpt56_investment_execution_pack
 | `docs/visual_evidence/v0.3.0-alpha.363-review-2026-09-03/` | Historical failed capture-cycle evidence retained as a negative regression fixture. |
 | `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720/` | Complete accessible journey recaptured through the rendered-frame quality gate. |
 | `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1600x900/` | Complete standard journey recaptured through the rendered-frame quality gate. |
+| `docs/latest_review_2026-09-04.md` | Repeat current-main verification and visual review; confirms valid moving-fortress/contact evidence and remaining density work. |
+| `docs/visual_evidence/v0.3.0-alpha.364-review-2026-09-04/` | Fresh 1280×720 title, contact, and follow-up captures with machine-readable manifest. |

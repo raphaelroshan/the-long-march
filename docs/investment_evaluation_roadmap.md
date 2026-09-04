@@ -83,3 +83,12 @@ At that checkpoint, the prior statement that LM-I1 through LM-I6 and LM-GPT56-1 
 ### Resolution
 
 LM-GPT56-0 is complete in `0.3.0-alpha.364`. The exact failed grey frame is a negative regression fixture, and the new Godot viewport gate refuses null, wrong-size, blank, or visually uniform captures. LM-GPT56-1 was rerun through the gate at 1280×720 and 1600×900, producing complete checksummed state sequences. The evidence blocker above is closed; LM-H1 human observation is again the sole next packet.
+
+
+## 2026-09-04 repeat-test checkpoint — complete journey remains the next gate
+
+The current `0.3.0-alpha.364` main build passes the full verification suite. The repeat visual run now produces valid evidence: the title shows the moving-fortress identity, saved-run and region choices; First Watch reaches a real Siege Beast contact; and the follow-up reaches Contact Step 3 of 6 with a saved battle-step state, readable dossier, approach/advance controls, and fortress metrics.
+
+The opening now reads as a credible game. The remaining investment gate is not more regions but one complete, clean-save journey through First Watch, refit, route, travel, contact/event, consequence, recovery, arrival, next route, and Debrief. At 1280×720 the side rail, fortress, dossier, emergency controls, and timeline are information-dense; the agent should reduce overload only after the full journey evidence is captured, without hiding causal detail.
+
+Execute **LM-GPT56-1B** next. Capture the complete journey at 1600×900 and representative 1280×720 states, preserve deterministic replay and save/resume at each phase, and keep LM-H1 human observation optional rather than blocking. The current evidence is in `docs/latest_review_2026-09-04.md` and `docs/visual_evidence/v0.3.0-alpha.364-review-2026-09-04/`.
