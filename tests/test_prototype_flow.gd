@@ -222,6 +222,9 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(not game.settlement_hub.visible and game.main_columns.visible and game.settlement_detail_mode == "workshop" and not game.campaign_map.visible, "entering the workshop should replace the bazaar with a focused chassis workspace")
+	_expect(not game.journey_banner.visible and not game.asset_row.visible and not game.run_flow_tracker.visible, "the focused workshop should remove the decorative journey banner, asset strip, and run tracker from the chassis decision")
+	_expect(game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "the 1280x720 workshop should keep the complete chassis decision surface above the fold")
+	_expect(game.right_scroll.get_global_rect().encloses(game.settlement_hub_return_button.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.focus_chassis_button.get_global_rect()), "the 1280x720 workshop should show both its bazaar exit and primary chassis action without scrolling")
 	game.how_to_play_button.grab_focus()
 	await process_frame
 	await process_frame

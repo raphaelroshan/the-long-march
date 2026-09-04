@@ -23,3 +23,11 @@ These observations establish rendering and layout properties only. They do not e
 ## Boundary reached
 
 No additional objective blocker is visible in the validated cohort. The active roadmap now requires a consented, uncoached LM-H1 session on one retained checksummed candidate. Further hierarchy, pacing, tutorial, prose, or game-feel changes should respond to observed behavior rather than another speculative review pass.
+
+## LM-GPT56-1B workshop follow-up
+
+The completion-aware journey review exposed one bounded exception to the shared layout: `05a_live_refit.png` placed the chassis beneath a decorative journey banner, duplicated campaign status, and the run-flow tracker. At 1280×720 the chassis was compressed against the bottom of the viewport, while automatic focus scrolling moved the workshop's return action above the visible right dock. This was a geometry and hierarchy concern, not evidence of player confusion.
+
+The focused workshop now removes the banner, duplicate journey summary, decorative asset strip, and run-flow tracker while that workbench is open. It retains the exact resource values, system condition, phase, selected module, placement grid, dependency chain, refit actions, and bazaar return. The right panel no longer enforces a 760-pixel content minimum; it scrolls only when its actual controls require it.
+
+A fresh local 1280×720 rendered inspection under Godot 4.7.2 shows the complete chassis plus both `RETURN TO ASHGATE DEPOT BAZAAR` and `EDIT CHASSIS` in the same frame. That image is review-only because the retained candidate uses Godot 4.4.1. Deterministic geometry assertions enforce the same bounds without replacing the candidate evidence. The optional Field Briefing may remain below the fold; the primary spatial decision, dependency explanation, and exit may not.

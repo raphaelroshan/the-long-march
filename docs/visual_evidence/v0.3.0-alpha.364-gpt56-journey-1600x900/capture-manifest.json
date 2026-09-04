@@ -337,7 +337,7 @@
   ],
   "terminal_state": {
     "current_location": "meridian_pass",
-    "encounter_step": 6,
+    "encounter_step": 5,
     "encounters_completed": 5,
     "pending_event": "",
     "phase": "results",
