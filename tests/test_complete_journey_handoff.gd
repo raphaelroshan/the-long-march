@@ -383,6 +383,9 @@ func _run_ashgate_journey() -> void:
 		game.settlement_hub.primary_action_button.pressed.emit()
 		await _settle()
 		_expect(game.main_columns.visible and game.state.can_refit(), "the investment profile should enter Ashgate's workshop before departure")
+		if responsive_profile:
+			_expect(not game.journey_banner.visible and not game.run_flow_tracker.visible and game.left_scroll.get_global_rect().encloses(game.fortress_panel.get_global_rect()), "the compact investment workshop should make the complete chassis the dominant above-fold decision")
+			_expect(game.right_scroll.get_global_rect().encloses(game.settlement_hub_return_button.get_global_rect()) and game.right_scroll.get_global_rect().encloses(game.focus_chassis_button.get_global_rect()), "the compact investment workshop should keep its exit and primary refit action visible together")
 		game._on_grid_cell_pressed(Vector2i(0, 0))
 		await _settle()
 		game.remove_button.pressed.emit()

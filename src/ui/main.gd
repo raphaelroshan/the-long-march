@@ -235,6 +235,7 @@ var recruit_iven_button: Button
 var save_button: Button
 var load_button: Button
 var guidance_label: Label
+var desk_title: Label
 var current_order_button: Button
 var run_flow_panels: Array[PanelContainer] = []
 var run_flow_labels: Array[Label] = []
@@ -841,18 +842,18 @@ func _build_ui() -> void:
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	main_columns.add_child(right_scroll)
 	var right := PanelContainer.new()
-	right.custom_minimum_size = Vector2(370, 760)
+	right.custom_minimum_size = Vector2(370, 0)
 	right.add_theme_stylebox_override("panel", _flat_style(Color("#151d21"), Color("#2c3a40"), 1, 6, 10))
 	right_scroll.add_child(right)
 	var controls := VBoxContainer.new()
 	controls.add_theme_constant_override("separation", 10)
 	right.add_child(controls)
 
-	var control_title := Label.new()
-	control_title.text = "MARCHMASTER'S DESK"
-	control_title.add_theme_font_size_override("font_size", 20)
-	control_title.add_theme_color_override("font_color", Color("#e8c58e"))
-	controls.add_child(control_title)
+	desk_title = Label.new()
+	desk_title.text = "MARCHMASTER'S DESK"
+	desk_title.add_theme_font_size_override("font_size", 20)
+	desk_title.add_theme_color_override("font_color", Color("#e8c58e"))
+	controls.add_child(desk_title)
 	settlement_hub_return_button = Button.new()
 	settlement_hub_return_button.text = "RETURN TO SETTLEMENT BAZAAR"
 	settlement_hub_return_button.custom_minimum_size = Vector2(0, 46)
@@ -2152,6 +2153,11 @@ func _desk_context_anchor_for(control: Control) -> Control:
 func _scroll_action_context_into_view(control: Control) -> void:
 	if not _control_can_receive_focus(control) or not control.has_focus() or right_scroll == null or not right_scroll.is_ancestor_of(control):
 		return
+	if _settlement_hub_available() and not settlement_hub_active and settlement_detail_mode == "workshop" and control in [settlement_hub_return_button, focus_chassis_button]:
+		# The compact workshop is intentionally arranged so its exit and primary
+		# edit action coexist. Do not let focus scrolling move the exit offscreen.
+		right_scroll.scroll_vertical = 0
+		return
 	var viewport_rect := right_scroll.get_global_rect()
 	var previous_scroll := right_scroll.scroll_vertical
 	var context_anchor := _desk_context_anchor_for(control)
@@ -3434,10 +3440,24 @@ func _signed_change(value: int) -> String:
 	return "+%d" % value if value > 0 else str(value)
 
 func _apply_start_detail_visibility() -> void:
-	if not _settlement_hub_available() or settlement_hub_active:
+	var detail_active := _settlement_hub_available() and not settlement_hub_active
+	var show_workshop := detail_active and settlement_detail_mode == "workshop"
+	var show_journey := detail_active and settlement_detail_mode == "journey"
+	# The workshop is a focused spatial task. Keep its chassis and exit action
+	# above the fold instead of repeating the journey banner and run tracker.
+	desk_title.visible = not show_workshop
+	run_flow_heading_row.visible = not show_workshop
+	run_flow_tracker.visible = not show_workshop
+	journey_label.visible = not show_workshop
+	campaign_progress_bar.visible = not show_workshop
+	how_to_play_button.visible = not show_workshop
+	if show_workshop:
+		subtitle_label.visible = false
+		journey_banner.visible = false
+		asset_row.visible = false
+		encounter_label.visible = false
+	if not detail_active:
 		return
-	var show_workshop := settlement_detail_mode == "workshop"
-	var show_journey := settlement_detail_mode == "journey"
 	contract_group.visible = false
 	for control in [refit_title, module_group, focus_chassis_button, refit_actions, refit_label, dependency_card_panel]:
 		control.visible = show_workshop
@@ -3445,7 +3465,7 @@ func _apply_start_detail_visibility() -> void:
 		control.visible = show_journey
 	campaign_comparison_panel.visible = show_journey and campaign_comparison_panel.visible
 	campaign_commit_intel_label.visible = show_journey and campaign_commit_intel_label.visible
-	asset_row.visible = show_workshop
+	asset_row.visible = false
 
 func _active_contract_status() -> String:
 	return state.veyru_contract_status if state.campaign_region_id == "flooded_veyru" else (state.cinder_contract_status if state.campaign_region_id == "cinder_spine" else (state.salt_contract_status if state.campaign_region_id == "white_salt_expanse" else state.guard_contract_status))
