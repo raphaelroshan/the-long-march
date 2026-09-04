@@ -2153,6 +2153,11 @@ func _desk_context_anchor_for(control: Control) -> Control:
 func _scroll_action_context_into_view(control: Control) -> void:
 	if not _control_can_receive_focus(control) or not control.has_focus() or right_scroll == null or not right_scroll.is_ancestor_of(control):
 		return
+	if _settlement_hub_available() and not settlement_hub_active and settlement_detail_mode == "workshop" and control in [settlement_hub_return_button, focus_chassis_button]:
+		# The compact workshop is intentionally arranged so its exit and primary
+		# edit action coexist. Do not let focus scrolling move the exit offscreen.
+		right_scroll.scroll_vertical = 0
+		return
 	var viewport_rect := right_scroll.get_global_rect()
 	var previous_scroll := right_scroll.scroll_vertical
 	var context_anchor := _desk_context_anchor_for(control)
@@ -3445,6 +3450,7 @@ func _apply_start_detail_visibility() -> void:
 	run_flow_tracker.visible = not show_workshop
 	journey_label.visible = not show_workshop
 	campaign_progress_bar.visible = not show_workshop
+	how_to_play_button.visible = not show_workshop
 	if show_workshop:
 		subtitle_label.visible = false
 		journey_banner.visible = false
