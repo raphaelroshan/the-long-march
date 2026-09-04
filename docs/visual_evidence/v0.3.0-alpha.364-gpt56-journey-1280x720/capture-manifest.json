@@ -1,9 +1,50 @@
 {
   "build": "0.3.0-alpha.364",
   "capture_method": "godot_viewport_after_rendered_frame_gate",
+  "engine": "4.4.1.stable",
   "game": "The Long March",
+  "journey_contract": {
+    "captured_state_count": 22,
+    "fresh_save_started": true,
+    "journey_id": "ashgate_lowlands_alpha",
+    "normal_player_actions": true,
+    "profile_id": "LM-GPT56-1B",
+    "terminal_complete": true
+  },
   "quality_result": "validated_rendered_frames",
-  "schema_version": 1,
+  "resume_checkpoints": [
+    {
+      "checkpoint_id": "departure",
+      "current_location": "ashgate_depot",
+      "encounters_completed": 0,
+      "pending_event": "lift_chain_sings",
+      "phase": "battle",
+      "target_node": "rill_crossing"
+    },
+    {
+      "checkpoint_id": "pre_contact_interruption",
+      "current_location": "ashgate_depot",
+      "encounters_completed": 0,
+      "pending_event": "lift_chain_sings",
+      "phase": "battle",
+      "target_node": "rill_crossing"
+    },
+    {
+      "checkpoint_id": "arrival",
+      "current_location": "rill_crossing",
+      "encounters_completed": 1,
+      "phase": "map"
+    },
+    {
+      "checkpoint_id": "roadside_event",
+      "current_location": "morrowline_camp",
+      "encounters_completed": 3,
+      "pending_event": "mara_berth_choice",
+      "phase": "settlement",
+      "specialist_id": "iven_pell"
+    }
+  ],
+  "schema_version": 2,
   "states": [
     {
       "attempt": 1,
@@ -270,6 +311,16 @@
       "width": 1280
     }
   ],
+  "terminal_state": {
+    "current_location": "meridian_pass",
+    "encounter_step": 6,
+    "encounters_completed": 5,
+    "pending_event": "",
+    "phase": "results",
+    "run_complete": true,
+    "specialist_id": "mara_flint",
+    "target_node": ""
+  },
   "viewport": {
     "height": 720,
     "width": 1280

@@ -125,6 +125,7 @@ The full creative vertical and skeletal Early Access campaign requirements are d
 
 The dependency-aware execution program in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md) is complete from LM-GPT56-0 through LM-GPT56-5. It rejects invalid screenshot evidence, proves the full creative journey, preserves one shared fortress identity, defines the four-region skeleton and consequential people/promises, and carries those claims into a checksummed Early Access package contract. The sole next packet is a consented, uncoached LM-H1 observation cohort; the repository does not present authored pacing as human evidence.
 | `docs/lm_gpt56_0_rendered_frame_gate_report.md` | Godot-controlled capture readiness, exact grey-frame regression, and accepted journey evidence. |
+| `docs/lm_gpt56_1b_completion_evidence_report.md` | Completion-aware clean-save journey, resume checkpoints, responsive evidence, and terminal-Debrief contract. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-audit verification, visual evidence, strong-opening assessment, and next complete-journey task. |
 | `docs/lm_gpt56_5_early_access_package_report.md` | Final GPT56 package scope, platform and timing contract, verification evidence, and honest release boundary. |
 | `docs/latest_review_2026-09-03.md` | Grey-frame capture diagnosis and the alpha.364 rendered-frame-gate resolution. |
