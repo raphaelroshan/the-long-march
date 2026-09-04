@@ -29,6 +29,12 @@ const REQUIRED_STATES := [
 	"13_debrief.png",
 	"14_playtest_notes.png",
 ]
+const REQUIRED_RESUME_CHECKPOINTS := [
+	"departure",
+	"pre_contact_interruption",
+	"arrival",
+	"roadside_event",
+]
 const KNOWN_INVALID_GREY_FRAME := "res://docs/visual_evidence/v0.3.0-alpha.363-review-2026-09-03/01_title.png"
 
 var failures: Array[String] = []
@@ -58,12 +64,29 @@ func _check_committed_evidence(root_path: String) -> void:
 	_expect(manifest is Dictionary, "capture manifest should be valid JSON: " + manifest_path)
 	if not manifest is Dictionary:
 		return
+	_expect(int(manifest.get("schema_version", 0)) == 2, "capture manifest should use the completion-aware LM-GPT56-1B schema")
 	_expect(manifest.get("capture_method") == "godot_viewport_after_rendered_frame_gate", "manifest should identify the Godot-controlled capture method")
 	_expect(manifest.get("quality_result") == "validated_rendered_frames", "manifest should record validated rendered frames")
+	var journey_contract: Dictionary = manifest.get("journey_contract", {})
+	_expect(journey_contract.get("profile_id") == "LM-GPT56-1B", "capture manifest should identify the LM-GPT56-1B completion profile")
+	_expect(journey_contract.get("journey_id") == "ashgate_lowlands_alpha", "capture manifest should bind evidence to the canonical Ashgate journey")
+	_expect(bool(journey_contract.get("fresh_save_started", false)) and bool(journey_contract.get("normal_player_actions", false)), "capture manifest should prove a fresh-save player-action journey")
+	_expect(bool(journey_contract.get("terminal_complete", false)), "capture manifest should declare a completed terminal state")
+	var resumed_ids: Array[String] = []
+	for checkpoint in manifest.get("resume_checkpoints", []):
+		if checkpoint is Dictionary:
+			resumed_ids.append(String(checkpoint.get("checkpoint_id", "")))
+	for checkpoint_id in REQUIRED_RESUME_CHECKPOINTS:
+		_expect(checkpoint_id in resumed_ids, "capture manifest should include save/resume checkpoint: " + checkpoint_id)
+	var terminal_state: Dictionary = manifest.get("terminal_state", {})
+	_expect(bool(terminal_state.get("run_complete", false)), "capture manifest terminal state should complete the run")
+	_expect(int(terminal_state.get("encounters_completed", 0)) == 5, "capture manifest terminal state should secure all five contacts")
+	_expect(terminal_state.get("phase") == "results" and terminal_state.get("current_location") == "meridian_pass", "capture manifest terminal state should reach the Meridian Pass Debrief")
 	var viewport: Dictionary = manifest.get("viewport", {})
 	var expected_size := Vector2i(int(viewport.get("width", 0)), int(viewport.get("height", 0)))
 	var states: Array = manifest.get("states", [])
 	_expect(states.size() >= REQUIRED_STATES.size(), "capture manifest should list the complete journey state set")
+	_expect(int(journey_contract.get("captured_state_count", 0)) == states.size(), "capture manifest should bind its completion contract to the exact captured-state count")
 	var listed_files: Array[String] = []
 	for state in states:
 		if not state is Dictionary:

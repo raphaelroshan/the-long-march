@@ -24,6 +24,10 @@ The opening is now credible as a real game, but at 1280×720 the left state rail
 
 LM-GPT56-1 remains mandatory. Build a completion-aware clean-save fixture from First Watch through refit, route, travel, contact/event, consequence, recovery, arrival, next route, and Debrief. Capture the complete sequence at 1600×900 and representative 1280×720 states. Do not add another region until this full journey is visually and causally proven.
 
+## Resolution
+
+LM-GPT56-1B closes this gate. The current build's committed 4.4.1 journey evidence covers the entire sequence at both requested viewports, and schema-2 manifests now prove the clean-save contract, four restored checkpoints, five-contact completion, and terminal Meridian Pass Debrief. See [`lm_gpt56_1b_completion_evidence_report.md`](lm_gpt56_1b_completion_evidence_report.md). LM-H1 human observation is the sole next packet.
+
 ## Evidence
 
 - `01_title.png` — Main Menu with saved-run and region choices.

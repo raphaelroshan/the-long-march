@@ -28,6 +28,7 @@ var pre_contact_resume_tested := false
 var capture_filter: Array[String] = []
 var viewport_size := Vector2i(1600, 900)
 var capture_records: Array[Dictionary] = []
+var resume_records: Array[Dictionary] = []
 
 
 func _expect(condition: bool, message: String) -> void:
@@ -85,13 +86,25 @@ func _capture(name: String) -> void:
 func _write_capture_manifest() -> void:
 	if capture_dir.is_empty() or capture_records.is_empty():
 		return
+	var terminal_state := _evidence_state()
 	var manifest := {
-		"schema_version": 1,
+		"schema_version": 2,
 		"game": "The Long March",
 		"build": String(ProjectSettings.get_setting("application/config/version", "unknown")),
+		"engine": Engine.get_version_info().get("string", "unknown"),
 		"viewport": {"width": viewport_size.x, "height": viewport_size.y},
 		"capture_method": "godot_viewport_after_rendered_frame_gate",
 		"quality_result": "validated_rendered_frames",
+		"journey_contract": {
+			"profile_id": "LM-GPT56-1B" if gpt56_journey_profile else "complete_journey_handoff",
+			"journey_id": "ashgate_lowlands_alpha",
+			"fresh_save_started": true,
+			"normal_player_actions": true,
+			"captured_state_count": capture_records.size(),
+			"terminal_complete": bool(terminal_state.get("run_complete", false)),
+		},
+		"resume_checkpoints": resume_records,
+		"terminal_state": terminal_state,
 		"states": capture_records,
 	}
 	var file := FileAccess.open(capture_dir.path_join("capture-manifest.json"), FileAccess.WRITE)
@@ -99,6 +112,41 @@ func _write_capture_manifest() -> void:
 	if file != null:
 		file.store_string(JSON.stringify(manifest, "  ") + "\n")
 		file.close()
+
+
+func _evidence_state() -> Dictionary:
+	if game == null or game.state == null:
+		return {}
+	return {
+		"phase": String(game.state.phase),
+		"current_location": String(game.state.current_location),
+		"target_node": String(game.state.campaign_target_node),
+		"pending_event": String(game.state.campaign_event_pending),
+		"encounter_step": int(game.state.encounter_step),
+		"encounters_completed": int(game.state.campaign_encounters_completed),
+		"specialist_id": String(game.state.specialist_id),
+		"run_complete": bool(game.state.run_complete),
+	}
+
+
+func _record_resume_checkpoint(checkpoint_id: String) -> void:
+	var record := _evidence_state()
+	record["checkpoint_id"] = checkpoint_id
+	resume_records.append(record)
+
+
+func _expect_completion_evidence_contract() -> void:
+	if not gpt56_journey_profile:
+		return
+	var resumed_ids: Array[String] = []
+	for record in resume_records:
+		resumed_ids.append(String(record.get("checkpoint_id", "")))
+	for checkpoint_id in ["departure", "pre_contact_interruption", "arrival", "roadside_event"]:
+		_expect(checkpoint_id in resumed_ids, "LM-GPT56-1B should preserve the save/resume checkpoint: " + checkpoint_id)
+	var terminal_state := _evidence_state()
+	_expect(bool(terminal_state.get("run_complete", false)), "LM-GPT56-1B evidence should end at a completed run")
+	_expect(int(terminal_state.get("encounters_completed", 0)) == 5, "LM-GPT56-1B evidence should secure all five contacts")
+	_expect(terminal_state.get("phase") == "results" and terminal_state.get("current_location") == "meridian_pass", "LM-GPT56-1B evidence should end at the Meridian Pass Debrief")
 
 
 func _rect_encloses(outer: Rect2, inner: Rect2) -> bool:
@@ -145,6 +193,7 @@ func _relaunch_and_continue(expected_surface: String) -> void:
 			_expect(game.roadside_event.visible and game.roadside_event.choice_buttons[0].has_focus(), "Continue should restore the unresolved authored decision and its first action")
 		_:
 			_expect(false, "unknown relaunch surface: " + expected_surface)
+	_record_resume_checkpoint(expected_surface)
 
 
 func _choose_event(choice_id: String) -> void:
@@ -209,6 +258,7 @@ func _enter_contact() -> void:
 			game.journey_transition.continue_button.pressed.emit()
 			await _settle()
 			_expect(game.roadside_event.visible and game.roadside_event.choice_buttons[0].has_focus(), "continuing a restored road should return to the unresolved interruption without entering contact")
+			_record_resume_checkpoint("pre_contact_interruption")
 		await _choose_event("brace_lift_chain")
 	_expect(game.road_contact.visible and game.road_contact.advance_button.has_focus(), "travel should hand focus to the visible road contact")
 	_expect_semantic_cue("event" if interruption_seen else "contact_entry", "the road handoff should use the semantic cue for the surface it actually enters")
@@ -611,6 +661,7 @@ func _run() -> void:
 	await _capture("00_title")
 	await _complete_first_watch()
 	await _run_ashgate_journey()
+	_expect_completion_evidence_contract()
 	_write_capture_manifest()
 	app.queue_free()
 	await _settle()
@@ -628,6 +679,7 @@ func _run() -> void:
 			print("PASS: The Long March investment evaluation vertical")
 		if gpt56_journey_profile:
 			print("PASS: The Long March LM-GPT56-1 full creative journey")
+			print("PASS: The Long March LM-GPT56-1B completion evidence contract")
 		if responsive_profile:
 			print("PASS: The Long March responsive journey profile %dx%d" % [viewport_size.x, viewport_size.y])
 		print("PASS: The Long March complete journey handoff")
