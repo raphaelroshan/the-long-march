@@ -451,3 +451,8 @@ Issue the feeds in order: **LM-I1** lock one complete creative journey; **LM-I2*
 ## GPT-5.6 investment execution feed
 
 For the current investment-evaluation phase, read [`gpt56_investment_execution_packets.md`](gpt56_investment_execution_packets.md). LM-GPT56-0 must first reject invalid frames and validate Godot-controlled evidence; LM-GPT56-1 then proves First Watch, refit, route commitment, travel, contact/event, dependency consequence, recovery, settlement arrival, next route, and terminal Debrief in one clean-save path. LM-GPT56-2 through LM-GPT56-5 cover fortress identity, regional breadth, people/promises/memory, and alpha hardening. All six repository packets are complete; use their deterministic fixtures, screenshots, save/resume, controller/scaling, and package checks as the baseline for LM-H1.
+
+
+## Shared agent-QA operating order
+
+Before issuing any implementation feed, direct the agent to read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, and `AGENTS.md`. The first command is `bash scripts/agent_qa.sh`; the agent must preserve `artifacts/agent-qa/` and classify the result as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. New journey work must use `qa/scenarios/long_march_complete_journey.json` as the semantic contract and must not claim completion until the named route, contact, consequence, recovery, arrival, and Debrief states are produced.
