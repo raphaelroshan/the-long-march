@@ -274,6 +274,17 @@ def run_process(command: list[str], root: Path, env: dict[str, str], timeout: in
         return "timeout", 124, stdout, stderr
 
 
+def build_scenario_command(godot: str, root: Path, fixture: str) -> list[str]:
+    """Build the visual journey command without probing or mutating the host."""
+    # GitHub's Linux runners have no ALSA device. Selecting Dummy explicitly
+    # avoids a noisy ERR_CANT_OPEN followed by Godot's identical fallback while
+    # preserving strict failure on every error the journey actually emits.
+    command = [godot, "--audio-driver", "Dummy", "--path", str(root), "--script", fixture]
+    if sys.platform.startswith("linux") and shutil.which("xvfb-run"):
+        command = ["xvfb-run", "-a", "--server-args=-screen 0 1280x720x24", *command]
+    return command
+
+
 def write_result(output: Path, result: dict[str, Any]) -> int:
     (output / "qa-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
@@ -366,9 +377,7 @@ def main() -> int:
         result.update({"status": status, "exit_code": import_code, "duration_ms": round((time.time() - started) * 1000, 2), "errors": ["Godot project import failed; inspect import logs."]})
         return write_result(output, result)
 
-    command = [godot, "--path", str(root), "--script", scenario["adapter"]["fixture"]]
-    if sys.platform.startswith("linux") and shutil.which("xvfb-run"):
-        command = ["xvfb-run", "-a", "--server-args=-screen 0 1280x720x24", *command]
+    command = build_scenario_command(godot, root, scenario["adapter"]["fixture"])
     timeout_seconds = min(args.timeout, max(1, math.ceil(scenario["time_budget_ms"] / 1000)))
     result["command"] = command
     result["timeout_seconds"] = timeout_seconds

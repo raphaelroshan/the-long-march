@@ -55,6 +55,14 @@ def main() -> int:
     if (root / "tools" / "agent_qa_capture.gd").exists():
         errors.append("the obsolete editor-surface capture must remain removed")
 
+    journey_command = runner.build_scenario_command("godot", root, fixture)
+    if journey_command.count("--audio-driver") != 1:
+        errors.append("the visual journey must select an audio driver explicitly")
+    else:
+        audio_option = journey_command.index("--audio-driver")
+        if journey_command[audio_option + 1] != "Dummy":
+            errors.append("the non-interactive visual journey must use Godot's Dummy audio driver")
+
     timeout_kind, timeout_code, _, _ = runner.run_process(
         ["python3", "-c", "import time; time.sleep(2)"], root, os.environ.copy(), 1
     )
