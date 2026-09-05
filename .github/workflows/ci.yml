@@ -43,12 +43,30 @@ jobs:
         run: python tests/test_private_alpha_contract.py
 
   tests:
-    name: Godot headless tests (${{ matrix.os }})
+    name: Verification (${{ matrix.os }} / ${{ matrix.group }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            group: static
+          - os: ubuntu-latest
+            group: core
+          - os: ubuntu-latest
+            group: presentation
+          - os: ubuntu-latest
+            group: journey
+          - os: ubuntu-latest
+            group: regional
+          - os: windows-latest
+            group: core
+          - os: windows-latest
+            group: presentation
+          - os: windows-latest
+            group: journey
+          - os: windows-latest
+            group: regional
     defaults:
       run:
         shell: bash
@@ -59,14 +77,16 @@ jobs:
           fetch-depth: 0
           filter: tree:0
       - name: Setup Godot
+        if: matrix.group != 'static'
         uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.4.1
           use-dotnet: false
       - name: Verify Godot
+        if: matrix.group != 'static'
         run: godot --version
       - name: Run deterministic tests
-        run: bash scripts/verify.sh
+        run: bash scripts/verify.sh "${{ matrix.group }}"
 
   ai-review:
     name: Multi-agent AI review

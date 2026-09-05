@@ -2,8 +2,8 @@ extends SceneTree
 
 const RenderCapture = preload("res://tests/support/rendered_frame_capture.gd")
 const EVIDENCE_ROOTS := [
-	"res://docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1280x720",
-	"res://docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1600x900",
+	"res://docs/visual_evidence/v0.3.0-alpha.364-gpt56-1c-1280x720",
+	"res://docs/visual_evidence/v0.3.0-alpha.364-gpt56-1c-1600x900",
 ]
 const REQUIRED_STATES := [
 	"00_title.png",

@@ -1,9 +1,9 @@
 # The Long March — GPT-5.6 Investment Execution Packets
 
 **Baseline:** `0.3.0-alpha.364` on current `main` after merge.
-**Latest audit:** LM-GPT56-0 rejects the failed uniform-grey review frames and validates exact Godot-controlled captures for the full journey. LM-GPT56-1B binds those captures to clean-save, resume-checkpoint, and completed-Debrief state. All implementation packets now have deterministic repository and trustworthy rendered-frame evidence. The remaining investment risk is human calibration of comprehension, pacing, accessibility, and replay appetite on one retained candidate.
+**Latest audit:** LM-GPT56-0 rejects the failed uniform-grey review frames and validates exact Godot-controlled captures for the full journey. LM-GPT56-1B binds those captures to clean-save, resume-checkpoint, and completed-Debrief state. LM-GPT56-1C bounds and times verification failure domains and re-proves both review viewports. All implementation packets now have deterministic repository and trustworthy rendered-frame evidence. The remaining investment risk is human calibration of comprehension, pacing, accessibility, and replay appetite on one retained candidate.
 
-**Execution status:** LM-GPT56-0 through LM-GPT56-5 and the LM-GPT56-1B repeat-review gate are complete in `0.3.0-alpha.364`; see [`lm_gpt56_0_rendered_frame_gate_report.md`](lm_gpt56_0_rendered_frame_gate_report.md), [`lm_gpt56_1b_completion_evidence_report.md`](lm_gpt56_1b_completion_evidence_report.md), and the packet reports through [`lm_gpt56_5_early_access_package_report.md`](lm_gpt56_5_early_access_package_report.md). The only next packet is the consented LM-H1 human observation packet.
+**Execution status:** LM-GPT56-0 through LM-GPT56-5 and the LM-GPT56-1B/1C repeat-review gates are complete in `0.3.0-alpha.364`; see [`lm_gpt56_0_rendered_frame_gate_report.md`](lm_gpt56_0_rendered_frame_gate_report.md), [`lm_gpt56_1b_completion_evidence_report.md`](lm_gpt56_1b_completion_evidence_report.md), [`lm_gpt56_1c_verification_profile_report.md`](lm_gpt56_1c_verification_profile_report.md), and the packet reports through [`lm_gpt56_5_early_access_package_report.md`](lm_gpt56_5_early_access_package_report.md). The only next packet is the consented LM-H1 human observation packet.
 
 ## Packet LM-GPT56-0 — Rendered-frame evidence gate
 

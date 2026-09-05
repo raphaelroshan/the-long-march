@@ -13,7 +13,7 @@ The AI review layer is advisory unless it reports a critical finding. It never r
 | Repository policy | Required project files, secret patterns, large/generated artifacts | Blocks policy errors. |
 | Content manifest | Stable locations, characters, events, progression, and ending references | Blocks malformed content. |
 | Gameplay framework | Modules, shapes, spaces, connections, threats, interventions, progression, and slice scope | Blocks incomplete framework data. |
-| Godot tests | Placement, dependencies, power, heat, travel, threats, interventions, recovery, and save/load | Blocks failures on Ubuntu or Windows. |
+| Bounded verification | Static contracts plus core, presentation, journey, and regional Godot groups | Blocks failures; Godot groups run independently on Ubuntu and Windows. |
 | AI review | Architecture, gameplay, QA, and security findings | Blocks critical findings; otherwise reports. |
 | Packaging | Project import, source snapshot, Windows, unsigned macOS, and x86-64 Linux playtest builds | Produces guarded artifacts from reviewed export presets. |
 
@@ -26,7 +26,20 @@ python tools/validate_gameplay_framework.py --data content/gameplay_framework.js
 bash scripts/verify.sh
 ```
 
-A missing local Godot executable is an environment limitation and causes `scripts/verify.sh` to exit with status `2`. The verifier requires each suite's explicit PASS marker and rejects Godot `ERROR:` or `SCRIPT ERROR:` output even if the engine process exits zero. GitHub Actions installs Godot 4.4.1 and runs the actual test suite on both operating systems.
+The default command still runs every check. During diagnosis or development, the same coverage can be run as bounded groups:
+
+```bash
+bash scripts/verify.sh --list
+bash scripts/verify.sh static
+bash scripts/verify.sh core
+bash scripts/verify.sh presentation
+bash scripts/verify.sh journey
+bash scripts/verify.sh regional
+```
+
+Every step emits a `VERIFY_TIMING` record, every group emits `VERIFY_GROUP_RESULT`, and the invocation ends with `VERIFY_RESULT`, including the slowest completed step. These are coarse wall-clock diagnostics rather than performance budgets. The static group does not require Godot. A missing local Godot executable causes only Godot-backed groups to exit with status `2`.
+
+The verifier requires each suite's explicit PASS marker and rejects Godot `ERROR:` or `SCRIPT ERROR:` output even if the engine process exits zero. GitHub Actions installs Godot 4.4.1 and runs core, presentation, journey, and regional groups independently on Ubuntu and Windows; static checks run once on Ubuntu. Splitting controls failure scope and CI wall time without removing any prior invocation.
 
 Runnable desktop artifacts use `scripts/export_playtest.sh` both locally and in GitHub Actions. The workflow installs matching export templates and completes validation/import before calling the script with `LONG_MARCH_SKIP_IMPORT=1`; this avoids a redundant Windows editor import after the verified cache already exists. Local calls still import by default. An absent or mismatched template set fails with status `3`, removes the incomplete target, and explains the required remedy.
 
