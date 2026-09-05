@@ -1,0 +1,13 @@
+{
+  "game": "The Long March",
+  "build": "0.3.0-alpha.364",
+  "main_commit": "f17f3d5",
+  "review_date": "2026-09-05",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "states": ["title", "arrival_receipt", "plan_journey"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "verification": "bounded timeout at 900 seconds; no assertion failure observed in log tail",
+  "finding": "valid moving-fortress, route receipt, and journey-map evidence; wrapper requires per-suite profiling",
+  "source": "xvfb-run visual smoke capture from origin/main"
+}

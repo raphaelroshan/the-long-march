@@ -98,3 +98,10 @@ Execute **LM-GPT56-1B** next. Capture the complete journey at 1600×900 and repr
 LM-GPT56-1B is complete. The existing Godot 4.4.1 full-journey sets contain 24 validated states at 1600×900 and 22 representative accessibility states at 1280×720. Their schema-2 manifests now bind the frames to a clean-save player-action contract, restored departure/interruption/arrival/specialist checkpoints, and a five-contact terminal Debrief at Meridian Pass. The deterministic fixture and mandatory rendered-frame test enforce the same contract. Evidence and limitations are recorded in [`lm_gpt56_1b_completion_evidence_report.md`](lm_gpt56_1b_completion_evidence_report.md).
 
 LM-H1 is again the sole next packet. It is calibration work with consented human participants, not a repository feature gap and not permission to claim unobserved comprehension or pacing.
+
+
+## 2026-09-05 audit checkpoint — LM-GPT56-1C verification profiling remains open
+
+The current `0.3.0-alpha.364` build produces valid visual evidence beyond the title: an Arrival Receipt / Route Secured state and a Plan Journey route-map state with readiness metrics, risk forecast, prior receipt, and doctrine selection. The extended verification log records passes for the investment vertical, LM-GPT56-1, responsive profiles, complete journey handoff, Flooded Veyru, Cinder Spine, and other named fixtures, but the wrapper reaches its 900-second bound before completing the full suite. This is a release-process timeout, not an observed game assertion failure.
+
+The next agent must execute **LM-GPT56-1C**: profile and split the verification wrapper into bounded per-suite groups, identify the slowest fixture, and report timing without weakening coverage. Then re-prove the clean-save journey through contact, recovery, arrival, next route, and Debrief with 1600×900 and representative 1280×720 evidence. Preserve the causal chain and deterministic replay; do not add another region until the timing and complete-journey evidence are clean. Evidence is recorded in `docs/audit_report_2026-09-05.md` and `docs/visual_evidence/v0.3.0-alpha.364-audit-2026-09-05/`.
