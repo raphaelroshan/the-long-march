@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "game": "the-long-march",
+  "scenario_id": "long_march_complete_journey",
+  "purpose": "Prove the complete fortress-crawler journey from First Watch through route, contact, consequence, recovery, arrival, and Debrief.",
+  "status": "planned",
+  "seed": 6307,
+  "initial_save": "fresh",
+  "expected_states": [
+    "title",
+    "first_watch",
+    "refit",
+    "route_map",
+    "travel",
+    "contact_or_event",
+    "consequence",
+    "recovery",
+    "arrival",
+    "next_route",
+    "debrief"
+  ],
+  "semantic_commands": [
+    "start_run",
+    "complete_first_watch",
+    "open_refit",
+    "choose_route:ashgate_to_flooded_veyru",
+    "commit_route",
+    "advance_travel",
+    "lock_contact_target",
+    "resolve_contact:inspect",
+    "acknowledge_consequence",
+    "open_recovery",
+    "repair:critical_system",
+    "arrive",
+    "choose_next_route",
+    "open_debrief"
+  ],
+  "checkpoints": ["after_first_watch", "after_refit", "after_route", "after_contact", "after_recovery", "after_debrief"],
+  "screenshot_states": ["first_watch", "route_map", "contact_or_event", "recovery", "arrival", "debrief"],
+  "time_budget_ms": 60000,
+  "implementation_note": "Use semantic commands and rendered-frame readiness; preserve fortress_state authority and never infer a journey consequence from screenshot timing."
+}

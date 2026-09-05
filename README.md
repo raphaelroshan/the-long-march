@@ -100,6 +100,7 @@ The command verifies the complete cohort before recording its exact build, platf
 - [Private-alpha session sheet](docs/private_alpha_session_sheet.md) — uncoached observation protocol and capture matrix.
 - [Visual evidence gallery](docs/visual_evidence_gallery.md) — versioned implementation captures and their limits.
 - [Latest verification report](docs/latest_test_report_2026-08-31.md) — current automated evidence and explicit non-claims.
+- [Agent QA playbook](docs/qa_playbook.md) — shared result classifications, semantic scenario contract, evidence bundle, and runnable wrapper.
 
 ## Scope boundary
 
