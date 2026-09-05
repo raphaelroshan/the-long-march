@@ -4,32 +4,32 @@ This repository uses a layered QA contract. The existing game-specific verifier 
 
 ## Required agent loop
 
-Before editing, record the current commit, game version, Godot version, viewport, renderer, locale, and baseline command. Run `bash scripts/agent_qa.sh` and preserve `artifacts/agent-qa/qa-result.json` even when the baseline fails.
+Before editing, run the semantic scenario into a named baseline directory. The result records the commit, dirty state, game version, Godot version, viewport, renderer, locale, seed, input trace, captured states, duration, terminal state, and evidence limitations. Preserve the baseline even when it fails.
 
 Select one unfinished roadmap task. State the player-facing objective, authoritative owner, presentation owner, non-goals, acceptance criteria, expected state sequence, screenshot states, save checkpoints, and time budget before changing code. Large tasks are acceptable, but they must expose independently verifiable checkpoints.
 
-After editing, run the focused test, then `bash scripts/agent_qa.sh`, then the named end-to-end scenario for the changed claim. A result must be classified as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. Do not call a timeout a pass.
+After editing, run the focused test, the relevant `scripts/verify.sh` group, and the semantic scenario into a separate final directory. A result must be classified as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. Do not call a timeout a pass.
 
 ## Evidence contract
 
-Every QA output must identify the game, commit, version, engine, viewport, renderer, locale, seed, input trace, state identifier, screenshot path, duration, exit code, and known limitation. Screenshots must be captured after a named readiness condition and fixed frame/tick boundary. A blank, uniform, wrong-size, or semantically wrong screenshot is invalid evidence.
+Every QA output must identify the game, commit, version, engine, viewport, renderer, locale, seed, input trace, state identifiers, screenshot paths, duration, exit code, and known limitations. The runner rejects a planned or malformed scenario, missing PASS marker, wrong command trace, wrong checkpoint sequence, incomplete terminal state, missing image, wrong dimensions, or checksum mismatch. The Godot fixture rejects blank or visually uniform frames at its named rendered-frame boundary.
 
 Simulation authority must remain in the core layer. UI, audio, animation, screenshot timing, and visual effects may not decide prices, damage, targeting, route outcomes, persistence, or endings.
 
 ## Commands
 
 ```bash
-# Fast local evidence bundle; all games use their existing verifier.
-bash scripts/agent_qa.sh
+# Preserve a pre-change baseline.
+AGENT_QA_OUTPUT_DIR=artifacts/agent-qa/baseline bash scripts/agent_qa.sh
 
-# Longer run when the full suite is known to be slow.
-AGENT_QA_TIMEOUT_SECONDS=1800 bash scripts/agent_qa.sh
+# Run the post-change journey separately.
+AGENT_QA_OUTPUT_DIR=artifacts/agent-qa/final bash scripts/agent_qa.sh
 
-# Disable the title capture when only logic verification is needed.
-AGENT_QA_CAPTURE=0 bash scripts/agent_qa.sh
+# Select an explicit Godot binary when it is not on PATH.
+GODOT_BIN=/path/to/Godot bash scripts/agent_qa.sh
 ```
 
-The first implementation of `agent_qa.sh` runs the existing verifier and captures a readiness-validated title frame. Game-specific semantic journeys should be added to `qa/scenarios/` and wired to existing Godot fixtures rather than simulated with sleeps or coordinate clicks.
+The Long March adapter executes `tests/test_complete_journey_handoff.gd` through normal player-facing controls. Its responsive 1280×720 run captures 22 named states from title through Debrief, restores four save checkpoints, and validates the scenario's exact terminal state. The ordinary deterministic verifier remains a separate required layer; agent QA does not rerun it.
 
 ## PR report format
 
@@ -37,4 +37,4 @@ Agents must report changed files, baseline and final result tables, exact comman
 
 ## Current game-specific priorities
 
-Market of Ash: add a semantic ordinary-trade round trip from first purchase through route, departure, event, arrival, return market, and terminal receipt. Pack the Keep: add a semantic Greywatch run from War Council through placement, three waves, intervention, damage, Recovery, and Results. The Long March: profile slow verifier groups and add a semantic clean-save journey through route, contact, consequence, recovery, arrival, and Debrief.
+Market of Ash: add a semantic ordinary-trade round trip from first purchase through route, departure, event, arrival, return market, and terminal receipt. Pack the Keep: add a semantic Greywatch run from War Council through placement, three waves, intervention, damage, Recovery, and Results. The Long March adapter is implemented; its next use is to preserve comparable evidence around one narrow change derived from LM-H1 observation.

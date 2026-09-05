@@ -32,7 +32,7 @@ Never commit API keys, Steam or Epic credentials, generated binaries, private sa
 
 ## Agent QA contract
 
-Before changing code, also read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, the active roadmap, and the latest audit report. Run `bash scripts/agent_qa.sh` and record the exact version, commit, Godot version, viewport, and result classification.
+Before changing code, also read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, the active roadmap, and the latest audit report. Run `AGENT_QA_OUTPUT_DIR=artifacts/agent-qa/baseline bash scripts/agent_qa.sh`; after editing, use a separate `artifacts/agent-qa/final` directory. Preserve both results and their exact classifications.
 
 Use semantic commands and named readiness states for new journeys; never treat sleeps, coordinate clicks, or a screenshot taken before readiness as proof. Preserve `artifacts/agent-qa/` on success and failure.
 

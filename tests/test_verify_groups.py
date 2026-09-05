@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 EXPECTED_COUNTS = {
-    "static": 27,
+    "static": 28,
     "core": 15,
     "presentation": 17,
     "journey": 12,
