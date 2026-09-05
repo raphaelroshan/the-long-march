@@ -1342,3 +1342,7 @@ The March Charter stores each region's latest completed, declined, or failed obl
 ## 2026-09-02 — Save health means validated state, not file presence
 
 Build & Local Data validates campaign and tutorial checkpoints before labeling them healthy, displays the authoritative schema window, and distinguishes missing, valid, and unusable files. Release manifests carry the same save window and offline boundary and reject incompatible metadata after download. This was chosen over an `AVAILABLE` label because a present but corrupt save is precisely when a tester needs accurate recovery information.
+
+## 2026-09-05 — Verification groups follow failure domains
+
+The full verifier remains the default contract, but its checks can also run as static, core, presentation, journey, and regional groups. The boundaries follow behavior and ownership rather than equal test counts: a failing job now identifies whether the problem is repository content, authoritative state, presentation, the end-to-end journey, or regional UI. Every prior invocation remains covered, and all Godot groups still run on Ubuntu and Windows. Coarse per-step timing identifies a slow fixture without turning local machine time into a release performance budget.

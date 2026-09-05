@@ -2,6 +2,10 @@
 
 This gallery preserves versioned presentation captures from the playable alpha. They are internal development evidence, not final marketing art and not evidence that an uncoached player understood the interface.
 
+## Alpha.364 — LM-GPT56-1C complete journey re-proof
+
+[Standard 1600×900](visual_evidence/v0.3.0-alpha.364-gpt56-1c-1600x900/) and [responsive 1280×720](visual_evidence/v0.3.0-alpha.364-gpt56-1c-1280x720/) sets re-prove the clean-save journey on Godot 4.4.1 after verification profiling. Their manifests bind 24 standard and 22 accessibility frames to normal player actions, four save/resume checkpoints, five secured contacts, and terminal Debrief. The compact contact remains dense enough to require human comprehension testing.
+
 ## Alpha.347 — compact header and command clearance
 
 [Standard 1600×900](visual_evidence/v0.3.0-alpha.347-header-command-clearance-1600x900/) and [compact 1280×720](visual_evidence/v0.3.0-alpha.347-header-command-clearance-1280x720/) captures show the transient save receipt occupying unused header space rather than covering the route breadcrumb. The compact contact frame also keeps all four emergency orders visible together. These images verify layout geometry, not player comprehension.

@@ -2,26 +2,26 @@
 
 **Build:** `0.3.0-alpha.364`
 
-**Main commit:** `f17f3d5`
+**Baseline commit:** `73fc3d7`
 
 **Engine:** Godot 4.4.1
 
-**Viewport:** 1280×720
+**Viewports:** 1600×900 and responsive 1280×720
 
-**Evidence:** `docs/visual_evidence/v0.3.0-alpha.364-audit-2026-09-05/`
+**Evidence:** `docs/visual_evidence/v0.3.0-alpha.364-gpt56-1c-1600x900/` and `docs/visual_evidence/v0.3.0-alpha.364-gpt56-1c-1280x720/`
 
 ## Automated result
 
-The extended verification wrapper reached its 900-second bound and exited 124 without an assertion failure. The log records passes for the investment evaluation vertical, LM-GPT56-1 full creative journey, completion evidence contract, responsive journey profiles at 1280×720 and 1600×900, complete journey handoff, Flooded Veyru UI flow, Cinder Spine UI flow, responsive Cinder profiles, and White Salt UI flow before the timeout. This is a bounded verification-timeout result, not a clean full-suite pass and not a confirmed gameplay failure.
+The 900-second monolithic-wrapper timeout is resolved as a verification-orchestration problem, not a gameplay assertion failure. The wrapper now preserves all prior 26 Python invocations and 55 Godot invocations, adds one group-contract test, and exposes five independently runnable groups with per-step, per-group, and final machine-readable timing.
 
-The release process now needs a performance/fixture audit: identify the slowest remaining test group, split the wrapper into bounded suites, and report per-suite timing so a full green result is actionable.
+On the pinned Godot 4.4.1 local run, static completed in 5 seconds, core in 41 seconds, presentation in 52 seconds, journey in 134 seconds, and regional in 76 seconds. Journey is the slowest group. The slowest individual fixtures were 11-second complete-journey variants, led by the Cinder Quarry profile in the final summary; no fixture approached the external 900-second bound. GitHub Actions now runs the five groups as bounded Linux jobs and repeats all four Godot groups on Windows. Timing is machine-specific diagnostic evidence, not a player-facing performance or pacing claim.
 
 ## Visual result
 
-The title shows a strong moving-fortress identity with Continue, Review Training Certificate, New Journey, regional run choices, and a saved-run panel. The second capture reaches a valid Arrival Receipt / Route Secured state with hull, Ashmarks, pressure, systems, road outcome, and an Enter Journey Map action. The follow-up reaches Plan Journey with route forecast, readiness metrics, prior receipt, risk factors, and doctrine selection. This is valid evidence of a game loop beyond the title and tutorial.
+The fresh Godot-controlled proof starts from a clean save, completes First Watch, performs a live chassis refit, commits and travels roads, resolves the pre-contact interruption and road contacts, changes specialists, uses recovery, reaches Meridian Pass, and ends in Debrief after five secured contacts. Both manifests record the four required save/resume checkpoints and terminal `results` state at encounter step five.
 
-The 1280×720 route and receipt states are information-dense but legible. The next visual task should complete the clean-save journey through contact, recovery, arrival, next route, and Debrief before adding another region.
+The complete standard set contains 24 validated rendered states at 1600×900. The representative accessibility set contains 22 at 1280×720 with 110% text, high contrast, reduced motion, and alternate controller confirmation. The refit, contact, recovery, and Debrief frames were visually inspected for bounds and readable action hierarchy. The compact contact remains deliberately dense; whether an uncoached player understands it is an LM-H1 observation question.
 
 ## Next task
 
-Execute **LM-GPT56-1C**: split or profile the verification wrapper so the complete suite has bounded per-group timing, then prove the full clean-save journey and capture it at 1600×900 plus representative 1280×720 states. Preserve the causal chain and deterministic replay.
+**LM-GPT56-1C is complete.** The sole next packet is **LM-H1**: run one consented, uncoached observation cohort against one exact checksummed candidate and convert the first repeated finding into a narrow issue. Repository automation does not establish comprehension, comfort, pacing, or replay appetite.

@@ -134,5 +134,5 @@ The dependency-aware execution program in [`docs/gpt56_investment_execution_pack
 | `docs/visual_evidence/v0.3.0-alpha.364-gpt56-journey-1600x900/` | Complete standard journey recaptured through the rendered-frame quality gate. |
 | `docs/latest_review_2026-09-04.md` | Repeat current-main verification and visual review; confirms valid moving-fortress/contact evidence and remaining density work. |
 | `docs/visual_evidence/v0.3.0-alpha.364-review-2026-09-04/` | Fresh 1280×720 title, contact, and follow-up captures with machine-readable manifest. |
-| `docs/audit_report_2026-09-05.md` | Current main audit with valid journey evidence, bounded verification timeout, and LM-GPT56-1C next task. |
-| `docs/visual_evidence/v0.3.0-alpha.364-audit-2026-09-05/` | Fresh title, Arrival Receipt, Plan Journey screenshots, and capture manifest. |
+| `docs/lm_gpt56_1c_verification_profile_report.md` | Bounded verification timings, CI split, and complete journey re-proof. |
+| `docs/visual_evidence/v0.3.0-alpha.364-gpt56-1c-1600x900/` | Fresh checksummed standard journey through terminal Debrief. |
