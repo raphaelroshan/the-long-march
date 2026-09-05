@@ -10,8 +10,39 @@ permissions:
   contents: read
 
 jobs:
+  agent-qa:
+    name: Agent QA complete journey
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+      - name: Run semantic journey and capture evidence
+        env:
+          AGENT_QA_GAME: the-long-march
+          AGENT_QA_OUTPUT_DIR: artifacts/agent-qa
+          GODOT_BIN: godot
+        run: bash scripts/agent_qa.sh
+      - name: Upload agent QA evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: agent-qa-release-${{ github.run_number }}
+          path: artifacts/agent-qa/
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 30
+
   release-candidate:
     name: ${{ matrix.name }} release candidate
+    needs: agent-qa
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +75,11 @@ jobs:
           version: 4.4.1
           use-dotnet: false
           include-templates: true
+      - name: Download agent QA evidence
+        uses: actions/download-artifact@v7
+        with:
+          name: agent-qa-release-${{ github.run_number }}
+          path: artifacts/agent-qa
       - name: Run deterministic tests
         run: bash scripts/verify.sh
       - name: Require export presets for release builds
@@ -78,6 +114,7 @@ jobs:
             --platform "${{ matrix.target }}" \
             --engine-version "$(godot --version | head -n 1)" \
             --verification deterministic_tests \
+            --verification agent_qa_complete_journey \
             --verification "${{ matrix.target }}_export" \
             --verification "${{ matrix.target }}_packaged_smoke" \
             --verification offline_boundary \
@@ -98,6 +135,8 @@ jobs:
             --file early_access_known_limitations=docs/early_access_known_limitations.md \
             --file early_access_test_matrix=docs/early_access_test_matrix.md \
             --file campaign_contract=content/early_access_candidate.json \
+            --file agent_qa_result=artifacts/agent-qa/qa-result.json \
+            --file agent_qa_capture_manifest=artifacts/agent-qa/journey-capture/capture-manifest.json \
             --file gpt56_execution=docs/lm_gpt56_5_early_access_package_report.md \
             --file manifest_verifier=tools/verify_release_manifest.py
       - name: Verify exact cohort manifest

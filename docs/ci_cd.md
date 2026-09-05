@@ -14,6 +14,7 @@ The AI review layer is advisory unless it reports a critical finding. It never r
 | Content manifest | Stable locations, characters, events, progression, and ending references | Blocks malformed content. |
 | Gameplay framework | Modules, shapes, spaces, connections, threats, interventions, progression, and slice scope | Blocks incomplete framework data. |
 | Bounded verification | Static contracts plus core, presentation, journey, and regional Godot groups | Blocks failures; Godot groups run independently on Ubuntu and Windows. |
+| Agent QA journey | One executable semantic journey with provenance, state trace, checkpoints, terminal state, and rendered evidence | Blocks candidate packaging when evidence is incomplete or invalid. |
 | AI review | Architecture, gameplay, QA, and security findings | Blocks critical findings; otherwise reports. |
 | Packaging | Project import, source snapshot, Windows, unsigned macOS, and x86-64 Linux playtest builds | Produces guarded artifacts from reviewed export presets. |
 
@@ -40,6 +41,8 @@ bash scripts/verify.sh regional
 Every step emits a `VERIFY_TIMING` record, every group emits `VERIFY_GROUP_RESULT`, and the invocation ends with `VERIFY_RESULT`, including the slowest completed step. These are coarse wall-clock diagnostics rather than performance budgets. The static group does not require Godot. A missing local Godot executable causes only Godot-backed groups to exit with status `2`.
 
 The verifier requires each suite's explicit PASS marker and rejects Godot `ERROR:` or `SCRIPT ERROR:` output even if the engine process exits zero. GitHub Actions installs Godot 4.4.1 and runs core, presentation, journey, and regional groups independently on Ubuntu and Windows; static checks run once on Ubuntu. Splitting controls failure scope and CI wall time without removing any prior invocation.
+
+After the matrix passes, one dedicated Ubuntu `agent-qa` job runs the executable complete-journey scenario. It does not rerun the full verifier. The job uploads one `agent-qa-the-long-march-<run>` artifact on success or failure, and Windows/Linux candidate packaging requires a valid PASS result. Tagged/manual releases run the same single gate before their platform matrix. Each candidate manifest checksums the QA result and capture manifest; the retained QA artifact also contains import and scenario logs, the source scenario, and all 22 rendered states.
 
 Runnable desktop artifacts use `scripts/export_playtest.sh` both locally and in GitHub Actions. The workflow installs matching export templates and completes validation/import before calling the script with `LONG_MARCH_SKIP_IMPORT=1`; this avoids a redundant Windows editor import after the verified cache already exists. Local calls still import by default. An absent or mismatched template set fails with status `3`, removes the incomplete target, and explains the required remedy.
 

@@ -1,3 +1,3 @@
 # Agent QA scenarios
 
-Scenario manifests describe semantic player journeys, readiness checkpoints, save checkpoints, screenshot states, and time budgets. They are contracts for the next adapter work; a manifest marked `planned` must not be reported as an executed journey.
+Scenario manifests describe semantic player journeys, executable fixture adapters, readiness checkpoints, save checkpoints, screenshot states, terminal state, limitations, and time budgets. A selected manifest must be marked `implemented`; `planned` scenarios are rejected as invalid evidence.

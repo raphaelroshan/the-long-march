@@ -12,6 +12,30 @@ const LOCAL_PATHS := [
 	"user://the_long_march_playtest_journal.json",
 ]
 const RenderCapture = preload("res://tests/support/rendered_frame_capture.gd")
+const AGENT_QA_SEMANTIC_COMMANDS := [
+	"start_first_watch",
+	"complete_first_watch",
+	"enter_workshop",
+	"refit:wall_lamp",
+	"accept_assignment:morrowline_guard",
+	"choose_route:rill_crossing",
+	"resolve_event:lift_chain_sings",
+	"resolve_contact:rill_crossing",
+	"choose_route:broken_relay",
+	"resolve_contact:broken_relay",
+	"recruit_specialist:iven_pell",
+	"choose_route:morrowline_camp",
+	"resolve_contact:morrowline_camp",
+	"replace_specialist:mara_flint",
+	"resolve_event:mara_workbench_choice",
+	"use_recovery_service:morrowline",
+	"choose_route:cinder_quarry",
+	"resolve_contact:cinder_quarry",
+	"resolve_event:mara_followup",
+	"choose_route:meridian_pass",
+	"resolve_contact:meridian_pass",
+	"open_debrief",
+]
 
 var failures: Array[String] = []
 var app: Control
@@ -98,8 +122,10 @@ func _write_capture_manifest() -> void:
 		"journey_contract": {
 			"profile_id": "LM-GPT56-1B" if gpt56_journey_profile else "complete_journey_handoff",
 			"journey_id": "ashgate_lowlands_alpha",
+			"scenario_id": "long_march_complete_journey" if gpt56_journey_profile else "complete_journey_handoff",
 			"fresh_save_started": true,
 			"normal_player_actions": true,
+			"semantic_commands": AGENT_QA_SEMANTIC_COMMANDS if gpt56_journey_profile else [],
 			"captured_state_count": capture_records.size(),
 			"terminal_complete": bool(terminal_state.get("run_complete", false)),
 		},
@@ -118,6 +144,7 @@ func _evidence_state() -> Dictionary:
 	if game == null or game.state == null:
 		return {}
 	return {
+		"seed": int(game.state.seed),
 		"phase": String(game.state.phase),
 		"current_location": String(game.state.current_location),
 		"target_node": String(game.state.campaign_target_node),

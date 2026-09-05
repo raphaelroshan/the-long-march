@@ -117,6 +117,7 @@ run_group_static() {
 	run_step static test_smoke_playtest "" python3 tests/test_smoke_playtest.py
 	run_step static test_private_alpha_contract "" python3 tests/test_private_alpha_contract.py
 	run_step static test_gpt56_package_contract "" python3 tests/test_gpt56_package_contract.py
+	run_step static test_agent_qa_contract "" python3 tests/test_agent_qa_contract.py
 	run_step static test_verify_groups "" python3 tests/test_verify_groups.py
 }
 

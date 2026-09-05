@@ -1346,3 +1346,7 @@ Build & Local Data validates campaign and tutorial checkpoints before labeling t
 ## 2026-09-05 — Verification groups follow failure domains
 
 The full verifier remains the default contract, but its checks can also run as static, core, presentation, journey, and regional groups. The boundaries follow behavior and ownership rather than equal test counts: a failing job now identifies whether the problem is repository content, authoritative state, presentation, the end-to-end journey, or regional UI. Every prior invocation remains covered, and all Godot groups still run on Ubuntu and Windows. Coarse per-step timing identifies a slow fixture without turning local machine time into a release performance budget.
+
+## 2026-09-05 — Agent QA executes the game-specific journey once
+
+Agent QA uses the existing complete-journey Godot fixture as its semantic adapter and runs once in a dedicated CI job after deterministic verification. A generic editor capture was rejected because varied editor pixels do not prove a game state. The final result is accepted only when the declared command trace, rendered states, save checkpoints, terminal state, dimensions, and image checksums agree. Candidate packaging depends on this result, while the ordinary verifier remains the authoritative simulation and regression layer.
